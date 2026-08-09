@@ -1,0 +1,142 @@
+import { CreateCategoryInput, UpdateCategoryInput, CategoryUsage, CategoryTreeNode } from "./category.interface";
+export interface CategoryListParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    parentId?: string;
+    featured?: boolean;
+    sort?: string;
+}
+export declare const getAll: (params?: CategoryListParams) => Promise<{
+    data: {
+        id: number;
+        name: string;
+        slug: string;
+        parentId: number | null;
+        image: string | null;
+        icon: string | null;
+        banner: string | null;
+        thumbnail: string | null;
+        description: string | null;
+        featured: boolean;
+        sortOrder: number;
+        homepageVisibility: boolean;
+        seoTitle: string | null;
+        seoDescription: string | null;
+        seoKeywords: string | null;
+        status: "active" | "inactive" | "archived";
+        createdAt: Date;
+    }[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+}>;
+export declare const getAllFlat: () => Promise<{
+    id: number;
+    name: string;
+    slug: string;
+    parentId: number | null;
+    image: string | null;
+    icon: string | null;
+    banner: string | null;
+    thumbnail: string | null;
+    description: string | null;
+    featured: boolean;
+    sortOrder: number;
+    homepageVisibility: boolean;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    seoKeywords: string | null;
+    status: "active" | "inactive" | "archived";
+    createdAt: Date;
+}[]>;
+export declare const getTree: () => Promise<CategoryTreeNode[]>;
+export declare const getById: (id: number) => Promise<{
+    id: number;
+    name: string;
+    slug: string;
+    parentId: number | null;
+    image: string | null;
+    icon: string | null;
+    banner: string | null;
+    thumbnail: string | null;
+    description: string | null;
+    featured: boolean;
+    sortOrder: number;
+    homepageVisibility: boolean;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    seoKeywords: string | null;
+    status: "active" | "inactive" | "archived";
+    createdAt: Date;
+}>;
+export declare const getBySlug: (slug: string) => Promise<{
+    id: number;
+    name: string;
+    slug: string;
+    parentId: number | null;
+    image: string | null;
+    icon: string | null;
+    banner: string | null;
+    thumbnail: string | null;
+    description: string | null;
+    featured: boolean;
+    sortOrder: number;
+    homepageVisibility: boolean;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    seoKeywords: string | null;
+    status: "active" | "inactive" | "archived";
+    createdAt: Date;
+}>;
+export declare const getUsage: (id: number) => Promise<CategoryUsage>;
+export declare const create: (data: CreateCategoryInput) => Promise<{
+    id: number;
+    name: string;
+    slug: string;
+    parentId: number | null;
+    image: string | null;
+    icon: string | null;
+    banner: string | null;
+    thumbnail: string | null;
+    description: string | null;
+    featured: boolean;
+    sortOrder: number;
+    homepageVisibility: boolean;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    seoKeywords: string | null;
+    status: "active" | "inactive" | "archived";
+    createdAt: Date;
+}>;
+export declare const update: (id: number, data: UpdateCategoryInput) => Promise<{
+    id: number;
+    name: string;
+    slug: string;
+    parentId: number | null;
+    image: string | null;
+    icon: string | null;
+    banner: string | null;
+    thumbnail: string | null;
+    description: string | null;
+    featured: boolean;
+    sortOrder: number;
+    homepageVisibility: boolean;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    seoKeywords: string | null;
+    status: "active" | "inactive" | "archived";
+    createdAt: Date;
+}>;
+export declare const moveProducts: (fromId: number, targetId: number | null) => Promise<{
+    moved: number;
+    usage: CategoryUsage;
+}>;
+export declare const remove: (id: number) => Promise<{
+    success: boolean;
+}>;
+//# sourceMappingURL=category.service.d.ts.map

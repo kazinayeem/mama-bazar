@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Digital Atelier | Elegance for the Bold</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#acb3b4",
+                    "surface-bright": "#f9f9f9",
+                    "on-surface-variant": "#596061",
+                    "on-tertiary-container": "#584500",
+                    "tertiary": "#745c00",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#0c0f0f",
+                    "on-secondary-container": "#505252",
+                    "error-container": "#ff8b9a",
+                    "secondary-fixed-dim": "#d4d4d4",
+                    "on-background": "#2d3435",
+                    "secondary-dim": "#525354",
+                    "on-tertiary-fixed": "#413200",
+                    "error": "#9e3f4e",
+                    "surface-container-highest": "#dde4e5",
+                    "surface": "#f9f9f9",
+                    "surface-container-low": "#f2f4f4",
+                    "tertiary-fixed": "#f5ce53",
+                    "primary-dim": "#525252",
+                    "on-tertiary": "#fff8ef",
+                    "on-surface": "#2d3435",
+                    "inverse-primary": "#ffffff",
+                    "primary-fixed": "#e2e2e2",
+                    "on-secondary-fixed": "#3e4040",
+                    "tertiary-fixed-dim": "#e6c047",
+                    "secondary": "#5e5f60",
+                    "error-dim": "#4f0116",
+                    "on-secondary-fixed-variant": "#5a5c5c",
+                    "surface-variant": "#dde4e5",
+                    "on-tertiary-fixed-variant": "#634e00",
+                    "on-primary": "#f8f8f8",
+                    "primary": "#5e5e5e",
+                    "outline": "#757c7d",
+                    "inverse-on-surface": "#9c9d9d",
+                    "secondary-fixed": "#e2e2e2",
+                    "on-error": "#fff7f7",
+                    "tertiary-dim": "#665100",
+                    "on-error-container": "#782232",
+                    "tertiary-container": "#f5ce53",
+                    "secondary-container": "#e2e2e2",
+                    "on-secondary": "#f9f9f9",
+                    "surface-container": "#ebeeef",
+                    "background": "#f9f9f9",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#5b5b5b",
+                    "surface-dim": "#d3dbdd",
+                    "on-primary-fixed": "#3f3f3f",
+                    "primary-container": "#e2e2e2",
+                    "primary-fixed-dim": "#d4d4d4",
+                    "surface-container-high": "#e4e9ea",
+                    "on-primary-container": "#525252"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0px",
+                    "lg": "0px",
+                    "xl": "0px",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-tertiary-container selection:text-on-tertiary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl flex justify-between items-center px-8 h-20 w-full font-['Plus_Jakarta_Sans'] tracking-tight">
+<div class="flex items-center gap-12">
+<a class="text-2xl font-bold tracking-tighter text-neutral-900 dark:text-neutral-50" href="#">Digital Atelier</a>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-neutral-900 dark:text-white border-b border-neutral-900 dark:border-white pb-1 hover:text-neutral-900 dark:hover:text-white transition-colors duration-300" href="#">Couture</a>
+<a class="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors duration-300" href="#">Craft</a>
+<a class="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors duration-300" href="#">Heritage</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center gap-2 px-4 py-2 bg-surface-container-high text-xs uppercase tracking-widest font-semibold">
+<span>BDT</span>
+<span class="material-symbols-outlined text-sm" data-icon="expand_more">expand_more</span>
+</div>
+<div class="flex items-center gap-4 text-neutral-900 dark:text-neutral-50">
+<button class="hover:scale-110 transition-transform duration-300"><span class="material-symbols-outlined" data-icon="search">search</span></button>
+<button class="hover:scale-110 transition-transform duration-300"><span class="material-symbols-outlined" data-icon="favorite">favorite</span></button>
+<button class="hover:scale-110 transition-transform duration-300 relative">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+<span class="absolute -top-1 -right-1 bg-tertiary text-on-tertiary text-[10px] w-4 h-4 flex items-center justify-center rounded-full">2</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative h-[921px] w-full overflow-hidden flex items-center bg-surface-container-low">
+<div class="absolute inset-0 z-0">
+<img alt="High-end editorial model" class="w-full h-full object-cover object-center grayscale hover:grayscale-0 transition-all duration-1000" data-alt="striking editorial fashion photography of a model in avant-garde minimalist neutral clothing against a clean architectural concrete background with harsh shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0DfKO53IiyeQL5vzOnATUWA18zWD9ots1OTr3HT52Yt1WkoKUp3Jx6Jv62Jf_eOlL7aUMYq4x_Ct92U5WtfraqmaOWb9mpNW_SmoudmmeEzDGmoGC4vqwZLlQeP4u3OM6WnpO6zHHZp6awe6IJbxbD8LUONzMKMjJP4J9t41yfIL24ShrmfKhfYMfocBr6K5M0WFVMB2vsasgppOR2xdOw2StGA3ju8kbSVTC2IVhycGy2Y1YVdWu0gR_g9k-Lk_fFma1t7fIEom_"/>
+</div>
+<div class="container mx-auto px-8 relative z-10 grid grid-cols-12 gap-6">
+<div class="col-span-12 md:col-span-6 lg:col-span-5">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-bold mb-6 inline-block">The Spring Edit 2024</span>
+<h1 class="font-headline text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tighter text-on-surface leading-tight mb-8">
+                        Elegance <br/> <span class="italic font-light">for the</span> <br/> Bold
+                    </h1>
+<div class="flex items-center gap-6">
+<button class="bg-on-surface text-surface px-12 py-4 font-semibold uppercase tracking-widest text-sm hover:bg-tertiary transition-colors duration-500">Shop Now</button>
+<button class="group flex items-center gap-2 font-semibold uppercase tracking-widest text-sm py-4 border-b border-transparent hover:border-on-surface transition-all">
+                            View Lookbook
+                            <span class="material-symbols-outlined group-hover:translate-x-2 transition-transform" data-icon="arrow_right_alt">arrow_right_alt</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Category Grid: Organic Asymmetry -->
+<section class="py-32 px-8 container mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
+<!-- Women -->
+<div class="md:col-span-7 group cursor-pointer overflow-hidden relative aspect-[4/3] md:aspect-auto h-full">
+<img alt="Women Category" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="close-up of a elegant woman wearing sophisticated silk attire in neutral tones with minimalist jewelry" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYFbSPU_T2gqZa2DYZP9TijlYIZURdxinT3R2QLL8pKqmOfw2fSZmOVES50y_4uJl_EcfujKHOqlToPscV_--Dj2nyAI9S4lzqOE_R-jxswY2zh-vfWmsPQbw1-_SKSPLnlzAP3aTr7lPHJ_netpbHk7BsuZinHVBjyR3JTTQon3YW4wIktsn3FgMjdSdcZaKTMuCInhpNYZAOU_wzDfZwYMw4-GZbLe1JW1S_mv8uCXb-MVp-8PM-gUihqrvlbjcHZ7i5TqDijyJf"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors duration-500 flex flex-col justify-end p-12">
+<h3 class="text-white font-headline text-4xl font-bold mb-2">Women</h3>
+<p class="text-white/80 uppercase tracking-widest text-xs">Curated Sophistication</p>
+</div>
+</div>
+<!-- Men -->
+<div class="md:col-span-5 flex flex-col gap-8">
+<div class="flex-1 group cursor-pointer overflow-hidden relative min-h-[300px]">
+<img alt="Men Category" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="modern professional man in a tailored minimalist linen suit walking through a clean urban space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAghgzwWpgXfHjKmblfcQCXvjq9PjamRGcmtO-velhKmyRT3UZamgePC2p05nLKJd98j-u2fMPHhkQeRWnIncdyufKZC6MStv17V_wSNbMwcBmpwcgw1mxytA6oxQKJSBUo8h57ChJFQehA1OJKsZ8rrnXJqiAT__0hBoU3XVD1Jy_DWWskbvMHtxpYyiXcZiDB5yFOJvI6CpyybEcLW0odS9338ILwfSENqfQfY4kjbFpf7kcHXKQ2hIYKKR0yYyaMcJiRuO8IoIUv"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors duration-500 flex flex-col justify-end p-8">
+<h3 class="text-white font-headline text-3xl font-bold mb-1">Men</h3>
+<p class="text-white/80 uppercase tracking-widest text-[10px]">The Modern Essential</p>
+</div>
+</div>
+<!-- New Drops -->
+<div class="flex-1 group cursor-pointer overflow-hidden relative min-h-[300px] bg-tertiary-container">
+<img alt="New Drops" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 mix-blend-multiply opacity-80" data-alt="a stack of neatly folded high-quality organic cotton shirts in earthy muted colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4w1uHlwSc_ZeU5U_P1ql1g5w2ZLZHv-w_HOIy3luaRirhbFpm-90BL3yzF6FYy2xtJ_5G5i--CnAmOqU0ikahsoLGZmZBjSMGhAJtLPmn3USa6iALmlktRy58vVj6cl-5_BbCcMYyK0LhH_WcQ6kmuBVEsD9AA0O2lPmfIWBxxuFdWC0XKONrjcKhntev2tpLFCWeGPVqFeGrlVmxqmy3595fjVQbFE_ouhWPKIsFNw44awFfdi5hVSFj05MsWlIFWHD1RpbVoxFx"/>
+<div class="absolute inset-0 flex flex-col justify-center items-center text-center p-8">
+<h3 class="text-on-tertiary-container font-headline text-3xl font-black italic tracking-tighter mb-2">New Drops</h3>
+<div class="w-12 h-[1px] bg-on-tertiary-container mb-4"></div>
+<p class="text-on-tertiary-container uppercase tracking-[0.3em] text-[10px] font-bold">Limited Arrivals</p>
+</div>
+</div>
+</div>
+<!-- Kids -->
+<div class="md:col-span-12 group cursor-pointer overflow-hidden relative h-80">
+<img alt="Kids Category" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="fashionable young child wearing minimalist knitwear and playing in a minimalist aesthetic studio space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_BJ8pslH22_TYl2q0ovKbcFAnCq1mkF6Wg7HAQUHKXSlICEOhAtWQ4ryGN84eaUCvCOUEKvX5KST2bkwOx246ybfqASlzJyam6gkCz20xmlXbgNVmqr9RRHl7Mumrwm1gHf_mwERN5d1PozFQ7KYchcStAhU6sc42jWnRmmIVt6hIdxMgsOLf1YjfFyjgDmIoDyr5jrhEVNWHQA-S_3M7daE6LJXZHK9jv4IRIfVzoCE_9puY0-HPLA80cmrHLiZ9B_28qkY4Vm4w"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+<div class="text-center">
+<h3 class="text-white font-headline text-5xl font-bold mb-2">Kids</h3>
+<p class="text-white uppercase tracking-[0.5em] text-xs">Small Wonders</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trending Section: Product Cards -->
+<section class="bg-surface-container-low py-32">
+<div class="container mx-auto px-8">
+<div class="flex justify-between items-end mb-16">
+<div>
+<span class="text-tertiary font-bold uppercase tracking-widest text-[10px]">Most Coveted</span>
+<h2 class="font-headline text-4xl font-bold tracking-tight text-on-surface mt-2">Trending This Week</h2>
+</div>
+<a class="text-on-surface-variant hover:text-on-surface text-sm font-semibold uppercase tracking-widest flex items-center gap-2 group border-b border-outline-variant/30 pb-1" href="#">
+                        View All Collections
+                        <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform" data-icon="trending_flat">trending_flat</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Product Card 1 -->
+<div class="group">
+<div class="relative aspect-[3/4] overflow-hidden bg-surface-container-lowest mb-6">
+<img alt="Product" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" data-alt="close up of a premium charcoal wool coat with impeccable stitching details on a white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXug3hFo_Hw4PmQYy1zBZ2VQGlxhUdWyT4mpfs8w_O4eQUp22eH8MwU0ar4zv-qNDeGYzXiYLpg5OlgY8xKD0z8mRxkiO4aicE5F9Rbqcxc3YupEfe-PxPkKheKKt5SYgHDN414tMcsox2Np669hMCRNwPWvxNiRRP3WWV8WJCSdjVbcNCsBIWLZ302Pt9e3fUKWA4mxZhr_V9OjzzjKFMWtS-_EnzpRxuheQqzssheByJ4kxSpXf4iYcUwWffx8IRCDm7Rq3-h2-T"/>
+<div class="absolute top-4 right-4">
+<button class="w-10 h-10 bg-white flex items-center justify-center hover:bg-on-surface hover:text-white transition-colors duration-300">
+<span class="material-symbols-outlined text-xl" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 w-full translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+<button class="w-full bg-tertiary text-on-tertiary font-bold uppercase py-4 text-xs tracking-widest hover:bg-on-tertiary-container transition-colors">Quick Add +</button>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest mb-1">Couture</p>
+<h3 class="font-headline text-lg font-bold mb-2">Tailored Wool Sculpt Coat</h3>
+<p class="font-semibold text-on-surface">৳ 42,500</p>
+</div>
+<!-- Product Card 2 -->
+<div class="group">
+<div class="relative aspect-[3/4] overflow-hidden bg-surface-container-lowest mb-6">
+<img alt="Product" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" data-alt="minimalist cream colored puffer vest layered over a premium knit sweater with focus on texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnfntNPuEsq96XjZJLvJcyfPot-9y_g3MNTGJ3jOZsyLJn9JXyuc-4JZZjgIaJN3DD75sZRT_6sFNchOaSovixofXDLcsQ-GEFaPPUQlkKpBNWngpWnF9VjpXZIQjOfnxXx25jGoObrVkaVaAae0PgHH8BnlS6VUNrz5IX4CtbzVQitG7AluK4D5kUckmeeND8cpo4DdXPYJgUJmiG30SVrqOcjQ9pYh5x0u7vemF3aAhZ6xRfwi_kiw8e0NHz1TETQHjPgNX0WR8M"/>
+<div class="absolute top-4 right-4">
+<button class="w-10 h-10 bg-white flex items-center justify-center hover:bg-on-surface hover:text-white transition-colors duration-300">
+<span class="material-symbols-outlined text-xl" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 w-full translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+<button class="w-full bg-tertiary text-on-tertiary font-bold uppercase py-4 text-xs tracking-widest hover:bg-on-tertiary-container transition-colors">Quick Add +</button>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest mb-1">Essential</p>
+<h3 class="font-headline text-lg font-bold mb-2">Quilted Studio Vest</h3>
+<p class="font-semibold text-on-surface">৳ 18,200</p>
+</div>
+<!-- Product Card 3 -->
+<div class="group">
+<div class="relative aspect-[3/4] overflow-hidden bg-surface-container-lowest mb-6">
+<img alt="Product" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" data-alt="pure white oversized linen shirt on a wooden minimalist hanger with soft natural window light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZLxYmptGNoTes4X2Xi5DD144S5uZcJD8OrLDuAeJpMX7q2HArzq5Me_8sDmopTzNV7sMwa9qPItm2EWJAzOzZ_Niy23BautkWoBnSco9JOrxuKDJR5Y_6HWazVJt5cX-zUhVJkaiVFJpXwDNvDR-k8syGPUgA-GVD68VsGgPyq9kIKl1NcLNc9cPLwXAqg5C_JXs7vQVWoEfg7pR-RdkKXDqoyUHi3a8NJXbwvEp2D9ZnyqXfJTXn54c8GyQ2cSMGl1p4MfD7xhcY"/>
+<div class="absolute top-4 left-4">
+<span class="bg-tertiary text-on-tertiary text-[10px] uppercase font-bold px-2 py-1">Craftsmanship</span>
+</div>
+<div class="absolute top-4 right-4">
+<button class="w-10 h-10 bg-white flex items-center justify-center hover:bg-on-surface hover:text-white transition-colors duration-300">
+<span class="material-symbols-outlined text-xl" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 w-full translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+<button class="w-full bg-tertiary text-on-tertiary font-bold uppercase py-4 text-xs tracking-widest hover:bg-on-tertiary-container transition-colors">Quick Add +</button>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest mb-1">Heritage</p>
+<h3 class="font-headline text-lg font-bold mb-2">Hand-Loomed Linen Shirt</h3>
+<p class="font-semibold text-on-surface">৳ 12,800</p>
+</div>
+<!-- Product Card 4 -->
+<div class="group">
+<div class="relative aspect-[3/4] overflow-hidden bg-surface-container-lowest mb-6">
+<img alt="Product" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" data-alt="modern architectural high-heel leather boots in matte black set against a soft beige curved wall" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDon4cnX89-Ano0jWAQDZKE78VidKppDLPEn3aLAtBNKpez-c5FIVVpUShIekUbjIGBhKSDk48FQATDbQmcjk76vmp32Wh-yBXBq-6zq49DhFnOU0s87jYvu92SVuAsb277p9N88Lhuaub6PxkwzS3EgyJN376dyb8YQFrgPj72o4xBG1k-sM34yZnnOqdNJTD736EZVLjHqeGB_N1qEODZum36dRDnahjqKer9DMj3uFmYZNUM926bIWo916L_bDGDDHZLGJyIRzcG"/>
+<div class="absolute top-4 right-4">
+<button class="w-10 h-10 bg-white flex items-center justify-center hover:bg-on-surface hover:text-white transition-colors duration-300">
+<span class="material-symbols-outlined text-xl" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 w-full translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+<button class="w-full bg-tertiary text-on-tertiary font-bold uppercase py-4 text-xs tracking-widest hover:bg-on-tertiary-container transition-colors">Quick Add +</button>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest mb-1">Accessories</p>
+<h3 class="font-headline text-lg font-bold mb-2">Monolith Ankle Boot</h3>
+<p class="font-semibold text-on-surface">৳ 24,900</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Flash Sale Section -->
+<section class="py-24 bg-on-surface text-surface relative overflow-hidden">
+<div class="container mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="relative z-10">
+<h2 class="font-headline text-5xl md:text-6xl font-black mb-6 leading-tight">Flash Sale: <br/> Heritage Silks</h2>
+<p class="text-surface/70 text-lg mb-10 max-w-md">Own a piece of tradition. Limited edition Jamdani weaves now available at exclusive rates for 24 hours only.</p>
+<div class="flex gap-4 md:gap-8 mb-12">
+<div class="flex flex-col">
+<span class="text-4xl md:text-6xl font-bold font-headline">08</span>
+<span class="text-[10px] uppercase tracking-widest text-surface/50 font-bold">Hours</span>
+</div>
+<span class="text-4xl md:text-6xl font-light opacity-30">:</span>
+<div class="flex flex-col">
+<span class="text-4xl md:text-6xl font-bold font-headline">42</span>
+<span class="text-[10px] uppercase tracking-widest text-surface/50 font-bold">Mins</span>
+</div>
+<span class="text-4xl md:text-6xl font-light opacity-30">:</span>
+<div class="flex flex-col">
+<span class="text-4xl md:text-6xl font-bold font-headline">15</span>
+<span class="text-[10px] uppercase tracking-widest text-surface/50 font-bold">Secs</span>
+</div>
+</div>
+<button class="bg-tertiary text-on-tertiary px-12 py-5 font-bold uppercase tracking-widest text-sm hover:bg-tertiary-container transition-colors">Unlock Exclusive Access</button>
+</div>
+<div class="relative h-[500px] bg-surface-container-high/10 overflow-hidden">
+<img alt="Discounted Product" class="w-full h-full object-cover grayscale brightness-75" data-alt="dramatic close up of hand-loomed gold and black silk fabric with intricate traditional geometric patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6BUPBWgaZsGnl6L26aKWe3vaBwXAWcLsO0_MO43rblHcH5Lr3x36PnSRIFic-Hx2ngYkxgvzQLkiz-cesFh4PFbOetrNo8MojFR6EMj82E8eXmz15RD7bq7N9WFLauD8sy_O4Ir6AvFd6XckR2cSZmdC_bCIHDjbQRURBOvX4TQgKKRNSn0CKrDTFfBtvjJU_X9Z2AlUelgJMIJfiTgO09_BkNH-SvKzVSsCRSuYnzx6dIZPAyDFMcKS0m7KAIBNbDR50aRy-_0XJ"/>
+<div class="absolute bottom-8 right-8 bg-surface text-on-surface p-8 shadow-2xl">
+<p class="text-[10px] uppercase tracking-widest font-black text-tertiary mb-2">Signature Piece</p>
+<h4 class="font-headline font-bold text-xl mb-4">Midnight Gold Jamdani</h4>
+<div class="flex items-center gap-4">
+<span class="text-2xl font-bold">৳ 65,000</span>
+<span class="line-through text-on-surface/40 text-sm">৳ 82,000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Aesthetic abstract shape -->
+<div class="absolute -top-24 -right-24 w-96 h-96 border border-surface/5 rounded-full"></div>
+</section>
+<!-- Instagram Gallery -->
+<section class="py-32">
+<div class="container mx-auto px-8">
+<div class="text-center mb-16">
+<h2 class="font-headline text-3xl font-bold mb-4 tracking-tighter">Shop the Look</h2>
+<p class="text-on-surface-variant uppercase tracking-[0.2em] text-xs">Mention us @DigitalAtelier to be featured</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+<div class="aspect-square bg-surface-container-high group overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="social media style photo of a person wearing a bright yellow dress in a minimalist urban setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTKWLQP1jBU86jPURS9x_8LWQ9nqQ7fg8LO0kcXt3Fkd8JsaEnWdGFoyTeqNqIv_SnhI5nllPDtrVGf-qZawj5dIMlT-OkE037VYvp0x938_TZVTS0e1N5Zk-v5vmKL2Syxc6fiUKSsjOK3QW1V4vEUxfQt0j3duNwVvdq5JtyOwFrv3Ebu0k2WJG4grz7waG92hc2RqqXkZJRFYTczNSl5rVLD6V7rwLixQhSH6om2XULfUk5oIHZ30Sk3yBDjYTY1hpgk_SblqLB"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="shopping_bag">shopping_bag</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-container-high group overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="street style fashion photo of a model in a minimalist blazer and denim looking away from camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADWBAts3cjoEctYjebyA5UyFxnPyN3WUeEtm5TEQldlGMM-_gazwelRMo416fDkK8apPNS-QiA1sRhDOtQf0jS98W-TgvBOBeEYiX9WcgUUSDelgjYt5HzxmDvDzXS2XoyBK5xKQ5zErP9OtLaufLfot1maulr45AIT4FYsS-i6MZ3fna1WO02vUxlMFFTseTUYw2vEuztWK-ofllylO-dVqbJ3dljcfd5WZJmIGhNjVH4itJhkFdC6TuALR1h9e-csc4dkWWsCMsT"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="shopping_bag">shopping_bag</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-container-high group overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="fashion model sitting in an architectural chair wearing oversized linen trousers and top" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxcEFSPD7nXC0SfnffibVc9_SjDR0ME0WXqJfl7Nj7DXHmdtYuCDawJPhBXwLzcWb8a0RiBR_VklrdUveTWrUEk0Ff3hZCJiTr_wvkb4W1QoZbN-KAT4o8kAdO6Qjvrvx3JfOAVq3eprmko-bHARTsiIjm_9RROztV_iTE7udtl3rfEHNhVgXD5IsVTifaHcILoLkbERHRq4MUdGq5nmlG4q2gxKw3_agWY4598HM9-hf2IKNJbbnDK4B7MC4v_vOc0ZkVzQPmecv9"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="shopping_bag">shopping_bag</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-container-high group overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="close up of premium leather handbag and accessories on a cafe table in Paris" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdP_RTDSNRgSIqY9i2ili1dEwdute_CNhPtQjtLEIIA8OXP0I91C0oLPLH_cQNjWWRyXmhZ3lqinPGuo4BRZ8MQ-rEDmUdC5HrsARS0xrsenYKUyEccwWstSuas9i2MytdgxGhRkARsO54XROy4NM11oXhJ_hNhLtBuE579JuzwrOMTLtNFCZ7ytuQrgalhRr1kG1oMXFk6ZS4H26Sliw5W8EtrR5Wbi-cuDOdqGKNRQ4913oFFoTRlFH-4AfHu7wxREGNFLOflwfL"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="shopping_bag">shopping_bag</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-container-high group overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="person walking with luxury shopping bags in a high-end fashion district with blurred backgrounds" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvG5AFkx9R6eKrNJUVIUwkU2IK7Fsm3w0xuSsxxMMeEK2P5x56cDek9GjxbEH9tAr27bjW1PoM2cC1tigEKAbGUYXGsPJoGNHYOOWBOp-NYRmyC6xA2bpwjA-u5Ce31TLR2183DlwcdDfKJc4oKawgRcvIbFqOgWd-WV7BISTr6bqMC5zCKMowGrTpQz8U3Ygrzuk5kf0hu0I_Mvo1vd15syHiO_dqHbTzujdegh-car08XfFSH4Abw8ILgUdfvSynf34KM58c-nE5"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="shopping_bag">shopping_bag</span>
+</div>
+</div>
+<div class="aspect-square bg-surface-container-high group overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="overhead shot of a curated fashion outfit laid out on a clean marble floor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJyb-ifz_gcMZSL8W14JxQYZ8FS0cpkY3ItYlA2OwF4KV2bDDnj01C0ANaiiyo3939IYNtnGSWP9YXhG9LGhOSmKvFNrmHoSWzZN1hpk1GDQR4r2hfobkVYHo1xuX1489f48OPQWefhfm202dROdmtjkbp0sYN97pBvcII7UcVt94WkQ6p1flSrHtZBtsCrMA6g0oFvaGGbGK29Iu5BXvKXG9Ol9R4yAJqA7nQf37Lkm0z1xYpU7uagMwgoZOcydL4nKzgrcvsLPnQ"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="shopping_bag">shopping_bag</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trust Badges -->
+<section class="border-y border-outline-variant/10 py-16 bg-white">
+<div class="container mx-auto px-8 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-tertiary text-4xl mb-4" data-icon="local_shipping">local_shipping</span>
+<h4 class="font-bold text-sm uppercase tracking-widest mb-2">Priority Shipping</h4>
+<p class="text-xs text-on-surface-variant">2-3 day delivery across BD &amp; India HQ hubs.</p>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-tertiary text-4xl mb-4" data-icon="verified_user">verified_user</span>
+<h4 class="font-bold text-sm uppercase tracking-widest mb-2">Secure Payment</h4>
+<p class="text-xs text-on-surface-variant">Encrypted SSL gateway for all major cards.</p>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-tertiary text-4xl mb-4" data-icon="autorenew">autorenew</span>
+<h4 class="font-bold text-sm uppercase tracking-widest mb-2">Complimentary Returns</h4>
+<p class="text-xs text-on-surface-variant">Hassle-free 14-day collection from your door.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-neutral-50 dark:bg-neutral-950 w-full pt-20 pb-10 font-['Inter'] text-xs uppercase tracking-[0.1em]">
+<div class="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
+<div>
+<a class="font-bold text-neutral-900 dark:text-neutral-50 text-xl block mb-6" href="#">Digital Atelier</a>
+<p class="normal-case text-neutral-500 tracking-normal mb-6">A digital boutique celebrating the intersection of contemporary minimalism and South Asian craft heritage.</p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined cursor-pointer hover:text-gold-700" data-icon="public">public</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-gold-700" data-icon="camera">camera</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-gold-700" data-icon="mail">mail</span>
+</div>
+</div>
+<div>
+<h5 class="text-neutral-900 dark:text-white font-bold mb-6">Collections</h5>
+<ul class="flex flex-col gap-4 text-neutral-400 dark:text-neutral-500">
+<li><a class="hover:text-gold-700 transition-colors" href="#">Couture</a></li>
+<li><a class="hover:text-gold-700 transition-colors" href="#">Ready to Wear</a></li>
+<li><a class="hover:text-gold-700 transition-colors" href="#">Artisanal Jewellry</a></li>
+<li><a class="hover:text-gold-700 transition-colors" href="#">Seasonal Edit</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-neutral-900 dark:text-white font-bold mb-6">Support</h5>
+<ul class="flex flex-col gap-4 text-neutral-400 dark:text-neutral-500">
+<li><a class="hover:text-gold-700 transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="hover:text-gold-700 transition-colors" href="#">Terms of Service</a></li>
+<li><a class="hover:text-gold-700 transition-colors" href="#">Shipping &amp; Returns</a></li>
+<li><a class="hover:text-gold-700 transition-colors" href="#">Heritage Story</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-neutral-900 dark:text-white font-bold mb-6">Newsletter</h5>
+<p class="normal-case text-neutral-500 tracking-normal mb-4">Join our Atelier list for early access and editorial stories.</p>
+<div class="flex border-b border-neutral-300 py-2">
+<input class="bg-transparent border-none focus:ring-0 w-full text-xs placeholder:uppercase" placeholder="Email Address" type="email"/>
+<button class="hover:translate-x-1 transition-transform">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-8 mt-20 pt-10 border-t border-neutral-200/30 flex flex-col md:flex-row justify-between items-center gap-4">
+<span class="text-neutral-400 dark:text-neutral-500">© 2024 Digital Atelier. Crafted in South Asia.</span>
+<div class="flex gap-4">
+<img alt="PayPal" class="h-4 grayscale opacity-50" data-alt="paypal logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr_N0QVD3_-Njia9CXmq98CmMygM8hw9ae8nN1wQPQJQrpWqOj1VbhT-s65THc7PyKvtNxTJYwhEqbTh3hLCErxvXGCqMc7PJSie5d1nV-5WnxcxYAtH-Nnd-s_QX-SjxUU3klZzOpLUflYzerQlZUBwKbcwnt8PAdUl3HUdzg9LZgJ6FBbnprH8lom6rBVq2WV6hUx4YevWRogm-qWM-MhCH_YO3tcDL23l6Zw-5wEJXiJBWf3WtB_BQqf3rslz6nVig2ZpJ0eIhG"/>
+<img alt="Visa" class="h-4 grayscale opacity-50" data-alt="visa card logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmWuonPV71CcyqF0XNd4_pKtcUs1dH8oavH7KQYYemamWamb01YvBAA24onB38vvlpxW4B1kHWF4XQdYMOyARjMQpOvAL7-jIWO2GLyXD8UmXPOpklj4TbuWn78RofGUbOALjDBf9ELfTZ6tsdn0uFl-HhvYJsyeRaZNwTUMmwEdXRk93RkQNysOTmIA9qF2KGoXTg3zoCbMifxyGaNCFvRCSvvwtnU7c4uqxG1tVkgSVuh2YxGPjuQUsZKBLLbzjIzauvjoWt_eAa"/>
+<img alt="Mastercard" class="h-4 grayscale opacity-50" data-alt="mastercard logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDViHIVwrwvqm4kkJWeU341jUFAmCW0IDiV9kx_7MtJd0HUWd3qVfwIuDGN7OHln89x5MpHypx6jbAob9-LbEwvcIzcPA9JvuCM_QmxgySTR5uhRqIfpO7AxyoIK882ZkEPCGaubmd0ocbmYnnTCOchTWvj-CTNeF6-qT86cqW9QdjrNdi2wUtBM58i8EoIeOxB4UvjGjKF_SGu7ke5-Xz85_lZ0j_VWybvFivuwDEDVHnlUIERDgGz0B0guZ3OeRSUEC2tSaAK-6t2"/>
+</div>
+</div>
+</footer>
+<!-- Mobile Bottom Navigation -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-lg border-t border-neutral-100 flex justify-around items-center h-16 z-50">
+<button class="flex flex-col items-center text-neutral-900">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-[10px] uppercase font-bold tracking-tighter">Home</span>
+</button>
+<button class="flex flex-col items-center text-neutral-400">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="text-[10px] uppercase font-bold tracking-tighter">Browse</span>
+</button>
+<button class="flex flex-col items-center text-neutral-400">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="text-[10px] uppercase font-bold tracking-tighter">Bag</span>
+</button>
+<button class="flex flex-col items-center text-neutral-400">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] uppercase font-bold tracking-tighter">Profile</span>
+</button>
+</div>
+</body></html>

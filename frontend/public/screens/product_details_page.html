@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#acb3b4",
+                    "surface-bright": "#f9f9f9",
+                    "on-surface-variant": "#596061",
+                    "on-tertiary-container": "#584500",
+                    "tertiary": "#745c00",
+                    "surface-tint": "#5e5e5e",
+                    "inverse-surface": "#0c0f0f",
+                    "on-secondary-container": "#505252",
+                    "error-container": "#ff8b9a",
+                    "secondary-fixed-dim": "#d4d4d4",
+                    "on-background": "#2d3435",
+                    "secondary-dim": "#525354",
+                    "on-tertiary-fixed": "#413200",
+                    "error": "#9e3f4e",
+                    "surface-container-highest": "#dde4e5",
+                    "surface": "#f9f9f9",
+                    "surface-container-low": "#f2f4f4",
+                    "tertiary-fixed": "#f5ce53",
+                    "primary-dim": "#525252",
+                    "on-tertiary": "#fff8ef",
+                    "on-surface": "#2d3435",
+                    "inverse-primary": "#ffffff",
+                    "primary-fixed": "#e2e2e2",
+                    "on-secondary-fixed": "#3e4040",
+                    "tertiary-fixed-dim": "#e6c047",
+                    "secondary": "#5e5f60",
+                    "error-dim": "#4f0116",
+                    "on-secondary-fixed-variant": "#5a5c5c",
+                    "surface-variant": "#dde4e5",
+                    "on-tertiary-fixed-variant": "#634e00",
+                    "on-primary": "#f8f8f8",
+                    "primary": "#5e5e5e",
+                    "outline": "#757c7d",
+                    "inverse-on-surface": "#9c9d9d",
+                    "secondary-fixed": "#e2e2e2",
+                    "on-error": "#fff7f7",
+                    "tertiary-dim": "#665100",
+                    "on-error-container": "#782232",
+                    "tertiary-container": "#f5ce53",
+                    "secondary-container": "#e2e2e2",
+                    "on-secondary": "#f9f9f9",
+                    "surface-container": "#ebeeef",
+                    "background": "#f9f9f9",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#5b5b5b",
+                    "surface-dim": "#d3dbdd",
+                    "on-primary-fixed": "#3f3f3f",
+                    "primary-container": "#e2e2e2",
+                    "primary-fixed-dim": "#d4d4d4",
+                    "surface-container-high": "#e4e9ea",
+                    "on-primary-container": "#525252"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0px",
+                    "lg": "0px",
+                    "xl": "0px",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-tertiary-container selection:text-on-tertiary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl flex justify-between items-center px-8 h-20 w-full">
+<div class="flex items-center gap-12">
+<span class="text-2xl font-bold tracking-tighter text-neutral-900 dark:text-neutral-50 font-['Plus_Jakarta_Sans']">Digital Atelier</span>
+<div class="hidden md:flex gap-8">
+<a class="text-neutral-900 dark:text-white border-b border-neutral-900 dark:border-white pb-1 font-['Plus_Jakarta_Sans'] tracking-tight transition-colors duration-300" href="#">Couture</a>
+<a class="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors duration-300 font-['Plus_Jakarta_Sans'] tracking-tight" href="#">Craft</a>
+<a class="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors duration-300 font-['Plus_Jakarta_Sans'] tracking-tight" href="#">Heritage</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-surface-container-high px-4 py-2">
+<span class="material-symbols-outlined text-sm opacity-50 mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 font-body" placeholder="Search the Atelier..." type="text"/>
+</div>
+<span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">favorite</span>
+<span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">shopping_bag</span>
+</div>
+</nav>
+<main class="pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
+<!-- Product Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+<!-- Image Gallery Column -->
+<div class="lg:col-span-7 flex flex-col-reverse md:flex-row gap-4">
+<!-- Thumbnails -->
+<div class="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto no-scrollbar md:w-24 flex-shrink-0">
+<img class="w-20 h-24 md:w-full md:h-32 object-cover cursor-pointer border border-on-surface/10 hover:border-on-surface transition-colors" data-alt="Close-up detail of high-quality ivory silk fabric with intricate traditional embroidery hand-stitched with golden metallic threads" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9mhK3pgo40diFJH1BCIY17LLVHn31mPQYWbtqkiiVF3vzlAbD6ATWiZ6dduA4dS87uf4FKps5bGqCInql5a9S7WrIkfy5gghrLf3CXmS_TPmPLlFoeONZ2Mw5oC4bkTryDwts-31Z4IeF8_CvTowx1083ANpPDRKI0tUZPFIvWtw6dv1F8MAejAHRM7OhChtu28p53goxLJwraEoCnDx4668qPBRbQLwaEtvZCqJw1UNFNCwj-qXpvqI9daLy35dDWcttMo7Ta2Jn"/>
+<img class="w-20 h-24 md:w-full md:h-32 object-cover cursor-pointer border border-on-surface/10 hover:border-on-surface transition-colors" data-alt="Minimalist high-fashion portrait of a model wearing a structured beige couture jacket against a soft neutral studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjTGDSERSj54nAbX1seBAlJXIkwmzhPUCfrCjKmTRb7tH2PW6RWqaR0XwS5MOXAzQe-Vf_10fbBhIJk4N3CnZRh84QOswKPlISFSUemn9l8orCbsgn0obdsZ1Dvs5kupR4Xnq8rOuNDmKw3pTIftkgsIrgwQqPtr37xLPA7GIcBVoI0y7dwsYhnXFQi7PkkpTNiBxUo5q5Vfc5dmEO7FDjlh4gXo81G4NmChRR6_fqhTKUzkcD_8HMQ7CGtvpuiz6z2Sct7634AQVK"/>
+<img class="w-20 h-24 md:w-full md:h-32 object-cover cursor-pointer border border-on-surface/10 hover:border-on-surface transition-colors" data-alt="Editorial shot of a long tailored linen dress with architectural pleats and a sharp geometric neckline in soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlyaHwrp8R_u99ItCUS3RRQFdXVlPsmKqVd9bbwBMaYUXo3_5X7TblMHaCp-ukmAtZbnA-ALnypD7LsNg93Umn2BEHqXoXuc-ZPWH2O22VrjHE7RlVR7Xv578xdx-W6KDOg0KjoS3Tp9OjhBJ0ucPWdLgaTkAv_BojX4DyXSGBiEUMmIway9WCAKDx84mlCFBKzzC5qudHEBDuHikeZYxz6ub4XzJgyupM-3aT6hau3NC6aTRRY13cbEWBctYQEFm1hFAx3poE2dhF"/>
+<img class="w-20 h-24 md:w-full md:h-32 object-cover cursor-pointer border border-on-surface/10 hover:border-on-surface transition-colors" data-alt="Back view of a garment showing precision tailoring and hidden luxury finishes in high-contrast cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCm0BVXzkuuymhxHzS2q1Pejd570Ghj8tDqNo1wVXC1QCEB7mUqHIp9fOFOkZhfowGqP-6eDKwM0hwWA5pkewA46BVmGjHKHClzgngYBEl0M_bJx1eBYbp_MR3mRknvUyoFdPCSJFJNp9AyBOshjx5ITtKtAEI8_S4sOKwonSXK6Byl8MOOYxjUJvXdtMJvE_BFKqtonxARxoeYetJlT12qZbSLVsYswrm5gd5J4VYzSRYSyFhuODg8c8xoPhekeEg8kEkiQDSSvGUd"/>
+</div>
+<!-- Main Image -->
+<div class="flex-grow group relative bg-surface-container-low overflow-hidden">
+<img class="w-full h-[600px] object-cover transition-transform duration-700 group-hover:scale-110" data-alt="Full-length editorial product shot of a luxury handcrafted silk tunic with traditional South Asian motifs in a minimal architectural setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9hFXMhMG3mB4rzob_ZyWZ6LGTjT8rqUmy74AGw5gAbbQreg5bj5xzuz--UPrJh6bNM3GN6gMBK3qYsNvEo6sJ-MOePfqBe1Ppf3sZkBQ_xPh5IFaCEsMCZYUJexc5R43m_XGAiCqVjJ67wLCD0FJCcxCxQ-WMWQeL4gqzS8DMluOhNl1aDev3Qph5D4o6ddKpTLjoeuYjUBDwlKnCwW0V8GJY0tX1Zls8INI0mISqmKcANJSpKggExgHOvXnm49EpUFJYQeGzsoK4"/>
+<div class="absolute top-4 left-4 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 text-[10px] tracking-[0.2em] uppercase font-semibold">
+                        Heritage Craft
+                    </div>
+</div>
+</div>
+<!-- Product Details Column -->
+<div class="lg:col-span-5 flex flex-col">
+<div class="mb-8">
+<h1 class="text-4xl lg:text-5xl font-extrabold tracking-tighter mb-2">The Raw Silk Atelier Tunic</h1>
+<p class="text-on-surface-variant font-body mb-6 max-w-md">Hand-woven in Dhaka using traditional Jamdani techniques, redefined for the modern global silhouette. A testament to enduring South Asian artistry.</p>
+<div class="flex items-end gap-4">
+<span class="text-3xl font-bold">৳ 24,500</span>
+<span class="text-on-surface-variant line-through mb-1">৳ 28,000</span>
+<span class="text-tertiary font-bold text-sm mb-1 uppercase tracking-widest bg-tertiary-container px-2 py-0.5">12.5% OFF</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-2">Approx. ₹ 18,900 / $225 USD</p>
+</div>
+<!-- Size Selection -->
+<div class="mb-8">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs uppercase tracking-[0.15em] font-semibold">Select Size</span>
+<a class="text-xs underline text-on-surface-variant hover:text-on-surface transition-colors" href="#">Size Guide</a>
+</div>
+<div class="grid grid-cols-5 gap-2">
+<button class="py-4 border border-outline-variant/30 hover:border-on-surface transition-all text-sm">XS</button>
+<button class="py-4 border border-on-surface bg-on-surface text-surface text-sm">S</button>
+<button class="py-4 border border-outline-variant/30 hover:border-on-surface transition-all text-sm">M</button>
+<button class="py-4 border border-outline-variant/30 hover:border-on-surface transition-all text-sm">L</button>
+<button class="py-4 border border-outline-variant/30 opacity-40 cursor-not-allowed text-sm relative overflow-hidden">
+                            XL
+                            <div class="absolute inset-0 flex items-center justify-center">
+<div class="w-[140%] h-[1px] bg-outline rotate-45"></div>
+</div>
+</button>
+</div>
+<div class="mt-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-sm" style="font-variation-settings: 'FILL' 1;">error</span>
+<span class="text-xs text-error font-medium">Only 2 left in stock — High demand items</span>
+</div>
+</div>
+<!-- CTA Buttons -->
+<div class="flex flex-col gap-3 mb-10">
+<button class="w-full bg-on-surface text-surface py-5 font-bold uppercase tracking-[0.2em] text-sm hover:opacity-90 transition-opacity">Add to Atelier Bag</button>
+<button class="w-full bg-tertiary text-on-tertiary py-5 font-bold uppercase tracking-[0.2em] text-sm hover:opacity-90 transition-opacity">Reserve via Concierge</button>
+</div>
+<!-- Delivery & Info -->
+<div class="space-y-4 border-t border-outline-variant/10 pt-8">
+<div class="flex gap-4">
+<span class="material-symbols-outlined opacity-60">local_shipping</span>
+<div>
+<p class="text-sm font-semibold mb-1">Express Regional Delivery</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">Dhaka/Chittagong: 24-48 hours<br/>Delhi/Mumbai/Kolkata: 3-5 business days</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined opacity-60">verified</span>
+<div>
+<p class="text-sm font-semibold mb-1">Heritage Authentication</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">Every piece comes with a digital certificate of origin and artisan signature.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Review Section -->
+<section class="mt-32 pt-20 border-t border-outline-variant/10">
+<div class="flex flex-col md:flex-row justify-between items-start gap-12">
+<div class="w-full md:w-1/3">
+<h2 class="text-3xl font-bold tracking-tighter mb-4">Client Feedback</h2>
+<div class="flex items-center gap-4 mb-2">
+<div class="flex text-tertiary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+<span class="text-lg font-bold">4.8</span>
+</div>
+<p class="text-sm text-on-surface-variant">Based on 124 verified atelier purchases.</p>
+<button class="mt-8 px-6 py-3 border border-on-surface text-xs uppercase tracking-widest font-bold">Write a Review</button>
+</div>
+<div class="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="p-8 bg-surface-container-lowest">
+<div class="flex justify-between mb-4">
+<span class="text-xs font-bold uppercase tracking-widest">Ayesha K.</span>
+<span class="text-[10px] text-on-surface-variant">OCT 2023</span>
+</div>
+<p class="text-sm leading-relaxed text-on-surface-variant italic mb-4">"The drape of the raw silk is unparalleled. It breathes beautifully in the Dhaka humidity while maintaining its architectural shape."</p>
+<div class="flex text-tertiary text-xs">
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<div class="p-8 bg-surface-container-lowest">
+<div class="flex justify-between mb-4">
+<span class="text-xs font-bold uppercase tracking-widest">Rohan M.</span>
+<span class="text-[10px] text-on-surface-variant">SEP 2023</span>
+</div>
+<p class="text-sm leading-relaxed text-on-surface-variant italic mb-4">"Impressed with the delivery speed to Mumbai. The packaging itself was a work of art. The gold embroidery is subtle but prestigious."</p>
+<div class="flex text-tertiary text-xs">
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined scale-75" style="font-variation-settings: 'FILL' 0;">star</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Complete the Look Slider -->
+<section class="mt-32">
+<div class="flex justify-between items-end mb-12">
+<div>
+<span class="text-[10px] uppercase tracking-[0.3em] font-bold text-tertiary mb-2 block">Curated Ensemble</span>
+<h2 class="text-4xl font-extrabold tracking-tighter">Complete the Look</h2>
+</div>
+<div class="flex gap-4">
+<button class="w-12 h-12 flex items-center justify-center border border-outline-variant/30 hover:bg-on-surface hover:text-surface transition-all">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center border border-outline-variant/30 hover:bg-on-surface hover:text-surface transition-all">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<!-- Related Item 1 -->
+<div class="group cursor-pointer">
+<div class="relative overflow-hidden bg-surface-container-low aspect-[3/4] mb-4">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Modern minimalist leather flat sandals with geometric straps on a white marble pedestal" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClqI3qKeMFK3Lo1PUwh4PUXzh5n4J3eQzpC9gDyAJsBFqNYfdAFmRm-UgV4Nx09v0xdoAdybmtiejUv1nZvygiW_-QcdKCaHS92nNOZ2piP0WCxCurJGtsoP4R2X89pIuYvILZfMCE5XCWaQUKyAuVTdG_ED337nQSPFU1k1-QzMIU2HsMNUgnVKeLR589Q3NlcWYEMiVBt204dhrzYfLznoMUg7iqscwjuVWDuHxgWC5iJgHDUFfwjVyIYYS4zi8AeUMJS5P0RzAH"/>
+<div class="absolute bottom-0 left-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform bg-on-surface/90 text-surface w-full text-center py-2 text-[10px] uppercase tracking-widest font-bold">
+                            Quick Add
+                        </div>
+</div>
+<h3 class="text-xs uppercase tracking-widest font-bold mb-1">Architectural Sandal</h3>
+<p class="text-xs text-on-surface-variant">৳ 8,200</p>
+</div>
+<!-- Related Item 2 -->
+<div class="group cursor-pointer">
+<div class="relative overflow-hidden bg-surface-container-low aspect-[3/4] mb-4">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Luxury gold-plated drop earrings featuring traditional South Asian filigree work against a dark textured background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARC8CoQt4i6xDySojSju-vp2I4aDwT1quQNjbOHGNwLqhLR-vAz3H52fYY65gJYMr219QjB9MjdN-DFfGRJp35CEJ2ZvwnoN0KaZPKHhzGudpn4mbAOjaVn8rIIerydD1Z8NhNEqXHjHaa76gkj1OpO2i8I2JCe_GTDe9zPlWTfjNOD4L0qV8mFqryKvg_bIMT_2de5tmGK3BVjdYx3hEEtx9gpKkssMjIgGbGoKJfYWFhASzkoMtAbc7ChafYSClc8QIYkC62ZSv3"/>
+<div class="absolute bottom-0 left-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform bg-on-surface/90 text-surface w-full text-center py-2 text-[10px] uppercase tracking-widest font-bold">
+                            Quick Add
+                        </div>
+</div>
+<h3 class="text-xs uppercase tracking-widest font-bold mb-1">Heritage Drop Earring</h3>
+<p class="text-xs text-on-surface-variant">৳ 4,500</p>
+</div>
+<!-- Related Item 3 -->
+<div class="group cursor-pointer">
+<div class="relative overflow-hidden bg-surface-container-low aspect-[3/4] mb-4">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Sleek structured designer handbag in buttery tan leather with minimal hardware and clean lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqhIByIRh9JGZuQEFoDMhNLtt_qCPy_llzu06rN_XRyGyshw6MXFSm6-vk_pEyDFhwYm2XRhanew_aLKeYCY2Ca2ALxo_546w6h1N5IE1eJtReuRC_Jw_GyAXv5eO728JwPYseGKOZWbXtXl1O5SBc6nygkdlmqd3xvIBih_75hAZbxbVSycVUmgaG_CkY41D1Y9stXumOnNbuvqnEqKPJ2dlUW3LEbSJm32i-Jm8PtRYoZWYTnKoxVVSNCZNOeVkVBG91nkEEXuAC"/>
+<div class="absolute bottom-0 left-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform bg-on-surface/90 text-surface w-full text-center py-2 text-[10px] uppercase tracking-widest font-bold">
+                            Quick Add
+                        </div>
+</div>
+<h3 class="text-xs uppercase tracking-widest font-bold mb-1">Atelier Day Bag</h3>
+<p class="text-xs text-on-surface-variant">৳ 15,900</p>
+</div>
+<!-- Related Item 4 -->
+<div class="group cursor-pointer">
+<div class="relative overflow-hidden bg-surface-container-low aspect-[3/4] mb-4">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Crisp tailored wide-leg trousers in high-quality white linen displayed in a bright airy studio space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjQFgW0XRUQEvrJgFvQVgr5pXm2c3Lf_DzyO0XT5CNHvncDnG533CMYPzzYrXDeIcmL5OKNhFQkRkcqt0dIj9tWnfRtLiiN6HqxD_mb103BgZB5sfv35afDnIIdC1cYTA_jKjEXOg9FlyCelVElByRv8arGzZmVfKdKU_v060671USXlVmLBV9g9s6IEq_kLju20Uuk_v4JEv-qIUqgWqE8LnpVcHEnhUgvnz3-AzKnuq71U7tCGxes0eL4tgVb0p1D0HXB3aSfUyA"/>
+<div class="absolute bottom-0 left-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform bg-on-surface/90 text-surface w-full text-center py-2 text-[10px] uppercase tracking-widest font-bold">
+                            Quick Add
+                        </div>
+</div>
+<h3 class="text-xs uppercase tracking-widest font-bold mb-1">Linen Palazzo Trousers</h3>
+<p class="text-xs text-on-surface-variant">৳ 9,800</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-neutral-50 dark:bg-neutral-950 w-full pt-20 pb-10">
+<div class="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
+<div>
+<span class="font-bold text-neutral-900 dark:text-neutral-50 mb-6 block font-['Inter'] text-xs uppercase tracking-[0.1em]">Digital Atelier</span>
+<p class="text-neutral-400 text-[10px] leading-loose max-w-[200px]">CRAFTING THE FUTURE OF SOUTH ASIAN COUTURE THROUGH RADICAL TRANSPARENCY AND ARTISAN EMPOWERMENT.</p>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-bold text-neutral-900 dark:text-neutral-50 text-[10px] uppercase tracking-[0.1em]">Explore</span>
+<a class="text-neutral-400 text-[10px] uppercase tracking-[0.1em] hover:text-gold-700 transition-colors" href="#">Couture</a>
+<a class="text-neutral-400 text-[10px] uppercase tracking-[0.1em] hover:text-gold-700 transition-colors" href="#">Craft</a>
+<a class="text-neutral-400 text-[10px] uppercase tracking-[0.1em] hover:text-gold-700 transition-colors" href="#">Heritage Story</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-bold text-neutral-900 dark:text-neutral-50 text-[10px] uppercase tracking-[0.1em]">Legal</span>
+<a class="text-neutral-400 text-[10px] uppercase tracking-[0.1em] hover:text-gold-700 transition-colors" href="#">Privacy Policy</a>
+<a class="text-neutral-400 text-[10px] uppercase tracking-[0.1em] hover:text-gold-700 transition-colors" href="#">Terms of Service</a>
+<a class="text-neutral-400 text-[10px] uppercase tracking-[0.1em] hover:text-gold-700 transition-colors" href="#">Shipping &amp; Returns</a>
+</div>
+<div>
+<span class="font-bold text-neutral-900 dark:text-neutral-50 text-[10px] uppercase tracking-[0.1em] mb-6 block">Join the Atelier</span>
+<div class="flex border-b border-outline-variant/30 pb-2">
+<input class="bg-transparent border-none focus:ring-0 text-[10px] uppercase tracking-widest w-full font-body" placeholder="Email Address" type="email"/>
+<button class="material-symbols-outlined text-neutral-400">arrow_forward</button>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-8 mt-20 pt-10 border-t border-neutral-200/10 text-center md:text-left">
+<span class="text-neutral-400 dark:text-neutral-500 font-['Inter'] text-xs uppercase tracking-[0.1em]">© 2024 Digital Atelier. Crafted in South Asia.</span>
+</div>
+</footer>
+
+```</body></html>
