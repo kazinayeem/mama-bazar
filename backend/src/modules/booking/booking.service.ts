@@ -43,8 +43,8 @@ export const listBookings = async (query: BookingQuery) => {
   const offset = (page - 1) * limit;
 
   const conditions: any[] = [];
-  if (query.status) conditions.push(eq(bookings.status, query.status));
-  if (query.paymentStatus) conditions.push(eq(bookings.paymentStatus, query.paymentStatus));
+  if (query.status) conditions.push(eq(bookings.status, query.status as "pending" | "confirmed" | "active" | "completed" | "cancelled"));
+  if (query.paymentStatus) conditions.push(eq(bookings.paymentStatus, query.paymentStatus as "pending" | "partial" | "paid" | "refunded"));
   if (query.search) conditions.push(like(bookings.customerName, `%${query.search}%`));
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -103,8 +103,8 @@ export const createBooking = async (input: {
     bookingType: input.bookingType || "service",
     service: input.service || null,
     productId: input.productId || null,
-    startDate: input.startDate,
-    endDate: input.endDate,
+    startDate: sql`STR_TO_DATE(${input.startDate}, '%Y-%m-%d %H:%i:%s')`,
+    endDate: sql`STR_TO_DATE(${input.endDate}, '%Y-%m-%d %H:%i:%s')`,
     quantity: input.quantity ?? 1,
     price: String(input.price ?? 0),
     discount: String(input.discount ?? 0),

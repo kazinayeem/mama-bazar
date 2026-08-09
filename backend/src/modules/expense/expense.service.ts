@@ -19,8 +19,8 @@ export const listExpenses = async (query: ExpenseQuery) => {
   const offset = (page - 1) * limit;
 
   const conditions: any[] = [];
-  if (query.status) conditions.push(eq(expenses.status, query.status));
-  if (query.search) conditions.push(like(expenses.title, `%${query.search}%`));
+  if (query.status) conditions.push(eq(expenses.status, query.status as "pending" | "approved" | "rejected"));
+  if (query.search) conditions.push(like(expenses.vendor, `%${query.search}%`));
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   const data = await db

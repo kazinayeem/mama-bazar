@@ -25,6 +25,11 @@ import uploadRoutes from "./modules/upload/upload.route";
 import reviewRoutes from "./modules/review/review.route";
 import homepageRoutes from "./modules/homepage/homepage.route";
 import pagesRoutes from "./modules/pages/pages.route";
+import expenseRoutes from "./modules/expense/expense.route";
+import costRoutes from "./modules/cost/cost.route";
+import bookingRoutes from "./modules/booking/booking.route";
+import rentalRoutes from "./modules/rental/rental.route";
+import memoRoutes from "./modules/memo/memo.route";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -80,6 +85,11 @@ app.use("/api/uploads", uploadRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/homepage", homepageRoutes);
 app.use("/api/pages", pagesRoutes);
+app.use("/api/expenses", expenseRoutes);
+app.use("/api/costs", costRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/rentals", rentalRoutes);
+app.use("/api/memos", memoRoutes);
 // home
 app.get("/", (_req, res) => {
   res.json({ success: true, message: "Welcome to Mamabazar API" });

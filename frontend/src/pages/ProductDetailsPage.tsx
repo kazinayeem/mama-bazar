@@ -1,4 +1,4 @@
-import { ChevronRight, ExternalLink, GitCompareArrows, Heart, Minus, Package, Plus, Play, ShoppingBag, Star, Truck, Shield, Zap } from 'lucide-react'
+import { ChevronRight, GitCompareArrows, Heart, Minus, Plus, Play, ShoppingBag, Star, Truck, Shield, Zap } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ProductCard from '../components/common/ProductCard'
@@ -6,7 +6,7 @@ import { SEO, getProductSEO } from '../components/common/SEO'
 import StarRating from '../components/common/StarRating'
 import { useToast } from '../components/common/ToastProvider'
 import { authStorage } from '../lib/authStorage'
-import { formatPrice, salePrice } from '../lib/format'
+import { formatPrice } from '../lib/format'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { addToCart } from '../store/slices/cartSlice'
 import { openCart, toggleCompare, toggleWishlist } from '../store/slices/uiSlice'
@@ -23,7 +23,6 @@ import {
   getVariantEffectivePrice,
   getVariantDiscountPercent,
   hasVariantPriceRange,
-  getProductCardPrice,
 } from '../types'
 
 const infoRow = 'flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0'
@@ -110,8 +109,6 @@ const ProductDetailsPage = () => {
   const [activeColor, setActiveColor] = useState<string | undefined>(product?.colorOptions?.[0]?.name)
   const [activeSize, setActiveSize] = useState<string | undefined>(product?.sizeOptions?.[0])
   const [quantity, setQuantity] = useState(1)
-  const [showFullDesc, setShowFullDesc] = useState(false)
-
   const relatedQuery = useGetRelatedProductsQuery(product?.id || 0, { skip: !product })
   const reviewsQuery = useGetReviewsQuery({ productId: product?.id, limit: 20 }, { skip: !product })
   const [addReview, { isLoading: submittingReview }] = useAddReviewMutation()
@@ -129,8 +126,8 @@ const ProductDetailsPage = () => {
     [product],
   )
 
-  const hasColor = product?.colorOptions && product.colorOptions.length > 0
-  const hasSize = product?.sizeOptions && product.sizeOptions.length > 0
+  const hasColor = Boolean(product?.colorOptions && product.colorOptions.length > 0)
+  const hasSize = Boolean(product?.sizeOptions && product.sizeOptions.length > 0)
   const needsOptions = hasColor || hasSize
 
   const activeVariant = useMemo(
@@ -480,8 +477,8 @@ const ProductDetailsPage = () => {
                   const variantForSize = hasColor && activeColor
                     ? findVariantByOptions(product.variants, activeColor, size)
                     : findVariantByOptions(product.variants, undefined, size)
-                  const isUnavailable = hasColor && activeColor && !variantForSize
-                  const isOos = variantForSize && variantForSize.stock <= 0
+                  const isUnavailable = Boolean(hasColor && activeColor && !variantForSize)
+                  const isOos = Boolean(variantForSize && variantForSize.stock <= 0)
                   return (
                     <button
                       aria-label={`Select size ${size}`}
@@ -549,7 +546,7 @@ const ProductDetailsPage = () => {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-accent text-accent px-6 py-4 text-sm font-bold transition hover:bg-accent hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled={disableAddToCart}
+              disabled={Boolean(disableAddToCart)}
               onClick={() => handleAddToCart()}
               type="button"
             >
@@ -557,7 +554,7 @@ const ProductDetailsPage = () => {
             </button>
             <button
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 py-4 text-sm font-bold text-white transition hover:bg-accent-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled={disableAddToCart}
+              disabled={Boolean(disableAddToCart)}
               onClick={() => handleAddToCart(true)}
               type="button"
             >

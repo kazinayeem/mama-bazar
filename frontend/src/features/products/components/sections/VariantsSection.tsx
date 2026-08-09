@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react'
-import { Loader2, Palette, Plus, Ruler, Shuffle, X, Trash2, CheckSquare, ImagePlus } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Loader2, Palette, Plus, Ruler, Shuffle, X, Trash2, CheckSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -118,7 +118,7 @@ const VariantsSection = () => {
       return
     }
 
-    const newVariants = additions.map((name, idx) => {
+    const newVariants = additions.map((name) => {
       const opts = optionsCombos[combos.indexOf(name)]
       return {
         ...newVariant(),

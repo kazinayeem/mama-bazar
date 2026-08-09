@@ -116,7 +116,7 @@ export const createCost = async (input: {
     productId: input.productId || null,
     orderId: input.orderId || null,
     bookingId: input.bookingId || null,
-    costDate: input.costDate,
+    costDate: sql`STR_TO_DATE(${input.costDate}, '%Y-%m-%d %H:%i:%s')`,
     paymentMethod: input.paymentMethod || "cash",
     notes: input.notes || null,
     attachmentUrl: input.attachmentUrl || null,

@@ -122,7 +122,6 @@ export function getProductCardPrice(
   const prices = activeVariants.map((v) => getVariantEffectivePrice(v, productPrice, productDiscount))
   const uniquePrices = [...new Set(prices)]
   const minPrice = Math.min(...prices)
-  const maxPrice = Math.max(...prices)
 
   if (uniquePrices.length === 1) {
     return { price: minPrice, displayPrice: '', isRange: false }
