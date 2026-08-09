@@ -605,16 +605,54 @@ const syncVariants = async (
     .where(eq(productVariants.productId, productId));
   const existingIds = new Set<number>(existing.map((e: any) => Number(e.id)));
   const keptIds = new Set<number>();
+  const seenNames = new Set<string>();
+  const seenSkus = new Set<string>();
 
   for (const v of variants) {
+    const nameLower = v.name.toLowerCase();
+    if (seenNames.has(nameLower)) {
+      throw new AppError(400, `Duplicate variant name: "${v.name}"`);
+    }
+    seenNames.add(nameLower);
+
+    const priceNum = toNum(v.price);
+    if (priceNum !== null && priceNum < 0) {
+      throw new AppError(400, `Price cannot be negative for variant "${v.name}"`);
+    }
+    const salePriceNum = toNum(v.discountPrice ?? v.salePrice);
+    if (salePriceNum !== null && salePriceNum < 0) {
+      throw new AppError(400, `Sale price cannot be negative for variant "${v.name}"`);
+    }
+    const stockNum = toNum(v.stock) ?? 0;
+    if (stockNum < 0) {
+      throw new AppError(400, `Stock cannot be negative for variant "${v.name}"`);
+    }
+
+    const sku = toStr(v.sku);
+    if (sku) {
+      const skuLower = sku.toLowerCase();
+      if (seenSkus.has(skuLower)) {
+        throw new AppError(400, `Duplicate SKU: "${sku}"`);
+      }
+      seenSkus.add(skuLower);
+      const duplicateSku = await tx
+        .select({ id: productVariants.id })
+        .from(productVariants)
+        .where(eq(productVariants.sku, sku))
+        .limit(1);
+      if (duplicateSku.length > 0 && !existingIds.has(Number(duplicateSku[0].id))) {
+        throw new AppError(400, `SKU "${sku}" already exists on another variant`);
+      }
+    }
+
     const data = {
       name: v.name,
       options: v.options || {},
       price: toStr(v.price),
       discountPrice: toStr(v.discountPrice ?? v.salePrice),
-      sku: toStr(v.sku),
+      sku: sku,
       barcode: toStr(v.barcode),
-      stock: toNum(v.stock) ?? 0,
+      stock: stockNum,
       weight: toStr(v.weight),
       dimensions: toStr(v.dimensions),
       images: v.images || [],

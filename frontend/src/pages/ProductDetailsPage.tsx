@@ -16,21 +16,19 @@ import {
   useGetRelatedProductsQuery,
   useGetReviewsQuery,
 } from '../store/services/commerceApi'
-import type { Product, ProductVariant } from '../types'
+import {
+  type Product,
+  type ProductVariant,
+  findVariantByOptions,
+  getVariantEffectivePrice,
+  getVariantDiscountPercent,
+  hasVariantPriceRange,
+  getProductCardPrice,
+} from '../types'
 
 const infoRow = 'flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0'
 const infoLabel = 'text-sm font-semibold text-slate-500'
 const infoValue = 'text-sm font-bold text-slate-900 dark:text-white'
-
-function findActiveVariant(variants: Product['variants'], color?: string, size?: string): ProductVariant | undefined {
-  if (!variants || variants.length === 0) return undefined
-  return variants.find((v) => {
-    if (v.status === 'inactive') return false
-    const matchesColor = !color || Object.values(v.options).some((val) => val.toLowerCase() === color.toLowerCase())
-    const matchesSize = !size || Object.values(v.options).some((val) => val.toLowerCase() === size.toLowerCase())
-    return matchesColor && matchesSize
-  })
-}
 
 function getStockLabel(stock: number, product: Product): { text: string; className: string } {
   if (product.unlimitedStock) return { text: 'In Stock', className: 'bg-success/10 text-success' }
@@ -41,6 +39,63 @@ function getStockLabel(stock: number, product: Product): { text: string; classNa
   const alert = product.lowStockAlert || 5
   if (stock <= alert) return { text: `Only ${stock} left`, className: 'bg-accent/10 text-accent' }
   return { text: 'In Stock', className: 'bg-success/10 text-success' }
+}
+
+function resolvePriceText(product: Product, activeVariant?: ProductVariant): {
+  finalPrice: number
+  displayPrice: number | null
+  discount: number
+  showDiscount: boolean
+  priceLabel: string
+  showOriginalPrice: boolean
+} {
+  if (activeVariant) {
+    const effPrice = getVariantEffectivePrice(activeVariant, product.price, product.discount)
+    const variantDiscount = getVariantDiscountPercent(activeVariant)
+    const hasRegPrice = !!activeVariant.price
+    const hasDiscPrice = !!activeVariant.discountPrice
+    const discount = variantDiscount || 0
+
+    return {
+      finalPrice: effPrice,
+      displayPrice: (hasRegPrice && hasDiscPrice) ? Number(activeVariant.price) : null,
+      discount,
+      showDiscount: discount > 0,
+      priceLabel: '',
+      showOriginalPrice: hasRegPrice && hasDiscPrice,
+    }
+  }
+
+  if (product.variants && product.variants.length > 0 && hasVariantPriceRange(product.variants, product.price, product.discount)) {
+    return {
+      finalPrice: 0,
+      displayPrice: null,
+      discount: 0,
+      showDiscount: false,
+      priceLabel: 'Choose options',
+      showOriginalPrice: false,
+    }
+  }
+
+  const displayPrice = Number(product.price)
+  const displaySalePrice = Number(product.salePrice)
+  const discountFromDb = Number(product.discount || 0)
+  const effectivePrice = displaySalePrice > 0
+    ? displaySalePrice
+    : discountFromDb > 0
+      ? Math.round(displayPrice - (displayPrice * discountFromDb) / 100)
+      : displayPrice
+
+  return {
+    finalPrice: effectivePrice,
+    displayPrice: displaySalePrice > 0 ? displayPrice : (discountFromDb > 0 ? displayPrice : null),
+    discount: displaySalePrice > 0
+      ? Math.round(((displayPrice - displaySalePrice) / displayPrice) * 100)
+      : discountFromDb,
+    showDiscount: displaySalePrice > 0 || discountFromDb > 0,
+    priceLabel: '',
+    showOriginalPrice: displaySalePrice > 0 || discountFromDb > 0,
+  }
 }
 
 const ProductDetailsPage = () => {
@@ -74,6 +129,75 @@ const ProductDetailsPage = () => {
     [product],
   )
 
+  const hasColor = product?.colorOptions && product.colorOptions.length > 0
+  const hasSize = product?.sizeOptions && product.sizeOptions.length > 0
+  const needsOptions = hasColor || hasSize
+
+  const activeVariant = useMemo(
+    () => (product?.variants ? findVariantByOptions(product.variants, activeColor, activeSize) : undefined),
+    [product?.variants, activeColor, activeSize],
+  )
+
+  const variantImage = useMemo(() => {
+    if (activeVariant?.images?.[0]) return activeVariant.images[0]
+    if (activeVariant?.thumbnail) return activeVariant.thumbnail
+    const colorOption = product?.colorOptions?.find((c) => c.name === activeColor)
+    if (colorOption?.image) return colorOption.image
+    return undefined
+  }, [activeVariant, activeColor, product?.colorOptions])
+
+  const priceInfo = useMemo(() => {
+    if (!product) return { finalPrice: 0, displayPrice: null as number | null, discount: 0, showDiscount: false, priceLabel: '', showOriginalPrice: false }
+    return resolvePriceText(product, activeVariant)
+  }, [product, activeVariant])
+
+  const { finalPrice, displayPrice, discount, showDiscount, priceLabel, showOriginalPrice } = priceInfo
+
+  const effectiveStock = useMemo(() => {
+    if (!product) return 0
+    if (activeVariant) return activeVariant.stock
+    if (product.variants && product.variants.length > 0) {
+      return product.variants.filter((v) => v.status !== 'inactive' && v.availability !== false).reduce((s, v) => s + v.stock, 0)
+    }
+    return product.stock
+  }, [product, activeVariant])
+
+  const variantOutOfStock = useMemo(() => {
+    if (!activeVariant) return false
+    if (product?.unlimitedStock) return false
+    return activeVariant.stock <= 0
+  }, [activeVariant, product?.unlimitedStock])
+
+  const outOfStock = useMemo(() => {
+    if (!product) return true
+    if (product.unlimitedStock) return false
+    return effectiveStock <= 0
+  }, [product, effectiveStock])
+
+  const allOptionsSelected = useMemo(() => {
+    if (!product) return false
+    const colorNeeded = hasColor
+    const sizeNeeded = hasSize
+    if (colorNeeded && sizeNeeded) return !!activeColor && !!activeSize
+    if (colorNeeded) return !!activeColor
+    if (sizeNeeded) return !!activeSize
+    return true
+  }, [product, hasColor, hasSize, activeColor, activeSize])
+
+  const stockLabel = useMemo(() => {
+    if (!product) return { text: '', className: '' }
+    return getStockLabel(effectiveStock, product)
+  }, [product, effectiveStock])
+
+  const reviews = reviewsQuery.data || []
+  const related = relatedQuery.data || []
+  const specs = product?.specs || []
+
+  const maxQty = product?.maxOrder || (activeVariant ? activeVariant.stock : product?.stock || 1)
+  const minQty = product?.minOrder || 1
+
+  const showSelectOptionsPrice = priceLabel === 'Choose options'
+
   const handleAddToCart = (buyNow = false) => {
     if (!product) return
     dispatch(
@@ -87,6 +211,7 @@ const ProductDetailsPage = () => {
           images: product.images,
           stock: effectiveStock,
         },
+        variantId: activeVariant?.id,
         color: activeColor,
         size: activeSize,
         image: variantImage || product.images[activeImage] || product.images[0],
@@ -135,7 +260,6 @@ const ProductDetailsPage = () => {
     }
   }
 
-  /* ─── Loading state ─── */
   if (productQuery.isLoading) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -161,7 +285,6 @@ const ProductDetailsPage = () => {
     )
   }
 
-  /* ─── Error state ─── */
   if (productQuery.isError || !product) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6 lg:px-8">
@@ -176,31 +299,12 @@ const ProductDetailsPage = () => {
     )
   }
 
-  /* ─── Derived data ─── */
-  const activeVariant = findActiveVariant(product.variants, activeColor, activeSize)
-  const variantImage = activeVariant?.images?.[0] || activeVariant?.thumbnail || undefined
-
-  const displayPrice = activeVariant?.price || product.price
-  const displaySalePrice = activeVariant?.discountPrice || product.salePrice
-  const displayDiscount = Number(product.discount || 0)
-  const effectiveStock = activeVariant ? activeVariant.stock : product.stock
-  const discount = displayDiscount
-  const finalPrice = Number(displaySalePrice) || salePrice(displayPrice, displayDiscount)
-  const outOfStock = product.unlimitedStock ? false : effectiveStock <= 0
-
-  const stockLabel = getStockLabel(effectiveStock, product)
-  const reviews = reviewsQuery.data || []
-  const related = relatedQuery.data || []
-  const specs = product.specs || []
-
-  const maxQty = product.maxOrder || (activeVariant ? activeVariant.stock : product.stock)
-  const minQty = product.minOrder || 1
+  const disableAddToCart = outOfStock || variantOutOfStock || (needsOptions && !allOptionsSelected)
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <SEO {...seoProps} />
 
-      {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-400">
         <Link className="transition hover:text-primary" to="/">Home</Link>
         <ChevronRight size={13} />
@@ -232,7 +336,6 @@ const ProductDetailsPage = () => {
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
-        {/* ─── Gallery ─── */}
         <div>
           <div className="overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800">
             {product.images.length > 0 ? (
@@ -262,8 +365,6 @@ const ProductDetailsPage = () => {
               ))}
             </div>
           )}
-
-          {/* Video */}
           {product.videoUrl && (
             <div className="mt-4">
               <a
@@ -278,9 +379,7 @@ const ProductDetailsPage = () => {
           )}
         </div>
 
-        {/* ─── Info ─── */}
         <div className="flex flex-col">
-          {/* Badges */}
           <div className="flex flex-wrap items-center gap-2">
             {product.brandInfo?.name && (
               <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
@@ -299,7 +398,7 @@ const ProductDetailsPage = () => {
             {product.isOfficial && (
               <span className="rounded-full bg-blue-500/10 px-3 py-1 text-[11px] font-bold text-blue-600">Official</span>
             )}
-            {discount > 0 && (
+            {showDiscount && (
               <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent">
                 <Zap size={11} className="fill-accent" /> Save {discount}%
               </span>
@@ -310,7 +409,6 @@ const ProductDetailsPage = () => {
             {product.title}
           </h1>
 
-          {/* Rating */}
           <div className="mt-4 flex items-center gap-3">
             <StarRating rating={product.rating || 0} size={16} />
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -319,34 +417,39 @@ const ProductDetailsPage = () => {
             <span className="text-sm text-slate-400">({product.reviewCount || 0} reviews)</span>
           </div>
 
-          {/* Price */}
           <div className="mt-6 flex flex-wrap items-end gap-3">
-            <p className="font-headline text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-              {formatPrice(finalPrice)}
-            </p>
-            {discount > 0 && (
-              <p className="pb-1 text-lg text-slate-400 line-through">{formatPrice(Number(displayPrice))}</p>
+            {showSelectOptionsPrice ? (
+              <p className="font-headline text-2xl font-bold text-slate-400 dark:text-slate-500">
+                Select options to see price
+              </p>
+            ) : (
+              <>
+                <p className="font-headline text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                  {formatPrice(finalPrice)}
+                </p>
+                {showOriginalPrice && displayPrice && (
+                  <p className="pb-1 text-lg text-slate-400 line-through">{formatPrice(displayPrice)}</p>
+                )}
+              </>
             )}
             {activeVariant?.sku && (
               <span className="pb-1 text-xs text-slate-400">SKU: {activeVariant.sku}</span>
             )}
           </div>
 
-          {/* Short description */}
           {(product.shortDescription || product.description) && (
             <p className="mt-4 text-[15px] leading-8 text-slate-600 dark:text-slate-300">
               {product.shortDescription || product.description}
             </p>
           )}
 
-          {/* Color options */}
-          {product.colorOptions && product.colorOptions.length > 0 && (
+          {hasColor && (
             <div className="mt-7">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Color: <span className="text-slate-900 dark:text-white">{activeColor || 'Select'}</span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {product.colorOptions.map((color) => (
+                {product.colorOptions!.map((color) => (
                   <button
                     aria-label={`Select color ${color.name}`}
                     className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition ${
@@ -355,7 +458,7 @@ const ProductDetailsPage = () => {
                         : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'
                     }`}
                     key={color.name}
-                    onClick={() => { setActiveColor(color.name); setActiveImage(0) }}
+                    onClick={() => setActiveColor(color.name)}
                     style={color.value ? { backgroundColor: color.value } : undefined}
                     title={color.name}
                     type="button"
@@ -367,33 +470,49 @@ const ProductDetailsPage = () => {
             </div>
           )}
 
-          {/* Size options */}
-          {product.sizeOptions && product.sizeOptions.length > 0 && (
+          {hasSize && (
             <div className="mt-5">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Size: <span className="text-slate-900 dark:text-white">{activeSize || 'Select'}</span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {product.sizeOptions.map((size) => (
-                  <button
-                    aria-label={`Select size ${size}`}
-                    className={`flex h-11 min-w-[3rem] items-center justify-center rounded-lg border px-4 transition ${
-                      activeSize === size
-                        ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/30'
-                        : 'border-slate-200 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:text-slate-200'
-                    }`}
-                    key={size}
-                    onClick={() => setActiveSize(size)}
-                    type="button"
-                  >
-                    <span className="text-sm font-bold uppercase">{size}</span>
-                  </button>
-                ))}
+                {product.sizeOptions!.map((size) => {
+                  const variantForSize = hasColor && activeColor
+                    ? findVariantByOptions(product.variants, activeColor, size)
+                    : findVariantByOptions(product.variants, undefined, size)
+                  const isUnavailable = hasColor && activeColor && !variantForSize
+                  const isOos = variantForSize && variantForSize.stock <= 0
+                  return (
+                    <button
+                      aria-label={`Select size ${size}`}
+                      className={`flex h-11 min-w-[3rem] items-center justify-center rounded-lg border px-4 transition ${
+                        activeSize === size
+                          ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/30'
+                          : isUnavailable
+                            ? 'border-slate-100 text-slate-300 cursor-not-allowed line-through dark:border-slate-700 dark:text-slate-600'
+                            : isOos
+                              ? 'border-amber-200 text-amber-600 bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:bg-amber-950'
+                              : 'border-slate-200 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:text-slate-200'
+                      }`}
+                      disabled={isUnavailable}
+                      key={size}
+                      onClick={() => !isUnavailable && setActiveSize(size)}
+                      type="button"
+                    >
+                      <span className="text-sm font-bold uppercase">{size}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Quantity + stock */}
+          {needsOptions && allOptionsSelected && variantOutOfStock && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
+              This variant is currently out of stock
+            </div>
+          )}
+
           <div className="mt-7 flex items-center gap-5">
             <div>
               <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Quantity</p>
@@ -411,7 +530,7 @@ const ProductDetailsPage = () => {
                 <button
                   aria-label="Increase quantity"
                   className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                  disabled={outOfStock || quantity >= maxQty}
+                  disabled={outOfStock || variantOutOfStock || quantity >= maxQty}
                   onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
                   type="button"
                 >
@@ -427,11 +546,10 @@ const ProductDetailsPage = () => {
             </div>
           </div>
 
-          {/* CTAs */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-accent text-accent px-6 py-4 text-sm font-bold transition hover:bg-accent hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled={outOfStock}
+              disabled={disableAddToCart}
               onClick={() => handleAddToCart()}
               type="button"
             >
@@ -439,7 +557,7 @@ const ProductDetailsPage = () => {
             </button>
             <button
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 py-4 text-sm font-bold text-white transition hover:bg-accent-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-              disabled={outOfStock}
+              disabled={disableAddToCart}
               onClick={() => handleAddToCart(true)}
               type="button"
             >
@@ -472,7 +590,6 @@ const ProductDetailsPage = () => {
             </button>
           </div>
 
-          {/* Quick info */}
           <div className="mt-6 rounded-[18px] border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
             {product.warranty && (
               <div className={infoRow}>
@@ -514,10 +631,8 @@ const ProductDetailsPage = () => {
         </div>
       </div>
 
-      {/* ─── Tabs: Description / Specs / Features ─── */}
       <section className="mt-16">
         <div className="rounded-[18px] border border-slate-100 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:p-8">
-          {/* Full Description */}
           {product.description && (
             <div className="mb-8">
               <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Description</h2>
@@ -539,7 +654,6 @@ const ProductDetailsPage = () => {
             </div>
           )}
 
-          {/* Specifications */}
           {specs.length > 0 && (
             <div className="mb-8">
               <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Specifications</h2>
@@ -557,7 +671,6 @@ const ProductDetailsPage = () => {
             </div>
           )}
 
-          {/* Features */}
           {product.features && product.features.length > 0 && (
             <div className="mb-8">
               <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Features</h2>
@@ -572,7 +685,6 @@ const ProductDetailsPage = () => {
             </div>
           )}
 
-          {/* Tags */}
           {product.tags && product.tags.length > 0 && (
             <div>
               <h2 className="mb-3 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Tags</h2>
@@ -591,7 +703,6 @@ const ProductDetailsPage = () => {
         </div>
       </section>
 
-      {/* ─── Return Policy ─── */}
       {product.returnPolicy && (
         <section className="mt-6">
           <div className="rounded-[18px] border border-slate-100 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
@@ -603,7 +714,6 @@ const ProductDetailsPage = () => {
         </section>
       )}
 
-      {/* ─── Reviews ─── */}
       <section className="mt-16">
         <div className="mb-8">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Customer feedback</p>
@@ -709,7 +819,6 @@ const ProductDetailsPage = () => {
         </div>
       </section>
 
-      {/* ─── Related Products ─── */}
       {related.length > 0 && (
         <section className="mt-20">
           <div className="mb-8 flex items-end justify-between">

@@ -48,6 +48,7 @@ export interface Category {
 
 export interface ProductVariant {
   id: number
+  productId?: number
   name: string
   options: Record<string, string>
   price?: string | null
@@ -63,6 +64,76 @@ export interface ProductVariant {
   shippingCost?: string | null
   warranty?: string | null
   availability?: boolean
+}
+
+export function getVariantEffectivePrice(v: ProductVariant, basePrice?: string | number | null, baseDiscount?: string | number | null): number {
+  if (v.discountPrice) return Number(v.discountPrice)
+  if (v.price) return Number(v.price)
+  const p = Number(basePrice || 0)
+  const d = Number(baseDiscount || 0)
+  if (d > 0) return Math.round(p - (p * d) / 100)
+  return p
+}
+
+export function getVariantDiscountPercent(v: ProductVariant): number {
+  const price = Number(v.price)
+  const discountPrice = Number(v.discountPrice)
+  if (!price || !discountPrice || discountPrice >= price) return 0
+  return Math.round(((price - discountPrice) / price) * 100)
+}
+
+export function findVariantByOptions(
+  variants: ProductVariant[] | null | undefined,
+  color?: string,
+  size?: string
+): ProductVariant | undefined {
+  if (!variants || variants.length === 0) return undefined
+  return variants.find((v) => {
+    if (v.status === 'inactive') return false
+    const opts = v.options
+    const colorMatch = !color || (opts.color && opts.color.toLowerCase() === color.toLowerCase()) || Object.values(opts).some((val) => val.toLowerCase() === color.toLowerCase())
+    const sizeMatch = !size || (opts.size && opts.size.toLowerCase() === size.toLowerCase()) || Object.values(opts).some((val) => val.toLowerCase() === size.toLowerCase())
+    if (color && size) return colorMatch && sizeMatch
+    if (color) return colorMatch
+    if (size) return sizeMatch
+    return false
+  })
+}
+
+export function getProductCardPrice(
+  variants: ProductVariant[] | null | undefined,
+  productPrice: string | number,
+  productDiscount?: string | number | null,
+  productSalePrice?: string | number | null
+): { price: number; displayPrice: string; isRange: boolean; priceFrom?: number } {
+  if (!variants || variants.length === 0) {
+    const p = Number(productSalePrice) || Number(productPrice) || 0
+    const d = Number(productDiscount || 0)
+    const final = d > 0 ? Math.round(p - (p * d) / 100) : p
+    return { price: final, displayPrice: '', isRange: false }
+  }
+
+  const activeVariants = variants.filter((v) => v.status !== 'inactive' && v.availability !== false)
+  if (activeVariants.length === 0) {
+    const p = Number(productSalePrice) || Number(productPrice) || 0
+    return { price: p, displayPrice: '', isRange: false }
+  }
+
+  const prices = activeVariants.map((v) => getVariantEffectivePrice(v, productPrice, productDiscount))
+  const uniquePrices = [...new Set(prices)]
+  const minPrice = Math.min(...prices)
+  const maxPrice = Math.max(...prices)
+
+  if (uniquePrices.length === 1) {
+    return { price: minPrice, displayPrice: '', isRange: false }
+  }
+
+  return { price: minPrice, displayPrice: '', isRange: true, priceFrom: minPrice }
+}
+
+export function hasVariantPriceRange(variants: ProductVariant[] | null | undefined, productPrice: string | number, productDiscount?: string | number | null): boolean {
+  const { isRange } = getProductCardPrice(variants, productPrice, productDiscount)
+  return isRange
 }
 
 export interface ProductSpec {
@@ -179,6 +250,7 @@ export interface ProductReview {
 
 export interface OrderItemInput {
   productId: number
+  variantId?: number
   quantity: number
   size?: string
   color?: string

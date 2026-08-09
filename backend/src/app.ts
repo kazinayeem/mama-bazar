@@ -80,10 +80,13 @@ app.use("/api/uploads", uploadRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/homepage", homepageRoutes);
 app.use("/api/pages", pagesRoutes);
-
+// home
+app.get("/", (_req, res) => {
+  res.json({ success: true, message: "Welcome to Mamabazar API" });
+});
 // Health check
 app.get("/api/health", (_req, res) => {
-  res.json({ success: true, message: "GhorerBazar API is running" });
+  res.json({ success: true, message: "Mamabazar API is running" });
 });
 
 // JSON 404 for unknown routes (prevents HTML error pages in API clients)

@@ -1,5 +1,5 @@
 import { db } from "../../config/db";
-import { orders, orderItems, products, coupons, users, userAddresses, orderStatusHistory, shippingMethods, paymentMethods } from "../../config/schema";
+import { orders, orderItems, products, productVariants, coupons, users, userAddresses, orderStatusHistory, shippingMethods, paymentMethods } from "../../config/schema";
 import { eq, desc, asc, sql, and, or, like } from "drizzle-orm";
 import { CreateOrderInput, UpdateOrderStatusInput, VerifyPaymentInput, OrderStatus, PaymentMethod } from "./order.interface";
 import { AppError } from "../../utils/AppError";
@@ -183,6 +183,7 @@ const attachItemsAndHistory = async (order: any) => {
       id: orderItems.id,
       orderId: orderItems.orderId,
       productId: orderItems.productId,
+      variantId: orderItems.variantId,
       size: orderItems.size,
       color: orderItems.color,
       quantity: orderItems.quantity,
@@ -215,6 +216,7 @@ const attachItemsAndHistory = async (order: any) => {
         id: i.id,
         orderId: i.orderId,
         productId: i.productId,
+        variantId: i.variantId,
         size: i.size,
         color: i.color,
         quantity: i.quantity,
@@ -230,26 +232,53 @@ const attachItemsAndHistory = async (order: any) => {
 export const create = async (input: CreateOrderInput) => {
   // ---------- 1. Validate items & compute subtotal ----------
   let subtotal = 0;
-  const itemsWithPrice: { productId: number; quantity: number; size?: string; color?: string; price: number }[] = [];
+  const itemsWithPrice: { productId: number; variantId?: number; quantity: number; size?: string; color?: string; price: number }[] = [];
 
   for (const item of input.items) {
     const productRows = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
     const product = productRows[0];
     if (!product) throw new AppError(400, `Product ${item.productId} not found`);
-    if (product.stock < item.quantity) {
-      throw new AppError(400, `Insufficient stock for ${product.title}`);
+
+    let itemPrice: number;
+
+    if (item.variantId) {
+      const variantRows = await db.select().from(productVariants).where(
+        and(eq(productVariants.id, item.variantId), eq(productVariants.productId, item.productId))
+      ).limit(1);
+      const variant = variantRows[0];
+      if (!variant) throw new AppError(400, `Variant not found for product ${product.title}`);
+      if (variant.availability === false) throw new AppError(400, `Variant "${variant.name}" is not available`);
+      if (variant.stock < item.quantity) throw new AppError(400, `Insufficient stock for ${product.title} - ${variant.name}`);
+      itemPrice = variant.discountPrice ? Number(variant.discountPrice) : (variant.price ? Number(variant.price) : Number(product.price));
+    } else if (item.size || item.color) {
+      const variantRows = await db.select().from(productVariants).where(
+        and(eq(productVariants.productId, item.productId), eq(productVariants.status, "active"))
+      );
+      const variant = variantRows.find((v) => {
+        const opts = v.options as Record<string, string>;
+        const sizeMatch = !item.size || Object.values(opts).some((val) => val.toLowerCase() === item.size!.toLowerCase());
+        const colorMatch = !item.color || Object.values(opts).some((val) => val.toLowerCase() === item.color!.toLowerCase());
+        return sizeMatch && colorMatch;
+      });
+      if (!variant) throw new AppError(400, `Variant (${item.size}, ${item.color}) not found for ${product.title}`);
+      if (variant.availability === false) throw new AppError(400, `Variant "${variant.name}" is not available`);
+      if (variant.stock < item.quantity) throw new AppError(400, `Insufficient stock for ${product.title} - ${variant.name}`);
+      itemPrice = variant.discountPrice ? Number(variant.discountPrice) : (variant.price ? Number(variant.price) : Number(product.price));
+    } else {
+      if (product.stock < item.quantity) throw new AppError(400, `Insufficient stock for ${product.title}`);
+      const discountRate = Math.min(Number(product.discount || 0), 100);
+      itemPrice = Math.round(Number(product.price) * (1 - discountRate / 100));
     }
 
-    const discountRate = Math.min(Number(product.discount || 0), 100);
-    const actualPrice = Math.round(Number(product.price) * (1 - discountRate / 100));
-    const itemTotal = actualPrice * item.quantity;
+    const itemTotal = itemPrice * item.quantity;
     subtotal += itemTotal;
     itemsWithPrice.push({
       productId: item.productId,
+      variantId: item.variantId,
       quantity: item.quantity,
       size: item.size,
       color: item.color,
-      price: actualPrice,
+      price: itemPrice,
     });
   }
 
@@ -502,6 +531,7 @@ export const create = async (input: CreateOrderInput) => {
     await db.insert(orderItems).values({
       orderId,
       productId: item.productId,
+      variantId: item.variantId || null,
       size: item.size || null,
       color: item.color || null,
       quantity: item.quantity,
@@ -511,6 +541,12 @@ export const create = async (input: CreateOrderInput) => {
       .update(products)
       .set({ stock: sql`${products.stock} - ${item.quantity}` })
       .where(eq(products.id, item.productId));
+    if (item.variantId) {
+      await db
+        .update(productVariants)
+        .set({ stock: sql`${productVariants.stock} - ${item.quantity}` })
+        .where(eq(productVariants.id, item.variantId));
+    }
   }
 
   const order = await getById(orderId);

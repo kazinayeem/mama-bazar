@@ -7,6 +7,7 @@ const optStr = z.string().optional().nullable();
 
 const orderItemSchema = z.object({
   productId: z.number().int().positive(),
+  variantId: z.number().int().positive().optional().nullable(),
   quantity: z.number().int().positive(),
   size: z.string().optional().nullable(),
   color: z.string().optional().nullable(),

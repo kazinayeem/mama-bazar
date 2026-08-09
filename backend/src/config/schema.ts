@@ -708,3 +708,203 @@ export const newsletters = mysqlTable("newsletters", {
   status: mysqlEnum("status", ["subscribed", "unsubscribed"]).default("subscribed").notNull(),
   subscribedAt: timestamp("subscribed_at").defaultNow().notNull(),
 });
+
+// ==================== EXPENSE CATEGORIES ====================
+export const expenseCategories = mysqlTable("expense_categories", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
+  sortOrder: int("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const expenseCategoriesRelations = relations(expenseCategories, ({ many }) => ({
+  expenses: many(expenses),
+}));
+
+// ==================== EXPENSES ====================
+export const expenses = mysqlTable("expenses", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  categoryId: int("category_id").references(() => expenseCategories.id),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull().default("cash"),
+  vendor: varchar("vendor", { length: 255 }),
+  expenseDate: datetime("expense_date").notNull(),
+  referenceNumber: varchar("reference_number", { length: 100 }),
+  attachmentUrl: varchar("attachment_url", { length: 500 }),
+  notes: text("notes"),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("approved").notNull(),
+  createdById: int("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+  category: one(expenseCategories, {
+    fields: [expenses.categoryId],
+    references: [expenseCategories.id],
+  }),
+  createdBy: one(users, {
+    fields: [expenses.createdById],
+    references: [users.id],
+  }),
+}));
+
+// ==================== COSTS ====================
+export const costs = mysqlTable("costs", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  costType: varchar("cost_type", { length: 100 }).notNull().default("operational"),
+  quantity: decimal("quantity", { precision: 12, scale: 2 }).notNull().default("1"),
+  unitCost: decimal("unit_cost", { precision: 12, scale: 2 }).notNull().default("0"),
+  totalCost: decimal("total_cost", { precision: 12, scale: 2 }).notNull(),
+  supplierId: int("supplier_id").references(() => suppliers.id),
+  productId: int("product_id").references(() => products.id),
+  orderId: int("order_id").references(() => orders.id),
+  bookingId: int("booking_id").references(() => bookings.id),
+  costDate: datetime("cost_date").notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull().default("cash"),
+  notes: text("notes"),
+  attachmentUrl: varchar("attachment_url", { length: 500 }),
+  createdById: int("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const costsRelations = relations(costs, ({ one }) => ({
+  supplier: one(suppliers, {
+    fields: [costs.supplierId],
+    references: [suppliers.id],
+  }),
+  product: one(products, {
+    fields: [costs.productId],
+    references: [products.id],
+  }),
+  order: one(orders, {
+    fields: [costs.orderId],
+    references: [orders.id],
+  }),
+  booking: one(bookings, {
+    fields: [costs.bookingId],
+    references: [bookings.id],
+  }),
+  createdBy: one(users, {
+    fields: [costs.createdById],
+    references: [users.id],
+  }),
+}));
+
+// ==================== BOOKINGS ====================
+export const bookings = mysqlTable("bookings", {
+  id: int("id").primaryKey().autoincrement(),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  userId: int("user_id").references(() => users.id),
+  bookingType: varchar("booking_type", { length: 100 }).notNull().default("service"),
+  service: varchar("service", { length: 255 }),
+  productId: int("product_id").references(() => products.id),
+  startDate: datetime("start_date").notNull(),
+  endDate: datetime("end_date").notNull(),
+  quantity: int("quantity").notNull().default(1),
+  price: decimal("price", { precision: 12, scale: 2 }).notNull().default("0"),
+  discount: decimal("discount", { precision: 12, scale: 2 }).notNull().default("0"),
+  additionalCost: decimal("additional_cost", { precision: 12, scale: 2 }).notNull().default("0"),
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+  paymentStatus: mysqlEnum("payment_status", ["pending", "partial", "paid", "refunded"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["pending", "confirmed", "active", "completed", "cancelled"]).default("pending").notNull(),
+  notes: text("notes"),
+  attachmentUrl: varchar("attachment_url", { length: 500 }),
+  createdById: int("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const bookingsRelations = relations(bookings, ({ one }) => ({
+  user: one(users, {
+    fields: [bookings.userId],
+    references: [users.id],
+  }),
+  product: one(products, {
+    fields: [bookings.productId],
+    references: [products.id],
+  }),
+  createdBy: one(users, {
+    fields: [bookings.createdById],
+    references: [users.id],
+  }),
+}));
+
+// ==================== RENTALS ====================
+export const rentals = mysqlTable("rentals", {
+  id: int("id").primaryKey().autoincrement(),
+  rentalItem: varchar("rental_item", { length: 255 }).notNull(),
+  productId: int("product_id").references(() => products.id),
+  customerName: varchar("customer_name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  userId: int("user_id").references(() => users.id),
+  quantity: int("quantity").notNull().default(1),
+  startDate: datetime("start_date").notNull(),
+  endDate: datetime("end_date").notNull(),
+  returnDate: datetime("return_date"),
+  rateType: mysqlEnum("rate_type", ["daily", "weekly", "monthly"]).default("daily").notNull(),
+  dailyRate: decimal("daily_rate", { precision: 12, scale: 2 }).notNull().default("0"),
+  weeklyRate: decimal("weekly_rate", { precision: 12, scale: 2 }).notNull().default("0"),
+  monthlyRate: decimal("monthly_rate", { precision: 12, scale: 2 }).notNull().default("0"),
+  rate: decimal("rate", { precision: 12, scale: 2 }).notNull().default("0"),
+  durationUnits: int("duration_units").notNull().default(0),
+  securityDeposit: decimal("security_deposit", { precision: 12, scale: 2 }).notNull().default("0"),
+  discount: decimal("discount", { precision: 12, scale: 2 }).notNull().default("0"),
+  additionalCharge: decimal("additional_charge", { precision: 12, scale: 2 }).notNull().default("0"),
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+  paymentStatus: mysqlEnum("payment_status", ["pending", "partial", "paid", "refunded"]).default("pending").notNull(),
+  status: mysqlEnum("status", ["reserved", "rented", "returned", "overdue", "cancelled"]).default("reserved").notNull(),
+  notes: text("notes"),
+  attachmentUrl: varchar("attachment_url", { length: 500 }),
+  createdById: int("created_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const rentalsRelations = relations(rentals, ({ one }) => ({
+  product: one(products, {
+    fields: [rentals.productId],
+    references: [products.id],
+  }),
+  user: one(users, {
+    fields: [rentals.userId],
+    references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [rentals.createdById],
+    references: [users.id],
+  }),
+}));
+
+// ==================== MEMOS ====================
+export const memos = mysqlTable("memos", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }),
+  entityType: varchar("entity_type", { length: 30 }).notNull(),
+  entityId: int("entity_id"),
+  url: varchar("url", { length: 1000 }).notNull(),
+  publicId: varchar("public_id", { length: 500 }),
+  filename: varchar("filename", { length: 500 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  size: int("size").default(0).notNull(),
+  folder: varchar("folder", { length: 200 }).default("memos").notNull(),
+  notes: text("notes"),
+  uploadedById: int("uploaded_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const memosRelations = relations(memos, ({ one }) => ({
+  uploadedBy: one(users, {
+    fields: [memos.uploadedById],
+    references: [users.id],
+  }),
+}));

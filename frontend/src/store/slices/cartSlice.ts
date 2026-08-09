@@ -14,6 +14,7 @@ export interface CartProduct {
 export interface CartItem {
   key: string
   product: CartProduct
+  variantId?: number
   size?: string
   color?: string
   image?: string
@@ -24,6 +25,7 @@ type AddToCartPayload =
   | CartProduct
   | {
       product: CartProduct
+      variantId?: number
       size?: string
       color?: string
       image?: string
@@ -37,7 +39,7 @@ const initialState: CartState = {
   items: [],
 }
 
-const buildCartKey = (productId: number, size?: string, color?: string) => `${productId}::${size || ''}::${color || ''}`
+const buildCartKey = (productId: number, variantId?: number, size?: string, color?: string) => `${productId}::${variantId || ''}::${size || ''}::${color || ''}`
 
 const cartSlice = createSlice({
   name: 'cart',
@@ -45,7 +47,7 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action: PayloadAction<AddToCartPayload>) => {
       const payload = 'product' in action.payload ? action.payload : { product: action.payload }
-      const key = buildCartKey(payload.product.id, payload.size, payload.color)
+      const key = buildCartKey(payload.product.id, payload.variantId, payload.size, payload.color)
       const existing = state.items.find((item) => item.key === key)
       if (existing) {
         existing.quantity += 1
@@ -54,6 +56,7 @@ const cartSlice = createSlice({
       state.items.push({
         key,
         product: payload.product,
+        variantId: payload.variantId,
         size: payload.size,
         color: payload.color,
         image: payload.image,
