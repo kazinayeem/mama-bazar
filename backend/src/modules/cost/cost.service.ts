@@ -1,6 +1,6 @@
 import { db } from "../../config/db";
 import { costs, suppliers, products, orders, bookings } from "../../config/schema";
-import { eq, and, like, desc, sql } from "drizzle-orm";
+import { eq, and, like, desc, sql } from "drizzle-orm"
 import { AppError } from "../../utils/AppError";
 
 const DEFAULT_PAGE = 1;
@@ -139,7 +139,7 @@ export const updateCost = async (id: number, input: Record<string, unknown>) => 
       productId: input.productId !== undefined ? (Number(input.productId) || null) : existing.productId,
       orderId: input.orderId !== undefined ? (Number(input.orderId) || null) : existing.orderId,
       bookingId: input.bookingId !== undefined ? (Number(input.bookingId) || null) : existing.bookingId,
-      costDate: input.costDate !== undefined ? String(input.costDate) : existing.costDate,
+      costDate: input.costDate !== undefined ? sql`STR_TO_DATE(${input.costDate}, '%Y-%m-%d %H:%i:%s')` : existing.costDate,
       paymentMethod: input.paymentMethod !== undefined ? String(input.paymentMethod) : existing.paymentMethod,
       notes: input.notes !== undefined ? (input.notes as string | null) : existing.notes,
       attachmentUrl: input.attachmentUrl !== undefined ? (input.attachmentUrl as string | null) : existing.attachmentUrl,

@@ -50,8 +50,8 @@ export const listRentals = async (query: RentalQuery) => {
   const offset = (page - 1) * limit;
 
   const conditions: any[] = [];
-  if (query.status) conditions.push(eq(rentals.status, query.status));
-  if (query.paymentStatus) conditions.push(eq(rentals.paymentStatus, query.paymentStatus));
+  if (query.status) conditions.push(eq(rentals.status, query.status as "reserved" | "rented" | "returned" | "overdue" | "cancelled"));
+  if (query.paymentStatus) conditions.push(eq(rentals.paymentStatus, query.paymentStatus as "pending" | "partial" | "paid" | "refunded"));
   if (query.search) conditions.push(like(rentals.customerName, `%${query.search}%`));
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -117,9 +117,9 @@ export const createRental = async (input: {
     email: input.email || null,
     userId: input.userId || null,
     quantity: input.quantity ?? 1,
-    startDate: input.startDate,
-    endDate: input.endDate,
-    returnDate: input.returnDate || null,
+    startDate: sql`STR_TO_DATE(${input.startDate}, '%Y-%m-%d %H:%i:%s')`,
+    endDate: sql`STR_TO_DATE(${input.endDate}, '%Y-%m-%d %H:%i:%s')`,
+    returnDate: input.returnDate ? sql`STR_TO_DATE(${input.returnDate}, '%Y-%m-%d %H:%i:%s')` : null,
     rateType: (input.rateType as "daily" | "weekly" | "monthly") || "daily",
     dailyRate: String(input.dailyRate ?? 0),
     weeklyRate: String(input.weeklyRate ?? 0),
@@ -152,10 +152,10 @@ export const updateRental = async (id: number, input: Record<string, unknown>) =
       email: input.email !== undefined ? (input.email as string | null) : existing.email,
       userId: input.userId !== undefined ? (Number(input.userId) || null) : existing.userId,
       quantity: input.quantity !== undefined ? Number(input.quantity) : existing.quantity,
-      startDate: input.startDate !== undefined ? String(input.startDate) : existing.startDate,
-      endDate: input.endDate !== undefined ? String(input.endDate) : existing.endDate,
-      returnDate: input.returnDate !== undefined ? (input.returnDate as string | null) : existing.returnDate,
-      rateType: input.rateType !== undefined ? String(input.rateType) : existing.rateType,
+      startDate: input.startDate !== undefined ? sql`STR_TO_DATE(${input.startDate}, '%Y-%m-%d %H:%i:%s')` : existing.startDate,
+      endDate: input.endDate !== undefined ? sql`STR_TO_DATE(${input.endDate}, '%Y-%m-%d %H:%i:%s')` : existing.endDate,
+      returnDate: input.returnDate !== undefined ? (input.returnDate ? sql`STR_TO_DATE(${input.returnDate}, '%Y-%m-%d %H:%i:%s')` : null) : existing.returnDate,
+      rateType: input.rateType !== undefined ? (input.rateType as "daily" | "weekly" | "monthly") : existing.rateType,
       dailyRate: input.dailyRate !== undefined ? String(input.dailyRate) : existing.dailyRate,
       weeklyRate: input.weeklyRate !== undefined ? String(input.weeklyRate) : existing.weeklyRate,
       monthlyRate: input.monthlyRate !== undefined ? String(input.monthlyRate) : existing.monthlyRate,
@@ -165,8 +165,8 @@ export const updateRental = async (id: number, input: Record<string, unknown>) =
       discount: input.discount !== undefined ? String(input.discount) : existing.discount,
       additionalCharge: input.additionalCharge !== undefined ? String(input.additionalCharge) : existing.additionalCharge,
       totalAmount: input.totalAmount !== undefined ? String(input.totalAmount) : existing.totalAmount,
-      paymentStatus: input.paymentStatus !== undefined ? String(input.paymentStatus) : existing.paymentStatus,
-      status: input.status !== undefined ? String(input.status) : existing.status,
+      paymentStatus: input.paymentStatus !== undefined ? (input.paymentStatus as "pending" | "partial" | "paid" | "refunded") : existing.paymentStatus,
+      status: input.status !== undefined ? (input.status as "reserved" | "rented" | "returned" | "overdue" | "cancelled") : existing.status,
       notes: input.notes !== undefined ? (input.notes as string | null) : existing.notes,
       attachmentUrl: input.attachmentUrl !== undefined ? (input.attachmentUrl as string | null) : existing.attachmentUrl,
       createdById: input.createdById !== undefined ? (Number(input.createdById) || null) : existing.createdById,

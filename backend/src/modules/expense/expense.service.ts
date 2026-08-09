@@ -113,7 +113,7 @@ export const createExpense = async (input: {
     amount,
     paymentMethod: input.paymentMethod || "cash",
     vendor: input.vendor || null,
-    expenseDate: input.expenseDate,
+    expenseDate: sql`STR_TO_DATE(${input.expenseDate}, '%Y-%m-%d %H:%i:%s')`,
     referenceNumber: input.referenceNumber || null,
     attachmentUrl: input.attachmentUrl || null,
     notes: input.notes || null,
@@ -134,11 +134,11 @@ export const updateExpense = async (id: number, input: Record<string, unknown>) 
       amount: input.amount !== undefined ? String(input.amount) : existing.amount,
       paymentMethod: input.paymentMethod !== undefined ? String(input.paymentMethod) : existing.paymentMethod,
       vendor: input.vendor !== undefined ? (input.vendor as string | null) : existing.vendor,
-      expenseDate: input.expenseDate !== undefined ? String(input.expenseDate) : existing.expenseDate,
+      expenseDate: input.expenseDate !== undefined ? sql`STR_TO_DATE(${input.expenseDate}, '%Y-%m-%d %H:%i:%s')` : existing.expenseDate,
       referenceNumber: input.referenceNumber !== undefined ? (input.referenceNumber as string | null) : existing.referenceNumber,
       attachmentUrl: input.attachmentUrl !== undefined ? (input.attachmentUrl as string | null) : existing.attachmentUrl,
       notes: input.notes !== undefined ? (input.notes as string | null) : existing.notes,
-      status: input.status !== undefined ? String(input.status) : existing.status,
+      status: input.status !== undefined ? (input.status as "pending" | "approved" | "rejected") : existing.status,
     })
     .where(eq(expenses.id, id));
   return getExpense(id);

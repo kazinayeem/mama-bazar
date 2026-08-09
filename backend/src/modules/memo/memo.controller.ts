@@ -31,5 +31,5 @@ export const remove = async (req: Request, res: Response) => {
 export const removeMany = async (req: Request, res: Response) => {
   const { ids } = req.body as { ids: number[] };
   const result = await memoService.deleteManyMemos(ids);
-  res.json({ success: true, ...result });
+  res.json({ success: true, deleted: result.deleted });
 };
