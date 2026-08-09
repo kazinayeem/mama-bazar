@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async'
+import { resolveAbsoluteUrl } from '../../lib/apiConfig'
 import type { Product, Category } from '../../types'
 import type { Brand } from '../../types/admin'
 
@@ -32,7 +33,7 @@ export function SEO({ title, description, image, url, type = 'website', noIndex 
   const baseUrl = getBaseUrl()
   const pageTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - Premium Products & Gadgets`
   const pageDesc = safeStr(description, DEFAULT_DESCRIPTION)
-  const pageImage = image ? (image.startsWith('http') ? image : `${baseUrl}${image}`) : `${baseUrl}${DEFAULT_IMAGE}`
+  const pageImage = image ? resolveAbsoluteUrl(image) : resolveAbsoluteUrl(DEFAULT_IMAGE)
   const pageUrl = url ? (url.startsWith('http') ? url : `${baseUrl}${url}`) : (typeof window !== 'undefined' ? window.location.href : '')
 
   return (

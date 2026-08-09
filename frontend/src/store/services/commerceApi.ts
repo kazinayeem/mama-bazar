@@ -1,10 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { authStorage } from '../../lib/authStorage'
+import { API_BASE_URL } from '../../lib/apiConfig'
 import type { Category, Product, ProductReview } from '../../types'
 import type { Brand, Collection } from '../../types/admin'
 import type { HomepageData } from '../../types/homepage'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 type ApiEnvelope<T> = {
   success: boolean
@@ -55,7 +54,7 @@ const toQueryString = (params?: ProductsQueryParams | void) => {
 export const commerceApi = createApi({
   reducerPath: 'commerceApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE,
+    baseUrl: API_BASE_URL,
     prepareHeaders: (headers) => {
       const token = authStorage.getToken()
       if (token) headers.set('Authorization', `Bearer ${token}`)

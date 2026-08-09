@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { authStorage } from '../../lib/authStorage'
+import { API_BASE_URL } from '../../lib/apiConfig'
 import type {
   AdminListResult,
   AdminProduct,
@@ -17,7 +18,7 @@ import type {
 } from '../../types/admin'
 import type { Category, ShippingMethod } from '../../types'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+
 
 type Envelope<T> = {
   success: boolean
@@ -49,7 +50,7 @@ const parseError = (err: unknown): string => {
 export const adminProductsApi = createApi({
   reducerPath: 'adminProductsApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE,
+    baseUrl: API_BASE_URL,
     prepareHeaders: (headers) => {
       const token = authStorage.getToken()
       if (token) headers.set('Authorization', `Bearer ${token}`)

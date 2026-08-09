@@ -1,4 +1,5 @@
 import { authStorage } from './authStorage'
+import { resolveUrl } from './apiConfig'
 import type {
   AdminCoupon,
   ApiListResult,
@@ -22,8 +23,7 @@ import type {
   UserOrderWithItems,
 } from '../types'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-const FALLBACK_API_BASE = 'http://localhost:5000'
+const NETWORK_ERROR_MESSAGE = 'Unable to connect to the server. Please try again.'
 
 type ApiEnvelope<T> = {
   success: boolean
@@ -37,8 +37,6 @@ type ApiEnvelope<T> = {
   message?: string
 }
 
-const NETWORK_ERROR_MESSAGE = 'Unable to connect to the server. Please try again.'
-
 const parseEnvelope = <T>(raw: string): ApiEnvelope<T> | null => {
   try {
     return JSON.parse(raw) as ApiEnvelope<T>
@@ -51,45 +49,31 @@ const requestEnvelope = async <T>(path: string, init?: RequestInit, withAuth = f
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 6000)
   const token = authStorage.getToken()
-  const bases = [API_BASE, FALLBACK_API_BASE].filter((base, index, list) => list.indexOf(base) === index)
 
   try {
-    let lastError: Error | null = null
+    const response = await fetch(resolveUrl(path), {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(withAuth && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init?.headers || {}),
+      },
+      signal: controller.signal,
+    })
 
-    for (const base of bases) {
-      const response = await fetch(`${base}${path}`, {
-        ...init,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(withAuth && token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(init?.headers || {}),
-        },
-        signal: controller.signal,
-      })
+    const rawText = await response.text()
+    const data = parseEnvelope<T>(rawText)
 
-      const rawText = await response.text()
-      const data = parseEnvelope<T>(rawText)
-
-      if (!data) {
-        const looksLikeHtml = rawText.trimStart().startsWith('<!DOCTYPE') || rawText.trimStart().startsWith('<html')
-        const shouldRetry = looksLikeHtml && base !== FALLBACK_API_BASE
-        if (shouldRetry) {
-          continue
-        }
-        throw new Error(NETWORK_ERROR_MESSAGE)
-      }
-
-      if (!response.ok || !data.success) {
-        lastError = new Error(data.message || 'Request failed')
-        continue
-      }
-
-      return data
+    if (!data) {
+      throw new Error(NETWORK_ERROR_MESSAGE)
     }
 
-    throw lastError || new Error(NETWORK_ERROR_MESSAGE)
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || `Request failed (${response.status})`)
+    }
+
+    return data
   } catch (err) {
-    clearTimeout(timeout)
     if (err instanceof TypeError || (err as DOMException)?.name === 'AbortError') {
       throw new Error(NETWORK_ERROR_MESSAGE)
     }
@@ -214,7 +198,7 @@ export const api = {
   async uploadPaymentProof(file: File): Promise<{ url: string; provider?: string }> {
     const formData = new FormData()
     formData.append('file', file)
-    const response = await fetch(`${API_BASE}/api/uploads/payment-proof`, {
+    const response = await fetch(resolveUrl('/api/uploads/payment-proof'), {
       method: 'POST',
       body: formData,
     })
@@ -588,7 +572,7 @@ export const api = {
   async addHeroSlideByUpload(file: File): Promise<string[]> {
     const formData = new FormData()
     formData.append('image', file)
-    const response = await fetch(`${API_BASE}/api/settings/hero-slides`, {
+    const response = await fetch(resolveUrl('/api/settings/hero-slides'), {
       method: 'POST',
       headers: {
         ...(authStorage.getToken() ? { Authorization: `Bearer ${authStorage.getToken()}` } : {}),

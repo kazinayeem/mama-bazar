@@ -27,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { adminApi } from '@/lib/adminApi'
 import type { MediaAsset } from '@/types/admin'
 import { SEO } from '../../components/common/SEO'
+import { resolveAbsoluteUrl } from '@/lib/apiConfig'
 
 const AdminMediaPage = () => {
   const [assets, setAssets] = useState<MediaAsset[]>([])
@@ -84,7 +85,7 @@ const AdminMediaPage = () => {
   }
 
   const copyUrl = async (asset: MediaAsset) => {
-    const url = asset.url.startsWith('http') ? asset.url : `${window.location.origin}${asset.url}`
+    const url = resolveAbsoluteUrl(asset.url)
     try {
       await navigator.clipboard.writeText(url)
       setCopied(asset.id.toString())

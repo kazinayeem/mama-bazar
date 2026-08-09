@@ -7,6 +7,7 @@ import { formatPrice } from '../../lib/format'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { addToCart } from '../../store/slices/cartSlice'
 import { toggleWishlist } from '../../store/slices/uiSlice'
+import { resolveUrl } from '@/lib/apiConfig'
 import type { Product } from '../../types'
 import StarRating from './StarRating'
 
@@ -15,9 +16,6 @@ interface ProductCardProps {
   onQuickView: (product: Product) => void
   index?: number
 }
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-const resolveUrl = (url: string) => (url.startsWith('/') ? `${API_BASE}${url}` : url)
 
 const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
   const dispatch = useAppDispatch()

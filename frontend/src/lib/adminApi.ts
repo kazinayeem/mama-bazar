@@ -1,4 +1,5 @@
 import { authStorage } from './authStorage'
+import { resolveUrl } from './apiConfig'
 import type {
   AdminCustomer,
   AdminOrder,
@@ -20,7 +21,7 @@ import type { ContactMessage, PolicyPage } from '../types'
 import type { AdminCheckoutNotice, AdminPaymentMethod } from '../types/admin'
 import type { HomepageConfig, NewsletterSubscriber } from '../types/homepage'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+
 
 type Envelope<T> = {
   success: boolean
@@ -56,7 +57,7 @@ async function handleResponse<T>(response: Response): Promise<Envelope<T>> {
 }
 
 const requestJson = async <T>(path: string, init?: RequestInit): Promise<Envelope<T>> => {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(resolveUrl(path), {
     ...init,
     headers: {
       'Content-Type': 'application/json',
@@ -68,7 +69,7 @@ const requestJson = async <T>(path: string, init?: RequestInit): Promise<Envelop
 }
 
 const requestForm = async <T>(path: string, formData: FormData): Promise<Envelope<T>> => {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(resolveUrl(path), {
     method: 'POST',
     headers: { Authorization: token() },
     body: formData,

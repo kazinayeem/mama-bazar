@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { resolveUrl } from '@/lib/apiConfig'
 import type { HomepageHeroSlide } from '../../types/homepage'
 
 interface HeroCarouselProps {
@@ -11,11 +12,10 @@ interface HeroCarouselProps {
 
 const AUTOPLAY_MS = 5000
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-
-const resolveUrl = (url?: string) => {
+const resolveHeroUrl = (url?: string) => {
   if (!url) return ''
-  const absolute = url.startsWith('/') ? `${API_BASE}${url}` : url
+  const absolute = resolveUrl(url)
+  if (!absolute) return ''
   if (/^https:\/\/res\.cloudinary\.com\//.test(absolute)) {
     return absolute.replace(
       /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(\/?v\d+\/.*)$/,
@@ -26,9 +26,9 @@ const resolveUrl = (url?: string) => {
 }
 
 const pickImage = (slide: HomepageHeroSlide) => {
-  const desktop = resolveUrl(slide.desktopImage)
-  const tablet = resolveUrl(slide.tabletImage) || desktop
-  const mobile = resolveUrl(slide.mobileImage) || tablet
+  const desktop = resolveHeroUrl(slide.desktopImage)
+  const tablet = resolveHeroUrl(slide.tabletImage) || desktop
+  const mobile = resolveHeroUrl(slide.mobileImage) || tablet
   return { desktop, tablet, mobile }
 }
 

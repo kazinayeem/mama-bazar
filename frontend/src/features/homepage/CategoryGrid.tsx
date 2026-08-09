@@ -1,15 +1,13 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { resolveUrl } from '@/lib/apiConfig'
 import type { Category } from '../../types'
 
 interface CategoryGridProps {
   items: Category[]
   columns?: number
 }
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-const resolveUrl = (url: string) => (url.startsWith('/') ? `${API_BASE}${url}` : url)
 
 const CategoryGrid = ({ items }: CategoryGridProps) => {
   const trackRef = useRef<HTMLDivElement>(null)

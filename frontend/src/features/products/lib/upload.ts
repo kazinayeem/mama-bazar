@@ -1,7 +1,6 @@
 import { authStorage } from '@/lib/authStorage'
+import { resolveUrl } from '@/lib/apiConfig'
 import type { MediaAsset } from '@/types/admin'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 export interface UploadProgress {
   loaded: number
@@ -21,7 +20,7 @@ export const uploadFilesWithProgress = (
     files.forEach((f) => formData.append('files', f))
 
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${API_BASE}/api/media/upload/multiple`)
+    xhr.open('POST', resolveUrl('/api/media/upload/multiple'))
 
     const token = authStorage.getToken()
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
