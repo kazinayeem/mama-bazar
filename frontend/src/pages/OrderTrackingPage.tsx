@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { Search, Package, Truck, Clock, CheckCircle2, XCircle, AlertCircle, FileText, Download, Printer, MapPin, CreditCard, Calendar } from 'lucide-react'
+import { Search, Package, CheckCircle2, AlertCircle, FileText, Download, Printer, MapPin, CreditCard, Calendar } from 'lucide-react'
 import { SEO } from '../components/common/SEO'
 import InvoiceTemplate from '../components/invoice/InvoiceTemplate'
 import { printInvoice, downloadInvoicePdf, generateInvoiceFilename } from '../lib/invoiceUtils'
@@ -54,18 +54,6 @@ const getTimelineFlow = (status: OrderStatus): OrderStatus[] => {
   if (status === 'returned') return RETURNED_FLOW
   if (status === 'refunded') return REFUNDED_FLOW
   return ORDER_PROGRESS_FLOW
-}
-
-const maskPhone = (phone: string): string => {
-  if (!phone || phone.length < 6) return phone
-  return phone.slice(0, 3) + '****' + phone.slice(-3)
-}
-
-const maskEmail = (email: string | null): string => {
-  if (!email) return ''
-  const [local, domain] = email.split('@')
-  if (!domain) return email
-  return local.slice(0, 2) + '***@' + domain
 }
 
 const OrderTrackingPage = () => {

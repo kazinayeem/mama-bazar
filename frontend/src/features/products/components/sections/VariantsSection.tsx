@@ -46,9 +46,6 @@ const VariantsSection = () => {
   const selectedColors = reference.colors.filter((c) => form.colorOptions.includes(c.name))
   const selectedSizes = reference.sizes.filter((s) => form.sizeOptions.includes(s.name))
 
-  const colorById = (id?: number) => reference.colors.find((c) => c.id === id)
-  const sizeById = (id?: number) => reference.sizes.find((s) => s.id === id)
-
   const updateVariant = useCallback((key: string, patch: Partial<VariantFormValue>) => {
     set({ variants: form.variants.map((v) => (v.key === key ? { ...v, ...patch } : v)) })
     setVariantErrors([])

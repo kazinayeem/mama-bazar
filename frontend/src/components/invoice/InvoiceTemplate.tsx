@@ -230,8 +230,6 @@ const InvoiceTemplate = ({ order, showActions = false, onDownload, onPrint }: In
                   const hasVariant = !!(item.color || item.size || item.variantName)
                   const variantParts = [item.color, item.size, item.variantName].filter(Boolean)
                   const variantStr = variantParts.length > 0 ? variantParts.join(' / ') : '-'
-                  const sku = item.sku || item.product?.sku || '-'
-
                   return (
                     <tr
                       key={item.id || index}
