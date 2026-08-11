@@ -25,24 +25,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from '@/components/ui/skeleton'
 import { adminApi } from '@/lib/adminApi'
 import { currency } from '@/lib/format'
+import {
+  getAllowedNextStatuses,
+  getBlockedStatuses,
+  ORDER_STATUS_FLOW,
+  ORDER_STATUS_LABELS as STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  shouldShowPaymentVerificationPanel,
+} from '@/lib/orderLifecycle'
 import type { AdminOrder } from '@/types/admin'
 import type { OrderStatus } from '@/types'
 import { SEO } from '../../components/common/SEO'
-
-const ORDER_STATUSES: OrderStatus[] = [
-  'pending',
-  'payment_pending',
-  'payment_verification',
-  'confirmed',
-  'processing',
-  'packed',
-  'shipped',
-  'out_for_delivery',
-  'delivered',
-  'returned',
-  'cancelled',
-  'refunded',
-]
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning/15 text-warning',
@@ -57,32 +50,6 @@ const STATUS_COLORS: Record<string, string> = {
   returned: 'bg-muted text-muted-foreground',
   cancelled: 'bg-destructive/10 text-destructive',
   refunded: 'bg-destructive/10 text-destructive',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pending',
-  payment_pending: 'Payment Pending',
-  payment_verification: 'Payment Verification',
-  confirmed: 'Confirmed',
-  processing: 'Processing',
-  packed: 'Packed',
-  shipped: 'Shipped',
-  out_for_delivery: 'Out for delivery',
-  delivered: 'Delivered',
-  returned: 'Returned',
-  cancelled: 'Cancelled',
-  refunded: 'Refunded',
-}
-
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  pending: 'Pending',
-  payment_pending: 'Payment pending',
-  payment_verification: 'Under verification',
-  verified: 'Verified',
-  success: 'Success',
-  failed: 'Failed',
-  rejected: 'Rejected',
-  refunded: 'Refunded',
 }
 
 const openInvoice = (order: AdminOrder) => {
@@ -207,14 +174,15 @@ const AdminOrdersPage = () => {
     }
   }
 
-  const updateStatus = async (next: string) => {
+  const updateStatus = async (next: OrderStatus) => {
     if (!selectedOrder) return
     setUpdatingStatus(next)
     try {
-      await adminApi.updateOrderStatus(selectedOrder.id, { status: next })
+      const updated = await adminApi.updateOrderStatus(selectedOrder.id, { status: next })
       toast.success(`Order marked as ${STATUS_LABELS[next]}`)
-      setSelectedOrder((prev) => (prev ? { ...prev, status: next as AdminOrder['status'] } : prev))
-      load()
+      setSelectedOrder(updated)
+      setOrders((prev) => prev.map((order) => (order.id === updated.id ? { ...order, ...updated } : order)))
+      void load({ page, status, search })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Update failed')
     } finally {
@@ -226,11 +194,11 @@ const AdminOrdersPage = () => {
     if (!selectedOrder) return
     setVerifying(action)
     try {
-      await adminApi.verifyOrderPayment(selectedOrder.id, action)
+      const updated = await adminApi.verifyOrderPayment(selectedOrder.id, action)
       toast.success(action === 'verified' ? 'Payment verified — order confirmed' : 'Payment rejected')
-      const detail = await adminApi.getOrder(selectedOrder.id)
-      setSelectedOrder(detail)
-      load()
+      setSelectedOrder(updated)
+      setOrders((prev) => prev.map((order) => (order.id === updated.id ? { ...order, ...updated } : order)))
+      void load({ page, status, search })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Verification failed')
     } finally {
@@ -267,7 +235,9 @@ const AdminOrdersPage = () => {
   }
 
   const timeline = selectedOrder?.statusHistory || []
-  const awaitingVerification = selectedOrder?.paymentStatus === 'payment_verification'
+  const awaitingVerification = selectedOrder ? shouldShowPaymentVerificationPanel(selectedOrder) : false
+  const allowedNextStatuses = selectedOrder ? getAllowedNextStatuses(selectedOrder) : []
+  const blockedStatuses = selectedOrder ? getBlockedStatuses(selectedOrder) : []
 
   return (
     <AdminLayout>
@@ -299,7 +269,7 @@ const AdminOrdersPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  {ORDER_STATUSES.map((s) => (
+                  {ORDER_STATUS_FLOW.map((s) => (
                     <SelectItem key={s} value={s}>
                       {STATUS_LABELS[s]}
                     </SelectItem>
@@ -458,7 +428,7 @@ const AdminOrdersPage = () => {
                 <div className="rounded-lg border p-4">
                   <p className="mb-2 text-sm font-semibold">Update Status</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {ORDER_STATUSES.filter((s) => s !== selectedOrder.status).map((s) => (
+                    {allowedNextStatuses.map((s) => (
                       <Button
                         key={s}
                         size="sm"
@@ -476,6 +446,43 @@ const AdminOrdersPage = () => {
                       Current: {STATUS_LABELS[selectedOrder.status]}
                     </Badge>
                   </div>
+                  <div className="mt-4 rounded-md bg-muted/50 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Lifecycle overview</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {ORDER_STATUS_FLOW.map((statusItem) => {
+                        const isCurrent = statusItem === selectedOrder.status
+                        const isNext = allowedNextStatuses.includes(statusItem)
+                        const isBlocked = !isCurrent && !isNext
+                        return (
+                          <span
+                            key={statusItem}
+                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                              isCurrent
+                                ? 'border-primary bg-primary text-white'
+                                : isNext
+                                  ? 'border-primary/30 bg-primary/10 text-primary'
+                                  : 'border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500'
+                            } ${isBlocked ? 'opacity-80' : ''}`}
+                          >
+                            {STATUS_LABELS[statusItem]}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {blockedStatuses.length > 0 && (
+                    <div className="mt-3 text-xs text-muted-foreground">
+                      Locked from this state:
+                      <span className="ml-2 flex flex-wrap gap-1.5 pt-2">
+                        {blockedStatuses.map((statusItem) => (
+                          <span key={statusItem} className="rounded-full border border-slate-200 px-2.5 py-1 text-[11px] text-slate-400 dark:border-slate-700">
+                            {STATUS_LABELS[statusItem]}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Items */}
