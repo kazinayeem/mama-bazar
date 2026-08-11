@@ -185,7 +185,10 @@ export interface ProductSpec {
 export interface ProductRelation {
   id: number
   type: ProductRelationType
-  relatedProductId: number
+  /** The backend returns the related product object; use its id when submitting. */
+  relatedProduct?: { id: number; title: string; slug?: string; price?: string | number; discount?: string | number | null; images?: string[] | null } | null
+  /** Present on some older responses — prefer relatedProduct.id. */
+  relatedProductId?: number
 }
 
 export interface ProductRelationInput {

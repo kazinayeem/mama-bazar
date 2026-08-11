@@ -24,6 +24,7 @@ import {
   PRODUCT_STATUSES,
   formValuesToPayload,
   productTitle,
+  validateVariants,
   type ProductFormValues,
   type ProductInput,
 } from '../lib/productForm'
@@ -42,8 +43,9 @@ interface ProductFormProps {
 const validate = (form: ProductFormValues): string[] => {
   const errors: string[] = []
   if (!form.title.trim()) errors.push('Product title is required')
-  const hasVariants = form.variants.length > 0
-  if (!hasVariants) {
+  const variantResult = validateVariants(form)
+  errors.push(...variantResult.errors)
+  if (!form.hasVariants || form.variants.length === 0) {
     const price = Number(form.price)
     if (!form.price.trim() || Number.isNaN(price) || price <= 0) errors.push('Price must be a positive number')
   }
@@ -54,6 +56,7 @@ const ProductForm = ({ initialValues, isEditing, submitting, onCancel, onSubmit,
   const navigate = useNavigate()
   const reference = useReferenceData()
   const [form, setForm] = useState<ProductFormValues>(initialValues)
+  const [variantErrors, setVariantErrors] = useState<string[]>([])
 
   const set = (patch: Partial<ProductFormValues>) => setForm((prev) => ({ ...prev, ...patch }))
 
@@ -68,18 +71,18 @@ const ProductForm = ({ initialValues, isEditing, submitting, onCancel, onSubmit,
   }, [reference])
 
   const contextValue = useMemo(
-    () => ({ form, set, reference, categoriesByParent }),
-    [form, reference, categoriesByParent],
+    () => ({ form, set, reference, categoriesByParent, variantErrors, setVariantErrors }),
+    [form, reference, categoriesByParent, variantErrors],
   )
 
   const handleSubmit = (mode: SaveMode) => {
-    if (mode === 'publish') {
-      const errors = validate(form)
-      if (errors.length > 0) {
-        errors.forEach((e) => toast.error(e))
-        return
-      }
+    const errors = validate(form)
+    if (errors.length > 0) {
+      setVariantErrors(validateVariants(form).errors)
+      errors.forEach((e) => toast.error(e))
+      return
     }
+    setVariantErrors([])
     onSubmit(formValuesToPayload(form), mode)
   }
 
@@ -136,12 +139,12 @@ const ProductForm = ({ initialValues, isEditing, submitting, onCancel, onSubmit,
 
               <Button type="button" variant="secondary" disabled={submitting} onClick={() => handleSubmit('draft')}>
                 {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />}
-                Save Draft
+                {submitting ? 'Saving…' : 'Save Draft'}
               </Button>
 
               <Button type="button" disabled={submitting} onClick={() => handleSubmit('publish')}>
                 {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
-                {isEditing ? 'Save & Publish' : 'Publish'}
+                {submitting ? 'Saving…' : isEditing ? 'Save & Publish' : 'Publish'}
               </Button>
             </div>
           </div>
@@ -163,11 +166,11 @@ const ProductForm = ({ initialValues, isEditing, submitting, onCancel, onSubmit,
         <div className="sticky bottom-0 z-30 -mx-4 flex items-center gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
           <Button type="button" variant="outline" className="flex-1" disabled={submitting} onClick={() => handleSubmit('draft')}>
             {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />}
-            Draft
+            {submitting ? 'Saving…' : 'Draft'}
           </Button>
           <Button type="button" className="flex-1" disabled={submitting} onClick={() => handleSubmit('publish')}>
             {submitting ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
-            {isEditing ? 'Save & Publish' : 'Publish'}
+            {submitting ? 'Saving…' : isEditing ? 'Save & Publish' : 'Publish'}
           </Button>
           <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/admin/products')} aria-label="Back to products">
             <ArrowLeft className="h-5 w-5" />

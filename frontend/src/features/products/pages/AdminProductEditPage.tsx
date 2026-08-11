@@ -30,7 +30,11 @@ const AdminProductEditPage = () => {
       if (fieldErrors && Object.keys(fieldErrors).length) {
         toast.error(
           Object.entries(fieldErrors)
-            .map(([field, message]) => `• ${field}: ${message}`)
+            .map(([field, message]) =>
+              field === 'relations'
+                ? `• relations: ${message} — please check the category, brand, collection, vendor, supplier or related product selections.`
+                : `• ${field}: ${message}`,
+            )
             .join('\n'),
         )
       }

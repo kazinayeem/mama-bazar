@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Eye, Heart, ImageOff, Plus, ShoppingBag } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from './ToastProvider'
 import { formatPrice } from '../../lib/format'
@@ -8,7 +8,12 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { addToCart } from '../../store/slices/cartSlice'
 import { toggleWishlist } from '../../store/slices/uiSlice'
 import { resolveUrl } from '@/lib/apiConfig'
-import type { Product } from '../../types'
+import {
+  findVariantByOptions,
+  getVariantDiscountPercent,
+  getVariantEffectivePrice,
+  type Product,
+} from '../../types'
 import StarRating from './StarRating'
 
 interface ProductCardProps {
@@ -22,20 +27,34 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
   const toast = useToast()
   const wishlisted = useAppSelector((state) => state.ui.wishlist.includes(product.id))
   const [activeColor, setActiveColor] = useState<string | undefined>(product.colorOptions?.[0]?.name)
+  const [activeSize, setActiveSize] = useState<string | undefined>(product.sizeOptions?.[0])
   const [imageFailed, setImageFailed] = useState(false)
 
+  const hasColorOptions = Boolean(product.colorOptions?.length)
+  const hasSizeOptions = Boolean(product.sizeOptions?.length)
+
+  const activeVariant = useMemo(
+    () => (product.variants ? findVariantByOptions(product.variants, activeColor, activeSize) : undefined),
+    [product.variants, activeColor, activeSize],
+  )
+
   const price = Number(product.price)
-  const discount = Number(product.discount || 0)
-  const salePriceValue =
-    Number(product.salePrice) > 0
+  const baseDiscount = Number(product.discount || 0)
+  const variantDiscount = activeVariant ? getVariantDiscountPercent(activeVariant) : 0
+  const salePriceValue = activeVariant
+    ? getVariantEffectivePrice(activeVariant, product.price, product.discount)
+    : Number(product.salePrice) > 0
       ? Math.round(Number(product.salePrice))
-      : discount > 0
-        ? Math.round(price - (price * discount) / 100)
+      : baseDiscount > 0
+        ? Math.round(price - (price * baseDiscount) / 100)
         : price
 
   const brandName = product.brandInfo?.name || product.brand || ''
   const activeColorOption = product.colorOptions?.find((c) => c.name === activeColor)
+  const activeSizeLabel = activeSize || ''
   const activeImage =
+    (activeVariant?.images?.[0] ? resolveUrl(activeVariant.images[0]) : null) ||
+    (activeVariant?.thumbnail ? resolveUrl(activeVariant.thumbnail) : null) ||
     (activeColorOption?.image ? resolveUrl(activeColorOption.image) : null) ||
     (product.images.length > 0 ? resolveUrl(product.images[0]) : '')
 
@@ -55,6 +74,8 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
           images: product.images,
           stock: product.stock,
         },
+          variantId: activeVariant?.id,
+          size: activeSizeLabel || undefined,
         color: activeColor,
         image: activeImage,
       }),
@@ -70,8 +91,10 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
   }
 
   // Badge priority: sale > flash sale > new arrival > best seller
-  const badge = discount > 0
-    ? { text: `-${discount}%`, className: 'bg-red-500 text-white' }
+  const badge = variantDiscount > 0
+    ? { text: `-${variantDiscount}%`, className: 'bg-red-500 text-white' }
+    : baseDiscount > 0
+      ? { text: `-${baseDiscount}%`, className: 'bg-red-500 text-white' }
     : product.isFlashSale
       ? { text: 'Flash Sale', className: 'bg-accent text-white' }
       : product.isNewArrival
@@ -110,6 +133,12 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         {badge && (
           <span className={`absolute left-2.5 top-2.5 inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold shadow-sm ${badge.className}`}>
             {badge.text}
+          </span>
+        )}
+
+        {(activeVariant || hasColorOptions || hasSizeOptions) && (
+          <span className="absolute left-2.5 bottom-2.5 rounded-full bg-slate-950/75 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
+            {activeVariant ? 'Variant selected' : 'Options available'}
           </span>
         )}
 
@@ -170,7 +199,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         {/* Price row */}
         <div className="flex flex-wrap items-baseline gap-x-1.5 pt-0.5">
           <span className="text-base font-extrabold text-slate-900 dark:text-white">{formatPrice(salePriceValue)}</span>
-          {discount > 0 && (
+          {baseDiscount > 0 && (
             <span className="text-xs text-slate-400 line-through">{formatPrice(price)}</span>
           )}
           {isLowStock && !isOutOfStock && (
@@ -179,9 +208,9 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         </div>
 
         {/* Color variants — fixed height with overflow handling */}
-        <div className="flex min-h-[18px] items-center gap-1 overflow-hidden">
-          {product.colorOptions && product.colorOptions.length > 0 ? (
-            product.colorOptions.slice(0, 6).map((color) => (
+        <div className="flex min-h-[18px] flex-wrap items-center gap-1 overflow-hidden">
+          {hasColorOptions ? (
+            product.colorOptions?.slice(0, 6).map((color) => (
               <button
                 aria-label={`Select color ${color.name}`}
                 className={`h-4 w-4 shrink-0 rounded-full border-2 transition ${
@@ -192,7 +221,25 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
                 style={{ backgroundColor: color.value || '#cccccc' }}
                 type="button"
               />
-            ))
+              ))
+          ) : null}
+          {hasSizeOptions ? (
+            <div className="ml-1 flex flex-wrap gap-1.5">
+              {product.sizeOptions?.slice(0, 4).map((size) => (
+                <button
+                  className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold transition ${
+                    activeSize === size
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-slate-200 text-slate-500 hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-400'
+                  }`}
+                  key={size}
+                  onClick={() => setActiveSize(size)}
+                  type="button"
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           ) : null}
         </div>
 

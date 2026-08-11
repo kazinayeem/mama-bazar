@@ -34,6 +34,8 @@ export interface ProductFormContextValue {
   set: (patch: Partial<ProductFormValues>) => void
   reference: ReferenceData
   categoriesByParent: Map<string | number, Category[]>
+  variantErrors: string[]
+  setVariantErrors: (errors: string[]) => void
 }
 
 export const ProductFormContext = createContext<ProductFormContextValue | null>(null)

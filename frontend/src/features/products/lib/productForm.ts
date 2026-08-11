@@ -47,6 +47,7 @@ export interface RelationFormValue {
 }
 
 export interface ProductFormValues {
+  hasVariants: boolean
   title: string
   slug?: string
   description: string
@@ -155,6 +156,7 @@ export const num = (v?: string | number | null): number | undefined => {
 }
 
 export const emptyForm = (): ProductFormValues => ({
+  hasVariants: false,
   title: '',
   description: '',
   shortDescription: '',
@@ -230,6 +232,7 @@ export const emptyForm = (): ProductFormValues => ({
 })
 
 export const productToFormValues = (product: AdminProduct): ProductFormValues => ({
+  hasVariants: (product.variants?.length ?? 0) > 0,
   title: product.title || '',
   description: product.description || '',
   shortDescription: product.shortDescription || '',
@@ -316,19 +319,50 @@ export const productToFormValues = (product: AdminProduct): ProductFormValues =>
   relations: (product.relations || []).map((r) => ({
     key: newKey(),
     type: r.type,
-    relatedProductId: String(r.relatedProductId),
+    relatedProductId: r.relatedProduct?.id ? String(r.relatedProduct.id) : r.relatedProductId ? String(r.relatedProductId) : '',
   })),
 })
 
 export const formValuesToPayload = (values: ProductFormValues): ProductInput => {
-  const hasVariants = values.variants.length > 0
+  const hasVariants = values.hasVariants && values.variants.length > 0
   const priceNum = num(values.price)
+
+  const variants =
+    values.hasVariants || values.variants.length > 0
+      ? values.variants
+          .filter((v) => v.name.trim())
+          .map<ProductVariantInput>((v) => ({
+            id: v.id ?? undefined,
+            name: v.name.trim(),
+            options: v.options.trim() ? safeParseOptions(v.options) : undefined,
+            price: v.price || undefined,
+            salePrice: v.salePrice || undefined,
+            sku: v.sku || undefined,
+            barcode: v.barcode || undefined,
+            stock: num(v.stock),
+            thumbnail: v.thumbnail || undefined,
+            availability: v.availability,
+          }))
+      : []
+
+  const variantPrices = variants
+    .map((v) => Number(v.price))
+    .filter((n) => Number.isFinite(n) && n > 0)
+
   return {
     title: values.title.trim(),
     description: values.description || undefined,
     shortDescription: values.shortDescription || undefined,
     returnPolicy: values.returnPolicy || undefined,
-    price: hasVariants ? (priceNum ?? 0) : (priceNum ?? 0),
+    // When variants exist the parent price is a fallback for the storefront;
+    // derive it from the cheapest variant so the parent product always has a valid price.
+    price: hasVariants
+      ? priceNum && priceNum > 0
+        ? priceNum
+        : variantPrices.length
+          ? Math.min(...variantPrices)
+          : 0
+      : priceNum ?? 0,
     salePrice: num(values.salePrice),
     discount: num(values.discount),
     costPrice: num(values.costPrice),
@@ -390,23 +424,7 @@ export const formValuesToPayload = (values: ProductFormValues): ProductInput => 
         ? values.colorOptions.map((name) => ({ name, value: name.toLowerCase().replace(/\s+/g, '-') }))
         : undefined,
     images: values.images.filter((i) => i.status === 'done' || i.status === 'existing').map((i) => i.url),
-    variants:
-      values.variants.length > 0
-        ? values.variants
-            .filter((v) => v.name.trim())
-            .map<ProductVariantInput>((v) => ({
-              id: v.id ?? undefined,
-              name: v.name.trim(),
-              options: v.options.trim() ? safeParseOptions(v.options) : undefined,
-              price: v.price || undefined,
-              salePrice: v.salePrice || undefined,
-              sku: v.sku || undefined,
-              barcode: v.barcode || undefined,
-              stock: num(v.stock),
-              thumbnail: v.thumbnail || undefined,
-              availability: v.availability,
-            }))
-        : undefined,
+    variants: variants.length > 0 ? variants : [],
     specs:
       values.specs.length > 0
         ? values.specs
@@ -418,16 +436,24 @@ export const formValuesToPayload = (values: ProductFormValues): ProductInput => 
               sortOrder: index + 1,
             }))
         : undefined,
-    relations:
-      values.relations.length > 0
-        ? values.relations
-            .filter((r) => r.relatedProductId.trim())
-            .map<ProductRelationInput>((r) => ({
-              type: r.type,
-              relatedProductId: Number(r.relatedProductId),
-            }))
-        : undefined,
+    relations: toRelationPayload(values.relations),
   }
+}
+
+/**
+ * Normalize relation rows for the API.
+ * The backend expects `relations: [{ relatedProductId: number, type }]` — a JSON
+ * array. Rows without a valid numeric product id are dropped, and the whole
+ * field is omitted (not null / empty) when nothing is linked.
+ */
+const toRelationPayload = (
+  relations: RelationFormValue[],
+): ProductRelationInput[] | undefined => {
+  if (!relations || relations.length === 0) return undefined
+  const valid = relations
+    .map((r) => ({ type: r.type, relatedProductId: Number(String(r.relatedProductId).trim()) }))
+    .filter((r) => Number.isInteger(r.relatedProductId) && r.relatedProductId > 0)
+  return valid.length > 0 ? valid : undefined
 }
 
 const safeParseOptions = (json: string): Record<string, string> | undefined => {
@@ -438,6 +464,112 @@ const safeParseOptions = (json: string): Record<string, string> | undefined => {
     return undefined
   }
   return undefined
+}
+
+/** Build the variant `options` payload: option names for display plus the DB ids for mapping. */
+export const buildVariantOptions = (
+  color?: { name: string; id?: number } | null,
+  size?: { name: string; id?: number } | null,
+): Record<string, string> => {
+  const options: Record<string, string> = {}
+  if (color?.name) {
+    options.color = color.name
+    if (color.id) options.colorId = String(color.id)
+  }
+  if (size?.name) {
+    options.size = size.name
+    if (size.id) options.sizeId = String(size.id)
+  }
+  return options
+}
+
+/** Unique per-combination key used to detect existing variants when generating. */
+export const variantCombinationKey = (options: Record<string, string>): string =>
+  [options.color || '', options.size || ''].join('::').toLowerCase()
+
+const slugifyToken = (value: string): string =>
+  value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+const shortCode = (value: string, length: number): string =>
+  value
+    .split(/[\s/-]+/)
+    .map((part) => part.replace(/[^A-Za-z0-9]/g, '').toUpperCase())
+    .filter(Boolean)
+    .map((part) => (part.length > length ? part.slice(0, length) : part))
+    .join('-')
+
+/** Generate a unique SKU like JBL-510BT-BLK-L from the product SKU + color + size. */
+export const suggestVariantSku = (productSku: string, color?: string, size?: string): string => {
+  const base = productSku.trim() ? slugifyToken(productSku.trim()) : ''
+  const colorCode = color ? shortCode(color, 3) : ''
+  const sizeCode = size ? shortCode(size, 3) : ''
+  const parts = [base, colorCode, sizeCode].filter(Boolean)
+  return parts.length > 0 ? parts.join('-') : ''
+}
+
+export interface VariantValidationResult {
+  errors: string[]
+  duplicateSkus: string[]
+}
+
+/** Validate variant rows before saving. Returns errors with inline-friendly messages. */
+export const validateVariants = (values: Pick<ProductFormValues, 'hasVariants' | 'variants' | 'price'>): VariantValidationResult => {
+  const errors: string[] = []
+  const duplicateSkus: string[] = []
+  const seenNames = new Set<string>()
+  const seenSkus = new Set<string>()
+
+  if (values.hasVariants && values.variants.length === 0) {
+    errors.push('Variant mode is enabled, but no variants were added. Add at least one variant or turn the toggle off.')
+  }
+
+  values.variants.forEach((v, idx) => {
+    const label = v.name.trim() ? `"${v.name.trim()}"` : `Variant ${idx + 1}`
+    if (!v.name.trim()) {
+      errors.push(`Variant ${idx + 1}: Name is required`)
+    } else {
+      const nameLower = v.name.trim().toLowerCase()
+      if (seenNames.has(nameLower)) {
+        errors.push(`Variant ${idx + 1}: Duplicate variant name "${v.name.trim()}"`)
+      }
+      seenNames.add(nameLower)
+    }
+
+    const price = Number(v.price)
+    if (v.price.trim() && (Number.isNaN(price) || price < 0)) {
+      errors.push(`${label}: Price must be a non-negative number`)
+    }
+    const salePrice = Number(v.salePrice)
+    if (v.salePrice.trim() && (Number.isNaN(salePrice) || salePrice < 0)) {
+      errors.push(`${label}: Sale price must be a non-negative number`)
+    }
+    if (v.price.trim() && v.salePrice.trim() && salePrice > price) {
+      errors.push(`${label}: Sale price cannot exceed regular price`)
+    }
+    const stock = Number(v.stock)
+    if (v.stock.trim() && (Number.isNaN(stock) || stock < 0)) {
+      errors.push(`${label}: Stock cannot be negative`)
+    }
+    if (v.sku.trim()) {
+      const skuLower = v.sku.trim().toLowerCase()
+      if (seenSkus.has(skuLower)) {
+        errors.push(`Duplicate SKU detected: ${v.sku.trim()}`)
+        duplicateSkus.push(v.sku.trim())
+      }
+      seenSkus.add(skuLower)
+    }
+  })
+
+  const hasVariantPrices = values.variants.some((v) => Number(v.price) > 0)
+  const parentPrice = Number(values.price)
+  if (values.hasVariants && values.variants.length > 0 && !hasVariantPrices && !(Number.isFinite(parentPrice) && parentPrice > 0)) {
+    errors.push('At least one variant must have a price (or set the main price)')
+  }
+
+  return { errors, duplicateSkus }
 }
 
 export const productTitle = (values: ProductFormValues): string => values.title.trim() || 'Untitled product'

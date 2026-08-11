@@ -614,7 +614,7 @@ export const adminProductsApi = createApi({
         count: response.data?.count ?? 0,
       }),
     }),
-  },
+  }),
 })
 
 export const {

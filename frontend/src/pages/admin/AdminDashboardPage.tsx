@@ -41,6 +41,11 @@ import { adminApi } from '@/lib/adminApi'
 import { currency } from '@/lib/format'
 import type { DashboardData } from '@/types/admin'
 import { SEO } from '../../components/common/SEO'
+import {
+  useGetExpenseSummaryQuery,
+  useGetExpenseMonthlyTrendQuery,
+  useGetExpenseByCategoryQuery,
+} from '@/store/services/adminProductsApi'
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-warning/15 text-warning',
@@ -156,6 +161,30 @@ const AdminDashboardPage = () => {
       label: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     }))
   }, [data])
+
+  const year = new Date().getFullYear()
+  const { data: expenseSummary } = useGetExpenseSummaryQuery()
+  const { data: expenseTrend } = useGetExpenseMonthlyTrendQuery({ year: String(year) })
+  const { data: expenseByCategory } = useGetExpenseByCategoryQuery({ dateFrom: undefined, dateTo: undefined })
+
+  const expenseTrendData = useMemo(
+    () =>
+      (expenseTrend?.data || []).map((row) => ({
+        label: new Date(Number(year), Math.max(0, row.month - 1), 1).toLocaleDateString('en-US', { month: 'short' }),
+        total: Number(row.total),
+      })),
+    [expenseTrend, year],
+  )
+
+  const expenseCards = useMemo(
+    () => [
+      { label: 'Total Expenses', value: currency(expenseSummary?.total ?? 0), sub: 'All time', icon: Wallet },
+      { label: 'This Month', value: currency(expenseSummary?.thisMonth ?? 0), sub: `${expenseSummary?.thisMonthCount ?? 0} expenses`, icon: Wallet },
+      { label: 'This Week', value: currency(expenseSummary?.thisWeek ?? 0), sub: `${expenseSummary?.thisWeekCount ?? 0} expenses`, icon: Wallet },
+      { label: 'Today', value: currency(expenseSummary?.today ?? 0), sub: `${expenseSummary?.todayCount ?? 0} expenses`, icon: Wallet },
+    ],
+    [expenseSummary],
+  )
 
   return (
     <AdminLayout>
@@ -290,10 +319,95 @@ const AdminDashboardPage = () => {
           </Card>
         </div>
 
+        {/* Finance snapshot */}
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {expenseCards.map((card) => (
+            <Card key={card.label} className="transition-shadow hover:shadow-md">
+              <CardContent className="flex items-start justify-between p-5">
+                <div>
+                  <p className="text-sm text-muted-foreground">{card.label}</p>
+                  <p className="mt-1 text-xl font-bold tracking-tight">{card.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{card.sub}</p>
+                </div>
+                <div className="rounded-lg bg-destructive/10 p-2.5 text-destructive">
+                  <card.icon className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          {/* Recent orders */}
+          {/* Expense trend */}
           <Card className="xl:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-base">Expense Trend</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{year}</Badge>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/admin/expenses/reports">View report</Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {expenseTrendData.length === 0 ? (
+                <p className="py-12 text-center text-sm text-muted-foreground">No expenses recorded for {year}.</p>
+              ) : (
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={expenseTrendData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+                      <defs>
+                        <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={24} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={56} tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))} />
+                      <Tooltip formatter={(value) => [currency(Number(value)), 'Spent']} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                      <Area type="monotone" dataKey="total" stroke="#ef4444" strokeWidth={2} fill="url(#expGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Top expense categories */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-base">Top Expense Categories</CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/admin/expenses/categories">Manage</Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {!expenseByCategory?.length ? (
+                <p className="p-6 text-sm text-muted-foreground">No expenses yet</p>
+              ) : (
+                <div className="divide-y">
+                  {expenseByCategory.slice(0, 5).map((category) => (
+                    <div key={category.categoryId ?? 'none'} className="flex items-center gap-3 px-5 py-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted">
+                        <Wallet className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{category.categoryName || 'Uncategorized'}</p>
+                        <p className="text-xs text-muted-foreground">{category.count} expense{category.count === 1 ? '' : 's'}</p>
+                      </div>
+                      <span className="text-xs font-semibold">{currency(category.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          {/* Recent orders */}
+          <Card className="xl:col-span-2">            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-base">Recent Orders</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/admin/orders">View all</Link>

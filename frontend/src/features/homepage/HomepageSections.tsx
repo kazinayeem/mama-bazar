@@ -10,6 +10,7 @@ import PromoBanner from './PromoBanner'
 import ReviewsSection from './ReviewsSection'
 import NewsletterBlock from './NewsletterBlock'
 import WhyChooseUs from './WhyChooseUs'
+import { Link } from 'react-router-dom'
 import {
   asBanners,
   asBrands,
@@ -35,7 +36,7 @@ interface HomepageSectionsProps {
 const ProductRowSkeleton = () => (
   <div className="flex gap-3 overflow-hidden py-1">
     {Array.from({ length: 5 }).map((_, i) => (
-      <div key={i} className="h-72 w-48 shrink-0 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+      <div key={i} className="h-72 w-48 shrink-0 animate-pulse rounded-2xl border border-slate-100 bg-slate-100/80 dark:border-slate-800 dark:bg-slate-800" />
     ))}
   </div>
 )
@@ -118,13 +119,39 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
   }
 
   const heroSlides = asSlides(data.sections.find((s) => s.type === 'hero')) || data.heroSlides
+  const popularSearches = data.popularSearches?.slice(0, 8) || []
 
   return (
     <>
       {data.sections.map((section) => {
         switch (section.type) {
           case 'hero':
-            return <HeroCarousel key={section.id} slides={heroSlides} />
+            return (
+              <div key={section.id} className="space-y-4">
+                <HeroCarousel slides={heroSlides} />
+                {popularSearches.length > 0 && (
+                  <section className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col gap-3 rounded-3xl border border-slate-100 bg-white/90 px-4 py-4 shadow-soft backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Popular searches</p>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Jump into the products shoppers are looking for right now.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {popularSearches.map((term) => (
+                          <Link
+                            className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-primary hover:bg-primary hover:text-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            to={`/shop?search=${encodeURIComponent(term)}`}
+                            key={term}
+                          >
+                            {term}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+              </div>
+            )
 
           case 'trust_strip':
             return <TrustStrip key={section.id} items={asContentItems(section)} />

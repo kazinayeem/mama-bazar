@@ -11,6 +11,7 @@ import {
   getMyOrders,
   trackOrder,
   getInvoice,
+  getCustomerInvoice,
   remove,
 } from "./order.controller";
 import { authMiddleware, adminOnly } from "../../middleware/auth";
@@ -44,6 +45,9 @@ router.post("/track", validate(trackOrderSchema), asyncHandler(trackOrder));
 
 // CUSTOMER - Signed-in user's own orders
 router.get("/my-orders", authMiddleware, asyncHandler(getMyOrders));
+
+// CUSTOMER - Get invoice for own order (authenticated, checks ownership)
+router.get("/:id/my-invoice", authMiddleware, validate(orderIdSchema), asyncHandler(getCustomerInvoice));
 
 // Admin routes
 router.get("/", authMiddleware, adminOnly, validate(orderListSchema), asyncHandler(getAll));

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { useToast } from './ToastProvider'
 import { formatNumber, formatPrice } from '../../lib/format'
 import type { Product } from '../../types'
+import { findVariantByOptions, getVariantEffectivePrice } from '../../types'
 import { useAppDispatch } from '../../store/hooks'
 import { addToCart } from '../../store/slices/cartSlice'
 import StarRating from './StarRating'
@@ -18,6 +19,8 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
   const dispatch = useAppDispatch()
   const toast = useToast()
   const [activeImage, setActiveImage] = useState(0)
+  const [activeColor] = useState<string | undefined>(product?.colorOptions?.[0]?.name)
+  const [activeSize] = useState<string | undefined>(product?.sizeOptions?.[0])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -29,9 +32,13 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
 
   if (!product) return null
 
+  const activeVariant = product.variants ? findVariantByOptions(product.variants, activeColor, activeSize) : undefined
+
   const price = Number(product.price)
   const discount = Number(product.discount || 0)
-  const salePriceValue = Math.round(price - (price * discount) / 100)
+  const salePriceValue = activeVariant
+    ? getVariantEffectivePrice(activeVariant, product.price, product.discount)
+    : Math.round(price - (price * discount) / 100)
 
   const handleAdd = () => {
     dispatch(
@@ -45,6 +52,9 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
           images: product.images,
           stock: product.stock,
         },
+        variantId: activeVariant?.id,
+        size: activeSize,
+        color: activeColor,
         image: product.images[activeImage],
       }),
     )

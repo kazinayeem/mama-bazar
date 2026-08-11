@@ -159,8 +159,8 @@ const AdminExpenseReportsPage = () => {
           <XAxis dataKey="label" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} tickFormatter={(v: number) => formatNumber(v)} width={50} />
           <Tooltip
-            formatter={(value: number | string) => [currency(value), 'Spent']}
-            labelFormatter={(label: string) => `${label} ${year}`}
+            formatter={(value) => [currency(Number(value)), 'Spent']}
+            labelFormatter={(label) => `${String(label)} ${year}`}
           />
           <Area type="monotone" dataKey="total" stroke="#ef4444" fill="url(#expenseTrend)" strokeWidth={2} />
         </AreaChart>
@@ -437,12 +437,7 @@ const AdminExpenseReportsPage = () => {
                             <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip
-                          formatter={(value: number | string, _name: string, props) => {
-                            const row = props.payload as { categoryName?: string | null }
-                            return [currency(value), row.categoryName || 'Unassigned']
-                          }}
-                        />
+                        <Tooltip formatter={(value, name) => [currency(Number(value)), String(name || 'Unassigned')]} />
                       </PieChart>
                     </ResponsiveContainer>
                   )}
@@ -630,7 +625,7 @@ const AdminExpenseReportsPage = () => {
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                       <YAxis tick={{ fontSize: 12 }} tickFormatter={(v: number) => formatNumber(v)} width={50} />
-                      <Tooltip formatter={(value: number | string, name: string) => [currency(value), name]} />
+                      <Tooltip formatter={(value, name) => [currency(Number(value)), String(name)]} />
                       <Area type="monotone" dataKey="revenue" stroke="#3b82f6" fill="none" strokeWidth={2} name="Revenue" />
                       <Area type="monotone" dataKey="productCost" stroke="#f59e0b" fill="none" strokeWidth={2} name="Product Cost" />
                       <Area type="monotone" dataKey="operatingExpenses" stroke="#ef4444" fill="none" strokeWidth={2} name="Operating Expenses" />
