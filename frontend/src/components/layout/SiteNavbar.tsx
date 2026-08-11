@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, ChevronRight, Heart, LogIn, LogOut, Menu, Moon, Package, ShoppingBag, Sun, User, X, Zap, MapPin, Settings } from 'lucide-react'
+import { ChevronDown, ChevronRight, Heart, LogIn, LogOut, Menu, Package, ShoppingBag, User, X, Zap, MapPin, Settings } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { fetchMyProfile, logout } from '../../store/slices/authSlice'
-import { openCart, toggleTheme } from '../../store/slices/uiSlice'
+import { openCart } from '../../store/slices/uiSlice'
 import { useGetCategoriesQuery, useGetHomepageQuery } from '../../store/services/commerceApi'
 import SearchBar from '../common/SearchBar'
 import { formatPrice } from '../../lib/format'
@@ -12,7 +12,6 @@ import { formatPrice } from '../../lib/format'
 const SiteNavbar = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const theme = useAppSelector((state) => state.ui.theme)
   const cartItems = useAppSelector((state) => state.cart.items)
   const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems])
   const subtotal = useMemo(() => cartItems.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0), [cartItems])
@@ -140,15 +139,6 @@ const SiteNavbar = () => {
             >
               Track Order
             </Link>
-
-            <button
-              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-              className={iconButton}
-              onClick={() => dispatch(toggleTheme())}
-              type="button"
-            >
-              {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
-            </button>
 
             <NavLink aria-label="Wishlist" className={`${iconButton} hidden sm:flex`} to="/shop">
               <Heart size={17} />
