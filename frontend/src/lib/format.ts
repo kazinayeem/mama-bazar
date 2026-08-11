@@ -4,7 +4,7 @@ export const currency = (value: number | string, unit = 'BDT') => {
   const formatter = new Intl.NumberFormat('en-BD', {
     maximumFractionDigits: 0,
   })
-  if (unit === 'BDT') return `Tk ${formatter.format(amount)}`
+  if (unit === 'BDT') return `৳${formatter.format(amount)}`
   return `${unit} ${formatter.format(amount)}`
 }
 
@@ -19,7 +19,7 @@ export const formatPrice = (value: number, unit = 'BDT') => {
   const formatter = new Intl.NumberFormat('en-BD', {
     maximumFractionDigits: 0,
   })
-  if (unit === 'BDT') return `Tk ${formatter.format(value)}`
+  if (unit === 'BDT') return `৳${formatter.format(value)}`
   return `${unit} ${formatter.format(value)}`
 }
 

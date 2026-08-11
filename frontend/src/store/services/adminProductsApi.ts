@@ -17,6 +17,21 @@ import type {
   Vendor,
 } from '../../types/admin'
 import type { Category, ShippingMethod } from '../../types'
+import type {
+  Expense,
+  ExpenseCategory,
+  ExpenseFilters,
+  ExpenseInput,
+  ExpenseListResult,
+  ExpenseMonthlyReport,
+  ExpenseRangeReport,
+  ExpenseSummary,
+  ExpenseTrendRow,
+  ExpenseCategoryRow,
+  ExpenseMemberRow,
+  ProfitOverview,
+  TeamMember,
+} from '../../types/admin'
 
 
 
@@ -57,7 +72,7 @@ export const adminProductsApi = createApi({
       return headers
     },
   }),
-  tagTypes: ['Products', 'Product', 'Categories', 'Brands', 'Collections', 'Colors', 'Sizes', 'Vendors', 'Suppliers', 'Media', 'Shipping'],
+  tagTypes: ['Products', 'Product', 'Categories', 'Brands', 'Collections', 'Colors', 'Sizes', 'Vendors', 'Suppliers', 'Media', 'Shipping', 'Expenses', 'Expense', 'ExpenseCategories', 'ExpenseSummary', 'ExpenseReports'],
   endpoints: (builder) => ({
     // ==================== Products ====================
     getAdminProducts: builder.query<AdminProductListResult, AdminProductFilters | void>({
@@ -460,7 +475,146 @@ export const adminProductsApi = createApi({
       query: (id) => ({ url: `/api/media/${id}`, method: 'DELETE' }),
       invalidatesTags: [{ type: 'Media', id: 'LIST' }],
     }),
-  }),
+
+    // ==================== Expenses ====================
+    getAdminExpenses: builder.query<ExpenseListResult, ExpenseFilters | void>({
+      query: (filters) => `/api/expenses${toQueryString(filters as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<Expense[]>) => ({
+        data: response.data || [],
+        total: response.pagination?.total || 0,
+        page: response.pagination?.page || 1,
+        limit: response.pagination?.limit || 20,
+        totalPages: response.pagination?.totalPages || 1,
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.data.map((e) => ({ type: 'Expense' as const, id: e.id })),
+              { type: 'Expenses' as const, id: 'LIST' },
+            ]
+          : [{ type: 'Expenses' as const, id: 'LIST' }],
+    }),
+
+    getAdminExpenseById: builder.query<Expense, number>({
+      query: (id) => `/api/expenses/${id}`,
+      transformResponse: (response: Envelope<Expense>) => {
+        if (!response.data) throw new Error(response.message || 'Expense not found')
+        return response.data
+      },
+      providesTags: (_result, _error, id) => [{ type: 'Expense', id }],
+    }),
+
+    createExpense: builder.mutation<Expense, ExpenseInput>({
+      query: (payload) => ({ url: '/api/expenses', method: 'POST', body: payload }),
+      transformResponse: (response: Envelope<Expense>) => response.data!,
+      invalidatesTags: ['Expenses', 'Expense', 'ExpenseSummary', 'ExpenseReports'],
+    }),
+
+    updateExpense: builder.mutation<Expense, { id: number; payload: Partial<ExpenseInput> }>({
+      query: ({ id, payload }) => ({ url: `/api/expenses/${id}`, method: 'PUT', body: payload }),
+      transformResponse: (response: Envelope<Expense>) => response.data!,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Expense', id },
+        { type: 'Expenses', id: 'LIST' },
+        { type: 'ExpenseSummary', id: 'LIST' },
+        { type: 'ExpenseReports', id: 'LIST' },
+      ],
+    }),
+
+    deleteExpense: builder.mutation<{ success: boolean }, number>({
+      query: (id) => ({ url: `/api/expenses/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Expenses', 'Expense', 'ExpenseSummary', 'ExpenseReports'],
+    }),
+
+    // ==================== Expense categories ====================
+    getAdminExpenseCategories: builder.query<ExpenseCategory[], void>({
+      query: () => '/api/expenses/categories',
+      transformResponse: (response: Envelope<ExpenseCategory[]>) => response.data || [],
+      providesTags: [{ type: 'ExpenseCategories', id: 'LIST' }],
+    }),
+
+    createExpenseCategory: builder.mutation<ExpenseCategory, Record<string, unknown>>({
+      query: (payload) => ({ url: '/api/expenses/categories', method: 'POST', body: payload }),
+      transformResponse: (response: Envelope<ExpenseCategory>) => response.data!,
+      invalidatesTags: ['ExpenseCategories'],
+    }),
+
+    updateExpenseCategory: builder.mutation<ExpenseCategory, { id: number; payload: Record<string, unknown> }>({
+      query: ({ id, payload }) => ({ url: `/api/expenses/categories/${id}`, method: 'PUT', body: payload }),
+      transformResponse: (response: Envelope<ExpenseCategory>) => response.data!,
+      invalidatesTags: ['ExpenseCategories'],
+    }),
+
+    deleteExpenseCategory: builder.mutation<{ success: boolean; usageCount?: number; message?: string }, number>({
+      query: (id) => ({ url: `/api/expenses/categories/${id}`, method: 'DELETE' }),
+      transformResponse: (response: Envelope<{ usageCount?: number }>) => ({
+        success: response.success,
+        usageCount: response.data?.usageCount ?? (response as { usageCount?: number }).usageCount ?? 0,
+        message: response.message,
+      }),
+      invalidatesTags: ['ExpenseCategories', 'Expenses'],
+    }),
+
+    // ==================== Expense reference data ====================
+    getExpenseTeamMembers: builder.query<TeamMember[], void>({
+      query: () => '/api/expenses/members',
+      transformResponse: (response: Envelope<TeamMember[]>) => response.data || [],
+    }),
+
+    // ==================== Expense reports ====================
+    getExpenseSummary: builder.query<ExpenseSummary, Record<string, string | undefined> | void>({
+      query: (params) => `/api/expenses/summary${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<ExpenseSummary>) => response.data!,
+      providesTags: [{ type: 'ExpenseSummary', id: 'LIST' }],
+    }),
+
+    getExpenseByMember: builder.query<ExpenseMemberRow[], Record<string, string | number | boolean | undefined> | void>({
+      query: (params) => `/api/expenses/by-member${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<ExpenseMemberRow[]>) => response.data || [],
+      providesTags: [{ type: 'ExpenseReports', id: 'LIST' }],
+    }),
+
+    getExpenseByCategory: builder.query<ExpenseCategoryRow[], Record<string, string | number | boolean | undefined> | void>({
+      query: (params) => `/api/expenses/by-category${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<ExpenseCategoryRow[]>) => response.data || [],
+      providesTags: [{ type: 'ExpenseReports', id: 'LIST' }],
+    }),
+
+    getExpenseMonthlyReport: builder.query<ExpenseMonthlyReport, Record<string, string | number | undefined> | void>({
+      query: (params) => `/api/expenses/monthly${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<ExpenseMonthlyReport>) => response.data!,
+      providesTags: [{ type: 'ExpenseReports', id: 'LIST' }],
+    }),
+
+    getExpenseMonthlyTrend: builder.query<{ year: number; data: ExpenseTrendRow[] }, Record<string, string | undefined> | void>({
+      query: (params) => `/api/expenses/trends${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<{ year: number; data: ExpenseTrendRow[] }>) => response.data!,
+      providesTags: [{ type: 'ExpenseReports', id: 'LIST' }],
+    }),
+
+    getExpenseRangeReport: builder.query<ExpenseRangeReport, Record<string, string | undefined> | void>({
+      query: (params) => `/api/expenses/report${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<ExpenseRangeReport>) => response.data!,
+      providesTags: [{ type: 'ExpenseReports', id: 'LIST' }],
+    }),
+
+    getProfitOverview: builder.query<ProfitOverview, Record<string, string | number | undefined> | void>({
+      query: (params) => `/api/expenses/profit${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<ProfitOverview>) => response.data!,
+      providesTags: [{ type: 'ExpenseReports', id: 'LIST' }],
+    }),
+
+    exportExpensesCsv: builder.mutation<{ csv: string; count: number }, ExpenseFilters | void>({
+      query: (filters) => ({
+        url: `/api/expenses/export/csv${toQueryString(filters as Record<string, string | number | boolean | undefined>)}`,
+        method: 'GET',
+      }),
+      transformResponse: (response: Envelope<{ csv?: string; count?: number }>) => ({
+        csv: response.data?.csv || '',
+        count: response.data?.count ?? 0,
+      }),
+    }),
+  },
 })
 
 export const {
@@ -528,6 +682,25 @@ export const {
   useGetAdminMediaFoldersQuery,
   useUploadMediaMutation,
   useDeleteMediaMutation,
+  useGetAdminExpensesQuery,
+  useLazyGetAdminExpensesQuery,
+  useGetAdminExpenseByIdQuery,
+  useCreateExpenseMutation,
+  useUpdateExpenseMutation,
+  useDeleteExpenseMutation,
+  useGetAdminExpenseCategoriesQuery,
+  useCreateExpenseCategoryMutation,
+  useUpdateExpenseCategoryMutation,
+  useDeleteExpenseCategoryMutation,
+  useGetExpenseTeamMembersQuery,
+  useGetExpenseSummaryQuery,
+  useGetExpenseByMemberQuery,
+  useGetExpenseByCategoryQuery,
+  useGetExpenseMonthlyReportQuery,
+  useGetExpenseMonthlyTrendQuery,
+  useGetExpenseRangeReportQuery,
+  useGetProfitOverviewQuery,
+  useExportExpensesCsvMutation,
 } = adminProductsApi
 
 export { parseError, toQueryString }

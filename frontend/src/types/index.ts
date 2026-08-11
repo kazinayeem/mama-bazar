@@ -37,6 +37,7 @@ export interface Category {
   parentId?: number | null
   featured?: boolean
   homepageVisibility?: boolean
+  productCount?: number
   sortOrder?: number
   seoTitle?: string | null
   seoDescription?: string | null
@@ -475,6 +476,7 @@ export interface AuthRegisterInput extends AuthCredentials {
 export interface UserOrderItem {
   id: number
   productId: number
+  variantId?: number | null
   quantity: number
   price: string
   size?: string | null

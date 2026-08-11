@@ -54,6 +54,18 @@ interface HeroSlidesManagerProps {
 
 const uid = () => `slide-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 
+const isValidButtonUrl = (url?: string) => {
+  if (!url?.trim()) return true
+  const value = url.trim()
+  if (value.startsWith('/') || value.startsWith('#')) return true
+  try {
+    const parsed = new URL(value)
+    return ['http:', 'https:', 'tel:', 'mailto:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
 const blankSlide = (): HomepageHeroSlide => ({
   id: uid(),
   desktopImage: '',
@@ -90,6 +102,18 @@ const HeroSlidesManager = ({ slides, onChange }: HeroSlidesManagerProps) => {
     if (!editing) return
     if (!editing.desktopImage) {
       toast.error('A desktop image is required')
+      return
+    }
+    if ((editing.title?.trim().length ?? 0) > 120) {
+      toast.error('Title must be 120 characters or fewer')
+      return
+    }
+    if (!isValidButtonUrl(editing.primaryButtonUrl)) {
+      toast.error('Primary button link must be a valid URL or internal path (e.g. /shop)')
+      return
+    }
+    if (!isValidButtonUrl(editing.secondaryButtonUrl)) {
+      toast.error('Secondary button link must be a valid URL or internal path (e.g. /shop)')
       return
     }
     setSaving(true)
@@ -181,6 +205,16 @@ const HeroSlidesManager = ({ slides, onChange }: HeroSlidesManagerProps) => {
                   </p>
                 </div>
 
+                <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground" title={slide.status === 'active' ? 'Slide is live on the homepage' : 'Slide is hidden from the homepage'}>
+                  <Switch
+                    checked={slide.status === 'active'}
+                    onCheckedChange={(checked) =>
+                      onChange(slides.map((s) => (s.id === slide.id ? { ...s, status: checked ? 'active' : 'inactive' } : s)))
+                    }
+                  />
+                  Live
+                </label>
+
                 <div className="flex items-center gap-1">
                   <Button onClick={() => duplicate(slide)} size="icon" title="Duplicate" variant="ghost">
                     <Copy className="h-4 w-4" />
@@ -259,7 +293,7 @@ const HeroSlidesManager = ({ slides, onChange }: HeroSlidesManagerProps) => {
                 </div>
                 <div>
                   <Label>Title</Label>
-                  <Input className="mt-1" onChange={(e) => updateSlide({ title: e.target.value })} placeholder="Slide headline" value={editing.title || ''} />
+                  <Input className="mt-1" maxLength={120} onChange={(e) => updateSlide({ title: e.target.value })} placeholder="Slide headline" value={editing.title || ''} />
                 </div>
                 <div>
                   <Label>Subtitle</Label>

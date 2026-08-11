@@ -119,7 +119,7 @@ const ProductTable = ({
               <TableHead className="w-32">Brand</TableHead>
               <TableHead className="w-36">Category</TableHead>
               <TableHead className="w-28 text-right">Price</TableHead>
-              <TableHead className="w-28 text-right">Sale Price</TableHead>
+              <TableHead className="w-28">Type</TableHead>
               <TableHead className="w-24 text-center">Stock</TableHead>
               <TableHead className="w-28">Status</TableHead>
               <TableHead className="w-20 text-center">Featured</TableHead>
@@ -195,11 +195,13 @@ const ProductTable = ({
                         <p className="text-xs text-muted-foreground">-{product.discount}%</p>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
-                      {Number(product.salePrice) > 0 ? (
-                        <p className="text-sm font-medium text-success">{currency(product.salePrice!)}</p>
+                    <TableCell>
+                      {product.variants && product.variants.length > 0 ? (
+                        <Badge variant="secondary" className="text-[10px]">
+                          {product.variants.length} Variant{product.variants.length !== 1 ? 's' : ''}
+                        </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <Badge variant="outline" className="text-[10px]">Simple</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-center">
@@ -212,7 +214,10 @@ const ProductTable = ({
                               : 'secondary'
                         }
                       >
-                        {product.stock}
+                        {product.variants && product.variants.length > 0
+                          ? `${product.stock} (total)`
+                          : product.stock
+                        }
                       </Badge>
                     </TableCell>
                     <TableCell>

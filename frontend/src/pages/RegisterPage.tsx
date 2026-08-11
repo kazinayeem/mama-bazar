@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { SEO } from '../components/common/SEO'
 import { clearAuthError, registerUser } from '../store/slices/authSlice'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks'
 const RegisterPage = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
   const { loading, error, user } = useAppSelector((state) => state.auth)
 
   const [name, setName] = useState('')
@@ -16,10 +17,24 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Get the redirect path from location state or URL params
+  const redirectPath = useMemo(() => {
+    // Check location state first (used when navigating from checkout)
+    const stateFrom = (location.state as { from?: string } | null)?.from
+    if (stateFrom) return stateFrom
+
+    // Check URL search params (used for direct links)
+    const searchParams = new URLSearchParams(location.search)
+    const redirectTo = searchParams.get('redirect')
+    if (redirectTo) return redirectTo
+
+    return '/dashboard'
+  }, [location.state, location.search])
+
   useEffect(() => {
     if (!user) return
-    navigate('/dashboard', { replace: true })
-  }, [navigate, user])
+    navigate(redirectPath, { replace: true })
+  }, [navigate, user, redirectPath])
 
   useEffect(() => {
     return () => {

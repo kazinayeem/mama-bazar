@@ -60,7 +60,7 @@ export const create = async (req: Request, res: Response) => {
   const result = await orderService.create(input);
 
   const message = result.auth
-    ? "Order placed. Your account is now signed in."
+    ? "Order placed successfully"
     : "Order placed successfully";
 
   res.status(201).json({ success: true, data: result, message });

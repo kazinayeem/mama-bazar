@@ -22,6 +22,10 @@ import {
   MapPin,
   PanelsTopLeft,
   FileText,
+  Wallet,
+  ReceiptText,
+  ListOrdered,
+  ChartPie,
 } from 'lucide-react'
 
 export interface AdminNavItem {
@@ -60,6 +64,15 @@ export const adminNavSections: AdminNavSection[] = [
       { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
       { label: 'Coupons', href: '/admin/coupons', icon: TicketPercent },
       { label: 'Marketing', href: '/admin/marketing', icon: Megaphone },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { label: 'Expenses', href: '/admin/expenses', icon: ReceiptText },
+      { label: 'Expense Categories', href: '/admin/expenses/categories', icon: ListOrdered },
+      { label: 'Expense Reports', href: '/admin/expenses/reports', icon: ChartPie },
+      { label: 'Profit Overview', href: '/admin/expenses/reports?tab=profit', icon: Wallet },
     ],
   },
   {

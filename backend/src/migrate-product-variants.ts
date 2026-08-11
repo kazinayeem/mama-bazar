@@ -13,6 +13,12 @@ async function runMigrations() {
     );
 
     await db.execute(
+      sql`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS variant_id INT`
+    );
+    await db.execute(
+      sql`ALTER TABLE order_items ADD FOREIGN KEY IF NOT EXISTS fk_order_items_variant (variant_id) REFERENCES product_variants(id)`
+    );
+    await db.execute(
       sql`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS size VARCHAR(30)`
     );
     await db.execute(

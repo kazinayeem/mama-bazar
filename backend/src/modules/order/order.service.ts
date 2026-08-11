@@ -1,6 +1,6 @@
 import { db } from "../../config/db";
 import { orders, orderItems, products, productVariants, coupons, users, userAddresses, orderStatusHistory, shippingMethods, paymentMethods } from "../../config/schema";
-import { eq, desc, asc, sql, and, or, like } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, like, inArray } from "drizzle-orm";
 import { CreateOrderInput, UpdateOrderStatusInput, VerifyPaymentInput, OrderStatus, PaymentMethod } from "./order.interface";
 import { AppError } from "../../utils/AppError";
 import bcrypt from "bcryptjs";
@@ -190,9 +190,11 @@ const attachItemsAndHistory = async (order: any) => {
       price: orderItems.price,
       productTitle: products.title,
       productImages: products.images,
+      variantName: productVariants.name,
     })
     .from(orderItems)
     .leftJoin(products, eq(orderItems.productId, products.id))
+    .leftJoin(productVariants, eq(orderItems.variantId, productVariants.id))
     .where(eq(orderItems.orderId, order.id));
 
   const statusHistory = await getTimelineWithFallback(order.id, order.status as OrderStatus, order.createdAt);
@@ -221,6 +223,7 @@ const attachItemsAndHistory = async (order: any) => {
         color: i.color,
         quantity: i.quantity,
         price: i.price,
+        variantName: i.variantName || null,
         product: i.productTitle ? { title: i.productTitle, image } : null,
       };
     }),
@@ -234,27 +237,59 @@ export const create = async (input: CreateOrderInput) => {
   let subtotal = 0;
   const itemsWithPrice: { productId: number; variantId?: number; quantity: number; size?: string; color?: string; price: number }[] = [];
 
+  // Batch fetch all products upfront to avoid N+1 queries
+  const productIds = [...new Set(input.items.map(item => item.productId))];
+  const allProducts = await db.select().from(products).where(inArray(products.id, productIds));
+  const productMap = new Map(allProducts.map(p => [p.id, p]));
+
+  // Collect all variant IDs that are explicitly provided
+  const explicitVariantIds = input.items
+    .filter(item => item.variantId)
+    .map(item => item.variantId!);
+
+  // Batch fetch explicit variants
+  const allExplicitVariants = explicitVariantIds.length > 0
+    ? await db.select().from(productVariants).where(inArray(productVariants.id, explicitVariantIds))
+    : [];
+  const explicitVariantMap = new Map(allExplicitVariants.map(v => [v.id, v]));
+
+  // Collect product IDs that need size/color variant lookup
+  const productIdsNeedingVariantLookup = input.items
+    .filter(item => !item.variantId && (item.size || item.color))
+    .map(item => item.productId);
+
+  // Batch fetch variants for size/color lookup
+  const allSizeColorVariants = productIdsNeedingVariantLookup.length > 0
+    ? await db.select().from(productVariants).where(
+        and(
+          inArray(productVariants.productId, productIdsNeedingVariantLookup),
+          eq(productVariants.status, "active")
+        )
+      )
+    : [];
+  // Group variants by product ID for efficient lookup
+  const variantsByProduct = new Map<number, typeof allSizeColorVariants>();
+  for (const v of allSizeColorVariants) {
+    const existing = variantsByProduct.get(v.productId) || [];
+    existing.push(v);
+    variantsByProduct.set(v.productId, existing);
+  }
+
   for (const item of input.items) {
-    const productRows = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
-    const product = productRows[0];
+    const product = productMap.get(item.productId);
     if (!product) throw new AppError(400, `Product ${item.productId} not found`);
 
     let itemPrice: number;
 
     if (item.variantId) {
-      const variantRows = await db.select().from(productVariants).where(
-        and(eq(productVariants.id, item.variantId), eq(productVariants.productId, item.productId))
-      ).limit(1);
-      const variant = variantRows[0];
+      const variant = explicitVariantMap.get(item.variantId);
       if (!variant) throw new AppError(400, `Variant not found for product ${product.title}`);
       if (variant.availability === false) throw new AppError(400, `Variant "${variant.name}" is not available`);
       if (variant.stock < item.quantity) throw new AppError(400, `Insufficient stock for ${product.title} - ${variant.name}`);
       itemPrice = variant.discountPrice ? Number(variant.discountPrice) : (variant.price ? Number(variant.price) : Number(product.price));
     } else if (item.size || item.color) {
-      const variantRows = await db.select().from(productVariants).where(
-        and(eq(productVariants.productId, item.productId), eq(productVariants.status, "active"))
-      );
-      const variant = variantRows.find((v) => {
+      const productVariantsList = variantsByProduct.get(item.productId) || [];
+      const variant = productVariantsList.find((v) => {
         const opts = v.options as Record<string, string>;
         const sizeMatch = !item.size || Object.values(opts).some((val) => val.toLowerCase() === item.size!.toLowerCase());
         const colorMatch = !item.color || Object.values(opts).some((val) => val.toLowerCase() === item.color!.toLowerCase());
@@ -264,6 +299,8 @@ export const create = async (input: CreateOrderInput) => {
       if (variant.availability === false) throw new AppError(400, `Variant "${variant.name}" is not available`);
       if (variant.stock < item.quantity) throw new AppError(400, `Insufficient stock for ${product.title} - ${variant.name}`);
       itemPrice = variant.discountPrice ? Number(variant.discountPrice) : (variant.price ? Number(variant.price) : Number(product.price));
+      // Store the resolved variant ID
+      item.variantId = variant.id;
     } else {
       if (product.stock < item.quantity) throw new AppError(400, `Insufficient stock for ${product.title}`);
       const discountRate = Math.min(Number(product.discount || 0), 100);
@@ -374,65 +411,24 @@ export const create = async (input: CreateOrderInput) => {
     orderStatus = "payment_pending";
   }
 
-  // ---------- 7. Resolve user (guest auto-create) ----------
-  let resolvedUserId = input.userId;
+  // ---------- 7. Resolve user (true guest checkout - no auto-create) ----------
+  let resolvedUserId = input.userId || null;
   let checkoutAuth: CheckoutAuth | null = null;
 
-  if (!resolvedUserId) {
+  // Only auto-login existing users; never auto-create accounts for guests
+  if (!resolvedUserId && input.phone) {
     const existingRows = await db.select().from(users).where(eq(users.phone, input.phone)).limit(1);
     const existingUser = existingRows[0];
 
     if (existingUser) {
+      // User exists but is not logged in - link the order to their account
       resolvedUserId = existingUser.id;
-      const canAutoLogin = await bcrypt.compare(input.phone, existingUser.password);
-      if (canAutoLogin) {
-        const token = jwt.sign(
-          { id: existingUser.id, phone: existingUser.phone, role: existingUser.role },
-          env.JWT_SECRET,
-          { expiresIn: TOKEN_EXPIRY }
-        );
-        checkoutAuth = {
-          token,
-          user: {
-            id: existingUser.id,
-            name: existingUser.name,
-            phone: existingUser.phone,
-            role: existingUser.role,
-          },
-        };
-      }
-    } else {
-      const hashedPassword = await bcrypt.hash(input.phone, SALT_ROUNDS);
-      const userInsert = await db.insert(users).values({
-        name: input.name,
-        phone: input.phone,
-        password: hashedPassword,
-        role: DEFAULT_ROLE,
-        shippingArea: input.shippingArea,
-        shippingAddress: input.address,
-      });
-
-      resolvedUserId = userInsert[0].insertId;
-
-      const token = jwt.sign(
-        { id: resolvedUserId, phone: input.phone, role: DEFAULT_ROLE },
-        env.JWT_SECRET,
-        { expiresIn: TOKEN_EXPIRY }
-      );
-
-      checkoutAuth = {
-        token,
-        user: {
-          id: resolvedUserId,
-          name: input.name,
-          phone: input.phone,
-          role: DEFAULT_ROLE,
-        },
-      };
+      // Do NOT auto-login - guest remains a guest
     }
+    // If no user exists, resolvedUserId stays null - true guest order
   }
 
-  // ---------- 8. Update user + save address ----------
+  // ---------- 8. Update user + save address (only for logged-in users) ----------
   if (resolvedUserId) {
     await db
       .update(users)
@@ -526,27 +522,46 @@ export const create = async (input: CreateOrderInput) => {
     createdByUserId: resolvedUserId || null,
   });
 
-  // ---------- 10. Items + stock ----------
-  for (const item of itemsWithPrice) {
-    await db.insert(orderItems).values({
-      orderId,
-      productId: item.productId,
-      variantId: item.variantId || null,
-      size: item.size || null,
-      color: item.color || null,
-      quantity: item.quantity,
-      price: String(item.price),
-    });
+  // ---------- 10. Items + stock (bulk operations) ----------
+  // Bulk insert order items
+  if (itemsWithPrice.length > 0) {
+    await db.insert(orderItems).values(
+      itemsWithPrice.map(item => ({
+        orderId,
+        productId: item.productId,
+        variantId: item.variantId || null,
+        size: item.size || null,
+        color: item.color || null,
+        quantity: item.quantity,
+        price: String(item.price),
+      }))
+    );
+  }
+
+  // Bulk update product stock
+  const productIdsToUpdate = [...new Set(itemsWithPrice.map(item => item.productId))];
+  for (const productId of productIdsToUpdate) {
+    const totalQuantity = itemsWithPrice
+      .filter(item => item.productId === productId)
+      .reduce((sum, item) => sum + item.quantity, 0);
     await db
       .update(products)
-      .set({ stock: sql`${products.stock} - ${item.quantity}` })
-      .where(eq(products.id, item.productId));
-    if (item.variantId) {
-      await db
-        .update(productVariants)
-        .set({ stock: sql`${productVariants.stock} - ${item.quantity}` })
-        .where(eq(productVariants.id, item.variantId));
-    }
+      .set({ stock: sql`${products.stock} - ${totalQuantity}` })
+      .where(eq(products.id, productId));
+  }
+
+  // Bulk update variant stock
+  const variantIdsToUpdate = itemsWithPrice
+    .filter(item => item.variantId)
+    .map(item => item.variantId!);
+  for (const variantId of variantIdsToUpdate) {
+    const totalQuantity = itemsWithPrice
+      .filter(item => item.variantId === variantId)
+      .reduce((sum, item) => sum + item.quantity, 0);
+    await db
+      .update(productVariants)
+      .set({ stock: sql`${productVariants.stock} - ${totalQuantity}` })
+      .where(eq(productVariants.id, variantId));
   }
 
   const order = await getById(orderId);

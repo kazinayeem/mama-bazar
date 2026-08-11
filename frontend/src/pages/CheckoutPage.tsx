@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { LogIn, CheckCircle, Copy, Check } from 'lucide-react'
 import { SEO } from '../components/common/SEO'
 import { api } from '../lib/api'
-import { currency, salePrice } from '../lib/format'
+import { currency } from '../lib/format'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { clearCart, removeFromCart } from '../store/slices/cartSlice'
 import { setAuthSession } from '../store/slices/authSlice'
@@ -94,11 +95,8 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod')
   const [notices, setNotices] = useState<CheckoutNotice[]>([])
 
-  const [senderNumber, setSenderNumber] = useState('')
   const [transactionId, setTransactionId] = useState('')
-  const [amountSent, setAmountSent] = useState('')
-  const [paymentScreenshot, setPaymentScreenshot] = useState('')
-  const [uploadingProof, setUploadingProof] = useState(false)
+  const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
 
   const [couponCode, setCouponCode] = useState('')
   const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null)
@@ -110,7 +108,7 @@ const CheckoutPage = () => {
   const [agreeTerms, setAgreeTerms] = useState(false)
 
   const subtotal = useMemo(
-    () => cart.reduce((sum, item) => sum + salePrice(item.product.price, item.product.discount) * item.quantity, 0),
+    () => cart.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0),
     [cart],
   )
 
@@ -125,9 +123,43 @@ const CheckoutPage = () => {
 
   const selectedShippingMethod = shippingMethods.find((m) => m.id === shippingMethodId) || null
   const selectedPaymentMethod = paymentMethods.find((m) => m.code === paymentMethod) || null
-  const isOnlinePayment = paymentMethod !== 'cod'
+  const isMobileBanking = selectedPaymentMethod?.type === 'mobile_banking'
+  const isBankTransfer = selectedPaymentMethod?.type === 'bank'
+  const requiresTransactionId = isMobileBanking || isBankTransfer
 
   const set = (patch: Partial<AddressFormState>) => setForm((prev) => ({ ...prev, ...patch }))
+
+  // ---------- Copy to clipboard ----------
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedNumber(text)
+      setTimeout(() => setCopiedNumber(null), 2000)
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopiedNumber(text)
+      setTimeout(() => setCopiedNumber(null), 2000)
+    }
+  }
+
+  // ---------- Auto-fill from user profile ----------
+  useEffect(() => {
+    if (!authUser) return
+
+    // Auto-fill from user profile if form is empty
+    setForm((prev) => ({
+      ...prev,
+      name: prev.name || authUser.name || '',
+      phone: prev.phone || authUser.phone || '',
+      email: prev.email || '',
+    }))
+  }, [authUser])
 
   // ---------- Load checkout config ----------
   useEffect(() => {
@@ -259,20 +291,6 @@ const CheckoutPage = () => {
     }
   }
 
-  // ---------- Screenshot upload ----------
-  const handleProofUpload = async (file: File) => {
-    setUploadingProof(true)
-    setSubmitError('')
-    try {
-      const result = await api.uploadPaymentProof(file)
-      setPaymentScreenshot(result.url)
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Screenshot upload failed')
-    } finally {
-      setUploadingProof(false)
-    }
-  }
-
   // ---------- Validation ----------
   const validate = (): string | null => {
     if (!form.name.trim()) return 'Please enter your full name'
@@ -286,11 +304,8 @@ const CheckoutPage = () => {
     if (selectedShippingMethod && !selectedShippingMethod.codAvailable && paymentMethod === 'cod') {
       return `${selectedShippingMethod.name} does not support Cash on Delivery`
     }
-    if (isOnlinePayment) {
-      if (!senderNumber.trim()) return 'Please enter the sender (bKash/Nagad/Rocket) number you paid from'
-      if (!paymentScreenshot && !transactionId.trim()) {
-        return 'Please upload your payment screenshot or enter the TrxID'
-      }
+    if (requiresTransactionId && !transactionId.trim()) {
+      return 'Please enter the Transaction ID'
     }
     if (!agreeTerms) return 'Please agree to the terms and conditions'
     return null
@@ -331,13 +346,11 @@ const CheckoutPage = () => {
         couponCode: couponApplied?.code,
         orderNote: orderNote.trim() || undefined,
         paymentMethod,
-        senderNumber: isOnlinePayment ? senderNumber.trim() : undefined,
-        transactionId: isOnlinePayment && transactionId.trim() ? transactionId.trim() : undefined,
-        paymentScreenshot: isOnlinePayment && paymentScreenshot ? paymentScreenshot : undefined,
-        amountSent: isOnlinePayment && amountSent ? Number(amountSent) : undefined,
+        transactionId: transactionId.trim() || undefined,
         taxAmount: tax,
         items: cart.map((item) => ({
           productId: item.product.id,
+          variantId: item.variantId,
           quantity: item.quantity,
           size: item.size,
           color: item.color,
@@ -385,8 +398,69 @@ const CheckoutPage = () => {
         </div>
       )}
 
+      {/* Login Prompt for Guest Users */}
+      {!authUser && (
+        <div className="mb-8 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 p-6">
+          <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="text-center md:text-left">
+              <h2 className="font-headline text-xl font-bold text-slate-900">Already have an account?</h2>
+              <p className="mt-1 text-sm text-slate-600">Login for a faster checkout experience.</p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 md:justify-start">
+                <span className="flex items-center gap-1">
+                  <CheckCircle size={14} className="text-primary" />
+                  Your details will be auto-filled
+                </span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle size={14} className="text-primary" />
+                  View your previous orders
+                </span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle size={14} className="text-primary" />
+                  Save your delivery address
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-primary/90 hover:shadow-xl"
+                state={{ from: '/checkout' }}
+                to="/auth/login"
+              >
+                <LogIn size={16} />
+                Login / Register
+              </Link>
+              <button
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                onClick={() => {
+                  // Scroll to the checkout form
+                  document.getElementById('checkout-form')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                type="button"
+              >
+                Continue as Guest
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logged-in user indicator */}
+      {authUser && (
+        <div className="mb-6 rounded-xl border border-success/30 bg-success/5 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/20">
+              <CheckCircle size={20} className="text-success" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Welcome back, {authUser.name}!</p>
+              <p className="text-xs text-slate-500">Your information will be auto-filled from your account.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
-        <form className="space-y-10 lg:col-span-7" onSubmit={onSubmit}>
+        <form className="space-y-10 lg:col-span-7" id="checkout-form" onSubmit={onSubmit}>
           <div>
             <h1 className="font-headline text-3xl font-extrabold tracking-tight">Checkout</h1>
             <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">{cart.length} items in your bag</p>
@@ -526,86 +600,228 @@ const CheckoutPage = () => {
             <div className="space-y-3">
               {paymentMethods.map((method) => {
                 const active = paymentMethod === method.code
-                return (
-                  <button
-                    className={`flex w-full items-center gap-4 border px-4 py-3.5 text-left transition-colors ${
-                      active ? 'border-tertiary bg-tertiary/5' : 'border-outline-variant/30 hover:border-outline-variant'
-                    }`}
-                    key={method.code}
-                    onClick={() => {
-                      setPaymentMethod(method.code)
-                      setSubmitError('')
-                    }}
-                    type="button"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-variant/20 text-sm font-bold">{PAYMENT_ICONS[method.code] || '💳'}</span>
-                    <span className="min-w-0 flex-1 text-sm font-semibold">{method.name}</span>
-                    {method.code === 'cod' && <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Pay at door</span>}
-                  </button>
-                )
-              })}
-              {paymentMethods.length === 0 && <p className="text-sm text-on-surface-variant">No payment methods available.</p>}
-            </div>
+                const merchantNumber = method.config?.merchantNumber
+                const bankName = method.config?.bankName
+                const accountName = method.config?.accountName
+                const accountNumber = method.config?.accountNumber
+                const branch = method.config?.branch
 
-            {/* Online payment details */}
-            {selectedPaymentMethod && isOnlinePayment && (
-              <div className="mt-4 space-y-4 rounded-lg border border-outline-variant/30 bg-surface-variant/5 p-4">
-                {selectedPaymentMethod.config?.instructions && (
-                  <div className="rounded-md bg-tertiary/10 p-3 text-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">How to pay</p>
-                    <p className="mt-1 whitespace-pre-line">{selectedPaymentMethod.config.instructions}</p>
-                    {(selectedPaymentMethod.config.merchantName || selectedPaymentMethod.config.merchantNumber) && (
-                      <p className="mt-2 text-xs text-on-surface-variant">
-                        Pay to: <span className="font-semibold">{selectedPaymentMethod.config.merchantName || selectedPaymentMethod.config.accountName || ''}</span>{' '}
-                        {selectedPaymentMethod.config.merchantNumber || selectedPaymentMethod.config.accountNumber || ''}
-                      </p>
+                return (
+                  <div key={method.code} className="rounded-xl border transition-all duration-200">
+                    {/* Payment method header */}
+                    <button
+                      className={`flex w-full items-center gap-4 px-4 py-4 text-left transition-colors ${
+                        active ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-surface-variant/30'
+                      }`}
+                      onClick={() => {
+                        setPaymentMethod(method.code)
+                        setTransactionId('')
+                        setSubmitError('')
+                      }}
+                      type="button"
+                    >
+                      {/* Radio indicator */}
+                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                        active ? 'border-primary' : 'border-slate-300'
+                      }`}>
+                        {active && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                      </div>
+                      
+                      {/* Payment icon */}
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-variant/20 text-lg font-bold">
+                        {PAYMENT_ICONS[method.code] || '💳'}
+                      </span>
+                      
+                      {/* Payment name and description */}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold">{method.name}</p>
+                        {method.code === 'cod' && (
+                          <p className="mt-0.5 text-xs text-on-surface-variant">Pay in cash when your order is delivered</p>
+                        )}
+                        {method.type === 'mobile_banking' && merchantNumber && (
+                          <p className="mt-0.5 text-xs text-on-surface-variant">Pay securely using {method.name}</p>
+                        )}
+                        {method.type === 'bank' && bankName && (
+                          <p className="mt-0.5 text-xs text-on-surface-variant">Transfer to {bankName}</p>
+                        )}
+                      </div>
+                      
+                      {/* Checkmark for selected */}
+                      {active && (
+                        <CheckCircle size={20} className="shrink-0 text-primary" />
+                      )}
+                    </button>
+
+                    {/* Expanded payment details */}
+                    {active && (
+                      <div className="border-t border-outline-variant/20 px-4 py-5">
+                        {/* COD instructions */}
+                        {method.code === 'cod' && (
+                          <div className="rounded-lg bg-surface-variant/30 p-4">
+                            <p className="text-sm font-medium text-slate-700">
+                              বাংলা: ডেলিভারি পাওয়ার সময় ক্যাশ পেমেন্ট করতে হবে।
+                            </p>
+                            <p className="mt-2 text-sm text-slate-600">
+                              English: Pay in cash when your order is delivered.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Mobile banking instructions */}
+                        {method.type === 'mobile_banking' && merchantNumber && (
+                          <div className="space-y-4">
+                            {/* Payment number with copy */}
+                            <div className="rounded-lg bg-surface-variant/30 p-4">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                                Payment Number
+                              </p>
+                              <div className="mt-2 flex items-center gap-3">
+                                <span className="text-xl font-bold text-slate-900">{merchantNumber}</span>
+                                <button
+                                  className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                                  onClick={() => copyToClipboard(merchantNumber)}
+                                  type="button"
+                                >
+                                  {copiedNumber === merchantNumber ? (
+                                    <>
+                                      <Check size={14} />
+                                      Copied!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy size={14} />
+                                      Copy
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                              {method.config?.merchantName && (
+                                <p className="mt-2 text-sm text-slate-600">
+                                  Account Name: {method.config.merchantName}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Bilingual instructions */}
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                                  বাংলা নির্দেশনা
+                                </p>
+                                <p className="mt-1 text-sm text-slate-700">
+                                  ১. উপরের {method.name} নম্বরে Send Money/Payment করুন।<br />
+                                  ২. পেমেন্ট সম্পন্ন করার পর Transaction ID নিচের ঘরে দিন।<br />
+                                  ৩. তারপর Place Order করুন।
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                                  English Instructions
+                                </p>
+                                <p className="mt-1 text-sm text-slate-700">
+                                  1. Send the required payment amount to the {method.name} number above.<br />
+                                  2. After completing the payment, enter the Transaction ID below.<br />
+                                  3. Then confirm your order.
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Transaction ID input */}
+                            <div>
+                              <label className={labelClass}>Transaction ID</label>
+                              <input
+                                className={inputClass}
+                                onChange={(event) => setTransactionId(event.target.value)}
+                                placeholder="Enter Transaction ID"
+                                required
+                                value={transactionId}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Bank transfer instructions */}
+                        {method.type === 'bank' && (
+                          <div className="space-y-4">
+                            {/* Bank information */}
+                            <div className="rounded-lg bg-surface-variant/30 p-4">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                                Bank Information
+                              </p>
+                              <div className="mt-3 space-y-2">
+                                {bankName && (
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600">Bank Name:</span>
+                                    <span className="text-sm font-semibold text-slate-900">{bankName}</span>
+                                  </div>
+                                )}
+                                {accountName && (
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600">Account Name:</span>
+                                    <span className="text-sm font-semibold text-slate-900">{accountName}</span>
+                                  </div>
+                                )}
+                                {accountNumber && (
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600">Account Number:</span>
+                                    <span className="text-sm font-semibold text-slate-900">{accountNumber}</span>
+                                  </div>
+                                )}
+                                {branch && (
+                                  <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600">Branch:</span>
+                                    <span className="text-sm font-semibold text-slate-900">{branch}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Bilingual instructions */}
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                                  বাংলা নির্দেশনা
+                                </p>
+                                <p className="mt-1 text-sm text-slate-700">
+                                  ১. উপরের ব্যাংক অ্যাকাউন্টে নির্ধারিত পরিমাণ টাকা ট্রান্সফার করুন।<br />
+                                  ২. ট্রান্সফার সম্পন্ন করার পর Transaction ID/Reference Number দিন।<br />
+                                  ৩. তারপর অর্ডার কনফার্ম করুন।
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                                  English Instructions
+                                </p>
+                                <p className="mt-1 text-sm text-slate-700">
+                                  1. Transfer the required amount to the bank account above.<br />
+                                  2. After completing the transfer, enter the Transaction ID/Reference Number.<br />
+                                  3. Confirm your order.
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Transaction ID input */}
+                            <div>
+                              <label className={labelClass}>Transaction ID / Reference</label>
+                              <input
+                                className={inputClass}
+                                onChange={(event) => setTransactionId(event.target.value)}
+                                placeholder="Enter Transaction ID or Reference Number"
+                                required
+                                value={transactionId}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className={labelClass}>Sender Number (paid from)</label>
-                    <input className={inputClass} onChange={(event) => setSenderNumber(event.target.value)} placeholder="01XXXXXXXXX" value={senderNumber} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Amount Sent (Tk)</label>
-                    <input className={inputClass} onChange={(event) => setAmountSent(event.target.value)} placeholder={String(total)} type="number" value={amountSent} />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className={labelClass}>Transaction ID (TrxID)</label>
-                    <input className={inputClass} onChange={(event) => setTransactionId(event.target.value)} placeholder="e.g. 9XB7H2KD5F" value={transactionId} />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Payment Screenshot (upload TrxID screenshot)</label>
-                  {paymentScreenshot ? (
-                    <div className="flex items-center gap-3">
-                      <img alt="Payment screenshot" className="h-16 w-16 rounded-md border object-cover" src={paymentScreenshot} />
-                      <button className="text-xs font-bold uppercase tracking-widest text-tertiary" onClick={() => setPaymentScreenshot('')} type="button">
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-outline-variant/50 px-4 py-5 text-sm text-on-surface-variant hover:border-tertiary">
-                      {uploadingProof ? 'Uploading...' : 'Click to upload screenshot (JPG / PNG, max 5MB)'}
-                      <input
-                        accept="image/jpeg,image/png,image/webp,image/heic"
-                        className="hidden"
-                        disabled={uploadingProof}
-                        onChange={(event) => {
-                          const file = event.target.files?.[0]
-                          if (file) handleProofUpload(file)
-                          event.target.value = ''
-                        }}
-                        type="file"
-                      />
-                    </label>
-                  )}
-                </div>
-              </div>
-            )}
+                )
+              })}
+              {paymentMethods.length === 0 && (
+                <p className="text-sm text-on-surface-variant">No payment methods available.</p>
+              )}
+            </div>
           </section>
 
           {/* ==================== 4. Coupon + Note ==================== */}
@@ -662,11 +878,31 @@ const CheckoutPage = () => {
               Review & Confirm
             </h2>
 
+            {/* Login reminder for guest users */}
+            {!authUser && (
+              <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+                  <div className="text-center sm:text-left">
+                    <p className="text-sm font-semibold text-slate-900">Have an account?</p>
+                    <p className="text-xs text-slate-500">Login to save your order to your account.</p>
+                  </div>
+                  <Link
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary/90"
+                    state={{ from: '/checkout' }}
+                    to="/auth/login"
+                  >
+                    <LogIn size={14} />
+                    Login
+                  </Link>
+                </div>
+              </div>
+            )}
+
             <label className="flex items-start gap-3 text-sm text-on-surface-variant">
               <input checked={agreeTerms} className="mt-0.5" onChange={(event) => setAgreeTerms(event.target.checked)} type="checkbox" />
               <span>
                 I agree to the <span className="font-semibold text-tertiary">Terms & Conditions</span> and understand that my order will be processed after
-                confirmation {isOnlinePayment && 'and payment verification'}.
+                confirmation {requiresTransactionId && 'and payment verification'}.
               </span>
             </label>
 
@@ -702,13 +938,13 @@ const CheckoutPage = () => {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{item.product.title}</p>
                       <p className="text-xs text-on-surface-variant">
-                        {item.quantity} × {currency(salePrice(item.product.price, item.product.discount))}
-                        {item.size ? ` · ${item.size}` : ''}
-                        {item.color ? ` · ${item.color}` : ''}
+                        {item.quantity} × {currency(Number(item.product.price))}
+                        {item.size ? ` · Size: ${item.size}` : ''}
+                        {item.color ? ` · Color: ${item.color}` : ''}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold">{currency(salePrice(item.product.price, item.product.discount) * item.quantity)}</p>
+                      <p className="text-sm font-semibold">{currency(Number(item.product.price) * item.quantity)}</p>
                       <button
                         className="mt-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-destructive"
                         onClick={() => dispatch(removeFromCart(item.key))}
@@ -745,7 +981,7 @@ const CheckoutPage = () => {
                   <span className="font-headline text-lg font-bold">Total</span>
                   <span className="font-headline text-2xl font-extrabold">{currency(total)}</span>
                 </div>
-                {isOnlinePayment && selectedPaymentMethod?.config?.extraFeePercent ? (
+                {selectedPaymentMethod?.config?.extraFeePercent ? (
                   <p className="text-xs text-on-surface-variant">Note: payment gateway fees may apply.</p>
                 ) : null}
               </div>

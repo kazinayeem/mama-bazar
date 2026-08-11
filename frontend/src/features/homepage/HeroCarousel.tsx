@@ -40,8 +40,8 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
 
   const renderButton = (text: string, url: string, primary: boolean) => {
     const className = primary
-      ? 'inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-accent-600 active:scale-95'
-      : 'inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/15 px-5 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/25 active:scale-95'
+      ? 'inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-600 hover:shadow-accent/40 active:scale-95'
+      : 'inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-6 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/25 active:scale-95'
 
     const inner = (
       <>
@@ -95,18 +95,18 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
           style={{
             background:
               slide.alignment === 'right'
-                ? 'linear-gradient(270deg, rgba(2,6,23,0.65) 0%, rgba(2,6,23,0.15) 50%, rgba(2,6,23,0) 75%)'
+                ? 'linear-gradient(270deg, rgba(2,6,23,0.7) 0%, rgba(2,6,23,0.18) 50%, rgba(2,6,23,0) 75%)'
                 : slide.alignment === 'center'
-                  ? 'linear-gradient(180deg, rgba(2,6,23,0.3) 0%, rgba(2,6,23,0.08) 50%, rgba(2,6,23,0.32) 100%)'
-                  : 'linear-gradient(90deg, rgba(2,6,23,0.65) 0%, rgba(2,6,23,0.15) 50%, rgba(2,6,23,0) 75%)',
-            opacity: slide.overlayOpacity ?? 0.7,
+                  ? 'linear-gradient(180deg, rgba(2,6,23,0.35) 0%, rgba(2,6,23,0.1) 50%, rgba(2,6,23,0.35) 100%)'
+                  : 'linear-gradient(90deg, rgba(2,6,23,0.7) 0%, rgba(2,6,23,0.18) 50%, rgba(2,6,23,0) 75%)',
+            opacity: slide.overlayOpacity ?? 0.65,
           } as CSSProperties}
         />
       )}
 
       {/* Content */}
       <div
-        className={`relative z-10 flex h-full flex-col justify-center px-6 py-8 sm:px-10 lg:px-16 ${
+        className={`relative z-10 flex h-full flex-col justify-center px-6 py-8 sm:px-12 lg:px-20 ${
           slide.alignment === 'center'
             ? 'items-center text-center'
             : slide.alignment === 'right'
@@ -114,38 +114,36 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
               : 'items-start text-left'
         }`}
       >
-        <div className="max-w-sm sm:max-w-md">
+        <div className="max-w-md sm:max-w-lg">
           {slide.badge && (
-            <span
-              className="mb-3 inline-flex items-center rounded-full bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white"
-            >
+            <span className="mb-3 inline-flex items-center rounded-full bg-accent px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
               {slide.badge}
             </span>
           )}
 
           {slide.title && (
             <h2
-              className="font-headline text-2xl font-black leading-tight tracking-tight sm:text-3xl lg:text-4xl"
-              style={{ color: textColor, textShadow: '0 1px 8px rgba(2,6,23,0.4)' }}
+              className="font-headline text-3xl font-black leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl"
+              style={{ color: textColor, textShadow: '0 2px 12px rgba(2,6,23,0.45)' }}
             >
               {slide.title}
             </h2>
           )}
 
           {slide.subtitle && (
-            <p className="mt-2 text-sm font-semibold sm:text-base" style={{ color: textColor }}>
+            <p className="mt-3 text-sm font-semibold sm:text-base lg:text-lg" style={{ color: textColor }}>
               {slide.subtitle}
             </p>
           )}
 
           {slide.description && (
-            <p className="mt-2 text-xs leading-6 opacity-90 sm:text-sm" style={{ color: textColor }}>
+            <p className="mt-2 max-w-md text-xs leading-6 opacity-90 sm:text-sm" style={{ color: textColor }}>
               {slide.description}
             </p>
           )}
 
           {(slide.primaryButtonText || slide.secondaryButtonText) && (
-            <div className="mt-5 flex flex-wrap gap-2.5">
+            <div className="mt-6 flex flex-wrap gap-3">
               {slide.primaryButtonText && slide.primaryButtonUrl &&
                 renderButton(slide.primaryButtonText, slide.primaryButtonUrl, true)}
               {slide.secondaryButtonText && slide.secondaryButtonUrl &&
@@ -195,8 +193,8 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="h-[260px] w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800 sm:h-[320px] lg:h-[400px]" />
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 sm:h-[400px] lg:h-[480px] dark:bg-slate-800" />
       </div>
     )
   }
@@ -204,17 +202,14 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
   if (count === 0) return null
 
   return (
-    <section
-      aria-label="Promotions"
-      className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
-    >
+    <section aria-label="Promotions" className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
       <div
-        className="group relative select-none overflow-hidden rounded-2xl"
+        className="group relative select-none overflow-hidden rounded-2xl shadow-lift sm:rounded-3xl"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         {/* Fixed compact height — the critical fix */}
-        <div className="relative h-[260px] w-full overflow-hidden sm:h-[320px] lg:h-[400px]">
+        <div className="relative h-[300px] w-full overflow-hidden sm:h-[400px] lg:h-[480px]">
           <AnimatePresence custom={direction} initial={false} mode="popLayout">
             <motion.div
               key={slides[safeIndex].id}
@@ -225,7 +220,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.06}
@@ -243,37 +238,37 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
             <>
               <button
                 aria-label="Previous slide"
-                className="absolute left-3 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white/40 active:scale-95 sm:h-9 sm:w-9 lg:opacity-0 lg:group-hover:opacity-100"
+                className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:left-5 sm:h-11 sm:w-11 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
                 onClick={prev}
                 type="button"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={20} />
               </button>
               <button
                 aria-label="Next slide"
-                className="absolute right-3 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white/40 active:scale-95 sm:h-9 sm:w-9 lg:opacity-0 lg:group-hover:opacity-100"
+                className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:right-5 sm:h-11 sm:w-11 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
                 onClick={next}
                 type="button"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={20} />
               </button>
             </>
           )}
 
           {/* Dots */}
           {count > 1 && (
-            <div className="absolute inset-x-0 bottom-3 z-20 flex items-center justify-center gap-1.5">
+            <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2">
               {slides.map((slide, dotIndex) => (
                 <button
                   aria-label={`Go to slide ${dotIndex + 1}`}
-                  className="flex h-4 items-center"
+                  className="flex h-5 items-center"
                   key={slide.id}
                   onClick={() => go(dotIndex, dotIndex > safeIndex ? 1 : -1)}
                   type="button"
                 >
                   <span
-                    className={`block h-1.5 rounded-full transition-all duration-300 ${
-                      dotIndex === safeIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'
+                    className={`block h-2 rounded-full shadow-sm transition-all duration-300 ${
+                      dotIndex === safeIndex ? 'w-8 bg-accent' : 'w-2 bg-white/70 hover:bg-white'
                     }`}
                   />
                 </button>

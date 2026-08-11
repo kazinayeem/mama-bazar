@@ -9,6 +9,7 @@ import CollectionTiles from './CollectionTiles'
 import PromoBanner from './PromoBanner'
 import ReviewsSection from './ReviewsSection'
 import NewsletterBlock from './NewsletterBlock'
+import WhyChooseUs from './WhyChooseUs'
 import {
   asBanners,
   asBrands,
@@ -25,6 +26,8 @@ import type { Product } from '../../types'
 interface HomepageSectionsProps {
   data?: HomepageData
   loading?: boolean
+  hasError?: boolean
+  onRetry?: () => void
   onQuickView: (product: Product) => void
 }
 
@@ -32,29 +35,57 @@ interface HomepageSectionsProps {
 const ProductRowSkeleton = () => (
   <div className="flex gap-3 overflow-hidden py-1">
     {Array.from({ length: 5 }).map((_, i) => (
-      <div key={i} className="h-56 w-44 shrink-0 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
+      <div key={i} className="h-72 w-48 shrink-0 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
     ))}
   </div>
 )
 
-const HomepageSections = ({ data, loading, onQuickView }: HomepageSectionsProps) => {
+const HomepageErrorState = ({ onRetry }: { onRetry?: () => void }) => (
+  <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <div className="flex flex-col items-center gap-4 rounded-3xl border border-slate-100 bg-white px-6 py-14 text-center shadow-soft dark:border-slate-800 dark:bg-slate-900">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl dark:bg-red-950/40">
+        <svg fill="none" height="26" viewBox="0 0 24 24" width="26" stroke="currentColor" strokeWidth="2" className="text-red-500">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        </svg>
+      </span>
+      <div>
+        <h2 className="font-headline text-lg font-extrabold text-slate-900 dark:text-white">Unable to load the homepage</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          Something went wrong while fetching products and offers. Please try again.
+        </p>
+      </div>
+      {onRetry && (
+        <button
+          className="mt-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700 active:scale-95"
+          onClick={onRetry}
+          type="button"
+        >
+          Try Again
+        </button>
+      )}
+    </div>
+  </div>
+)
+
+const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: HomepageSectionsProps) => {
   if (!data) {
+    if (hasError) return <HomepageErrorState onRetry={onRetry} />
     if (!loading) return null
     return (
       <div className="space-y-6 bg-white py-4 dark:bg-slate-950">
         {/* Hero skeleton */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="h-[260px] w-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800 sm:h-[320px] lg:h-[400px]" />
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+          <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 dark:bg-slate-800 sm:h-[400px] lg:h-[480px]" />
         </div>
 
         {/* Trust strip skeleton */}
         <div className="mx-auto max-w-7xl px-4">
-          <div className="flex gap-6 py-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex shrink-0 items-center gap-3">
-                <div className="h-9 w-9 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
-                <div className="space-y-1">
-                  <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+              <div key={i} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-900/60">
+                <div className="h-10 w-10 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
+                <div className="space-y-1.5">
+                  <div className="h-2.5 w-24 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
                   <div className="h-2 w-28 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
                 </div>
               </div>
@@ -64,12 +95,12 @@ const HomepageSections = ({ data, loading, onQuickView }: HomepageSectionsProps)
 
         {/* Category carousel skeleton */}
         <div className="mx-auto max-w-7xl px-4">
-          <div className="mb-3 h-5 w-40 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+          <div className="mb-4 h-6 w-48 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
           <div className="flex gap-3 overflow-hidden">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex shrink-0 flex-col items-center gap-2">
-                <div className="h-14 w-14 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
-                <div className="h-2.5 w-14 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex w-[138px] shrink-0 flex-col items-center gap-2 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/60">
+                <div className="h-16 w-16 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+                <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
               </div>
             ))}
           </div>
@@ -78,7 +109,7 @@ const HomepageSections = ({ data, loading, onQuickView }: HomepageSectionsProps)
         {/* Product rail skeleton x2 */}
         {[1, 2].map((k) => (
           <div key={k} className="mx-auto max-w-7xl px-4">
-            <div className="mb-3 h-5 w-40 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+            <div className="mb-4 h-6 w-48 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
             <ProductRowSkeleton />
           </div>
         ))}
@@ -158,6 +189,16 @@ const HomepageSections = ({ data, loading, onQuickView }: HomepageSectionsProps)
             return (
               <SectionShell key={section.id} section={section}>
                 <ReviewsSection items={items} />
+              </SectionShell>
+            )
+          }
+
+          case 'why_choose_us': {
+            const items = asContentItems(section)
+            if (items.length === 0) return null
+            return (
+              <SectionShell key={section.id} section={section}>
+                <WhyChooseUs items={items} />
               </SectionShell>
             )
           }

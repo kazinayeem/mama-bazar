@@ -90,13 +90,16 @@ const openInvoice = (order: AdminOrder) => {
   if (!win) return
   const itemRows = (order.items || [])
     .map(
-      (i) =>
-        `<tr>
-          <td>${i.product?.title || `Product #${i.productId}`}</td>
+      (i) => {
+        const variantParts = [i.color, i.size].filter(Boolean)
+        const variantStr = variantParts.length > 0 ? ` (${variantParts.join(' / ')})` : ''
+        return `<tr>
+          <td>${i.product?.title || `Product #${i.productId}`}${variantStr}</td>
           <td>${i.quantity}</td>
           <td>Tk ${Number(i.price).toLocaleString()}</td>
           <td class="right">Tk ${(Number(i.price) * i.quantity).toLocaleString()}</td>
-        </tr>`,
+        </tr>`
+      },
     )
     .join('')
   win.document.write(`<!DOCTYPE html><html><head><title>Invoice ${order.orderId}</title><style>
@@ -495,8 +498,8 @@ const AdminOrdersPage = () => {
                             <p className="truncate text-sm font-medium">{item.product?.title || `Product #${item.productId}`}</p>
                             <p className="text-xs text-muted-foreground">
                               {item.quantity} × {currency(item.price)}
-                              {item.size ? ` · ${item.size}` : ''}
                               {item.color ? ` · ${item.color}` : ''}
+                              {item.size ? ` · ${item.size}` : ''}
                             </p>
                           </div>
                           <span className="text-sm font-semibold">{currency(Number(item.price) * item.quantity)}</span>

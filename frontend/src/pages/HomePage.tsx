@@ -10,7 +10,7 @@ import type { Product } from '../types'
 const HomePage = () => {
   const toast = useToast()
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null)
-  const { data: homepage, isLoading } = useGetHomepageQuery()
+  const { data: homepage, isLoading, isError, refetch } = useGetHomepageQuery()
 
   return (
     <main className="overflow-x-hidden bg-white dark:bg-slate-950">
@@ -19,7 +19,13 @@ const HomePage = () => {
         description="Discover premium products at unbeatable prices. Official warranty, free delivery, and 24/7 support."
         url="/"
       />
-      <HomepageSections data={homepage} loading={isLoading} onQuickView={setQuickViewProduct} />
+      <HomepageSections
+        data={homepage}
+        hasError={isError}
+        loading={isLoading}
+        onQuickView={setQuickViewProduct}
+        onRetry={refetch}
+      />
 
       {/* Single floating chat button — fixed bottom-right only */}
       <button

@@ -406,10 +406,12 @@ export interface AdminOrder extends Order {
   items?: Array<{
     id: number
     productId: number
+    variantId?: number | null
     quantity: number
     price: string
     size?: string | null
     color?: string | null
+    variantName?: string | null
     product?: { title?: string; image?: string | null } | null
   }>
   statusHistory?: OrderStatusHistory[]
@@ -475,4 +477,147 @@ export interface DashboardData {
   topProducts: Array<{ id: number; title: string; slug: string; image: string | null; quantity: number; revenue: number }>
   topCategories: Array<{ id: number | null; name: string | null; count: number }>
   lowStockProducts: Array<{ id: number; title: string; slug: string; stock: number; image: string | null; price: string }>
+}
+
+// ==================== EXPENSES & FINANCE ====================
+export type ExpenseStatus = 'pending' | 'approved' | 'rejected'
+
+export interface ExpenseCategory {
+  id: number
+  name: string
+  description?: string | null
+  status: 'active' | 'inactive'
+  sortOrder: number
+  createdAt?: string
+}
+
+export interface Expense {
+  id: number
+  title: string
+  description?: string | null
+  categoryId?: number | null
+  categoryName?: string | null
+  amount: string
+  paymentMethod: string
+  vendor?: string | null
+  memberId?: number | null
+  memberName?: string | null
+  expenseDate: string
+  referenceNumber?: string | null
+  attachmentUrl?: string | null
+  notes?: string | null
+  status: ExpenseStatus
+  createdById?: number | null
+  createdByName?: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface ExpenseFilters {
+  page?: number
+  limit?: number
+  search?: string
+  status?: string
+  memberId?: string
+  categoryId?: string
+  paymentMethod?: string
+  dateFrom?: string
+  dateTo?: string
+  amountMin?: string
+  amountMax?: string
+}
+
+export interface ExpenseListResult {
+  data: Expense[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export interface ExpenseInput {
+  title: string
+  description?: string | null
+  categoryId?: number | null
+  amount: number
+  paymentMethod?: string
+  memberId?: number | null
+  expenseDate: string
+  referenceNumber?: string | null
+  attachmentUrl?: string | null
+  notes?: string | null
+  status?: ExpenseStatus
+}
+
+export interface ExpenseSummary {
+  total: number
+  totalCount: number
+  thisMonth: number
+  thisMonthCount: number
+  thisWeek: number
+  thisWeekCount: number
+  today: number
+  todayCount: number
+}
+
+export interface ExpenseMemberRow {
+  memberId?: number | null
+  memberName: string
+  total: number
+  count: number
+}
+
+export interface ExpenseCategoryRow {
+  categoryId?: number | null
+  categoryName: string
+  total: number
+  count: number
+}
+
+export interface ExpenseMonthlyReport {
+  year: number
+  month: number
+  total: number
+  count: number
+  average: number
+  highest: number
+  lowest: number
+  byMember: ExpenseMemberRow[]
+  byCategory: ExpenseCategoryRow[]
+  expenses: Expense[]
+  pagination: { page: number; limit: number; total: number; totalPages: number }
+}
+
+export interface ExpenseTrendRow {
+  month: number
+  label: string
+  total: number
+  count: number
+}
+
+export interface ExpenseRangeReport {
+  dateFrom: string | null
+  dateTo: string | null
+  total: number
+  count: number
+  byMember: ExpenseMemberRow[]
+  byCategory: ExpenseCategoryRow[]
+  expenses: Expense[]
+}
+
+export interface ProfitOverview {
+  year: number
+  month: number
+  revenue: number
+  productCost: number
+  operatingExpenses: number
+  netProfit: number
+  hasRevenueData: boolean
+}
+
+export interface TeamMember {
+  id: number
+  name: string
+  phone: string
+  role: UserRole
 }

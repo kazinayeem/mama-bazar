@@ -1,14 +1,13 @@
 import { motion } from 'framer-motion'
-import { Flame, Timer } from 'lucide-react'
+import { ArrowRight, Flame, Timer } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { HomepageFlashSaleWindow } from '../../types/homepage'
 import type { Product } from '../../types'
-import SectionShell from './SectionShell'
-import type { HomepageSectionConfig } from '../../types/homepage'
 import ProductCarousel from './ProductCarousel'
 
 interface FlashDealsProps {
-  section: HomepageSectionConfig
+  section: { title?: string; subtitle?: string; ctaText?: string; ctaUrl?: string }
   products: Product[]
   window?: HomepageFlashSaleWindow
   onQuickView: (product: Product) => void
@@ -60,11 +59,11 @@ const useCountdown = (target: number) => {
 }
 
 const TimeUnit = ({ value, label }: { value: string; label: string }) => (
-  <div className="flex flex-col items-center">
-    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20 font-headline text-base font-black tabular-nums text-white">
+  <div className="flex flex-col items-center gap-0.5">
+    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white font-headline text-base font-black tabular-nums text-slate-900 shadow-md sm:h-11 sm:w-11">
       {value}
     </span>
-    <span className="mt-1 text-[9px] font-bold uppercase tracking-wider text-white/70">{label}</span>
+    <span className="text-[9px] font-bold uppercase tracking-wider text-white/70">{label}</span>
   </div>
 )
 
@@ -75,41 +74,55 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
   if (products.length === 0) return null
 
   return (
-    <SectionShell section={section}>
-      {/* Compact Flash Deals header */}
-      <div className="relative mb-5 overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-4 sm:py-5">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent/20 blur-2xl" />
-        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <motion.span
-              animate={{ scale: [1, 1.15, 1] }}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-white"
-              transition={{ duration: 1.4, repeat: Infinity }}
-            >
-              <Flame size={18} className="fill-white" />
-            </motion.span>
-            <div>
-              <p className="font-headline text-lg font-black text-white">Flash Deals</p>
-              <p className="text-xs text-accent">Limited stock — while supplies last</p>
+    <section className="bg-slate-50 py-8 lg:py-12 dark:bg-slate-900/60">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Flash Deals header panel */}
+        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-5 sm:rounded-3xl sm:px-7 sm:py-6 lg:mb-8">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-accent/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 left-1/3 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <motion.span
+                animate={{ scale: [1, 1.12, 1] }}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-white shadow-lg shadow-accent/30"
+                transition={{ duration: 1.4, repeat: Infinity }}
+              >
+                <Flame size={22} className="fill-white" />
+              </motion.span>
+              <div>
+                <p className="font-headline text-xl font-black text-white sm:text-2xl">
+                  {section.title || 'Flash Deals'}
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-accent sm:text-sm">
+                  {section.subtitle || 'Limited-time prices. When they are gone, they are gone.'}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent/20 px-2.5 py-1 text-[11px] font-bold text-accent">
-              <Timer size={11} /> Ends in
-            </span>
-            <div className="flex items-start gap-1.5">
-              {time.days > 0 && <TimeUnit label="D" value={pad(time.days)} />}
-              <TimeUnit label="H" value={pad(time.hours)} />
-              <TimeUnit label="M" value={pad(time.minutes)} />
-              <TimeUnit label="S" value={pad(time.seconds)} />
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-3 py-1.5 text-[11px] font-bold text-accent">
+                <Timer size={12} /> Ends in
+              </span>
+              <div className="flex items-start gap-2">
+                {time.days > 0 && <TimeUnit label="Days" value={pad(time.days)} />}
+                <TimeUnit label="Hrs" value={pad(time.hours)} />
+                <TimeUnit label="Min" value={pad(time.minutes)} />
+                <TimeUnit label="Sec" value={pad(time.seconds)} />
+              </div>
+              <Link
+                className="group hidden items-center gap-1.5 rounded-full border border-white/25 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/10 lg:inline-flex"
+                to="/shop?sale=true"
+              >
+                View All
+                <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
           </div>
         </div>
-      </div>
 
-      <ProductCarousel onQuickView={onQuickView} products={products.slice(0, 10)} />
-    </SectionShell>
+        <ProductCarousel onQuickView={onQuickView} products={products.slice(0, 10)} />
+      </div>
+    </section>
   )
 }
 

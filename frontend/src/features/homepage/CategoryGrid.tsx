@@ -48,11 +48,11 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
       {canScrollLeft && (
         <button
           aria-label="Scroll categories left"
-          className="absolute -left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          className="absolute -left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           onClick={() => scroll('left')}
           type="button"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={17} />
         </button>
       )}
 
@@ -60,11 +60,11 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
       {canScrollRight && (
         <button
           aria-label="Scroll categories right"
-          className="absolute -right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          className="absolute -right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           onClick={() => scroll('right')}
           type="button"
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={17} />
         </button>
       )}
 
@@ -89,12 +89,12 @@ const CategoryChip = ({ category }: { category: Category }) => {
   return (
     <Link
       aria-label={`Shop ${category.name}`}
-      className="group flex shrink-0 flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white px-3 py-3 transition hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/30 dark:hover:bg-primary/10"
-      style={{ scrollSnapAlign: 'start', minWidth: '80px', maxWidth: '96px' }}
+      className="group flex w-[138px] shrink-0 flex-col items-center gap-2.5 rounded-2xl border border-slate-100 bg-white px-3 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-card sm:w-[150px] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/30 dark:hover:bg-primary/10"
+      style={{ scrollSnapAlign: 'start' }}
       to={`/shop?category=${category.slug}`}
     >
       {/* Image circle */}
-      <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-50 ring-1 ring-slate-100 transition group-hover:ring-primary/30 dark:bg-slate-800 dark:ring-slate-700">
+      <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-100 transition duration-300 group-hover:scale-105 group-hover:ring-primary/40 sm:h-[68px] sm:w-[68px] dark:bg-slate-800 dark:ring-slate-700">
         {imgSrc && !imgFailed ? (
           <img
             alt={category.name}
@@ -104,16 +104,23 @@ const CategoryChip = ({ category }: { category: Category }) => {
             src={imgSrc}
           />
         ) : (
-          <span className="font-headline text-xl font-black text-primary">
+          <span className="font-headline text-2xl font-black text-primary">
             {category.name.slice(0, 1).toUpperCase()}
           </span>
         )}
       </span>
 
       {/* Label */}
-      <span className="line-clamp-2 text-center text-[11px] font-semibold leading-tight text-slate-700 transition group-hover:text-primary dark:text-slate-300">
+      <span className="line-clamp-1 text-center text-xs font-bold leading-tight text-slate-800 transition group-hover:text-primary dark:text-slate-200">
         {category.name}
       </span>
+
+      {/* Product count */}
+      {typeof category.productCount === 'number' && category.productCount > 0 && (
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 transition group-hover:bg-primary/10 group-hover:text-primary dark:bg-slate-800 dark:text-slate-400">
+          {category.productCount} products
+        </span>
+      )}
     </Link>
   )
 }

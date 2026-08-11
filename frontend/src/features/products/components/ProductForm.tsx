@@ -42,8 +42,11 @@ interface ProductFormProps {
 const validate = (form: ProductFormValues): string[] => {
   const errors: string[] = []
   if (!form.title.trim()) errors.push('Product title is required')
-  const price = Number(form.price)
-  if (!form.price.trim() || Number.isNaN(price) || price <= 0) errors.push('Price must be a positive number')
+  const hasVariants = form.variants.length > 0
+  if (!hasVariants) {
+    const price = Number(form.price)
+    if (!form.price.trim() || Number.isNaN(price) || price <= 0) errors.push('Price must be a positive number')
+  }
   return errors
 }
 

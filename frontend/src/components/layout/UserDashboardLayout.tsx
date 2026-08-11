@@ -1,14 +1,15 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { LayoutDashboard, Package, User, MapPin, Shield } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { fetchMyOrders, fetchMyProfile } from '../../store/slices/authSlice'
 
 const navItems = [
-  { label: 'Overview', href: '/dashboard/overview' },
-  { label: 'Orders', href: '/dashboard/orders' },
-  { label: 'Profile', href: '/dashboard/profile' },
-  { label: 'Addresses', href: '/dashboard/addresses' },
-  { label: 'Security', href: '/dashboard/security' },
+  { label: 'Overview', href: '/dashboard/overview', icon: LayoutDashboard },
+  { label: 'Orders', href: '/dashboard/orders', icon: Package },
+  { label: 'Profile', href: '/dashboard/profile', icon: User },
+  { label: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
+  { label: 'Security', href: '/dashboard/security', icon: Shield },
 ]
 
 const UserDashboardLayout = () => {
@@ -20,58 +21,106 @@ const UserDashboardLayout = () => {
     dispatch(fetchMyOrders())
   }, [dispatch])
 
+  const getUserInitials = useCallback((name: string) => {
+    if (!name) return 'U'
+    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+  }, [])
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-6 rounded-2xl border border-outline-variant/20 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-5 text-white sm:p-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-200">Customer Portal</p>
-        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-4xl">Hi, {user?.name || 'User'}</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-200">
-          Clean account management, quick order tracking, and a faster checkout flow from saved settings.
-        </p>
+      {/* Profile Hero */}
+      <header className="mb-6 overflow-hidden rounded-2xl border border-slate-200/50 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700">
+        <div className="flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/20 text-2xl font-bold text-white ring-4 ring-white/10 sm:h-20 sm:w-20 sm:text-3xl">
+              {getUserInitials(user?.name || '')}
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-400">Customer Portal</p>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                Hi, {user?.name || 'User'}
+              </h1>
+              <p className="mt-1 max-w-lg text-sm text-slate-300">
+                Manage your profile, orders and delivery preferences from one place.
+              </p>
+            </div>
+          </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:max-w-xl sm:grid-cols-4">
-          <div className="rounded-xl border border-white/20 bg-white/10 p-3">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-slate-300">Orders</p>
-            <p className="mt-1 text-xl font-bold">{userOrders.length}</p>
-          </div>
-          <div className="rounded-xl border border-white/20 bg-white/10 p-3">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-slate-300">Phone</p>
-            <p className="mt-1 truncate text-sm font-semibold">{user?.phone || '-'}</p>
-          </div>
-          <div className="rounded-xl border border-white/20 bg-white/10 p-3">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-slate-300">Area</p>
-            <p className="mt-1 truncate text-sm font-semibold">{user?.shippingArea || 'Not set'}</p>
-          </div>
-          <div className="rounded-xl border border-white/20 bg-white/10 p-3">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-slate-300">Role</p>
-            <p className="mt-1 text-sm font-semibold uppercase">{user?.role || 'user'}</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Orders</p>
+              <p className="mt-1 text-xl font-bold text-white">{userOrders.length}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Phone</p>
+              <p className="mt-1 truncate text-sm font-semibold text-white">{user?.phone || '-'}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Area</p>
+              <p className="mt-1 truncate text-sm font-semibold text-white">{user?.shippingArea || 'Not set'}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Account</p>
+              <p className="mt-1 text-sm font-semibold uppercase text-emerald-400">Active</p>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-outline-variant/20 bg-white p-3 lg:sticky lg:top-24 lg:h-fit">
-          <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible" aria-label="Dashboard sections">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.href}
-                to={item.href}
-                className={({ isActive }) =>
-                  [
-                    'rounded-xl border px-4 py-2 text-sm font-semibold transition whitespace-nowrap',
-                    isActive
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-outline-variant/30 text-slate-700 hover:border-slate-400 hover:bg-slate-50',
-                  ].join(' ')
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+        {/* Desktop Sidebar */}
+        <aside className="hidden rounded-2xl border border-slate-200 bg-white p-3 lg:sticky lg:top-24 lg:block lg:h-fit">
+          <nav className="flex flex-col gap-1" aria-label="Dashboard sections">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <NavLink
+                  key={item.href}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    [
+                      'flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition',
+                      isActive
+                        ? 'bg-slate-900 text-white'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                    ].join(' ')
+                  }
+                >
+                  <Icon size={18} />
+                  {item.label}
+                </NavLink>
+              )
+            })}
           </nav>
         </aside>
 
-        <section className="min-w-0 rounded-2xl border border-outline-variant/20 bg-white p-4 sm:p-6">
+        {/* Mobile Navigation */}
+        <div className="mb-2 overflow-x-auto lg:hidden">
+          <nav className="flex gap-2 pb-2" aria-label="Dashboard sections">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <NavLink
+                  key={item.href}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    [
+                      'flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition whitespace-nowrap',
+                      isActive
+                        ? 'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-200 text-slate-600 hover:border-slate-400 hover:bg-slate-50',
+                    ].join(' ')
+                  }
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </NavLink>
+              )
+            })}
+          </nav>
+        </div>
+
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
           <Outlet />
         </section>
       </div>

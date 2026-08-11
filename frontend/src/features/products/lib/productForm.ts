@@ -321,13 +321,14 @@ export const productToFormValues = (product: AdminProduct): ProductFormValues =>
 })
 
 export const formValuesToPayload = (values: ProductFormValues): ProductInput => {
+  const hasVariants = values.variants.length > 0
   const priceNum = num(values.price)
   return {
     title: values.title.trim(),
     description: values.description || undefined,
     shortDescription: values.shortDescription || undefined,
     returnPolicy: values.returnPolicy || undefined,
-    price: priceNum ?? 0,
+    price: hasVariants ? (priceNum ?? 0) : (priceNum ?? 0),
     salePrice: num(values.salePrice),
     discount: num(values.discount),
     costPrice: num(values.costPrice),

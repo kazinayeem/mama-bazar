@@ -9,6 +9,7 @@ import {
   mysqlEnum,
   json,
   boolean,
+  index,
 } from "drizzle-orm/mysql-core";
 import type { AnyMySqlColumn } from "drizzle-orm/mysql-core";
 import { sql, relations } from "drizzle-orm";
@@ -724,28 +725,43 @@ export const expenseCategoriesRelations = relations(expenseCategories, ({ many }
 }));
 
 // ==================== EXPENSES ====================
-export const expenses = mysqlTable("expenses", {
-  id: int("id").primaryKey().autoincrement(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  categoryId: int("category_id").references(() => expenseCategories.id),
-  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
-  paymentMethod: varchar("payment_method", { length: 50 }).notNull().default("cash"),
-  vendor: varchar("vendor", { length: 255 }),
-  expenseDate: datetime("expense_date").notNull(),
-  referenceNumber: varchar("reference_number", { length: 100 }),
-  attachmentUrl: varchar("attachment_url", { length: 500 }),
-  notes: text("notes"),
-  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("approved").notNull(),
-  createdById: int("created_by_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const expenses = mysqlTable(
+  "expenses",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    categoryId: int("category_id").references(() => expenseCategories.id),
+    amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+    paymentMethod: varchar("payment_method", { length: 50 }).notNull().default("cash"),
+    vendor: varchar("vendor", { length: 255 }),
+    memberId: int("member_id").references(() => users.id),
+    memberName: varchar("member_name", { length: 255 }),
+    expenseDate: datetime("expense_date").notNull(),
+    referenceNumber: varchar("reference_number", { length: 100 }),
+    attachmentUrl: varchar("attachment_url", { length: 500 }),
+    notes: text("notes"),
+    status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("approved").notNull(),
+    createdById: int("created_by_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    expenseDateIdx: index("expenses_expense_date_idx").on(table.expenseDate),
+    memberIdIdx: index("expenses_member_id_idx").on(table.memberId),
+    categoryIdIdx: index("expenses_category_id_idx").on(table.categoryId),
+    statusIdx: index("expenses_status_idx").on(table.status),
+  }),
+);
 
 export const expensesRelations = relations(expenses, ({ one }) => ({
   category: one(expenseCategories, {
     fields: [expenses.categoryId],
     references: [expenseCategories.id],
+  }),
+  member: one(users, {
+    fields: [expenses.memberId],
+    references: [users.id],
   }),
   createdBy: one(users, {
     fields: [expenses.createdById],

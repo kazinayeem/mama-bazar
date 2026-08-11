@@ -146,6 +146,33 @@ const DashboardOrdersPage = () => {
                   <div className="mt-5 rounded-2xl border border-slate-200 bg-[#fcfbf7] p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                        Order Items ({order.items?.length || 0})
+                      </p>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                      {order.items?.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between rounded-xl border border-slate-100 bg-white px-3 py-2.5">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-slate-900">{item.product?.title || `Product #${item.productId}`}</p>
+                            <p className="mt-0.5 text-xs text-slate-500">
+                              {item.quantity} × {currency(item.price)}
+                              {item.color ? ` · Color: ${item.color}` : ''}
+                              {item.size ? ` · Size: ${item.size}` : ''}
+                            </p>
+                          </div>
+                          <span className="ml-3 text-sm font-bold text-slate-950">{currency(Number(item.price) * item.quantity)}</span>
+                        </div>
+                      ))}
+                      {(!order.items || order.items.length === 0) && (
+                        <p className="text-sm text-slate-500">Item details not available.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 rounded-2xl border border-slate-200 bg-[#fcfbf7] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
                         Delivery Timeline ({order.historyCount || order.statusHistory?.length || 0})
                       </p>
                       <p className="text-sm font-medium text-slate-600">{formatOrderStatus(order.status)}</p>

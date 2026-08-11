@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -16,15 +16,28 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Get the redirect path from location state or URL params
+  const redirectPath = useMemo(() => {
+    // Check location state first (used when navigating from checkout)
+    const stateFrom = (location.state as { from?: string } | null)?.from
+    if (stateFrom) return stateFrom
+
+    // Check URL search params (used for direct links)
+    const searchParams = new URLSearchParams(location.search)
+    const redirectTo = searchParams.get('redirect')
+    if (redirectTo) return redirectTo
+
+    return '/dashboard'
+  }, [location.state, location.search])
+
   useEffect(() => {
     if (!user) return
     if (user.role === 'admin' || user.role === 'manager') {
       navigate('/admin/dashboard', { replace: true })
       return
     }
-    const from = (location.state as { from?: string } | null)?.from || '/dashboard'
-    navigate(from, { replace: true })
-  }, [location.state, navigate, user])
+    navigate(redirectPath, { replace: true })
+  }, [navigate, user, redirectPath])
 
   useEffect(() => {
     return () => {

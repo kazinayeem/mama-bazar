@@ -1,4 +1,4 @@
-import { Boxes } from 'lucide-react'
+import { Boxes, Info } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -15,13 +15,28 @@ import { STOCK_STATUSES } from '../../lib/productForm'
 
 const InventorySection = () => {
   const { form, set } = useProductForm()
+  const hasVariants = form.variants.length > 0
+  const totalVariantStock = form.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)
 
   return (
     <FormSection title="Inventory" description="Stock levels, reorder alerts and fulfillment rules" icon={<Boxes className="h-4 w-4" />}>
+      {hasVariants && (
+        <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <div className="flex items-start gap-2">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <div className="text-sm">
+              <p className="font-medium text-primary">Variant stock: {totalVariantStock} total across {form.variants.length} variant(s)</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Stock is managed per variant. Set stock quantities in the Variants section.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
-          <Label htmlFor="stock">Stock Quantity</Label>
-          <Input id="stock" type="number" min="0" value={form.stock} onChange={(e) => set({ stock: e.target.value })} />
+          <Label htmlFor="stock">Stock Quantity{hasVariants ? ' (Base)' : ''}</Label>
+          <Input id="stock" type="number" min="0" value={form.stock} onChange={(e) => set({ stock: e.target.value })} disabled={hasVariants} />
+          {hasVariants && <p className="text-xs text-muted-foreground">Managed per variant</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="low-stock-alert">Low Stock Alert</Label>

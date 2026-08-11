@@ -31,7 +31,13 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
   const { data: homepageData } = useGetHomepageQuery()
   const popularSearches = homepageData?.popularSearches || []
 
-  const suggestionsQuery = useGetProductsQuery({ search: query, limit: 5 }, { skip: !query.trim() })
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const suggestionsQuery = useGetProductsQuery({ search: debouncedQuery, limit: 5 }, { skip: !debouncedQuery })
   const suggestions = suggestionsQuery.data?.data || []
 
   useEffect(() => {
@@ -99,7 +105,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
             transition={{ duration: 0.18 }}
           >
             <div className="max-h-[22rem] overflow-y-auto p-2">
-              {query ? (
+              {debouncedQuery ? (
                 <>
                   <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Suggestions</p>
                   {suggestionsQuery.isLoading ? (

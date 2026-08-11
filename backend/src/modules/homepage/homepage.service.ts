@@ -33,8 +33,16 @@ const DEFAULT_SECTIONS: HomepageSectionConfig[] = [
     id: "categories",
     type: "categories",
     enabled: true,
-    title: "Shop by category",
-    subtitle: "Everything you need to upgrade your home.",
+    title: "Explore Categories",
+    subtitle: "Discover our wide range of products across all categories.",
+    limit: 12,
+  },
+  {
+    id: "new_arrivals",
+    type: "new_arrivals",
+    enabled: true,
+    title: "New arrivals",
+    subtitle: "Fresh products just added to the store.",
     limit: 12,
   },
   {
@@ -43,20 +51,40 @@ const DEFAULT_SECTIONS: HomepageSectionConfig[] = [
     enabled: true,
   },
   {
-    id: "flash_deals",
-    type: "flash_deals",
-    enabled: true,
-    title: "Flash Deals",
-    subtitle: "Limited-time prices. When they're gone, they're gone.",
-    limit: 12,
-    background: "muted",
-  },
-  {
     id: "featured",
     type: "featured",
     enabled: true,
     title: "Featured products",
     subtitle: "Handpicked favourites from our catalogue.",
+    limit: 12,
+  },
+  {
+    id: "brands",
+    type: "brands",
+    enabled: true,
+    title: "Trusted brands",
+    subtitle: "100% authentic products from official distributors.",
+    limit: 10,
+  },
+  {
+    id: "promo_banner_2",
+    type: "promo_banner",
+    enabled: true,
+  },
+  {
+    id: "collections",
+    type: "collections",
+    enabled: true,
+    title: "Featured collections",
+    subtitle: "Complete setups built for every lifestyle.",
+    limit: 6,
+  },
+  {
+    id: "flash_deals",
+    type: "flash_deals",
+    enabled: true,
+    title: "Flash Deals",
+    subtitle: "Limited-time prices. When they're gone, they're gone.",
     limit: 12,
     background: "muted",
   },
@@ -69,22 +97,6 @@ const DEFAULT_SECTIONS: HomepageSectionConfig[] = [
     limit: 12,
   },
   {
-    id: "brands",
-    type: "brands",
-    enabled: true,
-    title: "Trusted brands",
-    subtitle: "100% authentic products from official distributors.",
-    limit: 10,
-  },
-  {
-    id: "collections",
-    type: "collections",
-    enabled: true,
-    title: "Featured collections",
-    subtitle: "Complete setups built for every lifestyle.",
-    limit: 6,
-  },
-  {
     id: "trending",
     type: "trending",
     enabled: true,
@@ -92,14 +104,6 @@ const DEFAULT_SECTIONS: HomepageSectionConfig[] = [
     subtitle: "The products everyone is talking about.",
     limit: 10,
     background: "muted",
-  },
-  {
-    id: "new_arrivals",
-    type: "new_arrivals",
-    enabled: true,
-    title: "New arrivals",
-    subtitle: "Fresh products just added to the store.",
-    limit: 10,
   },
   {
     id: "recommendations",
@@ -113,7 +117,7 @@ const DEFAULT_SECTIONS: HomepageSectionConfig[] = [
     id: "why_choose_us",
     type: "why_choose_us",
     enabled: true,
-    title: "Why choose GhorerBazar",
+    title: "Why choose Mama Bazar",
   },
   {
     id: "reviews",
@@ -357,7 +361,33 @@ const resolveCategories = async (limit: number) => {
     .where(and(eq(categories.status, "active"), isNull(categories.parentId)))
     .orderBy(asc(categories.sortOrder))
     .limit(limit);
-  return rows;
+
+  if (rows.length === 0) return rows;
+
+  // Active product count per parent category (across category/sub/child links)
+  const ids = rows.map((r) => r.id);
+  const countRows = await db
+    .select({
+      categoryId: categories.id,
+      productCount: sql<number>`COUNT(DISTINCT ${products.id})`,
+    })
+    .from(categories)
+    .innerJoin(
+      products,
+      and(
+        eq(products.status, "active"),
+        or(
+          eq(products.categoryId, categories.id),
+          eq(products.subCategoryId, categories.id),
+          eq(products.childCategoryId, categories.id)
+        )
+      )
+    )
+    .where(inArray(categories.id, ids))
+    .groupBy(categories.id);
+
+  const countMap = new Map(countRows.map((r) => [r.categoryId, Number(r.productCount)]));
+  return rows.map((row) => ({ ...row, productCount: countMap.get(row.id) ?? 0 }));
 };
 
 const resolveBrands = async (limit: number) => {
@@ -471,6 +501,8 @@ export const getHomepage = async (userId: number | null) => {
     byType("reviews") ? resolveReviews(limits.reviews || 8) : Promise.resolve([]),
   ]);
 
+  const promoBannerSections = enabled.filter((s) => s.type === "promo_banner");
+
   const needsProducts = (t: string) => ["flash_deals", "featured", "best_sellers", "trending", "new_arrivals", "recommendations"].includes(t);
 
   // Flash sale window: the backend decides whether a sale is active.
@@ -534,9 +566,14 @@ export const getHomepage = async (userId: number | null) => {
       case "collections":
         data.items = collectionRows;
         break;
-      case "promo_banner":
-        data.items = bannerRows;
+      case "promo_banner": {
+        // Multiple promo_banner sections share the banner pool round-robin so
+        // each banner is shown exactly once across the homepage.
+        const promoIdx = promoBannerSections.indexOf(section);
+        const promoCount = promoBannerSections.length;
+        data.items = promoCount > 1 ? bannerRows.filter((_, i) => i % promoCount === promoIdx) : bannerRows;
         break;
+      }
       case "why_choose_us":
         data.items = config.whyChooseUs;
         break;

@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { resolveUrl } from '@/lib/apiConfig'
 import type { Banner } from '../../types/admin'
 
 interface PromoBannerProps {
@@ -8,25 +9,26 @@ interface PromoBannerProps {
 
 const isExternal = (url: string) => /^https?:\/\//.test(url)
 
-const PromoBanner = ({ items }: PromoBannerProps) => {
-  const banner = items[0]
-  if (!banner) return null
+const PromoCard = ({ banner }: { banner: Banner }) => {
   const target = banner.link || '/shop'
+  const image = resolveUrl(banner.image)
+  const imageTablet = resolveUrl(banner.imageTablet) || image
+  const imageMobile = resolveUrl(banner.imageMobile) || imageTablet
 
   const body = (
     <>
       <picture>
-        {banner.imageMobile && <source media="(max-width: 639px)" srcSet={banner.imageMobile} />}
-        {banner.imageTablet && <source media="(max-width: 1023px)" srcSet={banner.imageTablet} />}
+        <source media="(min-width: 1024px)" srcSet={image} />
+        <source media="(min-width: 640px)" srcSet={imageTablet} />
         <img
           alt={banner.title || 'Promotional banner'}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
-          src={banner.image}
+          src={imageMobile}
         />
       </picture>
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent" />
-      <div className="relative z-10 max-w-sm px-6 py-8 sm:px-8 sm:py-10">
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/45 to-transparent" />
+      <div className="relative z-10 flex h-full max-w-sm flex-col justify-center px-6 py-8 sm:px-8 sm:py-10">
         {banner.title && (
           <h2 className="font-headline text-xl font-black tracking-tight text-white sm:text-2xl">
             {banner.title}
@@ -36,7 +38,7 @@ const PromoBanner = ({ items }: PromoBannerProps) => {
           <p className="mt-2 text-xs leading-6 text-slate-200 sm:text-sm">{banner.subtitle}</p>
         )}
         {banner.buttonText && (
-          <span className="group mt-5 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-bold text-white transition hover:bg-accent-600 active:scale-95">
+          <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-600 active:scale-95">
             {banner.buttonText}
             <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
           </span>
@@ -46,7 +48,7 @@ const PromoBanner = ({ items }: PromoBannerProps) => {
   )
 
   return (
-    <div className="relative h-36 overflow-hidden rounded-xl sm:h-44 lg:h-52">
+    <div className="group relative h-44 overflow-hidden rounded-2xl shadow-soft transition-shadow hover:shadow-card sm:h-52 lg:h-60">
       {isExternal(target) ? (
         <a className="block h-full" href={target} rel="noopener noreferrer" target="_blank">
           {body}
@@ -56,6 +58,18 @@ const PromoBanner = ({ items }: PromoBannerProps) => {
           {body}
         </Link>
       )}
+    </div>
+  )
+}
+
+const PromoBanner = ({ items }: PromoBannerProps) => {
+  if (items.length === 0) return null
+  const visible = items.slice(0, 2)
+  return (
+    <div className={`grid gap-4 ${visible.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+      {visible.map((banner) => (
+        <PromoCard banner={banner} key={banner.id} />
+      ))}
     </div>
   )
 }

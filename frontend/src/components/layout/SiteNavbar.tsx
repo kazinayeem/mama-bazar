@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, ChevronRight, Heart, LogIn, Menu, Moon, ShoppingBag, Sun, User, X, Zap } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ChevronDown, ChevronRight, Heart, LogIn, LogOut, Menu, Moon, Package, ShoppingBag, Sun, User, X, Zap, MapPin, Settings } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { fetchMyProfile, logout } from '../../store/slices/authSlice'
@@ -13,22 +13,29 @@ const SiteNavbar = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const theme = useAppSelector((state) => state.ui.theme)
-  const cartCount = useAppSelector((state) => state.cart.items.reduce((sum, item) => sum + item.quantity, 0))
-  const subtotal = useAppSelector((state) => state.cart.items.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0))
+  const cartItems = useAppSelector((state) => state.cart.items)
+  const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems])
+  const subtotal = useMemo(() => cartItems.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0), [cartItems])
   const wishlistCount = useAppSelector((state) => state.ui.wishlist.length)
   const token = useAppSelector((state) => state.auth.token)
   const authUser = useAppSelector((state) => state.auth.user)
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   const categoriesQuery = useGetCategoriesQuery()
   const categories = categoriesQuery.data || []
   const { data: homepageData } = useGetHomepageQuery()
   const announcement = homepageData?.announcement
 
-  // Filter top-level parent categories
   const parentCategories = categories.filter((c) => !c.parentId)
+
+  const getUserInitials = useCallback((name: string) => {
+    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+  }, [])
 
   useEffect(() => {
     if (token && !authUser) {
@@ -45,10 +52,36 @@ const SiteNavbar = () => {
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setUserMenuOpen(false)
+        setShowLogoutModal(false)
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [])
+
+  const handleLogout = () => {
+    dispatch(logout())
+    setShowLogoutModal(false)
+    setUserMenuOpen(false)
+    navigate('/', { replace: true })
+  }
 
   const iconButton =
     'relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
@@ -65,14 +98,10 @@ const SiteNavbar = () => {
             : 'border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900'
         }`}
       >
-        {/* Announcement bar */}
         {announcement?.enabled && announcement.text && (
           <div
             className="text-white dark:bg-slate-950"
-            style={{
-              backgroundColor: announcement.backgroundColor || '#1e293b',
-              color: announcement.textColor || '#ffffff',
-            }}
+            style={{ backgroundColor: announcement.backgroundColor || '#1e293b', color: announcement.textColor || '#ffffff' }}
           >
             <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-1.5 text-center text-[11px] font-medium sm:text-xs">
               <Zap size={12} className="fill-accent text-accent" />
@@ -81,7 +110,6 @@ const SiteNavbar = () => {
           </div>
         )}
 
-        {/* Top Header */}
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
@@ -94,17 +122,17 @@ const SiteNavbar = () => {
             </button>
 
             <NavLink aria-label="Mama Bazar home" className="flex items-center gap-2" to="/">
-              <img alt="Mama Bazar logo" className="h-24 w-auto object-contain" src="/brandlogo.png" />
-             
+              <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
+              <span className="hidden font-headline text-lg font-extrabold tracking-tight text-slate-900 dark:text-white sm:block">
+                Mama<span className="text-primary">Bazar</span>
+              </span>
             </NavLink>
           </div>
 
-          {/* Search bar - Desktop */}
           <div className="hidden lg:block w-full max-w-xl mx-4">
             <SearchBar />
           </div>
 
-          {/* Quick links & Cart */}
           <div className="flex items-center gap-2">
             <Link
               to="/dashboard/orders"
@@ -142,38 +170,122 @@ const SiteNavbar = () => {
             </button>
 
             {authUser ? (
-              <button
-                aria-label="Account"
-                className={iconButton}
-                onClick={() => navigate(authUser.role === 'admin' || authUser.role === 'manager' ? '/admin/dashboard' : '/dashboard')}
-                type="button"
-              >
-                <User size={17} />
-              </button>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  aria-label="Account menu"
+                  aria-expanded={userMenuOpen}
+                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 transition hover:border-primary dark:border-slate-700 dark:bg-slate-800"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  type="button"
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white dark:bg-white dark:text-slate-900">
+                    {getUserInitials(authUser.name)}
+                  </div>
+                  <span className="hidden md:block text-sm font-semibold text-slate-700 dark:text-slate-200 max-w-[120px] truncate">
+                    {authUser.name.split(' ')[0]}
+                  </span>
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                      className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                    >
+                      <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white dark:bg-white dark:text-slate-900">
+                            {getUserInitials(authUser.name)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{authUser.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{authUser.phone}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="py-2">
+                        <Link
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                          onClick={() => setUserMenuOpen(false)}
+                          to="/dashboard"
+                        >
+                          <Settings size={16} className="text-slate-400" />
+                          My Account
+                        </Link>
+                        <Link
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                          onClick={() => setUserMenuOpen(false)}
+                          to="/dashboard/orders"
+                        >
+                          <Package size={16} className="text-slate-400" />
+                          My Orders
+                        </Link>
+                        <Link
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                          onClick={() => setUserMenuOpen(false)}
+                          to="/dashboard/addresses"
+                        >
+                          <MapPin size={16} className="text-slate-400" />
+                          My Addresses
+                        </Link>
+                        <Link
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                          onClick={() => setUserMenuOpen(false)}
+                          to="/dashboard/profile"
+                        >
+                          <User size={16} className="text-slate-400" />
+                          Profile Settings
+                        </Link>
+                      </div>
+
+                      <div className="border-t border-slate-100 dark:border-slate-800" />
+
+                      <div className="py-2">
+                        <button
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                          onClick={() => {
+                            setUserMenuOpen(false)
+                            setShowLogoutModal(true)
+                          }}
+                          type="button"
+                        >
+                          <LogOut size={16} />
+                          Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ) : (
-              <NavLink aria-label="Sign in" className={`${iconButton} hidden sm:flex`} to="/auth/login">
+              <NavLink
+                aria-label="Login / Register"
+                className={`${iconButton} hidden sm:flex`}
+                to="/auth/login"
+              >
                 <LogIn size={17} />
               </NavLink>
             )}
           </div>
         </div>
 
-        {/* Mobile search */}
         <div className="px-4 pb-3 lg:hidden">
           <SearchBar onNavigate={() => setMobileOpen(false)} />
         </div>
 
-        {/* Second Navigation - Desktop */}
         <div className="hidden lg:block border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
           <div className="mx-auto flex h-11 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8 text-sm">
-            {/* Categories Dropdown */}
             <div className="relative group py-2">
               <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 hover:text-primary transition">
                 <Menu size={15} />
                 All Categories
                 <ChevronDown size={13} />
               </button>
-              {/* Dropdown Menu */}
               <div className="absolute left-0 top-full z-50 hidden group-hover:block w-64 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-lift dark:border-slate-850 dark:bg-slate-900">
                 <div className="max-h-[350px] overflow-y-auto pr-1">
                   {parentCategories.map((cat) => (
@@ -198,52 +310,25 @@ const SiteNavbar = () => {
 
             <span className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
 
-            {/* Menu items */}
             <nav className="flex flex-1 items-center gap-5" aria-label="Main Navigation">
-              <NavLink
-                to="/"
-                className={({ isActive }) =>
-                  `text-xs font-bold uppercase tracking-wider transition ${
-                    isActive ? 'text-primary' : 'text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white'
-                  }`
-                }
-              >
+              <NavLink to="/" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-primary' : 'text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white'}`}>
                 Home
               </NavLink>
-              <NavLink
-                to="/shop"
-                className={({ isActive }) =>
-                  `text-xs font-bold uppercase tracking-wider transition ${
-                    isActive ? 'text-primary' : 'text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white'
-                  }`
-                }
-              >
+              <NavLink to="/shop" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-primary' : 'text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white'}`}>
                 Shop
               </NavLink>
-              <NavLink
-                to="/shop?sale=true"
-                className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition"
-              >
+              <NavLink to="/shop?sale=true" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
                 Deals
               </NavLink>
-              <NavLink
-                to="/brands"
-                className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition"
-              >
+              <NavLink to="/shop" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
                 Brands
               </NavLink>
-              <a
-                href="#about"
-                className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition"
-              >
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
                 About
-              </a>
-              <a
-                href="#contact"
-                className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition"
-              >
+              </NavLink>
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
                 Contact
-              </a>
+              </NavLink>
             </nav>
           </div>
         </div>
@@ -284,7 +369,20 @@ const SiteNavbar = () => {
                 </button>
               </div>
 
-              {/* Mobile Drawer Main Nav Links */}
+              {authUser && (
+                <div className="border-b border-slate-100 p-5 dark:border-slate-800">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white dark:bg-white dark:text-slate-900">
+                      {getUserInitials(authUser.name)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-white">{authUser.name}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{authUser.phone}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <nav className="p-5 border-b border-slate-100 dark:border-slate-800" aria-label="Mobile Navigation">
                 {[
                   { label: 'Home', to: '/' },
@@ -309,7 +407,6 @@ const SiteNavbar = () => {
                 ))}
               </nav>
 
-              {/* Mobile Drawer Categories */}
               <div className="p-5">
                 <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Categories</p>
                 <div className="grid grid-cols-2 gap-2">
@@ -342,6 +439,7 @@ const SiteNavbar = () => {
                       onClick={() => {
                         dispatch(logout())
                         setMobileOpen(false)
+                        navigate('/', { replace: true })
                       }}
                       type="button"
                     >
@@ -353,12 +451,62 @@ const SiteNavbar = () => {
                       onClick={() => setMobileOpen(false)}
                       to="/auth/login"
                     >
-                      Sign In
+                      Login / Register
                     </NavLink>
                   )}
                 </div>
               </div>
             </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Logout Confirmation Modal */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] bg-slate-950/50 backdrop-blur-sm"
+              onClick={() => setShowLogoutModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[201] flex items-center justify-center p-4"
+            >
+              <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <div className="text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50">
+                    <LogOut size={24} className="text-red-600 dark:text-red-400" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">Logout from Mama Bazar?</h3>
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    Are you sure you want to logout? You will need to login again to access your account.
+                  </p>
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <button
+                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    onClick={() => setShowLogoutModal(false)}
+                    type="button"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                    onClick={handleLogout}
+                    type="button"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>

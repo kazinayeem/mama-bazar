@@ -41,6 +41,9 @@ const AdminPaymentMethodsPage = lazy(() => import('./pages/admin/AdminPaymentMet
 const AdminCheckoutNoticesPage = lazy(() => import('./pages/admin/AdminCheckoutNoticesPage'))
 const AdminHomepagePage = lazy(() => import('./pages/admin/AdminHomepagePage'))
 const AdminPoliciesPage = lazy(() => import('./pages/admin/AdminPoliciesPage'))
+const AdminExpensesPage = lazy(() => import('./pages/admin/AdminExpensesPage'))
+const AdminExpenseCategoriesPage = lazy(() => import('./pages/admin/AdminExpenseCategoriesPage'))
+const AdminExpenseReportsPage = lazy(() => import('./pages/admin/AdminExpenseReportsPage'))
 
 const DashboardOverviewPage = lazy(() => import('./pages/dashboard/DashboardOverviewPage'))
 const DashboardOrdersPage = lazy(() => import('./pages/dashboard/DashboardOrdersPage'))
@@ -127,6 +130,9 @@ function App() {
           <Route path="policies" element={<AdminRoute><AdminPoliciesPage /></AdminRoute>} />
           <Route path="homepage" element={<AdminRoute><AdminHomepagePage /></AdminRoute>} />
           <Route path="media" element={<AdminRoute><AdminMediaPage /></AdminRoute>} />
+          <Route path="expenses" element={<AdminRoute><AdminExpensesPage /></AdminRoute>} />
+          <Route path="expenses/categories" element={<AdminRoute><AdminExpenseCategoriesPage /></AdminRoute>} />
+          <Route path="expenses/reports" element={<AdminRoute><AdminExpenseReportsPage /></AdminRoute>} />
           <Route path="inventory" element={<AdminRoute><AdminInventoryPage /></AdminRoute>} />
           <Route path="customers" element={<AdminRoute><AdminCustomersPage /></AdminRoute>} />
           <Route path="coupons" element={<AdminRoute><AdminCouponsPage /></AdminRoute>} />

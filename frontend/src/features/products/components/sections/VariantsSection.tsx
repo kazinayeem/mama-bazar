@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import FormSection from '../FormSection'
 import AddEntityModal from '../AddEntityModal'
 import { useProductForm } from '../ProductFormContext'
@@ -34,6 +35,7 @@ const VariantsSection = () => {
   const [bulkStatus, setBulkStatus] = useState<'active' | 'inactive' | ''>('')
   const [showBulkEdit, setShowBulkEdit] = useState(false)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [deleteTarget, setDeleteTarget] = useState<VariantFormValue | null>(null)
 
   const updateVariant = useCallback((key: string, patch: Partial<VariantFormValue>) => {
     set({ variants: form.variants.map((v) => (v.key === key ? { ...v, ...patch } : v)) })
@@ -445,7 +447,7 @@ const VariantsSection = () => {
                     />
                   </td>
                   <td className={tdClass}>
-                    <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10" onClick={() => removeVariant(v.key)}>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(v)}>
                       <X className="h-3.5 w-3.5" />
                     </Button>
                   </td>
@@ -473,6 +475,29 @@ const VariantsSection = () => {
           if (addEntity === 'size') toggleSize(result.name)
         }}
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete variant?</AlertDialogTitle>
+            <AlertDialogDescription>
+              এই Variant টি কি মুছে ফেলতে চান? &quot;{deleteTarget?.name}&quot; will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteTarget) removeVariant(deleteTarget.key)
+                setDeleteTarget(null)
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </FormSection>
   )
 }
