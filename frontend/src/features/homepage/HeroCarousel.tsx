@@ -17,9 +17,12 @@ const resolveHeroUrl = (url?: string) => {
   const absolute = resolveUrl(url)
   if (!absolute) return ''
   if (/^https:\/\/res\.cloudinary\.com\//.test(absolute)) {
+    // Cloudinary transform syntax requires a `/` between the transformation and
+    // the version segment: .../image/upload/<transforms>/v<ts>/<public_id>.
+    // Stored URLs always carry the v<timestamp>/ version segment.
     return absolute.replace(
-      /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(\/?v\d+\/.*)$/,
-      '$1f_auto,q_auto$2',
+      /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(v\d+\/.*)$/,
+      '$1f_auto,q_auto/$2',
     )
   }
   return absolute

@@ -49,6 +49,11 @@ const run = async () => {
 
     // ---------- orders: new columns ----------
     const orderColumns: Array<[string, string]> = [
+      ["order_id", "VARCHAR(20) NOT NULL"],
+      ["user_id", "INT"],
+      ["transaction_id", "VARCHAR(100)"],
+      ["courier_tracking_number", "VARCHAR(120)"],
+      ["payment_status", "ENUM('pending','payment_pending','payment_verification','verified','success','failed','rejected','refunded') NOT NULL DEFAULT 'pending'"],
       ["alternative_phone", "VARCHAR(20)"],
       ["email", "VARCHAR(255)"],
       ["country", "VARCHAR(100)"],
@@ -74,6 +79,16 @@ const run = async () => {
       await db.execute(
         sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS ${sql.raw(column)} ${sql.raw(definition)}`
       );
+    }
+
+    // ---------- orders: unique index on order_id (added separately; TiDB rejects inline UNIQUE) ----------
+    const uniqueRows = await db.execute(
+      sql`SELECT COUNT(*) AS c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orders' AND NON_UNIQUE = 0 AND COLUMN_NAME = 'order_id'`
+    );
+    const hasUniqueIndex = (uniqueRows as unknown as Array<{ c: number }>)[0].c > 0;
+    if (!hasUniqueIndex) {
+      await db.execute(sql`ALTER TABLE orders ADD UNIQUE INDEX orders_order_id_unique (order_id)`);
+      console.log("orders.order_id unique index added");
     }
 
     // ---------- orders: remove legacy shipping_area (full address fields replaced it) ----------
@@ -119,6 +134,18 @@ const run = async () => {
         ALTER TABLE order_status_history MODIFY COLUMN status ENUM('pending','payment_pending','payment_verification','confirmed','processing','packed','shipped','out_for_delivery','delivered','returned','cancelled','refunded') NOT NULL
       `);
       console.log("order_status_history.status enum extended");
+    }
+
+    // ---------- order_items: new columns ----------
+    const orderItemColumns: Array<[string, string]> = [
+      ["variant_id", "INT"],
+      ["size", "VARCHAR(30)"],
+      ["color", "VARCHAR(50)"],
+    ];
+    for (const [column, definition] of orderItemColumns) {
+      await db.execute(
+        sql`ALTER TABLE order_items ADD COLUMN IF NOT EXISTS ${sql.raw(column)} ${sql.raw(definition)}`
+      );
     }
 
     // ---------- user_addresses: new columns ----------
