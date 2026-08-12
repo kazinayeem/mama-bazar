@@ -53,17 +53,17 @@ const ReferenceSelect = ({
     {loading ? (
       <Skeleton className="h-10 w-full" />
     ) : (
-      <Select
-        value={value}
-        disabled={disabled}
-        onValueChange={(v) => {
-          if (v === ADD_NEW_VALUE) {
-            onAddNew?.()
-            return
-          }
-          onChange(v)
-        }}
-      >
+     <Select
+  value={value != null ? String(value) : undefined}
+  disabled={disabled}
+  onValueChange={(v) => {
+    if (v === ADD_NEW_VALUE) {
+      onAddNew?.()
+      return
+    }
+    onChange(v)
+  }}
+>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
           {disabled && <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Locked</span>}
