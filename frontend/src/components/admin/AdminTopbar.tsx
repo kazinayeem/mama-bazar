@@ -135,14 +135,7 @@ const AdminTopbar = ({ collapsed, onToggleCollapse, onOpenCommandPalette, onOpen
         <kbd className="ml-2 rounded border bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
       </button>
 
-      <button
-        type="button"
-        onClick={() => dispatch(toggleTheme())}
-        className="rounded-md p-2 text-muted-foreground hover:bg-muted"
-        aria-label="Toggle theme"
-      >
-        {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-      </button>
+    
 
       <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
         <DropdownMenuTrigger asChild>
