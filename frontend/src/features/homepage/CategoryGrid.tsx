@@ -48,7 +48,7 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
       {canScrollLeft && (
         <button
           aria-label="Scroll categories left"
-          className="absolute -left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          className="absolute -left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-md transition hover:scale-105 hover:border-primary hover:text-primary-foreground active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           onClick={() => scroll('left')}
           type="button"
         >
@@ -60,7 +60,7 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
       {canScrollRight && (
         <button
           aria-label="Scroll categories right"
-          className="absolute -right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          className="absolute -right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-md transition hover:scale-105 hover:border-primary hover:text-primary-foreground active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           onClick={() => scroll('right')}
           type="button"
         >
@@ -71,7 +71,7 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
       {/* Scroll track */}
       <div
         ref={trackRef}
-        className="no-scrollbar flex gap-3 overflow-x-auto pb-1 pt-1 scroll-smooth"
+        className="no-scrollbar flex gap-3 overflow-x-auto pb-3 pt-1.5 scroll-smooth"
         style={{ scrollSnapType: 'x mandatory' }}
       >
         {items.map((category) => (
@@ -104,7 +104,7 @@ const CategoryChip = ({ category }: { category: Category }) => {
             src={imgSrc}
           />
         ) : (
-          <span className="font-headline text-2xl font-black text-primary-foreground">
+          <span className="font-headline text-2xl font-black text-slate-800 dark:text-white">
             {category.name.slice(0, 1).toUpperCase()}
           </span>
         )}

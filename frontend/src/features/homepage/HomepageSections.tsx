@@ -131,9 +131,9 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
                 <HeroCarousel slides={heroSlides} />
                 {popularSearches.length > 0 && (
                   <section className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col gap-3 rounded-3xl border border-slate-100 bg-white/90 px-4 py-4 shadow-soft backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                    <div className="flex flex-col items-start gap-3 rounded-3xl border border-slate-100 bg-white/90 px-4 py-4 shadow-soft backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary-foreground">Popular searches</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-900 dark:text-white">Popular searches</p>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Jump into the products shoppers are looking for right now.</p>
                       </div>
                       <div className="flex flex-wrap gap-2">

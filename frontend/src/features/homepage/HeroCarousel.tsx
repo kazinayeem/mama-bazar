@@ -30,14 +30,26 @@ const pickImage = (slide: HomepageHeroSlide) => {
 const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: boolean }) => {
   const images = pickImage(slide)
   const [imageFailed, setImageFailed] = useState(false)
-  const textColor = slide.textColor || '#ffffff'
   const isExternal = (url?: string) => !!url && /^https?:\/\//.test(url)
 
+  // A slide with the overlay switched off is a light track: keep the image at
+  // full brightness and default to dark text so it stays readable.
+  const isLightTrack = slide.overlay === false
+  const textColor = slide.textColor || (isLightTrack ? '#0f172a' : '#ffffff')
+  const hasImage = !!(images.desktop || images.tablet || images.mobile)
+  const showImage = hasImage && !imageFailed
+
   const renderButton = (text: string, url: string, primary: boolean) => {
-    /* Cinematic track CTAs: white-stroked pill on dark. Mint is reserved for the light track. */
-    const className = primary
-      ? 'inline-flex items-center gap-2 rounded-full border-2 border-white bg-transparent px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/10 active:scale-95'
-      : 'inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-6 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/25 active:scale-95'
+    /* Cinematic track CTAs: white-stroked pill on dark. Light track uses the
+       ink pill so contrast holds on bright imagery. */
+    const pill = 'inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold transition active:scale-95'
+    const className = isLightTrack
+      ? primary
+        ? `${pill} bg-slate-900 text-white shadow-lg shadow-slate-900/25 hover:bg-slate-800`
+        : `${pill} border border-slate-900/25 bg-slate-900/5 text-slate-900 backdrop-blur hover:bg-slate-900/10`
+      : primary
+        ? `${pill} border-2 border-white bg-transparent text-white hover:bg-white/10`
+        : `${pill} border border-white/40 bg-white/15 text-white backdrop-blur hover:bg-white/25`
 
     const inner = (
       <>
@@ -47,31 +59,36 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
     )
     if (isExternal(url)) {
       return (
-        <a className={className} href={url} rel="noopener noreferrer" style={!primary ? { color: textColor } : undefined} target="_blank">
+        <a className={className} href={url} rel="noopener noreferrer" target="_blank">
           {inner}
         </a>
       )
     }
     return (
-      <Link className={className} style={!primary ? { color: textColor } : undefined} to={url}>
+      <Link className={className} to={url}>
         {inner}
       </Link>
     )
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      {imageFailed ? (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-950 via-slate-900 to-slate-950">
-          <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/60 backdrop-blur">
-            <ImageOff size={12} />
-            Image unavailable
-          </div>
+    <div
+      className="relative h-full w-full overflow-hidden"
+      style={{ backgroundColor: slide.backgroundColor || '#0b1220' }}
+    >
+      {/* The slide background is always painted underneath so the banner area
+          never flashes empty/white while an image loads (or when it is missing). */}
+      {!showImage && (
+        <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-white/20 bg-black/30 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur">
+          <ImageOff size={12} />
+          Image unavailable
         </div>
-      ) : (
+      )}
+
+      {showImage && (
         <picture>
-          <source media="(min-width: 1024px)" srcSet={images.desktop} />
-          <source media="(min-width: 640px)" srcSet={images.tablet} />
+          {images.desktop && <source media="(min-width: 1024px)" srcSet={images.desktop} />}
+          {images.tablet && <source media="(min-width: 640px)" srcSet={images.tablet} />}
           <img
             alt={slide.title || slide.badge || 'Promotional banner'}
             className="absolute inset-0 h-full w-full object-cover object-center"
@@ -84,7 +101,9 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
         </picture>
       )}
 
-      {/* Subtle overlay — left-to-right gradient, not a full dark box */}
+      {/* Subtle overlay — left-to-right gradient, not a full dark box. A minimum
+          scrim is enforced on dark tracks so light text never sits on a bright
+          image without contrast. */}
       {slide.overlay !== false && (
         <div
           className="absolute inset-0"
@@ -95,14 +114,14 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
                 : slide.alignment === 'center'
                   ? 'linear-gradient(180deg, rgba(2,6,23,0.35) 0%, rgba(2,6,23,0.1) 50%, rgba(2,6,23,0.35) 100%)'
                   : 'linear-gradient(90deg, rgba(2,6,23,0.7) 0%, rgba(2,6,23,0.18) 50%, rgba(2,6,23,0) 75%)',
-            opacity: slide.overlayOpacity ?? 0.65,
+            opacity: Math.max(slide.overlayOpacity ?? 0.65, 0.35),
           } as CSSProperties}
         />
       )}
 
       {/* Content */}
       <div
-        className={`relative z-10 flex h-full flex-col justify-center px-6 py-8 sm:px-12 lg:px-20 ${
+        className={`relative z-10 flex h-full flex-col justify-center px-14 py-8 sm:px-16 lg:px-20 ${
           slide.alignment === 'center'
             ? 'items-center text-center'
             : slide.alignment === 'right'
@@ -112,7 +131,13 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
       >
         <div className="max-w-md sm:max-w-lg">
           {slide.badge && (
-            <span className="mb-3 inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur">
+            <span
+              className={`mb-3 inline-flex items-center rounded-full border px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider backdrop-blur ${
+                isLightTrack
+                  ? 'border-slate-900/15 bg-slate-900/10 text-slate-900'
+                  : 'border-white/25 bg-white/10 text-white'
+              }`}
+            >
               {slide.badge}
             </span>
           )}
@@ -120,7 +145,10 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
           {slide.title && (
             <h2
               className="font-headline text-3xl font-light leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl"
-              style={{ color: textColor, textShadow: '0 2px 12px rgba(2,6,23,0.45)' }}
+              style={{
+                color: textColor,
+                textShadow: isLightTrack ? 'none' : '0 2px 12px rgba(2,6,23,0.45)',
+              }}
             >
               {slide.title}
             </h2>
@@ -239,7 +267,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
             <>
               <button
                 aria-label="Previous slide"
-                className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:left-5 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
+                className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:left-5 dark:border-slate-700/60 dark:bg-slate-800/95 dark:text-white dark:hover:bg-slate-700"
                 onClick={prev}
                 type="button"
               >
@@ -247,7 +275,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
               </button>
               <button
                 aria-label="Next slide"
-                className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:right-5 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
+                className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:right-5 dark:border-slate-700/60 dark:bg-slate-800/95 dark:text-white dark:hover:bg-slate-700"
                 onClick={next}
                 type="button"
               >
