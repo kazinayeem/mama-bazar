@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.importCsv = exports.exportCsv = exports.autoSaveDraft = exports.duplicate = exports.bulkAction = exports.remove = exports.update = exports.create = exports.getRelated = exports.getBySlug = exports.getById = exports.getAll = exports.fullQuery = exports.fetchRatingMap = exports.formatProductRow = exports.deriveStockStatus = exports.deriveProfitMargin = void 0;
 const db_1 = require("../../config/db");
+const AppError_1 = require("../../utils/AppError");
 const schema_1 = require("../../config/schema");
 const drizzle_orm_1 = require("drizzle-orm");
 const DEFAULT_PAGE = 1;
@@ -473,15 +474,159 @@ const getRelated = async (categoryId, excludeId) => {
     return rows.map((row) => (0, exports.formatProductRow)(row, ratingMap.get(row.id)));
 };
 exports.getRelated = getRelated;
+const hasId = (v) => {
+    if (v === undefined || v === null || v === "")
+        return false;
+    const n = Number(v);
+    return Number.isInteger(n) && n > 0;
+};
+const validateProductRelations = async (data) => {
+    const errors = {};
+    if (hasId(data.categoryId)) {
+        const rows = await db_1.db
+            .select({ id: schema_1.categories.id })
+            .from(schema_1.categories)
+            .where((0, drizzle_orm_1.eq)(schema_1.categories.id, Number(data.categoryId)))
+            .limit(1);
+        if (!rows.length)
+            errors.categoryId = "Category not found";
+    }
+    if (hasId(data.subCategoryId)) {
+        const rows = await db_1.db
+            .select({ id: schema_1.categories.id, parentId: schema_1.categories.parentId })
+            .from(schema_1.categories)
+            .where((0, drizzle_orm_1.eq)(schema_1.categories.id, Number(data.subCategoryId)))
+            .limit(1);
+        if (!rows.length) {
+            errors.subCategoryId = "Sub-category not found";
+        }
+        else if (hasId(data.categoryId) && rows[0].parentId !== Number(data.categoryId)) {
+            errors.subCategoryId = "Sub-category does not belong to selected category";
+        }
+    }
+    if (hasId(data.childCategoryId)) {
+        const rows = await db_1.db
+            .select({ id: schema_1.categories.id, parentId: schema_1.categories.parentId })
+            .from(schema_1.categories)
+            .where((0, drizzle_orm_1.eq)(schema_1.categories.id, Number(data.childCategoryId)))
+            .limit(1);
+        if (!rows.length) {
+            errors.childCategoryId = "Child category not found";
+        }
+        else if (hasId(data.subCategoryId) && rows[0].parentId !== Number(data.subCategoryId)) {
+            errors.childCategoryId = "Child category does not belong to selected sub-category";
+        }
+    }
+    const refChecks = [
+        ["brandId", data.brandId, schema_1.brands],
+        ["collectionId", data.collectionId, schema_1.collections],
+        ["vendorId", data.vendorId, schema_1.vendors],
+        ["supplierId", data.supplierId, schema_1.suppliers],
+    ];
+    for (const [key, value, table] of refChecks) {
+        if (!hasId(value))
+            continue;
+        const rows = await db_1.db.select({ id: table.id }).from(table).where((0, drizzle_orm_1.eq)(table.id, Number(value))).limit(1);
+        if (!rows.length) {
+            errors[key] = "Reference not found";
+        }
+    }
+    if (Object.keys(errors).length) {
+        throw new AppError_1.AppError(400, "Validation failed", { errors });
+    }
+};
+const syncVariants = async (tx, productId, variants) => {
+    if (!variants.length) {
+        await tx.delete(schema_1.productVariants).where((0, drizzle_orm_1.eq)(schema_1.productVariants.productId, productId));
+        return;
+    }
+    const existing = await tx
+        .select({ id: schema_1.productVariants.id })
+        .from(schema_1.productVariants)
+        .where((0, drizzle_orm_1.eq)(schema_1.productVariants.productId, productId));
+    const existingIds = new Set(existing.map((e) => Number(e.id)));
+    const keptIds = new Set();
+    const seenNames = new Set();
+    const seenSkus = new Set();
+    for (const v of variants) {
+        const nameLower = v.name.toLowerCase();
+        if (seenNames.has(nameLower)) {
+            throw new AppError_1.AppError(400, `Duplicate variant name: "${v.name}"`);
+        }
+        seenNames.add(nameLower);
+        const priceNum = toNum(v.price);
+        if (priceNum !== null && priceNum < 0) {
+            throw new AppError_1.AppError(400, `Price cannot be negative for variant "${v.name}"`);
+        }
+        const salePriceNum = toNum(v.discountPrice ?? v.salePrice);
+        if (salePriceNum !== null && salePriceNum < 0) {
+            throw new AppError_1.AppError(400, `Sale price cannot be negative for variant "${v.name}"`);
+        }
+        const stockNum = toNum(v.stock) ?? 0;
+        if (stockNum < 0) {
+            throw new AppError_1.AppError(400, `Stock cannot be negative for variant "${v.name}"`);
+        }
+        const sku = toStr(v.sku);
+        if (sku) {
+            const skuLower = sku.toLowerCase();
+            if (seenSkus.has(skuLower)) {
+                throw new AppError_1.AppError(400, `Duplicate SKU: "${sku}"`);
+            }
+            seenSkus.add(skuLower);
+            const duplicateSku = await tx
+                .select({ id: schema_1.productVariants.id })
+                .from(schema_1.productVariants)
+                .where((0, drizzle_orm_1.eq)(schema_1.productVariants.sku, sku))
+                .limit(1);
+            if (duplicateSku.length > 0 && !existingIds.has(Number(duplicateSku[0].id))) {
+                throw new AppError_1.AppError(400, `SKU "${sku}" already exists on another variant`);
+            }
+        }
+        const data = {
+            name: v.name,
+            options: v.options || {},
+            price: toStr(v.price),
+            discountPrice: toStr(v.discountPrice ?? v.salePrice),
+            sku: sku,
+            barcode: toStr(v.barcode),
+            stock: stockNum,
+            weight: toStr(v.weight),
+            dimensions: toStr(v.dimensions),
+            images: v.images || [],
+            thumbnail: v.thumbnail || null,
+            status: v.status || "active",
+            shippingCost: toStr(v.shippingCost),
+            warranty: toStr(v.warranty),
+            availability: v.availability === undefined ? true : v.availability,
+        };
+        const id = v.id !== undefined && v.id !== null ? Number(v.id) : null;
+        if (id !== null && existingIds.has(id)) {
+            await tx
+                .update(schema_1.productVariants)
+                .set(data)
+                .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.productVariants.id, id), (0, drizzle_orm_1.eq)(schema_1.productVariants.productId, productId)));
+            keptIds.add(id);
+        }
+        else {
+            await tx.insert(schema_1.productVariants).values({ ...data, productId });
+        }
+    }
+    const removedIds = [...existingIds].filter((id) => !keptIds.has(id));
+    if (removedIds.length) {
+        await tx
+            .delete(schema_1.productVariants)
+            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.inArray)(schema_1.productVariants.id, removedIds), (0, drizzle_orm_1.eq)(schema_1.productVariants.productId, productId)));
+    }
+};
 const insertChildren = async (tx, productId, data) => {
     const variants = (data.variants || []).filter(Boolean);
     if (variants.length) {
         await tx.insert(schema_1.productVariants).values(variants.map((v) => ({
             productId,
             name: v.name,
-            options: v.options,
+            options: v.options || {},
             price: toStr(v.price),
-            discountPrice: toStr(v.discountPrice),
+            discountPrice: toStr(v.discountPrice ?? v.salePrice),
             sku: toStr(v.sku),
             barcode: toStr(v.barcode),
             stock: toNum(v.stock) ?? 0,
@@ -514,6 +659,7 @@ const insertChildren = async (tx, productId, data) => {
     }
 };
 const create = async (data) => {
+    await validateProductRelations(data);
     const variantStock = (data.variants || []).reduce((sum, v) => sum + (toNum(v.stock) ?? 0), 0);
     const stock = data.stock ?? (data.variants && data.variants.length ? variantStock : 0);
     const insertData = {
@@ -536,6 +682,7 @@ const create = async (data) => {
 };
 exports.create = create;
 const update = async (id, data) => {
+    await validateProductRelations(data);
     const updateData = { ...data };
     delete updateData.variants;
     delete updateData.specs;
@@ -574,7 +721,7 @@ const update = async (id, data) => {
         await db_1.db.transaction(async (tx) => {
             await tx.update(schema_1.products).set(updateData).where((0, drizzle_orm_1.eq)(schema_1.products.id, id));
             if (data.variants !== undefined) {
-                await tx.delete(schema_1.productVariants).where((0, drizzle_orm_1.eq)(schema_1.productVariants.productId, id));
+                await syncVariants(tx, id, (data.variants || []).filter(Boolean));
             }
             if (data.specs !== undefined) {
                 await tx.delete(schema_1.productSpecs).where((0, drizzle_orm_1.eq)(schema_1.productSpecs.productId, id));
@@ -582,8 +729,8 @@ const update = async (id, data) => {
             if (data.relations !== undefined) {
                 await tx.delete(schema_1.productRelations).where((0, drizzle_orm_1.eq)(schema_1.productRelations.productId, id));
             }
-            if (data.variants !== undefined || data.specs !== undefined || data.relations !== undefined) {
-                await insertChildren(tx, id, { ...data, variants: data.variants || [], specs: data.specs || [], relations: data.relations || [] });
+            if (data.specs !== undefined || data.relations !== undefined) {
+                await insertChildren(tx, id, { ...data, variants: [], specs: data.specs || [], relations: data.relations || [] });
             }
         });
     }

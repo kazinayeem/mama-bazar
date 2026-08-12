@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.newsletters = exports.reviewsRelations = exports.reviews = exports.checkoutNotices = exports.paymentMethods = exports.shippingMethods = exports.trackingLogs = exports.marketingIntegrations = exports.siteSettings = exports.usersRelations = exports.userAddressesRelations = exports.userAddresses = exports.users = exports.coupons = exports.orderItemsRelations = exports.orderItems = exports.orderStatusHistoryRelations = exports.orderStatusHistory = exports.ordersRelations = exports.orders = exports.mediaAssets = exports.banners = exports.brandsRelations = exports.brands = exports.productRelationsRelations = exports.productRelations = exports.productSpecsRelations = exports.productSpecs = exports.productVariantsRelations = exports.productVariants = exports.suppliersRelations = exports.suppliers = exports.vendorsRelations = exports.vendors = exports.collectionsRelations = exports.collections = exports.sizes = exports.colors = exports.productsRelations = exports.products = exports.categoriesRelations = exports.categories = void 0;
+exports.costsRelations = exports.costs = exports.expensesRelations = exports.expenses = exports.expenseCategoriesRelations = exports.expenseCategories = exports.newsletters = exports.reviewsRelations = exports.reviews = exports.checkoutNotices = exports.paymentMethods = exports.shippingMethods = exports.trackingLogs = exports.marketingIntegrations = exports.contactMessages = exports.policyPages = exports.siteSettings = exports.usersRelations = exports.userAddressesRelations = exports.userAddresses = exports.users = exports.coupons = exports.orderItemsRelations = exports.orderItems = exports.orderStatusHistoryRelations = exports.orderStatusHistory = exports.ordersRelations = exports.orders = exports.mediaAssets = exports.banners = exports.brandsRelations = exports.brands = exports.productRelationsRelations = exports.productRelations = exports.productSpecsRelations = exports.productSpecs = exports.productVariantsRelations = exports.productVariants = exports.suppliersRelations = exports.suppliers = exports.vendorsRelations = exports.vendors = exports.collectionsRelations = exports.collections = exports.sizes = exports.colors = exports.productsRelations = exports.products = exports.categoriesRelations = exports.categories = void 0;
+exports.memosRelations = exports.memos = exports.rentalsRelations = exports.rentals = exports.bookingsRelations = exports.bookings = void 0;
 const mysql_core_1 = require("drizzle-orm/mysql-core");
 const drizzle_orm_1 = require("drizzle-orm");
 // ==================== CATEGORIES ====================
@@ -21,7 +22,7 @@ exports.categories = (0, mysql_core_1.mysqlTable)("categories", {
     seoDescription: (0, mysql_core_1.text)("seo_description"),
     seoKeywords: (0, mysql_core_1.varchar)("seo_keywords", { length: 500 }),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive", "archived"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.categoriesRelations = (0, drizzle_orm_1.relations)(exports.categories, ({ many }) => ({
     products: many(exports.products),
@@ -96,10 +97,10 @@ exports.products = (0, mysql_core_1.mysqlTable)("products", {
     images: (0, mysql_core_1.json)("images").$type(),
     sizeOptions: (0, mysql_core_1.json)("size_options").$type(),
     colorOptions: (0, mysql_core_1.json)("color_options").$type(),
-    paymentMethods: (0, mysql_core_1.json)("payment_methods").$type().default(["cod"]),
+    paymentMethods: (0, mysql_core_1.json)("payment_methods").$type(),
     paymentPhoneNumber: (0, mysql_core_1.varchar)("payment_phone_number", { length: 20 }),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.productsRelations = (0, drizzle_orm_1.relations)(exports.products, ({ one, many }) => ({
     category: one(exports.categories, {
@@ -143,7 +144,7 @@ exports.colors = (0, mysql_core_1.mysqlTable)("colors", {
     hex: (0, mysql_core_1.varchar)("hex", { length: 7 }).notNull(),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive", "archived"]).default("active").notNull(),
     sortOrder: (0, mysql_core_1.int)("sort_order").default(0).notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== CATALOG: SIZES ====================
 exports.sizes = (0, mysql_core_1.mysqlTable)("sizes", {
@@ -152,7 +153,7 @@ exports.sizes = (0, mysql_core_1.mysqlTable)("sizes", {
     type: (0, mysql_core_1.mysqlEnum)("type", ["clothing", "shoes", "general", "custom"]).default("general").notNull(),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive", "archived"]).default("active").notNull(),
     sortOrder: (0, mysql_core_1.int)("sort_order").default(0).notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== CATALOG: COLLECTIONS ====================
 exports.collections = (0, mysql_core_1.mysqlTable)("collections", {
@@ -168,7 +169,7 @@ exports.collections = (0, mysql_core_1.mysqlTable)("collections", {
     startDate: (0, mysql_core_1.datetime)("start_date"),
     endDate: (0, mysql_core_1.datetime)("end_date"),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive", "archived"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.collectionsRelations = (0, drizzle_orm_1.relations)(exports.collections, ({ many }) => ({
     products: many(exports.products),
@@ -186,7 +187,7 @@ exports.vendors = (0, mysql_core_1.mysqlTable)("vendors", {
     address: (0, mysql_core_1.varchar)("address", { length: 500 }),
     notes: (0, mysql_core_1.text)("notes"),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive", "archived"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.vendorsRelations = (0, drizzle_orm_1.relations)(exports.vendors, ({ many }) => ({
     products: many(exports.products),
@@ -204,7 +205,7 @@ exports.suppliers = (0, mysql_core_1.mysqlTable)("suppliers", {
     address: (0, mysql_core_1.varchar)("address", { length: 500 }),
     notes: (0, mysql_core_1.text)("notes"),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive", "archived"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.suppliersRelations = (0, drizzle_orm_1.relations)(exports.suppliers, ({ many }) => ({
     products: many(exports.products),
@@ -230,7 +231,7 @@ exports.productVariants = (0, mysql_core_1.mysqlTable)("product_variants", {
     shippingCost: (0, mysql_core_1.decimal)("shipping_cost", { precision: 10, scale: 2 }),
     warranty: (0, mysql_core_1.varchar)("warranty", { length: 100 }),
     availability: (0, mysql_core_1.boolean)("availability").default(true).notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.productVariantsRelations = (0, drizzle_orm_1.relations)(exports.productVariants, ({ one }) => ({
     product: one(exports.products, {
@@ -298,7 +299,7 @@ exports.brands = (0, mysql_core_1.mysqlTable)("brands", {
     seoDescription: (0, mysql_core_1.text)("seo_description"),
     seoKeywords: (0, mysql_core_1.varchar)("seo_keywords", { length: 500 }),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive", "archived"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.brandsRelations = (0, drizzle_orm_1.relations)(exports.brands, ({ many }) => ({
     products: many(exports.products),
@@ -316,8 +317,8 @@ exports.banners = (0, mysql_core_1.mysqlTable)("banners", {
     buttonText: (0, mysql_core_1.varchar)("button_text", { length: 100 }),
     priority: (0, mysql_core_1.int)("priority").default(0).notNull(),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
-    updatedAt: (0, mysql_core_1.timestamp)("updated_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: (0, mysql_core_1.timestamp)("updated_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== MEDIA ASSETS ====================
 exports.mediaAssets = (0, mysql_core_1.mysqlTable)("media_assets", {
@@ -333,7 +334,7 @@ exports.mediaAssets = (0, mysql_core_1.mysqlTable)("media_assets", {
     folder: (0, mysql_core_1.varchar)("folder", { length: 200 }).default("general").notNull(),
     alt: (0, mysql_core_1.varchar)("alt", { length: 255 }),
     uploaderId: (0, mysql_core_1.int)("uploader_id").references(() => exports.users.id),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== ORDERS ====================
 exports.orders = (0, mysql_core_1.mysqlTable)("orders", {
@@ -406,7 +407,7 @@ exports.orders = (0, mysql_core_1.mysqlTable)("orders", {
     ])
         .default("pending")
         .notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.ordersRelations = (0, drizzle_orm_1.relations)(exports.orders, ({ many }) => ({
     items: many(exports.orderItems),
@@ -433,7 +434,7 @@ exports.orderStatusHistory = (0, mysql_core_1.mysqlTable)("order_status_history"
     ]).notNull(),
     note: (0, mysql_core_1.text)("note"),
     createdByUserId: (0, mysql_core_1.int)("created_by_user_id").references(() => exports.users.id),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.orderStatusHistoryRelations = (0, drizzle_orm_1.relations)(exports.orderStatusHistory, ({ one }) => ({
     order: one(exports.orders, {
@@ -454,6 +455,7 @@ exports.orderItems = (0, mysql_core_1.mysqlTable)("order_items", {
     productId: (0, mysql_core_1.int)("product_id")
         .references(() => exports.products.id)
         .notNull(),
+    variantId: (0, mysql_core_1.int)("variant_id").references(() => exports.productVariants.id),
     size: (0, mysql_core_1.varchar)("size", { length: 30 }),
     color: (0, mysql_core_1.varchar)("color", { length: 50 }),
     quantity: (0, mysql_core_1.int)("quantity").notNull(),
@@ -478,7 +480,7 @@ exports.coupons = (0, mysql_core_1.mysqlTable)("coupons", {
     minOrderAmount: (0, mysql_core_1.decimal)("min_order_amount", { precision: 10, scale: 2 }).default("0"),
     expiryDate: (0, mysql_core_1.timestamp)("expiry_date"),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== USERS ====================
 exports.users = (0, mysql_core_1.mysqlTable)("users", {
@@ -489,9 +491,10 @@ exports.users = (0, mysql_core_1.mysqlTable)("users", {
     shippingArea: (0, mysql_core_1.varchar)("shipping_area", { length: 100 }),
     shippingAddress: (0, mysql_core_1.text)("shipping_address"),
     role: (0, mysql_core_1.mysqlEnum)("role", ["admin", "manager", "user"]).default("user").notNull(),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
     resetTokenHash: (0, mysql_core_1.varchar)("reset_token_hash", { length: 255 }),
     resetTokenExpiresAt: (0, mysql_core_1.timestamp)("reset_token_expires_at"),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.userAddresses = (0, mysql_core_1.mysqlTable)("user_addresses", {
     id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
@@ -512,7 +515,7 @@ exports.userAddresses = (0, mysql_core_1.mysqlTable)("user_addresses", {
     apartment: (0, mysql_core_1.varchar)("apartment", { length: 255 }),
     postalCode: (0, mysql_core_1.varchar)("postal_code", { length: 20 }),
     isDefault: (0, mysql_core_1.boolean)("is_default").default(false).notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.userAddressesRelations = (0, drizzle_orm_1.relations)(exports.userAddresses, ({ one }) => ({
     user: one(exports.users, {
@@ -529,6 +532,27 @@ exports.siteSettings = (0, mysql_core_1.mysqlTable)("site_settings", {
     id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
     key: (0, mysql_core_1.varchar)("key", { length: 100 }).notNull().unique(),
     value: (0, mysql_core_1.text)("value"),
+});
+// ==================== POLICY PAGES ====================
+exports.policyPages = (0, mysql_core_1.mysqlTable)("policy_pages", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    slug: (0, mysql_core_1.varchar)("slug", { length: 150 }).notNull().unique(),
+    title: (0, mysql_core_1.varchar)("title", { length: 200 }).notNull(),
+    content: (0, mysql_core_1.text)("content").notNull(),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["published", "draft"]).default("published").notNull(),
+    lastUpdated: (0, mysql_core_1.int)("last_updated").notNull().default((0, drizzle_orm_1.sql) `0`),
+    updatedBy: (0, mysql_core_1.int)("updated_by"),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+// ==================== CONTACT MESSAGES ====================
+exports.contactMessages = (0, mysql_core_1.mysqlTable)("contact_messages", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    name: (0, mysql_core_1.varchar)("name", { length: 150 }).notNull(),
+    phone: (0, mysql_core_1.varchar)("phone", { length: 20 }).notNull(),
+    email: (0, mysql_core_1.varchar)("email", { length: 255 }),
+    message: (0, mysql_core_1.text)("message").notNull(),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["new", "read", "archived"]).default("new").notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== TRACKING PIXELS ====================
 exports.marketingIntegrations = (0, mysql_core_1.mysqlTable)("marketing_integrations", {
@@ -547,8 +571,8 @@ exports.marketingIntegrations = (0, mysql_core_1.mysqlTable)("marketing_integrat
     accessToken: (0, mysql_core_1.text)("access_token"),
     testEventCode: (0, mysql_core_1.varchar)("test_event_code", { length: 100 }),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
-    updatedAt: (0, mysql_core_1.timestamp)("updated_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: (0, mysql_core_1.timestamp)("updated_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== TRACKING LOGS ====================
 exports.trackingLogs = (0, mysql_core_1.mysqlTable)("tracking_logs", {
@@ -558,7 +582,7 @@ exports.trackingLogs = (0, mysql_core_1.mysqlTable)("tracking_logs", {
     payload: (0, mysql_core_1.json)("payload").$type(),
     status: (0, mysql_core_1.mysqlEnum)("status", ["success", "failed"]).default("success").notNull(),
     errorMessage: (0, mysql_core_1.text)("error_message"),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== SHIPPING METHODS ====================
 exports.shippingMethods = (0, mysql_core_1.mysqlTable)("shipping_methods", {
@@ -571,7 +595,7 @@ exports.shippingMethods = (0, mysql_core_1.mysqlTable)("shipping_methods", {
     freeShippingMinAmount: (0, mysql_core_1.decimal)("free_shipping_min_amount", { precision: 10, scale: 2 }),
     codAvailable: (0, mysql_core_1.boolean)("cod_available").default(true).notNull(),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== PAYMENT METHODS ====================
 exports.paymentMethods = (0, mysql_core_1.mysqlTable)("payment_methods", {
@@ -588,8 +612,8 @@ exports.paymentMethods = (0, mysql_core_1.mysqlTable)("payment_methods", {
     sortOrder: (0, mysql_core_1.int)("sort_order").default(0).notNull(),
     maintenanceMode: (0, mysql_core_1.boolean)("maintenance_mode").default(false).notNull(),
     config: (0, mysql_core_1.json)("config").$type(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
-    updatedAt: (0, mysql_core_1.timestamp)("updated_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: (0, mysql_core_1.timestamp)("updated_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== CHECKOUT NOTICES ====================
 exports.checkoutNotices = (0, mysql_core_1.mysqlTable)("checkout_notices", {
@@ -600,7 +624,7 @@ exports.checkoutNotices = (0, mysql_core_1.mysqlTable)("checkout_notices", {
     textColor: (0, mysql_core_1.varchar)("text_color", { length: 50 }).default("#9A3412"),
     icon: (0, mysql_core_1.varchar)("icon", { length: 50 }).default("alert"),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 // ==================== REVIEWS ====================
 exports.reviews = (0, mysql_core_1.mysqlTable)("reviews", {
@@ -612,7 +636,7 @@ exports.reviews = (0, mysql_core_1.mysqlTable)("reviews", {
     title: (0, mysql_core_1.varchar)("title", { length: 255 }),
     comment: (0, mysql_core_1.text)("comment").notNull(),
     status: (0, mysql_core_1.mysqlEnum)("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
-    createdAt: (0, mysql_core_1.timestamp)("created_at").defaultNow().notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
 exports.reviewsRelations = (0, drizzle_orm_1.relations)(exports.reviews, ({ one }) => ({
     product: one(exports.products, {
@@ -630,6 +654,205 @@ exports.newsletters = (0, mysql_core_1.mysqlTable)("newsletters", {
     email: (0, mysql_core_1.varchar)("email", { length: 255 }).notNull().unique(),
     source: (0, mysql_core_1.varchar)("source", { length: 100 }).default("homepage"),
     status: (0, mysql_core_1.mysqlEnum)("status", ["subscribed", "unsubscribed"]).default("subscribed").notNull(),
-    subscribedAt: (0, mysql_core_1.timestamp)("subscribed_at").defaultNow().notNull(),
+    subscribedAt: (0, mysql_core_1.timestamp)("subscribed_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
 });
+// ==================== EXPENSE CATEGORIES ====================
+exports.expenseCategories = (0, mysql_core_1.mysqlTable)("expense_categories", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    name: (0, mysql_core_1.varchar)("name", { length: 255 }).notNull().unique(),
+    description: (0, mysql_core_1.text)("description"),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
+    sortOrder: (0, mysql_core_1.int)("sort_order").default(0).notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+exports.expenseCategoriesRelations = (0, drizzle_orm_1.relations)(exports.expenseCategories, ({ many }) => ({
+    expenses: many(exports.expenses),
+}));
+// ==================== EXPENSES ====================
+exports.expenses = (0, mysql_core_1.mysqlTable)("expenses", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    title: (0, mysql_core_1.varchar)("title", { length: 255 }).notNull(),
+    description: (0, mysql_core_1.text)("description"),
+    categoryId: (0, mysql_core_1.int)("category_id").references(() => exports.expenseCategories.id),
+    amount: (0, mysql_core_1.decimal)("amount", { precision: 12, scale: 2 }).notNull(),
+    paymentMethod: (0, mysql_core_1.varchar)("payment_method", { length: 50 }).notNull().default("cash"),
+    vendor: (0, mysql_core_1.varchar)("vendor", { length: 255 }),
+    memberId: (0, mysql_core_1.int)("member_id").references(() => exports.users.id),
+    memberName: (0, mysql_core_1.varchar)("member_name", { length: 255 }),
+    expenseDate: (0, mysql_core_1.datetime)("expense_date").notNull(),
+    referenceNumber: (0, mysql_core_1.varchar)("reference_number", { length: 100 }),
+    attachmentUrl: (0, mysql_core_1.varchar)("attachment_url", { length: 500 }),
+    notes: (0, mysql_core_1.text)("notes"),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["pending", "approved", "rejected"]).default("approved").notNull(),
+    createdById: (0, mysql_core_1.int)("created_by_id").references(() => exports.users.id),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: (0, mysql_core_1.timestamp)("updated_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ({
+    expenseDateIdx: (0, mysql_core_1.index)("expenses_expense_date_idx").on(table.expenseDate),
+    memberIdIdx: (0, mysql_core_1.index)("expenses_member_id_idx").on(table.memberId),
+    categoryIdIdx: (0, mysql_core_1.index)("expenses_category_id_idx").on(table.categoryId),
+    statusIdx: (0, mysql_core_1.index)("expenses_status_idx").on(table.status),
+}));
+exports.expensesRelations = (0, drizzle_orm_1.relations)(exports.expenses, ({ one }) => ({
+    category: one(exports.expenseCategories, {
+        fields: [exports.expenses.categoryId],
+        references: [exports.expenseCategories.id],
+    }),
+    member: one(exports.users, {
+        fields: [exports.expenses.memberId],
+        references: [exports.users.id],
+    }),
+    createdBy: one(exports.users, {
+        fields: [exports.expenses.createdById],
+        references: [exports.users.id],
+    }),
+}));
+// ==================== COSTS ====================
+exports.costs = (0, mysql_core_1.mysqlTable)("costs", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    title: (0, mysql_core_1.varchar)("title", { length: 255 }).notNull(),
+    costType: (0, mysql_core_1.varchar)("cost_type", { length: 100 }).notNull().default("operational"),
+    quantity: (0, mysql_core_1.decimal)("quantity", { precision: 12, scale: 2 }).notNull().default("1"),
+    unitCost: (0, mysql_core_1.decimal)("unit_cost", { precision: 12, scale: 2 }).notNull().default("0"),
+    totalCost: (0, mysql_core_1.decimal)("total_cost", { precision: 12, scale: 2 }).notNull(),
+    supplierId: (0, mysql_core_1.int)("supplier_id").references(() => exports.suppliers.id),
+    productId: (0, mysql_core_1.int)("product_id").references(() => exports.products.id),
+    orderId: (0, mysql_core_1.int)("order_id").references(() => exports.orders.id),
+    bookingId: (0, mysql_core_1.int)("booking_id").references(() => exports.bookings.id),
+    costDate: (0, mysql_core_1.datetime)("cost_date").notNull(),
+    paymentMethod: (0, mysql_core_1.varchar)("payment_method", { length: 50 }).notNull().default("cash"),
+    notes: (0, mysql_core_1.text)("notes"),
+    attachmentUrl: (0, mysql_core_1.varchar)("attachment_url", { length: 500 }),
+    createdById: (0, mysql_core_1.int)("created_by_id").references(() => exports.users.id),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: (0, mysql_core_1.timestamp)("updated_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+exports.costsRelations = (0, drizzle_orm_1.relations)(exports.costs, ({ one }) => ({
+    supplier: one(exports.suppliers, {
+        fields: [exports.costs.supplierId],
+        references: [exports.suppliers.id],
+    }),
+    product: one(exports.products, {
+        fields: [exports.costs.productId],
+        references: [exports.products.id],
+    }),
+    order: one(exports.orders, {
+        fields: [exports.costs.orderId],
+        references: [exports.orders.id],
+    }),
+    booking: one(exports.bookings, {
+        fields: [exports.costs.bookingId],
+        references: [exports.bookings.id],
+    }),
+    createdBy: one(exports.users, {
+        fields: [exports.costs.createdById],
+        references: [exports.users.id],
+    }),
+}));
+// ==================== BOOKINGS ====================
+exports.bookings = (0, mysql_core_1.mysqlTable)("bookings", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    customerName: (0, mysql_core_1.varchar)("customer_name", { length: 255 }).notNull(),
+    phone: (0, mysql_core_1.varchar)("phone", { length: 20 }).notNull(),
+    email: (0, mysql_core_1.varchar)("email", { length: 255 }),
+    userId: (0, mysql_core_1.int)("user_id").references(() => exports.users.id),
+    bookingType: (0, mysql_core_1.varchar)("booking_type", { length: 100 }).notNull().default("service"),
+    service: (0, mysql_core_1.varchar)("service", { length: 255 }),
+    productId: (0, mysql_core_1.int)("product_id").references(() => exports.products.id),
+    startDate: (0, mysql_core_1.datetime)("start_date").notNull(),
+    endDate: (0, mysql_core_1.datetime)("end_date").notNull(),
+    quantity: (0, mysql_core_1.int)("quantity").notNull().default(1),
+    price: (0, mysql_core_1.decimal)("price", { precision: 12, scale: 2 }).notNull().default("0"),
+    discount: (0, mysql_core_1.decimal)("discount", { precision: 12, scale: 2 }).notNull().default("0"),
+    additionalCost: (0, mysql_core_1.decimal)("additional_cost", { precision: 12, scale: 2 }).notNull().default("0"),
+    totalAmount: (0, mysql_core_1.decimal)("total_amount", { precision: 12, scale: 2 }).notNull(),
+    paymentStatus: (0, mysql_core_1.mysqlEnum)("payment_status", ["pending", "partial", "paid", "refunded"]).default("pending").notNull(),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["pending", "confirmed", "active", "completed", "cancelled"]).default("pending").notNull(),
+    notes: (0, mysql_core_1.text)("notes"),
+    attachmentUrl: (0, mysql_core_1.varchar)("attachment_url", { length: 500 }),
+    createdById: (0, mysql_core_1.int)("created_by_id").references(() => exports.users.id),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: (0, mysql_core_1.timestamp)("updated_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+exports.bookingsRelations = (0, drizzle_orm_1.relations)(exports.bookings, ({ one }) => ({
+    user: one(exports.users, {
+        fields: [exports.bookings.userId],
+        references: [exports.users.id],
+    }),
+    product: one(exports.products, {
+        fields: [exports.bookings.productId],
+        references: [exports.products.id],
+    }),
+    createdBy: one(exports.users, {
+        fields: [exports.bookings.createdById],
+        references: [exports.users.id],
+    }),
+}));
+// ==================== RENTALS ====================
+exports.rentals = (0, mysql_core_1.mysqlTable)("rentals", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    rentalItem: (0, mysql_core_1.varchar)("rental_item", { length: 255 }).notNull(),
+    productId: (0, mysql_core_1.int)("product_id").references(() => exports.products.id),
+    customerName: (0, mysql_core_1.varchar)("customer_name", { length: 255 }).notNull(),
+    phone: (0, mysql_core_1.varchar)("phone", { length: 20 }).notNull(),
+    email: (0, mysql_core_1.varchar)("email", { length: 255 }),
+    userId: (0, mysql_core_1.int)("user_id").references(() => exports.users.id),
+    quantity: (0, mysql_core_1.int)("quantity").notNull().default(1),
+    startDate: (0, mysql_core_1.datetime)("start_date").notNull(),
+    endDate: (0, mysql_core_1.datetime)("end_date").notNull(),
+    returnDate: (0, mysql_core_1.datetime)("return_date"),
+    rateType: (0, mysql_core_1.mysqlEnum)("rate_type", ["daily", "weekly", "monthly"]).default("daily").notNull(),
+    dailyRate: (0, mysql_core_1.decimal)("daily_rate", { precision: 12, scale: 2 }).notNull().default("0"),
+    weeklyRate: (0, mysql_core_1.decimal)("weekly_rate", { precision: 12, scale: 2 }).notNull().default("0"),
+    monthlyRate: (0, mysql_core_1.decimal)("monthly_rate", { precision: 12, scale: 2 }).notNull().default("0"),
+    rate: (0, mysql_core_1.decimal)("rate", { precision: 12, scale: 2 }).notNull().default("0"),
+    durationUnits: (0, mysql_core_1.int)("duration_units").notNull().default(0),
+    securityDeposit: (0, mysql_core_1.decimal)("security_deposit", { precision: 12, scale: 2 }).notNull().default("0"),
+    discount: (0, mysql_core_1.decimal)("discount", { precision: 12, scale: 2 }).notNull().default("0"),
+    additionalCharge: (0, mysql_core_1.decimal)("additional_charge", { precision: 12, scale: 2 }).notNull().default("0"),
+    totalAmount: (0, mysql_core_1.decimal)("total_amount", { precision: 12, scale: 2 }).notNull(),
+    paymentStatus: (0, mysql_core_1.mysqlEnum)("payment_status", ["pending", "partial", "paid", "refunded"]).default("pending").notNull(),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["reserved", "rented", "returned", "overdue", "cancelled"]).default("reserved").notNull(),
+    notes: (0, mysql_core_1.text)("notes"),
+    attachmentUrl: (0, mysql_core_1.varchar)("attachment_url", { length: 500 }),
+    createdById: (0, mysql_core_1.int)("created_by_id").references(() => exports.users.id),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: (0, mysql_core_1.timestamp)("updated_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+exports.rentalsRelations = (0, drizzle_orm_1.relations)(exports.rentals, ({ one }) => ({
+    product: one(exports.products, {
+        fields: [exports.rentals.productId],
+        references: [exports.products.id],
+    }),
+    user: one(exports.users, {
+        fields: [exports.rentals.userId],
+        references: [exports.users.id],
+    }),
+    createdBy: one(exports.users, {
+        fields: [exports.rentals.createdById],
+        references: [exports.users.id],
+    }),
+}));
+// ==================== MEMOS ====================
+exports.memos = (0, mysql_core_1.mysqlTable)("memos", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    title: (0, mysql_core_1.varchar)("title", { length: 255 }),
+    entityType: (0, mysql_core_1.varchar)("entity_type", { length: 30 }).notNull(),
+    entityId: (0, mysql_core_1.int)("entity_id"),
+    url: (0, mysql_core_1.varchar)("url", { length: 1000 }).notNull(),
+    publicId: (0, mysql_core_1.varchar)("public_id", { length: 500 }),
+    filename: (0, mysql_core_1.varchar)("filename", { length: 500 }).notNull(),
+    mimeType: (0, mysql_core_1.varchar)("mime_type", { length: 100 }).notNull(),
+    size: (0, mysql_core_1.int)("size").default(0).notNull(),
+    folder: (0, mysql_core_1.varchar)("folder", { length: 200 }).default("memos").notNull(),
+    notes: (0, mysql_core_1.text)("notes"),
+    uploadedById: (0, mysql_core_1.int)("uploaded_by_id").references(() => exports.users.id),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+exports.memosRelations = (0, drizzle_orm_1.relations)(exports.memos, ({ one }) => ({
+    uploadedBy: one(exports.users, {
+        fields: [exports.memos.uploadedById],
+        references: [exports.users.id],
+    }),
+}));
 //# sourceMappingURL=schema.js.map

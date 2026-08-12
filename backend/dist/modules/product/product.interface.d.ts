@@ -6,6 +6,7 @@ export interface ProductVariantInput {
     name: string;
     options: Record<string, string>;
     price?: string | number;
+    salePrice?: string | number;
     discountPrice?: string | number;
     sku?: string;
     barcode?: string;

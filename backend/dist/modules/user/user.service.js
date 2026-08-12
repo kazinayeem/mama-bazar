@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.getProfile = exports.updateProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.remove = exports.getById = exports.getAll = exports.getDevAccounts = exports.login = exports.register = void 0;
+exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.getProfile = exports.updateProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.remove = exports.getById = exports.getAll = exports.devLogin = exports.login = exports.register = void 0;
 const db_1 = require("../../config/db");
 const schema_1 = require("../../config/schema");
 const drizzle_orm_1 = require("drizzle-orm");
@@ -58,6 +58,9 @@ const login = async (data) => {
     const isMatch = await bcryptjs_1.default.compare(data.password, user.password);
     if (!isMatch)
         throw new AppError_1.AppError(401, "Invalid credentials");
+    if (user.status === "inactive") {
+        throw new AppError_1.AppError(403, "Account is inactive");
+    }
     const token = jsonwebtoken_1.default.sign({ id: user.id, phone: user.phone, role: user.role }, env_1.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
     return {
         token,
@@ -65,24 +68,28 @@ const login = async (data) => {
     };
 };
 exports.login = login;
-const getDevAccounts = async () => {
-    if (env_1.env.NODE_ENV === "production") {
-        throw new AppError_1.AppError(404, "Not found");
-    }
-    const rows = await db_1.db
-        .select({ id: schema_1.users.id, name: schema_1.users.name, phone: schema_1.users.phone, role: schema_1.users.role })
-        .from(schema_1.users)
-        .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.users.phone, dev_credentials_1.DEV_ADMIN_PHONE), (0, drizzle_orm_1.eq)(schema_1.users.phone, dev_credentials_1.DEV_CUSTOMER_PHONE)))
-        .limit(2);
-    const accounts = rows.map((user) => ({
-        ...user,
-        password: user.role === "admin" || user.role === "manager"
-            ? dev_credentials_1.DEV_ADMIN_PASSWORD
-            : dev_credentials_1.DEV_CUSTOMER_PASSWORD,
-    }));
-    return accounts;
+const DEV_ROLE_CREDENTIALS = {
+    SUPER_ADMIN: { phone: dev_credentials_1.DEV_ADMIN_PHONE, password: dev_credentials_1.DEV_ADMIN_PASSWORD },
+    admin: { phone: dev_credentials_1.DEV_ADMIN_PHONE, password: dev_credentials_1.DEV_ADMIN_PASSWORD },
+    USER: { phone: dev_credentials_1.DEV_CUSTOMER_PHONE, password: dev_credentials_1.DEV_CUSTOMER_PASSWORD },
+    user: { phone: dev_credentials_1.DEV_CUSTOMER_PHONE, password: dev_credentials_1.DEV_CUSTOMER_PASSWORD },
 };
-exports.getDevAccounts = getDevAccounts;
+/**
+ * Development-only quick login. It authenticates the seeded development
+ * account through the exact same `login` path (DB lookup -> bcrypt verify ->
+ * account status -> real JWT), and is never available in production.
+ */
+const devLogin = async (role) => {
+    if (env_1.env.NODE_ENV === "production") {
+        throw new AppError_1.AppError(404, "Development login is unavailable");
+    }
+    const credentials = DEV_ROLE_CREDENTIALS[role];
+    if (!credentials) {
+        throw new AppError_1.AppError(400, "Unknown development account role");
+    }
+    return (0, exports.login)(credentials);
+};
+exports.devLogin = devLogin;
 const getAll = async () => {
     const allUsers = await db_1.db.select().from(schema_1.users).orderBy((0, drizzle_orm_1.desc)(schema_1.users.createdAt));
     return allUsers.map(({ password, ...rest }) => rest);

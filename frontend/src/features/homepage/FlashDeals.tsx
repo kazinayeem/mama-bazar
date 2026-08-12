@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Flame, Timer } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -68,6 +68,7 @@ const TimeUnit = ({ value, label }: { value: string; label: string }) => (
 )
 
 const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps) => {
+  const reduceMotion = useReducedMotion()
   const target = useMemo(() => computeTarget(window), [window])
   const time = useCountdown(target)
 
@@ -78,29 +79,29 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Flash Deals header panel */}
         <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-5 sm:rounded-3xl sm:px-7 sm:py-6 lg:mb-8">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-accent/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 left-1/3 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 -top-10 hidden h-48 w-48 rounded-full bg-white/5 blur-3xl md:block" />
+          <div className="pointer-events-none absolute -bottom-16 left-1/3 hidden h-40 w-40 rounded-full bg-white/5 blur-3xl md:block" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <motion.span
-                animate={{ scale: [1, 1.12, 1] }}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-lg shadow-accent/30"
-                transition={{ duration: 1.4, repeat: Infinity }}
+                animate={reduceMotion ? undefined : { scale: [1, 1.12, 1] }}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white shadow-lg shadow-black/30"
+                transition={reduceMotion ? undefined : { duration: 1.4, repeat: Infinity }}
               >
-                <Flame size={22} className="fill-white" />
+                <Flame size={22} className="fill-white/90" />
               </motion.span>
               <div>
-                <p className="font-headline text-xl font-black text-white sm:text-2xl">
+                <p className="font-headline text-xl font-light text-white tracking-tight sm:text-2xl">
                   {section.title || 'Flash Deals'}
                 </p>
-                <p className="mt-0.5 text-xs font-semibold text-accent sm:text-sm">
+                <p className="mt-0.5 text-xs font-medium text-white/75 sm:text-sm">
                   {section.subtitle || 'Limited-time prices. When they are gone, they are gone.'}
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-3 py-1.5 text-[11px] font-bold text-accent">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white">
                 <Timer size={12} /> Ends in
               </span>
               <div className="flex items-start gap-2">

@@ -28,6 +28,12 @@ const checkout_notice_route_1 = __importDefault(require("./modules/checkout-noti
 const upload_route_1 = __importDefault(require("./modules/upload/upload.route"));
 const review_route_1 = __importDefault(require("./modules/review/review.route"));
 const homepage_route_1 = __importDefault(require("./modules/homepage/homepage.route"));
+const pages_route_1 = __importDefault(require("./modules/pages/pages.route"));
+const expense_route_1 = __importDefault(require("./modules/expense/expense.route"));
+const cost_route_1 = __importDefault(require("./modules/cost/cost.route"));
+const booking_route_1 = __importDefault(require("./modules/booking/booking.route"));
+const rental_route_1 = __importDefault(require("./modules/rental/rental.route"));
+const memo_route_1 = __importDefault(require("./modules/memo/memo.route"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const app = (0, express_1.default)();
 // Security headers
@@ -74,9 +80,19 @@ app.use("/api/checkout-notices", checkout_notice_route_1.default);
 app.use("/api/uploads", upload_route_1.default);
 app.use("/api/reviews", review_route_1.default);
 app.use("/api/homepage", homepage_route_1.default);
+app.use("/api/pages", pages_route_1.default);
+app.use("/api/expenses", expense_route_1.default);
+app.use("/api/costs", cost_route_1.default);
+app.use("/api/bookings", booking_route_1.default);
+app.use("/api/rentals", rental_route_1.default);
+app.use("/api/memos", memo_route_1.default);
+// home
+app.get("/", (_req, res) => {
+    res.json({ success: true, message: "Welcome to Mamabazar API" });
+});
 // Health check
 app.get("/api/health", (_req, res) => {
-    res.json({ success: true, message: "GhorerBazar API is running" });
+    res.json({ success: true, message: "Mamabazar API is running" });
 });
 // JSON 404 for unknown routes (prevents HTML error pages in API clients)
 app.use((req, res, next) => {

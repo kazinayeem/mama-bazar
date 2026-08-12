@@ -64,26 +64,26 @@ export declare const colorUpdateSchema: z.ZodObject<{
         id: string;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
         displayName?: string | undefined;
         hex?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
         displayName?: string | undefined;
         hex?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const colorListSchema: z.ZodObject<{
@@ -197,24 +197,24 @@ export declare const sizeUpdateSchema: z.ZodObject<{
         id: string;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
         type?: "custom" | "clothing" | "shoes" | "general" | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
         type?: "custom" | "clothing" | "shoes" | "general" | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const sizeListSchema: z.ZodObject<{
@@ -384,9 +384,6 @@ export declare const collectionUpdateSchema: z.ZodObject<{
         id: string;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -399,11 +396,11 @@ export declare const collectionUpdateSchema: z.ZodObject<{
         status?: "active" | "inactive" | "archived" | undefined;
         startDate?: string | null | undefined;
         endDate?: string | null | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -416,6 +413,9 @@ export declare const collectionUpdateSchema: z.ZodObject<{
         status?: "active" | "inactive" | "archived" | undefined;
         startDate?: string | null | undefined;
         endDate?: string | null | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const collectionListSchema: z.ZodObject<{
@@ -577,9 +577,6 @@ export declare const vendorUpdateSchema: z.ZodObject<{
         id: string;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -591,11 +588,11 @@ export declare const vendorUpdateSchema: z.ZodObject<{
         email?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -607,6 +604,9 @@ export declare const vendorUpdateSchema: z.ZodObject<{
         email?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const supplierCreateSchema: z.ZodObject<{
@@ -714,9 +714,6 @@ export declare const supplierUpdateSchema: z.ZodObject<{
         id: string;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -728,11 +725,11 @@ export declare const supplierUpdateSchema: z.ZodObject<{
         email?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -744,6 +741,9 @@ export declare const supplierUpdateSchema: z.ZodObject<{
         email?: string | undefined;
         address?: string | undefined;
         notes?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const vendorListSchema: z.ZodObject<{

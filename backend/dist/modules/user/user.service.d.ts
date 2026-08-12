@@ -13,16 +13,24 @@ export declare const login: (data: LoginInput) => Promise<{
         role: "admin" | "manager" | "user";
     };
 }>;
-export declare const getDevAccounts: () => Promise<{
-    password: string;
-    id: number;
-    name: string;
-    phone: string;
-    role: "admin" | "manager" | "user";
-}[]>;
+/**
+ * Development-only quick login. It authenticates the seeded development
+ * account through the exact same `login` path (DB lookup -> bcrypt verify ->
+ * account status -> real JWT), and is never available in production.
+ */
+export declare const devLogin: (role: string) => Promise<{
+    token: string;
+    user: {
+        id: number;
+        name: string;
+        phone: string;
+        role: "admin" | "manager" | "user";
+    };
+}>;
 export declare const getAll: () => Promise<{
     id: number;
     name: string;
+    status: "active" | "inactive";
     createdAt: Date;
     phone: string;
     shippingArea: string | null;
@@ -34,6 +42,7 @@ export declare const getAll: () => Promise<{
 export declare const getById: (id: number) => Promise<{
     id: number;
     name: string;
+    status: "active" | "inactive";
     createdAt: Date;
     phone: string;
     shippingArea: string | null;
@@ -67,6 +76,7 @@ export declare const changePassword: (userId: number, data: ChangePasswordInput)
 export declare const updateProfile: (userId: number, data: UpdateProfileInput) => Promise<{
     id: number;
     name: string;
+    status: "active" | "inactive";
     createdAt: Date;
     phone: string;
     shippingArea: string | null;
@@ -76,6 +86,7 @@ export declare const updateProfile: (userId: number, data: UpdateProfileInput) =
 export declare const getProfile: (userId: number) => Promise<{
     id: number;
     name: string;
+    status: "active" | "inactive";
     createdAt: Date;
     phone: string;
     shippingArea: string | null;

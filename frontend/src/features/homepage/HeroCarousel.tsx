@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
@@ -39,8 +39,9 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
   const isExternal = (url?: string) => !!url && /^https?:\/\//.test(url)
 
   const renderButton = (text: string, url: string, primary: boolean) => {
+    /* Cinematic track CTAs: white-stroked pill on dark. Mint is reserved for the light track. */
     const className = primary
-      ? 'inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/25 transition hover:bg-accent-600 hover:shadow-accent/40 active:scale-95'
+      ? 'inline-flex items-center gap-2 rounded-full border-2 border-white bg-transparent px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/10 active:scale-95'
       : 'inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-6 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/25 active:scale-95'
 
     const inner = (
@@ -116,14 +117,14 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
       >
         <div className="max-w-md sm:max-w-lg">
           {slide.badge && (
-            <span className="mb-3 inline-flex items-center rounded-full bg-accent px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-accent-foreground shadow-sm">
+            <span className="mb-3 inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur">
               {slide.badge}
             </span>
           )}
 
           {slide.title && (
             <h2
-              className="font-headline text-3xl font-black leading-[1.1] tracking-tight sm:text-4xl lg:text-5xl"
+              className="font-headline text-3xl font-light leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl"
               style={{ color: textColor, textShadow: '0 2px 12px rgba(2,6,23,0.45)' }}
             >
               {slide.title}
@@ -160,6 +161,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [direction, setDirection] = useState(1)
+  const reduceMotion = useReducedMotion()
 
   const count = slides.length
   const safeIndex = count > 0 ? index % count : 0
@@ -177,10 +179,10 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
   const prev = useCallback(() => go(safeIndex - 1, -1), [go, safeIndex])
 
   useEffect(() => {
-    if (count <= 1 || paused) return
+    if (count <= 1 || paused || reduceMotion) return
     const timer = setTimeout(next, AUTOPLAY_MS)
     return () => clearTimeout(timer)
-  }, [count, paused, next, safeIndex])
+  }, [count, paused, next, safeIndex, reduceMotion])
 
   const variants = useMemo(
     () => ({
@@ -190,6 +192,10 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
     }),
     [],
   )
+
+  const slideTransition = reduceMotion
+    ? { duration: 0.01, ease: 'easeOut' as const }
+    : { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const }
 
   if (loading) {
     return (
@@ -220,8 +226,8 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              drag="x"
+              transition={slideTransition}
+              drag={reduceMotion ? false : 'x'}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.06}
               onDragEnd={(_, info) => {
@@ -238,7 +244,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
             <>
               <button
                 aria-label="Previous slide"
-                className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:left-5 sm:h-11 sm:w-11 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
+                className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:left-5 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
                 onClick={prev}
                 type="button"
               >
@@ -246,7 +252,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
               </button>
               <button
                 aria-label="Next slide"
-                className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:right-5 sm:h-11 sm:w-11 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
+                className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg backdrop-blur transition hover:bg-white active:scale-95 sm:right-5 lg:opacity-0 lg:group-hover:opacity-100 dark:bg-slate-800/90 dark:text-white"
                 onClick={next}
                 type="button"
               >
@@ -261,14 +267,14 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
               {slides.map((slide, dotIndex) => (
                 <button
                   aria-label={`Go to slide ${dotIndex + 1}`}
-                  className="flex h-5 items-center"
+                  className="flex h-11 items-center px-1"
                   key={slide.id}
                   onClick={() => go(dotIndex, dotIndex > safeIndex ? 1 : -1)}
                   type="button"
                 >
                   <span
                     className={`block h-2 rounded-full shadow-sm transition-all duration-300 ${
-                      dotIndex === safeIndex ? 'w-8 bg-accent' : 'w-2 bg-white/70 hover:bg-white'
+                      dotIndex === safeIndex ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
                     }`}
                   />
                 </button>

@@ -35,9 +35,11 @@ exports.catalogService = {
             conditions.push((0, drizzle_orm_1.eq)(table.status, params.status));
         }
         const where = conditions.length ? (0, drizzle_orm_1.and)(...conditions) : undefined;
-        const orderBy = params.sort === "name" || params.sort === "oldest"
+        const orderBy = params.sort === "oldest"
             ? [(0, drizzle_orm_1.asc)(table.createdAt)]
-            : [(0, drizzle_orm_1.asc)(table.sortOrder), (0, drizzle_orm_1.asc)(table.name)];
+            : table.sortOrder
+                ? [(0, drizzle_orm_1.asc)(table.sortOrder), (0, drizzle_orm_1.asc)(table.name)]
+                : [(0, drizzle_orm_1.asc)(table.name)];
         const [rows, totalRows] = await Promise.all([
             db_1.db.select().from(table).where(where).orderBy(...orderBy).limit(limit).offset((page - 1) * limit),
             db_1.db.select({ count: (0, drizzle_orm_1.count)() }).from(table).where(where),

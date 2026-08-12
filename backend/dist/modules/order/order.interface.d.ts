@@ -47,6 +47,7 @@ export interface IOrderItem {
     id: number;
     orderId: number;
     productId: number;
+    variantId?: number | null;
     size?: string | null;
     color?: string | null;
     quantity: number;
@@ -81,6 +82,7 @@ export interface CreateOrderInput {
     taxAmount?: number;
     items: {
         productId: number;
+        variantId?: number;
         quantity: number;
         size?: string;
         color?: string;

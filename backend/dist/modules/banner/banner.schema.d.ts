@@ -3,6 +3,9 @@ export declare const createBannerSchema: z.ZodObject<{
     body: z.ZodObject<{
         title: z.ZodOptional<z.ZodString>;
         subtitle: z.ZodOptional<z.ZodString>;
+        image: z.ZodOptional<z.ZodString>;
+        imageTablet: z.ZodOptional<z.ZodString>;
+        imageMobile: z.ZodOptional<z.ZodString>;
         link: z.ZodOptional<z.ZodString>;
         position: z.ZodOptional<z.ZodEnum<["hero", "banner", "promo", "sidebar"]>>;
         buttonText: z.ZodOptional<z.ZodString>;
@@ -10,17 +13,23 @@ export declare const createBannerSchema: z.ZodObject<{
         status: z.ZodOptional<z.ZodEnum<["active", "inactive"]>>;
     }, "strip", z.ZodTypeAny, {
         priority: number;
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
     }, {
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
         priority?: string | number | undefined;
@@ -28,19 +37,25 @@ export declare const createBannerSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     body: {
         priority: number;
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
     };
 }, {
     body: {
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
         priority?: string | number | undefined;
@@ -57,6 +72,9 @@ export declare const updateBannerSchema: z.ZodObject<{
     body: z.ZodObject<{
         title: z.ZodOptional<z.ZodString>;
         subtitle: z.ZodOptional<z.ZodString>;
+        image: z.ZodOptional<z.ZodString>;
+        imageTablet: z.ZodOptional<z.ZodString>;
+        imageMobile: z.ZodOptional<z.ZodString>;
         link: z.ZodOptional<z.ZodString>;
         position: z.ZodOptional<z.ZodEnum<["hero", "banner", "promo", "sidebar"]>>;
         buttonText: z.ZodOptional<z.ZodString>;
@@ -64,46 +82,58 @@ export declare const updateBannerSchema: z.ZodObject<{
         status: z.ZodOptional<z.ZodEnum<["active", "inactive"]>>;
     }, "strip", z.ZodTypeAny, {
         priority: number;
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
     }, {
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
         priority?: string | number | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         priority: number;
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
     };
-}, {
     params: {
         id: string;
     };
+}, {
     body: {
+        image?: string | undefined;
         status?: "active" | "inactive" | undefined;
         link?: string | undefined;
         title?: string | undefined;
         subtitle?: string | undefined;
+        imageMobile?: string | undefined;
+        imageTablet?: string | undefined;
         position?: "banner" | "hero" | "promo" | "sidebar" | undefined;
         buttonText?: string | undefined;
         priority?: string | number | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const bannerIdSchema: z.ZodObject<{

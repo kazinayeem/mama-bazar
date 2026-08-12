@@ -939,7 +939,7 @@ export declare const fullQuery: () => Omit<import("drizzle-orm/mysql-core").MySq
         data: ["cod", "online"];
         driverParam: string;
         notNull: false;
-        hasDefault: true;
+        hasDefault: false;
         enumValues: undefined;
         baseColumn: never;
     }, object>;
@@ -2072,7 +2072,7 @@ export declare const fullQuery: () => Omit<import("drizzle-orm/mysql-core").MySq
         data: ["cod", "online"];
         driverParam: string;
         notNull: false;
-        hasDefault: true;
+        hasDefault: false;
         enumValues: undefined;
         baseColumn: never;
     }, object>;

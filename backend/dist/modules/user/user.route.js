@@ -12,8 +12,8 @@ router.post("/register", (0, validate_1.validate)(user_schema_1.registerSchema),
 router.post("/login", (0, validate_1.validate)(user_schema_1.loginSchema), (0, asyncHandler_1.asyncHandler)(user_controller_1.login));
 router.post("/password-reset-request", (0, validate_1.validate)(user_schema_1.passwordResetRequestSchema), (0, asyncHandler_1.asyncHandler)(user_controller_1.requestPasswordReset));
 router.post("/password-reset", (0, validate_1.validate)(user_schema_1.passwordResetSchema), (0, asyncHandler_1.asyncHandler)(user_controller_1.resetPassword));
-// Dev-only: returns seeded quick-login accounts (404 in production)
-router.get("/dev-accounts", (0, asyncHandler_1.asyncHandler)(user_controller_1.getDevAccounts));
+// Dev-only: real JWT login as the seeded dev account (404 in production)
+router.post("/dev-login", (0, asyncHandler_1.asyncHandler)(user_controller_1.devLogin));
 // Protected
 router.get("/profile", auth_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(user_controller_1.getProfile));
 router.put("/profile", auth_1.authMiddleware, (0, validate_1.validate)(user_schema_1.updateProfileSchema), (0, asyncHandler_1.asyncHandler)(user_controller_1.updateProfile));

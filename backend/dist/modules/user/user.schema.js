@@ -9,7 +9,6 @@ exports.registerSchema = zod_1.z.object({
         name: zod_1.z.string().min(1, "Name is required"),
         phone: zod_1.z.string().regex(phoneRegex, "Invalid phone number. Use format: 01XXXXXXXXX or +880XXXXXXXXX"),
         password: zod_1.z.string().min(6, "Password must be at least 6 characters"),
-        role: zod_1.z.enum(["admin", "manager", "user"]).optional(),
     }),
 });
 exports.loginSchema = zod_1.z.object({

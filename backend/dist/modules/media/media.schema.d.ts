@@ -86,18 +86,18 @@ export declare const mediaUpdateSchema: z.ZodObject<{
         alt?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         alt?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         alt?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 //# sourceMappingURL=media.schema.d.ts.map

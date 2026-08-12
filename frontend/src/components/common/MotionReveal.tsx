@@ -1,4 +1,4 @@
-import { motion, type Variants } from 'framer-motion'
+import { motion, useReducedMotion, type Variants } from 'framer-motion'
 import type { ReactNode } from 'react'
 
 const variants: Variants = {
@@ -13,6 +13,12 @@ interface MotionRevealProps {
 }
 
 const MotionReveal = ({ children, delay = 0, className }: MotionRevealProps) => {
+  const reduceMotion = useReducedMotion()
+
+  if (reduceMotion) {
+    return <div className={className}>{children}</div>
+  }
+
   return (
     <motion.div
       className={className}

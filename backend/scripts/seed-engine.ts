@@ -316,6 +316,7 @@ export const seedAll = async () => {
       sizeOptions: p.sizes ?? [],
       colorOptions: p.colors ?? [],
       shippingCharge: p.shippingCharge ?? 0,
+      paymentMethods: ["cod"] as any,
       status: "active",
       productStatus: "published",
       stockStatus: p.stock === 0 ? "out_of_stock" : p.stock <= 10 ? "low_stock" : "in_stock",
@@ -546,7 +547,7 @@ export const seedAll = async () => {
 
   // ============ POLICY PAGES ============
   const { policyPageSeeds } = await import("./seed-pages");
-  const now = Math.floor(Date.now() / 1000);
+  const lastUpdated = Math.floor(Date.now() / 1000);
   let pageCount = 0;
   for (const page of policyPageSeeds) {
     const existing = await db.select({ id: schema.policyPages.id }).from(schema.policyPages).where(eq(schema.policyPages.slug, page.slug)).limit(1);
@@ -556,7 +557,7 @@ export const seedAll = async () => {
       title: page.title,
       content: page.content,
       status: "published",
-      lastUpdated: now,
+      lastUpdated: lastUpdated,
       updatedBy: adminId,
     });
     pageCount++;

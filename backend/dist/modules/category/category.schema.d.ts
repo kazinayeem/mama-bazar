@@ -144,9 +144,6 @@ export declare const updateCategorySchema: z.ZodObject<{
         status?: "active" | "inactive" | "archived" | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -163,11 +160,11 @@ export declare const updateCategorySchema: z.ZodObject<{
         seoDescription?: string | undefined;
         seoKeywords?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -184,6 +181,9 @@ export declare const updateCategorySchema: z.ZodObject<{
         seoDescription?: string | undefined;
         seoKeywords?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const categoryIdSchema: z.ZodObject<{
@@ -283,18 +283,18 @@ export declare const categoryMoveSchema: z.ZodObject<{
         targetId: string | number | null;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         targetId: string | number | null;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         targetId: string | number | null;
+    };
+    params: {
+        id: string;
     };
 }>;
 //# sourceMappingURL=category.schema.d.ts.map

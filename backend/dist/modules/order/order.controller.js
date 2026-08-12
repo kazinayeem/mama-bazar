@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStats = exports.remove = exports.getInvoice = exports.trackOrder = exports.getMyOrders = exports.addAdminNote = exports.verifyPayment = exports.updateStatus = exports.getById = exports.getAll = exports.create = void 0;
+exports.getStats = exports.remove = exports.getCustomerInvoice = exports.getInvoice = exports.trackOrder = exports.getMyOrders = exports.addAdminNote = exports.verifyPayment = exports.updateStatus = exports.getById = exports.getAll = exports.create = void 0;
 const orderService = __importStar(require("./order.service"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = require("../../config/env");
@@ -92,7 +92,7 @@ const create = async (req, res) => {
     };
     const result = await orderService.create(input);
     const message = result.auth
-        ? "Order placed. Your account is now signed in."
+        ? "Order placed successfully"
         : "Order placed successfully";
     res.status(201).json({ success: true, data: result, message });
 };
@@ -155,6 +155,14 @@ const getInvoice = async (req, res) => {
     res.json({ success: true, data: order });
 };
 exports.getInvoice = getInvoice;
+const getCustomerInvoice = async (req, res) => {
+    const userId = req.user?.id;
+    if (!userId)
+        throw new AppError_1.AppError(401, "Please sign in to view your invoice");
+    const order = await orderService.getCustomerInvoice(Number(req.params.id), userId);
+    res.json({ success: true, data: order });
+};
+exports.getCustomerInvoice = getCustomerInvoice;
 const remove = async (req, res) => {
     await orderService.remove(Number(req.params.id));
     res.json({ success: true, message: "Order deleted" });

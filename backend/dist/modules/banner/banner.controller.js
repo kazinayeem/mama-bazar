@@ -70,6 +70,11 @@ exports.getById = getById;
 const create = async (req, res) => {
     const { title, subtitle, link, position, buttonText, priority, status } = req.body;
     const images = await persistImages(req);
+    if (!images.image) {
+        const url = ["image", "imageTablet", "imageMobile"].find((k) => req.body[k]);
+        if (url)
+            images[url] = req.body[url];
+    }
     if (!images.image)
         throw new AppError_1.AppError(400, "Banner image is required");
     const data = await bannerService.create({
@@ -106,12 +111,12 @@ const update = async (req, res) => {
         updateData.priority = Number(priority);
     if (status !== undefined)
         updateData.status = status;
-    if (images.image)
-        updateData.image = images.image;
-    if (images.imageMobile)
-        updateData.imageMobile = images.imageMobile;
-    if (images.imageTablet)
-        updateData.imageTablet = images.imageTablet;
+    for (const field of ["image", "imageMobile", "imageTablet"]) {
+        if (images[field])
+            updateData[field] = images[field];
+        else if (req.body[field])
+            updateData[field] = req.body[field];
+    }
     const data = await bannerService.update(id, updateData);
     res.json({ success: true, data });
 };

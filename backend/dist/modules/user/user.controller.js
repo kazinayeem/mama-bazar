@@ -33,13 +33,13 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.remove = exports.getAll = exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.updateProfile = exports.getProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.getDevAccounts = exports.login = exports.register = void 0;
+exports.remove = exports.getAll = exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.updateProfile = exports.getProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.devLogin = exports.login = exports.register = void 0;
 const userService = __importStar(require("./user.service"));
 const register = async (req, res) => {
-    const { name, phone, password, role } = req.body;
-    // Default role is "user" for public registration, only admin can register admin/manager
-    const validRole = (role === "admin" || role === "manager") ? role : "user";
-    const data = await userService.register({ name, phone, password, role: validRole });
+    const { name, phone, password } = req.body;
+    // Public registration can only ever create "user" accounts.
+    // Admin/manager accounts are created only by the seed script or an existing admin.
+    const data = await userService.register({ name, phone, password, role: "user" });
     res.status(201).json({ success: true, data });
 };
 exports.register = register;
@@ -49,11 +49,12 @@ const login = async (req, res) => {
     res.json({ success: true, data });
 };
 exports.login = login;
-const getDevAccounts = async (req, res) => {
-    const data = await userService.getDevAccounts();
+const devLogin = async (req, res) => {
+    const role = req.body?.role;
+    const data = await userService.devLogin(role);
     res.json({ success: true, data });
 };
-exports.getDevAccounts = getDevAccounts;
+exports.devLogin = devLogin;
 const requestPasswordReset = async (req, res) => {
     const { phone } = req.body;
     await userService.requestPasswordReset({ phone });

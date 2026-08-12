@@ -1,0 +1,110 @@
+export interface BookingQuery {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    paymentStatus?: string;
+}
+export declare const listBookings: (query: BookingQuery) => Promise<{
+    data: {
+        productName: string | null;
+        id: number;
+        customerName: string;
+        phone: string;
+        email: string | null;
+        userId: number | null;
+        bookingType: string;
+        service: string | null;
+        productId: number | null;
+        startDate: Date;
+        endDate: Date;
+        quantity: number;
+        price: string;
+        discount: string;
+        additionalCost: string;
+        totalAmount: string;
+        paymentStatus: "pending" | "refunded" | "partial" | "paid";
+        status: "active" | "pending" | "confirmed" | "cancelled" | "completed";
+        notes: string | null;
+        attachmentUrl: string | null;
+        createdAt: Date;
+    }[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+}>;
+export declare const getBooking: (id: number) => Promise<{
+    productName: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    id: number;
+    customerName: string;
+    phone: string;
+    email: string | null;
+    userId: number | null;
+    bookingType: string;
+    service: string | null;
+    productId: number | null;
+    startDate: Date;
+    endDate: Date;
+    quantity: number;
+    price: string;
+    discount: string;
+    additionalCost: string;
+    totalAmount: string;
+    paymentStatus: "pending" | "refunded" | "partial" | "paid";
+    status: "active" | "pending" | "confirmed" | "cancelled" | "completed";
+    notes: string | null;
+    attachmentUrl: string | null;
+}>;
+export declare const createBooking: (input: {
+    customerName: string;
+    phone: string;
+    email?: string | null;
+    userId?: number | null;
+    bookingType?: string;
+    service?: string | null;
+    productId?: number | null;
+    startDate: string;
+    endDate: string;
+    quantity?: number;
+    price?: string | number;
+    discount?: string | number;
+    additionalCost?: string | number;
+    totalAmount?: string | number;
+    paymentStatus?: string;
+    status?: string;
+    notes?: string | null;
+    attachmentUrl?: string | null;
+}) => Promise<import("mysql2").ResultSetHeader>;
+export declare const updateBooking: (id: number, input: Record<string, unknown>) => Promise<{
+    productName: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    id: number;
+    customerName: string;
+    phone: string;
+    email: string | null;
+    userId: number | null;
+    bookingType: string;
+    service: string | null;
+    productId: number | null;
+    startDate: Date;
+    endDate: Date;
+    quantity: number;
+    price: string;
+    discount: string;
+    additionalCost: string;
+    totalAmount: string;
+    paymentStatus: "pending" | "refunded" | "partial" | "paid";
+    status: "active" | "pending" | "confirmed" | "cancelled" | "completed";
+    notes: string | null;
+    attachmentUrl: string | null;
+}>;
+export declare const deleteBooking: (id: number) => Promise<{
+    success: boolean;
+}>;
+//# sourceMappingURL=booking.service.d.ts.map

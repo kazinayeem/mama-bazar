@@ -28,17 +28,20 @@ export declare const createOrderSchema: z.ZodObject<{
         taxAmount: z.ZodNullable<z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
         items: z.ZodArray<z.ZodObject<{
             productId: z.ZodNumber;
+            variantId: z.ZodNullable<z.ZodOptional<z.ZodNumber>>;
             quantity: z.ZodNumber;
             size: z.ZodNullable<z.ZodOptional<z.ZodString>>;
             color: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
             productId: number;
             quantity: number;
+            variantId?: number | null | undefined;
             size?: string | null | undefined;
             color?: string | null | undefined;
         }, {
             productId: number;
             quantity: number;
+            variantId?: number | null | undefined;
             size?: string | null | undefined;
             color?: string | null | undefined;
         }>, "many">;
@@ -50,6 +53,7 @@ export declare const createOrderSchema: z.ZodObject<{
         items: {
             productId: number;
             quantity: number;
+            variantId?: number | null | undefined;
             size?: string | null | undefined;
             color?: string | null | undefined;
         }[];
@@ -82,6 +86,7 @@ export declare const createOrderSchema: z.ZodObject<{
         items: {
             productId: number;
             quantity: number;
+            variantId?: number | null | undefined;
             size?: string | null | undefined;
             color?: string | null | undefined;
         }[];
@@ -116,6 +121,7 @@ export declare const createOrderSchema: z.ZodObject<{
         items: {
             productId: number;
             quantity: number;
+            variantId?: number | null | undefined;
             size?: string | null | undefined;
             color?: string | null | undefined;
         }[];
@@ -150,6 +156,7 @@ export declare const createOrderSchema: z.ZodObject<{
         items: {
             productId: number;
             quantity: number;
+            variantId?: number | null | undefined;
             size?: string | null | undefined;
             color?: string | null | undefined;
         }[];
@@ -198,22 +205,22 @@ export declare const updateOrderStatusSchema: z.ZodObject<{
         trackingNumber?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         status: "pending" | "payment_pending" | "payment_verification" | "refunded" | "confirmed" | "processing" | "packed" | "shipped" | "out_for_delivery" | "delivered" | "returned" | "cancelled";
         note?: string | undefined;
         trackingNumber?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         status: "pending" | "payment_pending" | "payment_verification" | "refunded" | "confirmed" | "processing" | "packed" | "shipped" | "out_for_delivery" | "delivered" | "returned" | "cancelled";
         note?: string | undefined;
         trackingNumber?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const verifyPaymentSchema: z.ZodObject<{
@@ -235,20 +242,20 @@ export declare const verifyPaymentSchema: z.ZodObject<{
         note?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         action: "verified" | "rejected";
         note?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         action: "verified" | "rejected";
         note?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const adminNoteSchema: z.ZodObject<{
@@ -267,18 +274,18 @@ export declare const adminNoteSchema: z.ZodObject<{
         note: string;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         note: string;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         note: string;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const orderIdSchema: z.ZodObject<{

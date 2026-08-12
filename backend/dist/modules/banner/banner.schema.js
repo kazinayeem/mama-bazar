@@ -6,6 +6,9 @@ exports.createBannerSchema = zod_1.z.object({
     body: zod_1.z.object({
         title: zod_1.z.string().optional(),
         subtitle: zod_1.z.string().optional(),
+        image: zod_1.z.string().optional(),
+        imageTablet: zod_1.z.string().optional(),
+        imageMobile: zod_1.z.string().optional(),
         link: zod_1.z.string().optional(),
         position: zod_1.z.enum(["hero", "banner", "promo", "sidebar"]).optional(),
         buttonText: zod_1.z.string().optional(),
@@ -21,6 +24,9 @@ exports.updateBannerSchema = zod_1.z.object({
     body: zod_1.z.object({
         title: zod_1.z.string().optional(),
         subtitle: zod_1.z.string().optional(),
+        image: zod_1.z.string().optional(),
+        imageTablet: zod_1.z.string().optional(),
+        imageMobile: zod_1.z.string().optional(),
         link: zod_1.z.string().optional(),
         position: zod_1.z.enum(["hero", "banner", "promo", "sidebar"]).optional(),
         buttonText: zod_1.z.string().optional(),

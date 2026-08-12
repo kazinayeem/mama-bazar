@@ -1,6 +1,6 @@
 import { z } from "zod";
 export declare const createProductSchema: z.ZodObject<{
-    body: z.ZodObject<{
+    body: z.ZodEffects<z.ZodObject<{
         title: z.ZodString;
         description: z.ZodOptional<z.ZodString>;
         shortDescription: z.ZodOptional<z.ZodString>;
@@ -16,14 +16,14 @@ export declare const createProductSchema: z.ZodObject<{
         flashSalePrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
         wholesalePrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
         dealerPrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        categoryId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        subCategoryId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        childCategoryId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        collectionId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        brandId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
+        categoryId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        subCategoryId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        childCategoryId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        collectionId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        brandId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
         brand: z.ZodOptional<z.ZodString>;
-        vendorId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        supplierId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
+        vendorId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        supplierId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
         supplier: z.ZodOptional<z.ZodString>;
         countryOfOrigin: z.ZodOptional<z.ZodString>;
         sku: z.ZodOptional<z.ZodString>;
@@ -84,8 +84,9 @@ export declare const createProductSchema: z.ZodObject<{
         variants: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodObject<{
             id: z.ZodOptional<z.ZodNumber>;
             name: z.ZodString;
-            options: z.ZodRecord<z.ZodString, z.ZodString>;
+            options: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
             price: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
+            salePrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
             discountPrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
             sku: z.ZodOptional<z.ZodString>;
             barcode: z.ZodOptional<z.ZodString>;
@@ -100,11 +101,11 @@ export declare const createProductSchema: z.ZodObject<{
             availability: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -112,16 +113,17 @@ export declare const createProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
         }, {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -129,6 +131,7 @@ export declare const createProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -180,13 +183,13 @@ export declare const createProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -233,11 +236,11 @@ export declare const createProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -245,6 +248,7 @@ export declare const createProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -281,13 +285,13 @@ export declare const createProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -334,11 +338,11 @@ export declare const createProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -346,6 +350,211 @@ export declare const createProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
+            discountPrice?: string | number | undefined;
+            shippingCost?: string | number | undefined;
+            availability?: boolean | undefined;
+        }[] | undefined;
+        specs?: string | {
+            label: string;
+            value: string;
+            id?: number | undefined;
+            sortOrder?: number | undefined;
+        }[] | undefined;
+        relations?: string | {
+            relatedProductId: string | number;
+            type: "frequently_bought_together" | "cross_sell" | "up_sell" | "accessories" | "similar";
+        }[] | undefined;
+        existingImages?: string | undefined;
+    }>, {
+        title: string;
+        price: number;
+        brand?: string | undefined;
+        description?: string | undefined;
+        seoTitle?: string | undefined;
+        seoDescription?: string | undefined;
+        seoKeywords?: string | undefined;
+        status?: "active" | "inactive" | undefined;
+        shortDescription?: string | undefined;
+        salePrice?: string | number | undefined;
+        discount?: string | number | undefined;
+        costPrice?: string | number | undefined;
+        profitMargin?: string | number | undefined;
+        tax?: string | number | undefined;
+        vat?: string | number | undefined;
+        shippingCharge?: string | number | undefined;
+        codFee?: string | number | undefined;
+        flashSalePrice?: string | number | undefined;
+        wholesalePrice?: string | number | undefined;
+        dealerPrice?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
+        supplier?: string | undefined;
+        countryOfOrigin?: string | undefined;
+        sku?: string | undefined;
+        barcode?: string | undefined;
+        tags?: string | any[] | undefined;
+        warranty?: string | undefined;
+        weight?: string | undefined;
+        dimensions?: string | undefined;
+        features?: string | any[] | undefined;
+        returnPolicy?: string | undefined;
+        warehouse?: string | undefined;
+        videoUrl?: string | undefined;
+        canonicalUrl?: string | undefined;
+        ogImage?: string | undefined;
+        twitterImage?: string | undefined;
+        structuredData?: string | Record<any, any> | undefined;
+        emiAvailable?: string | boolean | undefined;
+        isFeatured?: string | boolean | undefined;
+        isTrending?: string | boolean | undefined;
+        isFlashSale?: string | boolean | undefined;
+        isNewArrival?: string | boolean | undefined;
+        isBestSeller?: string | boolean | undefined;
+        isLimitedEdition?: string | boolean | undefined;
+        isOfficial?: string | boolean | undefined;
+        isHotDeal?: string | boolean | undefined;
+        isArchived?: string | boolean | undefined;
+        stock?: string | number | undefined;
+        lowStockAlert?: string | number | undefined;
+        minOrder?: string | number | undefined;
+        maxOrder?: string | number | undefined;
+        unlimitedStock?: string | boolean | undefined;
+        backorder?: string | boolean | undefined;
+        trackInventory?: string | boolean | undefined;
+        stockStatus?: string | undefined;
+        productStatus?: "archived" | "draft" | "published" | "hidden" | "coming_soon" | "out_of_stock" | undefined;
+        images?: string | string[] | undefined;
+        sizeOptions?: string | any[] | undefined;
+        colorOptions?: string | {
+            name: string;
+            image?: string | undefined;
+            value?: string | undefined;
+        }[] | undefined;
+        paymentMethods?: string | any[] | undefined;
+        paymentPhoneNumber?: string | undefined;
+        variants?: string | {
+            name: string;
+            id?: number | undefined;
+            thumbnail?: string | undefined;
+            status?: "active" | "inactive" | undefined;
+            price?: string | number | undefined;
+            salePrice?: string | number | undefined;
+            sku?: string | undefined;
+            barcode?: string | undefined;
+            warranty?: string | undefined;
+            weight?: string | undefined;
+            dimensions?: string | undefined;
+            stock?: string | number | undefined;
+            images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
+            discountPrice?: string | number | undefined;
+            shippingCost?: string | number | undefined;
+            availability?: boolean | undefined;
+        }[] | undefined;
+        specs?: string | {
+            label: string;
+            value: string;
+            id?: number | undefined;
+            sortOrder?: number | undefined;
+        }[] | undefined;
+        relations?: string | {
+            relatedProductId: string | number;
+            type: "frequently_bought_together" | "cross_sell" | "up_sell" | "accessories" | "similar";
+        }[] | undefined;
+        existingImages?: string | undefined;
+    }, {
+        title: string;
+        price: string | number;
+        brand?: string | undefined;
+        description?: string | undefined;
+        seoTitle?: string | undefined;
+        seoDescription?: string | undefined;
+        seoKeywords?: string | undefined;
+        status?: "active" | "inactive" | undefined;
+        shortDescription?: string | undefined;
+        salePrice?: string | number | undefined;
+        discount?: string | number | undefined;
+        costPrice?: string | number | undefined;
+        profitMargin?: string | number | undefined;
+        tax?: string | number | undefined;
+        vat?: string | number | undefined;
+        shippingCharge?: string | number | undefined;
+        codFee?: string | number | undefined;
+        flashSalePrice?: string | number | undefined;
+        wholesalePrice?: string | number | undefined;
+        dealerPrice?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
+        supplier?: string | undefined;
+        countryOfOrigin?: string | undefined;
+        sku?: string | undefined;
+        barcode?: string | undefined;
+        tags?: string | any[] | undefined;
+        warranty?: string | undefined;
+        weight?: string | undefined;
+        dimensions?: string | undefined;
+        features?: string | any[] | undefined;
+        returnPolicy?: string | undefined;
+        warehouse?: string | undefined;
+        videoUrl?: string | undefined;
+        canonicalUrl?: string | undefined;
+        ogImage?: string | undefined;
+        twitterImage?: string | undefined;
+        structuredData?: string | Record<any, any> | undefined;
+        emiAvailable?: string | boolean | undefined;
+        isFeatured?: string | boolean | undefined;
+        isTrending?: string | boolean | undefined;
+        isFlashSale?: string | boolean | undefined;
+        isNewArrival?: string | boolean | undefined;
+        isBestSeller?: string | boolean | undefined;
+        isLimitedEdition?: string | boolean | undefined;
+        isOfficial?: string | boolean | undefined;
+        isHotDeal?: string | boolean | undefined;
+        isArchived?: string | boolean | undefined;
+        stock?: string | number | undefined;
+        lowStockAlert?: string | number | undefined;
+        minOrder?: string | number | undefined;
+        maxOrder?: string | number | undefined;
+        unlimitedStock?: string | boolean | undefined;
+        backorder?: string | boolean | undefined;
+        trackInventory?: string | boolean | undefined;
+        stockStatus?: string | undefined;
+        productStatus?: "archived" | "draft" | "published" | "hidden" | "coming_soon" | "out_of_stock" | undefined;
+        images?: string | string[] | undefined;
+        sizeOptions?: string | any[] | undefined;
+        colorOptions?: string | {
+            name: string;
+            image?: string | undefined;
+            value?: string | undefined;
+        }[] | undefined;
+        paymentMethods?: string | any[] | undefined;
+        paymentPhoneNumber?: string | undefined;
+        variants?: string | {
+            name: string;
+            id?: number | undefined;
+            thumbnail?: string | undefined;
+            status?: "active" | "inactive" | undefined;
+            price?: string | number | undefined;
+            salePrice?: string | number | undefined;
+            sku?: string | undefined;
+            barcode?: string | undefined;
+            warranty?: string | undefined;
+            weight?: string | undefined;
+            dimensions?: string | undefined;
+            stock?: string | number | undefined;
+            images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -384,13 +593,13 @@ export declare const createProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -437,11 +646,11 @@ export declare const createProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -449,6 +658,7 @@ export declare const createProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -487,13 +697,13 @@ export declare const createProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -540,11 +750,11 @@ export declare const createProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -552,6 +762,7 @@ export declare const createProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -577,7 +788,7 @@ export declare const updateProductSchema: z.ZodObject<{
     }, {
         id: string;
     }>;
-    body: z.ZodObject<{
+    body: z.ZodEffects<z.ZodObject<{
         title: z.ZodOptional<z.ZodString>;
         price: z.ZodOptional<z.ZodPipeline<z.ZodUnion<[z.ZodString, z.ZodNumber]>, z.ZodNumber>>;
         description: z.ZodOptional<z.ZodString>;
@@ -593,14 +804,14 @@ export declare const updateProductSchema: z.ZodObject<{
         flashSalePrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
         wholesalePrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
         dealerPrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        categoryId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        subCategoryId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        childCategoryId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        collectionId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        brandId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
+        categoryId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        subCategoryId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        childCategoryId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        collectionId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        brandId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
         brand: z.ZodOptional<z.ZodString>;
-        vendorId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
-        supplierId: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
+        vendorId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
+        supplierId: z.ZodOptional<z.ZodNullable<z.ZodUnion<[z.ZodString, z.ZodNumber]>>>;
         supplier: z.ZodOptional<z.ZodString>;
         countryOfOrigin: z.ZodOptional<z.ZodString>;
         sku: z.ZodOptional<z.ZodString>;
@@ -661,8 +872,9 @@ export declare const updateProductSchema: z.ZodObject<{
         variants: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodArray<z.ZodObject<{
             id: z.ZodOptional<z.ZodNumber>;
             name: z.ZodString;
-            options: z.ZodRecord<z.ZodString, z.ZodString>;
+            options: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
             price: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
+            salePrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
             discountPrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
             sku: z.ZodOptional<z.ZodString>;
             barcode: z.ZodOptional<z.ZodString>;
@@ -677,11 +889,11 @@ export declare const updateProductSchema: z.ZodObject<{
             availability: z.ZodOptional<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -689,16 +901,17 @@ export declare const updateProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
         }, {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -706,6 +919,7 @@ export declare const updateProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -757,13 +971,13 @@ export declare const updateProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -810,11 +1024,11 @@ export declare const updateProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -822,6 +1036,7 @@ export declare const updateProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -858,13 +1073,13 @@ export declare const updateProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -911,11 +1126,11 @@ export declare const updateProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -923,6 +1138,211 @@ export declare const updateProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
+            discountPrice?: string | number | undefined;
+            shippingCost?: string | number | undefined;
+            availability?: boolean | undefined;
+        }[] | undefined;
+        specs?: string | {
+            label: string;
+            value: string;
+            id?: number | undefined;
+            sortOrder?: number | undefined;
+        }[] | undefined;
+        relations?: string | {
+            relatedProductId: string | number;
+            type: "frequently_bought_together" | "cross_sell" | "up_sell" | "accessories" | "similar";
+        }[] | undefined;
+        existingImages?: string | undefined;
+    }>, {
+        brand?: string | undefined;
+        description?: string | undefined;
+        seoTitle?: string | undefined;
+        seoDescription?: string | undefined;
+        seoKeywords?: string | undefined;
+        status?: "active" | "inactive" | undefined;
+        title?: string | undefined;
+        shortDescription?: string | undefined;
+        price?: number | undefined;
+        salePrice?: string | number | undefined;
+        discount?: string | number | undefined;
+        costPrice?: string | number | undefined;
+        profitMargin?: string | number | undefined;
+        tax?: string | number | undefined;
+        vat?: string | number | undefined;
+        shippingCharge?: string | number | undefined;
+        codFee?: string | number | undefined;
+        flashSalePrice?: string | number | undefined;
+        wholesalePrice?: string | number | undefined;
+        dealerPrice?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
+        supplier?: string | undefined;
+        countryOfOrigin?: string | undefined;
+        sku?: string | undefined;
+        barcode?: string | undefined;
+        tags?: string | any[] | undefined;
+        warranty?: string | undefined;
+        weight?: string | undefined;
+        dimensions?: string | undefined;
+        features?: string | any[] | undefined;
+        returnPolicy?: string | undefined;
+        warehouse?: string | undefined;
+        videoUrl?: string | undefined;
+        canonicalUrl?: string | undefined;
+        ogImage?: string | undefined;
+        twitterImage?: string | undefined;
+        structuredData?: string | Record<any, any> | undefined;
+        emiAvailable?: string | boolean | undefined;
+        isFeatured?: string | boolean | undefined;
+        isTrending?: string | boolean | undefined;
+        isFlashSale?: string | boolean | undefined;
+        isNewArrival?: string | boolean | undefined;
+        isBestSeller?: string | boolean | undefined;
+        isLimitedEdition?: string | boolean | undefined;
+        isOfficial?: string | boolean | undefined;
+        isHotDeal?: string | boolean | undefined;
+        isArchived?: string | boolean | undefined;
+        stock?: string | number | undefined;
+        lowStockAlert?: string | number | undefined;
+        minOrder?: string | number | undefined;
+        maxOrder?: string | number | undefined;
+        unlimitedStock?: string | boolean | undefined;
+        backorder?: string | boolean | undefined;
+        trackInventory?: string | boolean | undefined;
+        stockStatus?: string | undefined;
+        productStatus?: "archived" | "draft" | "published" | "hidden" | "coming_soon" | "out_of_stock" | undefined;
+        images?: string | string[] | undefined;
+        sizeOptions?: string | any[] | undefined;
+        colorOptions?: string | {
+            name: string;
+            image?: string | undefined;
+            value?: string | undefined;
+        }[] | undefined;
+        paymentMethods?: string | any[] | undefined;
+        paymentPhoneNumber?: string | undefined;
+        variants?: string | {
+            name: string;
+            id?: number | undefined;
+            thumbnail?: string | undefined;
+            status?: "active" | "inactive" | undefined;
+            price?: string | number | undefined;
+            salePrice?: string | number | undefined;
+            sku?: string | undefined;
+            barcode?: string | undefined;
+            warranty?: string | undefined;
+            weight?: string | undefined;
+            dimensions?: string | undefined;
+            stock?: string | number | undefined;
+            images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
+            discountPrice?: string | number | undefined;
+            shippingCost?: string | number | undefined;
+            availability?: boolean | undefined;
+        }[] | undefined;
+        specs?: string | {
+            label: string;
+            value: string;
+            id?: number | undefined;
+            sortOrder?: number | undefined;
+        }[] | undefined;
+        relations?: string | {
+            relatedProductId: string | number;
+            type: "frequently_bought_together" | "cross_sell" | "up_sell" | "accessories" | "similar";
+        }[] | undefined;
+        existingImages?: string | undefined;
+    }, {
+        brand?: string | undefined;
+        description?: string | undefined;
+        seoTitle?: string | undefined;
+        seoDescription?: string | undefined;
+        seoKeywords?: string | undefined;
+        status?: "active" | "inactive" | undefined;
+        title?: string | undefined;
+        shortDescription?: string | undefined;
+        price?: string | number | undefined;
+        salePrice?: string | number | undefined;
+        discount?: string | number | undefined;
+        costPrice?: string | number | undefined;
+        profitMargin?: string | number | undefined;
+        tax?: string | number | undefined;
+        vat?: string | number | undefined;
+        shippingCharge?: string | number | undefined;
+        codFee?: string | number | undefined;
+        flashSalePrice?: string | number | undefined;
+        wholesalePrice?: string | number | undefined;
+        dealerPrice?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
+        supplier?: string | undefined;
+        countryOfOrigin?: string | undefined;
+        sku?: string | undefined;
+        barcode?: string | undefined;
+        tags?: string | any[] | undefined;
+        warranty?: string | undefined;
+        weight?: string | undefined;
+        dimensions?: string | undefined;
+        features?: string | any[] | undefined;
+        returnPolicy?: string | undefined;
+        warehouse?: string | undefined;
+        videoUrl?: string | undefined;
+        canonicalUrl?: string | undefined;
+        ogImage?: string | undefined;
+        twitterImage?: string | undefined;
+        structuredData?: string | Record<any, any> | undefined;
+        emiAvailable?: string | boolean | undefined;
+        isFeatured?: string | boolean | undefined;
+        isTrending?: string | boolean | undefined;
+        isFlashSale?: string | boolean | undefined;
+        isNewArrival?: string | boolean | undefined;
+        isBestSeller?: string | boolean | undefined;
+        isLimitedEdition?: string | boolean | undefined;
+        isOfficial?: string | boolean | undefined;
+        isHotDeal?: string | boolean | undefined;
+        isArchived?: string | boolean | undefined;
+        stock?: string | number | undefined;
+        lowStockAlert?: string | number | undefined;
+        minOrder?: string | number | undefined;
+        maxOrder?: string | number | undefined;
+        unlimitedStock?: string | boolean | undefined;
+        backorder?: string | boolean | undefined;
+        trackInventory?: string | boolean | undefined;
+        stockStatus?: string | undefined;
+        productStatus?: "archived" | "draft" | "published" | "hidden" | "coming_soon" | "out_of_stock" | undefined;
+        images?: string | string[] | undefined;
+        sizeOptions?: string | any[] | undefined;
+        colorOptions?: string | {
+            name: string;
+            image?: string | undefined;
+            value?: string | undefined;
+        }[] | undefined;
+        paymentMethods?: string | any[] | undefined;
+        paymentPhoneNumber?: string | undefined;
+        variants?: string | {
+            name: string;
+            id?: number | undefined;
+            thumbnail?: string | undefined;
+            status?: "active" | "inactive" | undefined;
+            price?: string | number | undefined;
+            salePrice?: string | number | undefined;
+            sku?: string | undefined;
+            barcode?: string | undefined;
+            warranty?: string | undefined;
+            weight?: string | undefined;
+            dimensions?: string | undefined;
+            stock?: string | number | undefined;
+            images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -940,9 +1360,6 @@ export declare const updateProductSchema: z.ZodObject<{
         existingImages?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         brand?: string | undefined;
         description?: string | undefined;
@@ -964,13 +1381,13 @@ export declare const updateProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -1017,11 +1434,11 @@ export declare const updateProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -1029,6 +1446,7 @@ export declare const updateProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -1045,10 +1463,10 @@ export declare const updateProductSchema: z.ZodObject<{
         }[] | undefined;
         existingImages?: string | undefined;
     };
-}, {
     params: {
         id: string;
     };
+}, {
     body: {
         brand?: string | undefined;
         description?: string | undefined;
@@ -1070,13 +1488,13 @@ export declare const updateProductSchema: z.ZodObject<{
         flashSalePrice?: string | number | undefined;
         wholesalePrice?: string | number | undefined;
         dealerPrice?: string | number | undefined;
-        categoryId?: string | number | undefined;
-        subCategoryId?: string | number | undefined;
-        childCategoryId?: string | number | undefined;
-        collectionId?: string | number | undefined;
-        brandId?: string | number | undefined;
-        vendorId?: string | number | undefined;
-        supplierId?: string | number | undefined;
+        categoryId?: string | number | null | undefined;
+        subCategoryId?: string | number | null | undefined;
+        childCategoryId?: string | number | null | undefined;
+        collectionId?: string | number | null | undefined;
+        brandId?: string | number | null | undefined;
+        vendorId?: string | number | null | undefined;
+        supplierId?: string | number | null | undefined;
         supplier?: string | undefined;
         countryOfOrigin?: string | undefined;
         sku?: string | undefined;
@@ -1123,11 +1541,11 @@ export declare const updateProductSchema: z.ZodObject<{
         paymentPhoneNumber?: string | undefined;
         variants?: string | {
             name: string;
-            options: Record<string, string>;
             id?: number | undefined;
             thumbnail?: string | undefined;
             status?: "active" | "inactive" | undefined;
             price?: string | number | undefined;
+            salePrice?: string | number | undefined;
             sku?: string | undefined;
             barcode?: string | undefined;
             warranty?: string | undefined;
@@ -1135,6 +1553,7 @@ export declare const updateProductSchema: z.ZodObject<{
             dimensions?: string | undefined;
             stock?: string | number | undefined;
             images?: string[] | undefined;
+            options?: Record<string, string> | undefined;
             discountPrice?: string | number | undefined;
             shippingCost?: string | number | undefined;
             availability?: boolean | undefined;
@@ -1150,6 +1569,9 @@ export declare const updateProductSchema: z.ZodObject<{
             type: "frequently_bought_together" | "cross_sell" | "up_sell" | "accessories" | "similar";
         }[] | undefined;
         existingImages?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const productIdSchema: z.ZodObject<{
@@ -1351,18 +1773,18 @@ export declare const saveDraftSchema: z.ZodObject<{
         draft: Record<any, any>;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         draft: Record<any, any>;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         draft: Record<any, any>;
+    };
+    params: {
+        id: string;
     };
 }>;
 //# sourceMappingURL=product.schema.d.ts.map

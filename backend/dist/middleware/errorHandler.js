@@ -12,11 +12,17 @@ const errorHandler = (err, _req, res, _next) => {
     }
     // Known operational errors
     if (err instanceof AppError_1.AppError) {
-        res.status(err.statusCode).json({
+        const body = {
             success: false,
             message: err.message,
-            ...(err.data !== undefined ? { data: err.data } : {}),
-        });
+        };
+        if (err.data && typeof err.data === "object" && "errors" in err.data) {
+            body.errors = err.data.errors;
+        }
+        else if (err.data !== undefined) {
+            body.data = err.data;
+        }
+        res.status(err.statusCode).json(body);
         return;
     }
     // Unknown / unexpected errors — hide details in production

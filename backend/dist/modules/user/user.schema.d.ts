@@ -4,31 +4,26 @@ export declare const registerSchema: z.ZodObject<{
         name: z.ZodString;
         phone: z.ZodString;
         password: z.ZodString;
-        role: z.ZodOptional<z.ZodEnum<["admin", "manager", "user"]>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
         phone: string;
         password: string;
-        role?: "admin" | "manager" | "user" | undefined;
     }, {
         name: string;
         phone: string;
         password: string;
-        role?: "admin" | "manager" | "user" | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     body: {
         name: string;
         phone: string;
         password: string;
-        role?: "admin" | "manager" | "user" | undefined;
     };
 }, {
     body: {
         name: string;
         phone: string;
         password: string;
-        role?: "admin" | "manager" | "user" | undefined;
     };
 }>;
 export declare const loginSchema: z.ZodObject<{
@@ -211,26 +206,26 @@ export declare const updateAddressSchema: z.ZodObject<{
         isDefault?: boolean | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         phone?: string | undefined;
         address?: string | undefined;
         shippingArea?: string | undefined;
         recipientName?: string | undefined;
         isDefault?: boolean | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         phone?: string | undefined;
         address?: string | undefined;
         shippingArea?: string | undefined;
         recipientName?: string | undefined;
         isDefault?: boolean | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const addressIdSchema: z.ZodObject<{

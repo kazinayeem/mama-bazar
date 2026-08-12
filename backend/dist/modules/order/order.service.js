@@ -1,16 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStats = exports.remove = exports.getInvoice = exports.trackOrder = exports.getMyOrders = exports.updateAdminNotes = exports.verifyPayment = exports.updateStatus = exports.getById = exports.getAll = exports.create = void 0;
+exports.getStats = exports.remove = exports.getCustomerInvoice = exports.getInvoice = exports.trackOrder = exports.getMyOrders = exports.updateAdminNotes = exports.verifyPayment = exports.updateStatus = exports.getById = exports.getAll = exports.create = void 0;
 const db_1 = require("../../config/db");
 const schema_1 = require("../../config/schema");
 const drizzle_orm_1 = require("drizzle-orm");
 const AppError_1 = require("../../utils/AppError");
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const env_1 = require("../../config/env");
 const DEFAULT_STATUS = "pending";
 const PERCENTAGE = "percentage";
 const DELIVERED_STATUS = "delivered";
@@ -154,15 +148,18 @@ const attachItemsAndHistory = async (order) => {
         id: schema_1.orderItems.id,
         orderId: schema_1.orderItems.orderId,
         productId: schema_1.orderItems.productId,
+        variantId: schema_1.orderItems.variantId,
         size: schema_1.orderItems.size,
         color: schema_1.orderItems.color,
         quantity: schema_1.orderItems.quantity,
         price: schema_1.orderItems.price,
         productTitle: schema_1.products.title,
         productImages: schema_1.products.images,
+        variantName: schema_1.productVariants.name,
     })
         .from(schema_1.orderItems)
         .leftJoin(schema_1.products, (0, drizzle_orm_1.eq)(schema_1.orderItems.productId, schema_1.products.id))
+        .leftJoin(schema_1.productVariants, (0, drizzle_orm_1.eq)(schema_1.orderItems.variantId, schema_1.productVariants.id))
         .where((0, drizzle_orm_1.eq)(schema_1.orderItems.orderId, order.id));
     const statusHistory = await getTimelineWithFallback(order.id, order.status, order.createdAt);
     return {
@@ -186,10 +183,12 @@ const attachItemsAndHistory = async (order) => {
                 id: i.id,
                 orderId: i.orderId,
                 productId: i.productId,
+                variantId: i.variantId,
                 size: i.size,
                 color: i.color,
                 quantity: i.quantity,
                 price: i.price,
+                variantName: i.variantName || null,
                 product: i.productTitle ? { title: i.productTitle, image } : null,
             };
         }),
@@ -200,24 +199,82 @@ const create = async (input) => {
     // ---------- 1. Validate items & compute subtotal ----------
     let subtotal = 0;
     const itemsWithPrice = [];
+    // Batch fetch all products upfront to avoid N+1 queries
+    const productIds = [...new Set(input.items.map(item => item.productId))];
+    const allProducts = await db_1.db.select().from(schema_1.products).where((0, drizzle_orm_1.inArray)(schema_1.products.id, productIds));
+    const productMap = new Map(allProducts.map(p => [p.id, p]));
+    // Collect all variant IDs that are explicitly provided
+    const explicitVariantIds = input.items
+        .filter(item => item.variantId)
+        .map(item => item.variantId);
+    // Batch fetch explicit variants
+    const allExplicitVariants = explicitVariantIds.length > 0
+        ? await db_1.db.select().from(schema_1.productVariants).where((0, drizzle_orm_1.inArray)(schema_1.productVariants.id, explicitVariantIds))
+        : [];
+    const explicitVariantMap = new Map(allExplicitVariants.map(v => [v.id, v]));
+    // Collect product IDs that need size/color variant lookup
+    const productIdsNeedingVariantLookup = input.items
+        .filter(item => !item.variantId && (item.size || item.color))
+        .map(item => item.productId);
+    // Batch fetch variants for size/color lookup
+    const allSizeColorVariants = productIdsNeedingVariantLookup.length > 0
+        ? await db_1.db.select().from(schema_1.productVariants).where((0, drizzle_orm_1.and)((0, drizzle_orm_1.inArray)(schema_1.productVariants.productId, productIdsNeedingVariantLookup), (0, drizzle_orm_1.eq)(schema_1.productVariants.status, "active")))
+        : [];
+    // Group variants by product ID for efficient lookup
+    const variantsByProduct = new Map();
+    for (const v of allSizeColorVariants) {
+        const existing = variantsByProduct.get(v.productId) || [];
+        existing.push(v);
+        variantsByProduct.set(v.productId, existing);
+    }
     for (const item of input.items) {
-        const productRows = await db_1.db.select().from(schema_1.products).where((0, drizzle_orm_1.eq)(schema_1.products.id, item.productId)).limit(1);
-        const product = productRows[0];
+        const product = productMap.get(item.productId);
         if (!product)
             throw new AppError_1.AppError(400, `Product ${item.productId} not found`);
-        if (product.stock < item.quantity) {
-            throw new AppError_1.AppError(400, `Insufficient stock for ${product.title}`);
+        let itemPrice;
+        if (item.variantId) {
+            const variant = explicitVariantMap.get(item.variantId);
+            if (!variant)
+                throw new AppError_1.AppError(400, `Variant not found for product ${product.title}`);
+            if (variant.availability === false)
+                throw new AppError_1.AppError(400, `Variant "${variant.name}" is not available`);
+            if (variant.stock < item.quantity)
+                throw new AppError_1.AppError(400, `Insufficient stock for ${product.title} - ${variant.name}`);
+            itemPrice = variant.discountPrice ? Number(variant.discountPrice) : (variant.price ? Number(variant.price) : Number(product.price));
         }
-        const discountRate = Math.min(Number(product.discount || 0), 100);
-        const actualPrice = Math.round(Number(product.price) * (1 - discountRate / 100));
-        const itemTotal = actualPrice * item.quantity;
+        else if (item.size || item.color) {
+            const productVariantsList = variantsByProduct.get(item.productId) || [];
+            const variant = productVariantsList.find((v) => {
+                const opts = v.options;
+                const sizeMatch = !item.size || Object.values(opts).some((val) => val.toLowerCase() === item.size.toLowerCase());
+                const colorMatch = !item.color || Object.values(opts).some((val) => val.toLowerCase() === item.color.toLowerCase());
+                return sizeMatch && colorMatch;
+            });
+            if (!variant)
+                throw new AppError_1.AppError(400, `Variant (${item.size}, ${item.color}) not found for ${product.title}`);
+            if (variant.availability === false)
+                throw new AppError_1.AppError(400, `Variant "${variant.name}" is not available`);
+            if (variant.stock < item.quantity)
+                throw new AppError_1.AppError(400, `Insufficient stock for ${product.title} - ${variant.name}`);
+            itemPrice = variant.discountPrice ? Number(variant.discountPrice) : (variant.price ? Number(variant.price) : Number(product.price));
+            // Store the resolved variant ID
+            item.variantId = variant.id;
+        }
+        else {
+            if (product.stock < item.quantity)
+                throw new AppError_1.AppError(400, `Insufficient stock for ${product.title}`);
+            const discountRate = Math.min(Number(product.discount || 0), 100);
+            itemPrice = Math.round(Number(product.price) * (1 - discountRate / 100));
+        }
+        const itemTotal = itemPrice * item.quantity;
         subtotal += itemTotal;
         itemsWithPrice.push({
             productId: item.productId,
+            variantId: item.variantId,
             quantity: item.quantity,
             size: item.size,
             color: item.color,
-            price: actualPrice,
+            price: itemPrice,
         });
     }
     // ---------- 2. Shipping method ----------
@@ -303,52 +360,21 @@ const create = async (input) => {
         paymentStatus = "payment_pending";
         orderStatus = "payment_pending";
     }
-    // ---------- 7. Resolve user (guest auto-create) ----------
-    let resolvedUserId = input.userId;
+    // ---------- 7. Resolve user (true guest checkout - no auto-create) ----------
+    let resolvedUserId = input.userId || null;
     let checkoutAuth = null;
-    if (!resolvedUserId) {
+    // Only auto-login existing users; never auto-create accounts for guests
+    if (!resolvedUserId && input.phone) {
         const existingRows = await db_1.db.select().from(schema_1.users).where((0, drizzle_orm_1.eq)(schema_1.users.phone, input.phone)).limit(1);
         const existingUser = existingRows[0];
         if (existingUser) {
+            // User exists but is not logged in - link the order to their account
             resolvedUserId = existingUser.id;
-            const canAutoLogin = await bcryptjs_1.default.compare(input.phone, existingUser.password);
-            if (canAutoLogin) {
-                const token = jsonwebtoken_1.default.sign({ id: existingUser.id, phone: existingUser.phone, role: existingUser.role }, env_1.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
-                checkoutAuth = {
-                    token,
-                    user: {
-                        id: existingUser.id,
-                        name: existingUser.name,
-                        phone: existingUser.phone,
-                        role: existingUser.role,
-                    },
-                };
-            }
+            // Do NOT auto-login - guest remains a guest
         }
-        else {
-            const hashedPassword = await bcryptjs_1.default.hash(input.phone, SALT_ROUNDS);
-            const userInsert = await db_1.db.insert(schema_1.users).values({
-                name: input.name,
-                phone: input.phone,
-                password: hashedPassword,
-                role: DEFAULT_ROLE,
-                shippingArea: input.shippingArea,
-                shippingAddress: input.address,
-            });
-            resolvedUserId = userInsert[0].insertId;
-            const token = jsonwebtoken_1.default.sign({ id: resolvedUserId, phone: input.phone, role: DEFAULT_ROLE }, env_1.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
-            checkoutAuth = {
-                token,
-                user: {
-                    id: resolvedUserId,
-                    name: input.name,
-                    phone: input.phone,
-                    role: DEFAULT_ROLE,
-                },
-            };
-        }
+        // If no user exists, resolvedUserId stays null - true guest order
     }
-    // ---------- 8. Update user + save address ----------
+    // ---------- 8. Update user + save address (only for logged-in users) ----------
     if (resolvedUserId) {
         await db_1.db
             .update(schema_1.users)
@@ -432,20 +458,42 @@ const create = async (input) => {
         note: historyNote,
         createdByUserId: resolvedUserId || null,
     });
-    // ---------- 10. Items + stock ----------
-    for (const item of itemsWithPrice) {
-        await db_1.db.insert(schema_1.orderItems).values({
+    // ---------- 10. Items + stock (bulk operations) ----------
+    // Bulk insert order items
+    if (itemsWithPrice.length > 0) {
+        await db_1.db.insert(schema_1.orderItems).values(itemsWithPrice.map(item => ({
             orderId,
             productId: item.productId,
+            variantId: item.variantId || null,
             size: item.size || null,
             color: item.color || null,
             quantity: item.quantity,
             price: String(item.price),
-        });
+        })));
+    }
+    // Bulk update product stock
+    const productIdsToUpdate = [...new Set(itemsWithPrice.map(item => item.productId))];
+    for (const productId of productIdsToUpdate) {
+        const totalQuantity = itemsWithPrice
+            .filter(item => item.productId === productId)
+            .reduce((sum, item) => sum + item.quantity, 0);
         await db_1.db
             .update(schema_1.products)
-            .set({ stock: (0, drizzle_orm_1.sql) `${schema_1.products.stock} - ${item.quantity}` })
-            .where((0, drizzle_orm_1.eq)(schema_1.products.id, item.productId));
+            .set({ stock: (0, drizzle_orm_1.sql) `${schema_1.products.stock} - ${totalQuantity}` })
+            .where((0, drizzle_orm_1.eq)(schema_1.products.id, productId));
+    }
+    // Bulk update variant stock
+    const variantIdsToUpdate = itemsWithPrice
+        .filter(item => item.variantId)
+        .map(item => item.variantId);
+    for (const variantId of variantIdsToUpdate) {
+        const totalQuantity = itemsWithPrice
+            .filter(item => item.variantId === variantId)
+            .reduce((sum, item) => sum + item.quantity, 0);
+        await db_1.db
+            .update(schema_1.productVariants)
+            .set({ stock: (0, drizzle_orm_1.sql) `${schema_1.productVariants.stock} - ${totalQuantity}` })
+            .where((0, drizzle_orm_1.eq)(schema_1.productVariants.id, variantId));
     }
     const order = await (0, exports.getById)(orderId);
     return { order, auth: checkoutAuth };
@@ -622,6 +670,15 @@ const getInvoice = async (id) => {
     return order;
 };
 exports.getInvoice = getInvoice;
+const getCustomerInvoice = async (id, userId) => {
+    const order = await (0, exports.getById)(id);
+    if (!order)
+        throw new AppError_1.AppError(404, "Order not found");
+    if (order.userId !== userId)
+        throw new AppError_1.AppError(403, "You can only view your own order invoices");
+    return order;
+};
+exports.getCustomerInvoice = getCustomerInvoice;
 // ==================== DELETE ====================
 const remove = async (id) => {
     await db_1.db.delete(schema_1.orderStatusHistory).where((0, drizzle_orm_1.eq)(schema_1.orderStatusHistory.orderId, id));

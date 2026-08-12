@@ -72,9 +72,6 @@ export declare const updateCheckoutNoticeSchema: z.ZodObject<{
         textColor?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         icon?: string | undefined;
         text?: string | undefined;
@@ -82,11 +79,11 @@ export declare const updateCheckoutNoticeSchema: z.ZodObject<{
         priority?: string | number | undefined;
         backgroundColor?: string | undefined;
         textColor?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         icon?: string | undefined;
         text?: string | undefined;
@@ -94,6 +91,9 @@ export declare const updateCheckoutNoticeSchema: z.ZodObject<{
         priority?: string | number | undefined;
         backgroundColor?: string | undefined;
         textColor?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const checkoutNoticeIdSchema: z.ZodObject<{

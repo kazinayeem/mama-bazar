@@ -7,6 +7,7 @@ const BD_PHONE_REGEX = /^(\+880|0)[1-9]\d{9}$/;
 const optStr = zod_1.z.string().optional().nullable();
 const orderItemSchema = zod_1.z.object({
     productId: zod_1.z.number().int().positive(),
+    variantId: zod_1.z.number().int().positive().optional().nullable(),
     quantity: zod_1.z.number().int().positive(),
     size: zod_1.z.string().optional().nullable(),
     color: zod_1.z.string().optional().nullable(),

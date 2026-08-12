@@ -88,9 +88,6 @@ export declare const updateShippingMethodSchema: z.ZodObject<{
         codAvailable?: boolean | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         description?: string | undefined;
@@ -100,11 +97,11 @@ export declare const updateShippingMethodSchema: z.ZodObject<{
         estimatedDelivery?: string | undefined;
         freeShippingMinAmount?: string | number | undefined;
         codAvailable?: boolean | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         description?: string | undefined;
@@ -114,6 +111,9 @@ export declare const updateShippingMethodSchema: z.ZodObject<{
         estimatedDelivery?: string | undefined;
         freeShippingMinAmount?: string | number | undefined;
         codAvailable?: boolean | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const shippingMethodIdSchema: z.ZodObject<{

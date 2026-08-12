@@ -52,18 +52,18 @@ export declare const updateReviewStatusSchema: z.ZodObject<{
         status: "pending" | "rejected" | "approved";
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         status: "pending" | "rejected" | "approved";
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         status: "pending" | "rejected" | "approved";
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const reviewIdSchema: z.ZodObject<{

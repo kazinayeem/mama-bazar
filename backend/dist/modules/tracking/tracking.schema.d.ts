@@ -80,9 +80,6 @@ export declare const updateTrackingSchema: z.ZodObject<{
         testEventCode?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         status?: "active" | "inactive" | undefined;
@@ -91,11 +88,11 @@ export declare const updateTrackingSchema: z.ZodObject<{
         scriptCode?: string | undefined;
         accessToken?: string | undefined;
         testEventCode?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         status?: "active" | "inactive" | undefined;
@@ -104,6 +101,9 @@ export declare const updateTrackingSchema: z.ZodObject<{
         scriptCode?: string | undefined;
         accessToken?: string | undefined;
         testEventCode?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const trackingIdSchema: z.ZodObject<{

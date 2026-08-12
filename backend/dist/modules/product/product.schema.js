@@ -4,16 +4,23 @@ exports.saveDraftSchema = exports.bulkProductSchema = exports.productListSchema 
 const zod_1 = require("zod");
 const numeric = zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional();
 const boolish = zod_1.z.union([zod_1.z.boolean(), zod_1.z.string()]).optional();
+const refId = (message) => zod_1.z
+    .union([zod_1.z.string(), zod_1.z.number()], { errorMap: () => ({ message }) })
+    .nullish();
+const refNum = (message) => zod_1.z
+    .union([zod_1.z.string(), zod_1.z.number()], { errorMap: () => ({ message }) })
+    .optional();
 const jsonArray = zod_1.z.union([zod_1.z.string(), zod_1.z.array(zod_1.z.any())]).optional();
 const variantSchema = zod_1.z.object({
     id: zod_1.z.number().optional(),
     name: zod_1.z.string(),
-    options: zod_1.z.record(zod_1.z.string(), zod_1.z.string()),
+    options: zod_1.z.record(zod_1.z.string(), zod_1.z.string()).optional(),
     price: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
+    salePrice: refNum("Invalid sale price"),
     discountPrice: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
     sku: zod_1.z.string().optional(),
     barcode: zod_1.z.string().optional(),
-    stock: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
+    stock: refNum("Invalid stock"),
     weight: zod_1.z.string().optional(),
     dimensions: zod_1.z.string().optional(),
     images: zod_1.z.array(zod_1.z.string()).optional(),
@@ -37,8 +44,8 @@ const productFields = {
     title: zod_1.z.string().min(1, "Title is required"),
     description: zod_1.z.string().optional(),
     shortDescription: zod_1.z.string().optional(),
-    price: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).pipe(zod_1.z.coerce.number().positive("Price must be positive")),
-    salePrice: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
+    price: zod_1.z.union([zod_1.z.string(), zod_1.z.number()], { errorMap: () => ({ message: "Invalid price" }) }).pipe(zod_1.z.coerce.number().positive("Price must be positive")),
+    salePrice: refNum("Invalid sale price"),
     discount: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
     costPrice: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
     profitMargin: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
@@ -47,16 +54,16 @@ const productFields = {
     shippingCharge: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
     codFee: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
     flashSalePrice: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
-    wholesalePrice: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
+    wholesalePrice: refNum("Invalid sale price"),
     dealerPrice: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
-    categoryId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
-    subCategoryId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
-    childCategoryId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
-    collectionId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
-    brandId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
+    categoryId: refId("Invalid category"),
+    subCategoryId: refId("Invalid sub-category id"),
+    childCategoryId: refId("Invalid child category id"),
+    collectionId: refId("Invalid collection id"),
+    brandId: refId("Invalid brand id"),
     brand: zod_1.z.string().optional(),
-    vendorId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
-    supplierId: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
+    vendorId: refId("Invalid vendor id"),
+    supplierId: refId("Invalid supplier id"),
     supplier: zod_1.z.string().optional(),
     countryOfOrigin: zod_1.z.string().optional(),
     sku: zod_1.z.string().optional(),
@@ -86,7 +93,7 @@ const productFields = {
     isOfficial: boolish,
     isHotDeal: boolish,
     isArchived: boolish,
-    stock: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
+    stock: refNum("Invalid stock"),
     lowStockAlert: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
     minOrder: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
     maxOrder: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
@@ -111,7 +118,22 @@ const productFields = {
     specs: zod_1.z.union([zod_1.z.string(), zod_1.z.array(specSchema)]).optional(),
     relations: zod_1.z.union([zod_1.z.string(), zod_1.z.array(relationSchema)]).optional(),
 };
-exports.createProductSchema = zod_1.z.object({ body: zod_1.z.object(productFields) });
+const refinePriceSanity = (body, ctx) => {
+    if (body.price === undefined || body.salePrice === undefined)
+        return;
+    const price = Number(body.price);
+    const salePrice = Number(body.salePrice);
+    if (Number.isFinite(price) && Number.isFinite(salePrice) && salePrice > price) {
+        ctx.addIssue({
+            code: "custom",
+            path: ["salePrice"],
+            message: "Sale price must not exceed regular price",
+        });
+    }
+};
+exports.createProductSchema = zod_1.z.object({
+    body: zod_1.z.object(productFields).superRefine(refinePriceSanity),
+});
 // NOTE: `price` and `title` must be optional here — the admin UI sends partial
 // updates (e.g. `{ isFeatured: true }` from the featured toggle). Requiring
 // `price` made every partial PUT fail with "Invalid input".
@@ -124,7 +146,7 @@ exports.updateProductSchema = zod_1.z.object({
             .union([zod_1.z.string(), zod_1.z.number()])
             .pipe(zod_1.z.coerce.number().positive("Price must be positive"))
             .optional(),
-    }),
+    }).superRefine(refinePriceSanity),
 });
 exports.productIdSchema = zod_1.z.object({
     params: zod_1.z.object({ id: zod_1.z.string() }),

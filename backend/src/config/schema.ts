@@ -32,7 +32,7 @@ export const categories = mysqlTable("categories", {
   seoDescription: text("seo_description"),
   seoKeywords: varchar("seo_keywords", { length: 500 }),
   status: mysqlEnum("status", ["active", "inactive", "archived"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -109,10 +109,10 @@ export const products = mysqlTable("products", {
   images: json("images").$type<string[]>(),
   sizeOptions: json("size_options").$type<string[]>(),
   colorOptions: json("color_options").$type<Array<{ name: string; value?: string; image?: string }>>(),
-  paymentMethods: json("payment_methods").$type<["cod", "online"]>().default(["cod"] as any),
+  paymentMethods: json("payment_methods").$type<["cod", "online"]>(),
   paymentPhoneNumber: varchar("payment_phone_number", { length: 20 }),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -158,7 +158,7 @@ export const colors = mysqlTable("colors", {
   hex: varchar("hex", { length: 7 }).notNull(),
   status: mysqlEnum("status", ["active", "inactive", "archived"]).default("active").notNull(),
   sortOrder: int("sort_order").default(0).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== CATALOG: SIZES ====================
@@ -168,7 +168,7 @@ export const sizes = mysqlTable("sizes", {
   type: mysqlEnum("type", ["clothing", "shoes", "general", "custom"]).default("general").notNull(),
   status: mysqlEnum("status", ["active", "inactive", "archived"]).default("active").notNull(),
   sortOrder: int("sort_order").default(0).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== CATALOG: COLLECTIONS ====================
@@ -185,7 +185,7 @@ export const collections = mysqlTable("collections", {
   startDate: datetime("start_date"),
   endDate: datetime("end_date"),
   status: mysqlEnum("status", ["active", "inactive", "archived"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const collectionsRelations = relations(collections, ({ many }) => ({
@@ -205,7 +205,7 @@ export const vendors = mysqlTable("vendors", {
   address: varchar("address", { length: 500 }),
   notes: text("notes"),
   status: mysqlEnum("status", ["active", "inactive", "archived"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const vendorsRelations = relations(vendors, ({ many }) => ({
@@ -225,7 +225,7 @@ export const suppliers = mysqlTable("suppliers", {
   address: varchar("address", { length: 500 }),
   notes: text("notes"),
   status: mysqlEnum("status", ["active", "inactive", "archived"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
@@ -253,7 +253,7 @@ export const productVariants = mysqlTable("product_variants", {
   shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }),
   warranty: varchar("warranty", { length: 100 }),
   availability: boolean("availability").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const productVariantsRelations = relations(productVariants, ({ one }) => ({
@@ -327,7 +327,7 @@ export const brands = mysqlTable("brands", {
   seoDescription: text("seo_description"),
   seoKeywords: varchar("seo_keywords", { length: 500 }),
   status: mysqlEnum("status", ["active", "inactive", "archived"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const brandsRelations = relations(brands, ({ many }) => ({
@@ -347,8 +347,8 @@ export const banners = mysqlTable("banners", {
   buttonText: varchar("button_text", { length: 100 }),
   priority: int("priority").default(0).notNull(),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== MEDIA ASSETS ====================
@@ -365,7 +365,7 @@ export const mediaAssets = mysqlTable("media_assets", {
   folder: varchar("folder", { length: 200 }).default("general").notNull(),
   alt: varchar("alt", { length: 255 }),
   uploaderId: int("uploader_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== ORDERS ====================
@@ -439,7 +439,7 @@ export const orders = mysqlTable("orders", {
   ])
     .default("pending")
     .notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const ordersRelations = relations(orders, ({ many }) => ({
@@ -468,7 +468,7 @@ export const orderStatusHistory = mysqlTable("order_status_history", {
   ]).notNull(),
   note: text("note"),
   createdByUserId: int("created_by_user_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const orderStatusHistoryRelations = relations(orderStatusHistory, ({ one }) => ({
@@ -518,7 +518,7 @@ export const coupons = mysqlTable("coupons", {
   minOrderAmount: decimal("min_order_amount", { precision: 10, scale: 2 }).default("0"),
   expiryDate: timestamp("expiry_date"),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== USERS ====================
@@ -533,7 +533,7 @@ export const users = mysqlTable("users", {
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
   resetTokenHash: varchar("reset_token_hash", { length: 255 }),
   resetTokenExpiresAt: timestamp("reset_token_expires_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const userAddresses = mysqlTable("user_addresses", {
@@ -555,7 +555,7 @@ export const userAddresses = mysqlTable("user_addresses", {
   apartment: varchar("apartment", { length: 255 }),
   postalCode: varchar("postal_code", { length: 20 }),
   isDefault: boolean("is_default").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const userAddressesRelations = relations(userAddresses, ({ one }) => ({
@@ -586,7 +586,7 @@ export const policyPages = mysqlTable("policy_pages", {
   status: mysqlEnum("status", ["published", "draft"]).default("published").notNull(),
   lastUpdated: int("last_updated").notNull().default(sql`0`),
   updatedBy: int("updated_by"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== CONTACT MESSAGES ====================
@@ -597,7 +597,7 @@ export const contactMessages = mysqlTable("contact_messages", {
   email: varchar("email", { length: 255 }),
   message: text("message").notNull(),
   status: mysqlEnum("status", ["new", "read", "archived"]).default("new").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== TRACKING PIXELS ====================
@@ -617,8 +617,8 @@ export const marketingIntegrations = mysqlTable("marketing_integrations", {
   accessToken: text("access_token"),
   testEventCode: varchar("test_event_code", { length: 100 }),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== TRACKING LOGS ====================
@@ -629,7 +629,7 @@ export const trackingLogs = mysqlTable("tracking_logs", {
   payload: json("payload").$type<Record<string, any>>(),
   status: mysqlEnum("status", ["success", "failed"]).default("success").notNull(),
   errorMessage: text("error_message"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== SHIPPING METHODS ====================
@@ -643,7 +643,7 @@ export const shippingMethods = mysqlTable("shipping_methods", {
   freeShippingMinAmount: decimal("free_shipping_min_amount", { precision: 10, scale: 2 }),
   codAvailable: boolean("cod_available").default(true).notNull(),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== PAYMENT METHODS ====================
@@ -661,8 +661,8 @@ export const paymentMethods = mysqlTable("payment_methods", {
   sortOrder: int("sort_order").default(0).notNull(),
   maintenanceMode: boolean("maintenance_mode").default(false).notNull(),
   config: json("config").$type<Record<string, unknown>>(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== CHECKOUT NOTICES ====================
@@ -674,7 +674,7 @@ export const checkoutNotices = mysqlTable("checkout_notices", {
   textColor: varchar("text_color", { length: 50 }).default("#9A3412"),
   icon: varchar("icon", { length: 50 }).default("alert"),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== REVIEWS ====================
@@ -687,7 +687,7 @@ export const reviews = mysqlTable("reviews", {
   title: varchar("title", { length: 255 }),
   comment: text("comment").notNull(),
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const reviewsRelations = relations(reviews, ({ one }) => ({
@@ -707,7 +707,7 @@ export const newsletters = mysqlTable("newsletters", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   source: varchar("source", { length: 100 }).default("homepage"),
   status: mysqlEnum("status", ["subscribed", "unsubscribed"]).default("subscribed").notNull(),
-  subscribedAt: timestamp("subscribed_at").defaultNow().notNull(),
+  subscribedAt: timestamp("subscribed_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 // ==================== EXPENSE CATEGORIES ====================
@@ -717,7 +717,7 @@ export const expenseCategories = mysqlTable("expense_categories", {
   description: text("description"),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
   sortOrder: int("sort_order").default(0).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const expenseCategoriesRelations = relations(expenseCategories, ({ many }) => ({
@@ -743,8 +743,8 @@ export const expenses = mysqlTable(
     notes: text("notes"),
     status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("approved").notNull(),
     createdById: int("created_by_id").references(() => users.id),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   },
   (table) => ({
     expenseDateIdx: index("expenses_expense_date_idx").on(table.expenseDate),
@@ -786,8 +786,8 @@ export const costs = mysqlTable("costs", {
   notes: text("notes"),
   attachmentUrl: varchar("attachment_url", { length: 500 }),
   createdById: int("created_by_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const costsRelations = relations(costs, ({ one }) => ({
@@ -835,8 +835,8 @@ export const bookings = mysqlTable("bookings", {
   notes: text("notes"),
   attachmentUrl: varchar("attachment_url", { length: 500 }),
   createdById: int("created_by_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const bookingsRelations = relations(bookings, ({ one }) => ({
@@ -882,8 +882,8 @@ export const rentals = mysqlTable("rentals", {
   notes: text("notes"),
   attachmentUrl: varchar("attachment_url", { length: 500 }),
   createdById: int("created_by_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const rentalsRelations = relations(rentals, ({ one }) => ({
@@ -915,7 +915,7 @@ export const memos = mysqlTable("memos", {
   folder: varchar("folder", { length: 200 }).default("memos").notNull(),
   notes: text("notes"),
   uploadedById: int("uploaded_by_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
 export const memosRelations = relations(memos, ({ one }) => ({

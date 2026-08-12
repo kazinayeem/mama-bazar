@@ -24,6 +24,8 @@ router.post("/create", orderCreateLimiter, (0, validate_1.validate)(order_schema
 router.post("/track", (0, validate_1.validate)(order_schema_1.trackOrderSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.trackOrder));
 // CUSTOMER - Signed-in user's own orders
 router.get("/my-orders", auth_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(order_controller_1.getMyOrders));
+// CUSTOMER - Get invoice for own order (authenticated, checks ownership)
+router.get("/:id/my-invoice", auth_1.authMiddleware, (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getCustomerInvoice));
 // Admin routes
 router.get("/", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.orderListSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getAll));
 router.get("/stats", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(order_controller_1.getStats));

@@ -1,16 +1,7 @@
 import { CreateOrderInput, UpdateOrderStatusInput, VerifyPaymentInput } from "./order.interface";
-type CheckoutAuth = {
-    token: string;
-    user: {
-        id: number;
-        name: string;
-        phone: string;
-        role: "admin" | "manager" | "user";
-    };
-};
 export declare const create: (input: CreateOrderInput) => Promise<{
     order: any;
-    auth: CheckoutAuth | null;
+    auth: null;
 }>;
 export declare const getAll: (page?: number, limit?: number, status?: string, search?: string) => Promise<{
     data: any[];
@@ -28,6 +19,7 @@ export declare const updateAdminNotes: (id: number, note: string, userId?: numbe
 export declare const getMyOrders: (userId: number) => Promise<any[]>;
 export declare const trackOrder: (orderId: string, phone: string) => Promise<any>;
 export declare const getInvoice: (id: number) => Promise<any>;
+export declare const getCustomerInvoice: (id: number, userId: number) => Promise<any>;
 export declare const remove: (id: number) => Promise<{
     success: boolean;
 }>;
@@ -37,5 +29,4 @@ export declare const getStats: () => Promise<{
     pendingOrders: number;
     pendingPayments: number;
 }>;
-export {};
 //# sourceMappingURL=order.service.d.ts.map

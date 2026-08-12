@@ -72,9 +72,6 @@ export declare const updateCouponSchema: z.ZodObject<{
         expiryDate?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         status?: "active" | "inactive" | undefined;
         code?: string | undefined;
@@ -82,11 +79,11 @@ export declare const updateCouponSchema: z.ZodObject<{
         discountValue?: string | number | undefined;
         minOrderAmount?: string | number | undefined;
         expiryDate?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         status?: "active" | "inactive" | undefined;
         code?: string | undefined;
@@ -94,6 +91,9 @@ export declare const updateCouponSchema: z.ZodObject<{
         discountValue?: string | number | undefined;
         minOrderAmount?: string | number | undefined;
         expiryDate?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const validateCouponSchema: z.ZodObject<{

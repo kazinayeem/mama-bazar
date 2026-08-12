@@ -761,6 +761,13 @@ export const getInvoice = async (id: number) => {
   return order;
 };
 
+export const getCustomerInvoice = async (id: number, userId: number) => {
+  const order = await getById(id);
+  if (!order) throw new AppError(404, "Order not found");
+  if (order.userId !== userId) throw new AppError(403, "You can only view your own order invoices");
+  return order;
+};
+
 // ==================== DELETE ====================
 
 export const remove = async (id: number) => {

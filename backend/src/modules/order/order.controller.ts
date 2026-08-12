@@ -127,6 +127,13 @@ export const getInvoice = async (req: Request, res: Response) => {
   res.json({ success: true, data: order });
 };
 
+export const getCustomerInvoice = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  if (!userId) throw new AppError(401, "Please sign in to view your invoice");
+  const order = await orderService.getCustomerInvoice(Number(req.params.id), userId);
+  res.json({ success: true, data: order });
+};
+
 export const remove = async (req: Request, res: Response) => {
   await orderService.remove(Number(req.params.id));
   res.json({ success: true, message: "Order deleted" });

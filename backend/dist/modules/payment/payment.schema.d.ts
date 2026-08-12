@@ -248,9 +248,6 @@ export declare const updatePaymentMethodSchema: z.ZodObject<{
         } | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
@@ -273,11 +270,11 @@ export declare const updatePaymentMethodSchema: z.ZodObject<{
             extraFee?: string | number | undefined;
             extraFeePercent?: string | number | undefined;
         } | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
@@ -300,6 +297,9 @@ export declare const updatePaymentMethodSchema: z.ZodObject<{
             extraFee?: string | number | undefined;
             extraFeePercent?: string | number | undefined;
         } | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const paymentMethodIdSchema: z.ZodObject<{

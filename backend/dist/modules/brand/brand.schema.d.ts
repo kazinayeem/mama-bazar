@@ -136,9 +136,6 @@ export declare const updateBrandSchema: z.ZodObject<{
         website?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -154,11 +151,11 @@ export declare const updateBrandSchema: z.ZodObject<{
         countryOfOrigin?: string | undefined;
         bannerImage?: string | undefined;
         website?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         name?: string | undefined;
         slug?: string | undefined;
@@ -174,6 +171,9 @@ export declare const updateBrandSchema: z.ZodObject<{
         countryOfOrigin?: string | undefined;
         bannerImage?: string | undefined;
         website?: string | undefined;
+    };
+    params: {
+        id: string;
     };
 }>;
 export declare const brandIdSchema: z.ZodObject<{
@@ -251,18 +251,18 @@ export declare const brandMoveSchema: z.ZodObject<{
         targetId: string | number | null;
     }>;
 }, "strip", z.ZodTypeAny, {
-    params: {
-        id: string;
-    };
     body: {
         targetId: string | number | null;
+    };
+    params: {
+        id: string;
     };
 }, {
-    params: {
-        id: string;
-    };
     body: {
         targetId: string | number | null;
+    };
+    params: {
+        id: string;
     };
 }>;
 //# sourceMappingURL=brand.schema.d.ts.map
