@@ -39,7 +39,6 @@ export const uploadBuffer = async (
   }
 ): Promise<UploadedFileResult> => {
   if (cloudinaryConfigured) {
-    const publicId = `${opts.folder}/${Date.now()}-${crypto.randomBytes(6).toString("hex")}`;
     const result = await new Promise<{ secure_url: string; public_id: string; width?: number; height?: number }>(
       (resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(

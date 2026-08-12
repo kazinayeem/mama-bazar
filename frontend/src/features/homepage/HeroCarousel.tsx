@@ -2,7 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { resolveUrl } from '@/lib/apiConfig'
+import { resolveImageUrl } from '@/lib/cloudinary'
 import type { HomepageHeroSlide } from '../../types/homepage'
 
 interface HeroCarouselProps {
@@ -12,21 +12,13 @@ interface HeroCarouselProps {
 
 const AUTOPLAY_MS = 5000
 
-const resolveHeroUrl = (url?: string) => {
-  if (!url) return ''
-  const absolute = resolveUrl(url)
-  if (!absolute) return ''
-  if (/^https:\/\/res\.cloudinary\.com\//.test(absolute)) {
-    // Cloudinary transform syntax requires a `/` between the transformation and
-    // the version segment: .../image/upload/<transforms>/v<ts>/<public_id>.
-    // Stored URLs always carry the v<timestamp>/ version segment.
-    return absolute.replace(
-      /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(v\d+\/.*)$/,
-      '$1f_auto,q_auto/$2',
-    )
-  }
-  return absolute
-}
+/**
+ * Hero slide images are stored as Cloudinary `secure_url`s. Those URLs are
+ * already valid and load without any transformation, so they are used as-is —
+ * injecting transforms via string manipulation is what previously produced
+ * malformed paths that Cloudinary rejected with HTTP 400.
+ */
+const resolveHeroUrl = (url?: string) => resolveImageUrl(url)
 
 const pickImage = (slide: HomepageHeroSlide) => {
   const desktop = resolveHeroUrl(slide.desktopImage)
