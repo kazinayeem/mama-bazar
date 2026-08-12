@@ -230,6 +230,19 @@ const SiteFooter = () => {
             </div>
           </div>
         </div>
+
+        {/* Credit */}
+        <div className="mt-8 text-center text-[10px] uppercase tracking-[0.18em] text-slate-600">
+          Product made by{' '}
+          <a
+            className="text-slate-500 transition hover:text-accent"
+            href="https://bornosoft.bd"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Bornosoft
+          </a>
+        </div>
       </div>
     </footer>
   )
