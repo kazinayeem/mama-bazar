@@ -1,4 +1,4 @@
-import { wipeAll, seedAll } from "./seed-engine";
+import { ensureSuperAdmin } from "./db-seed";
 
 const guard = () => {
   if (process.env.NODE_ENV === "production") {
@@ -14,8 +14,9 @@ async function main() {
   console.log("========================================");
   console.log("DATABASE RESET");
   console.log("========================================");
-  await wipeAll();
-  await seedAll();
+  console.log("Destructive wiping has been removed. Ensuring Super Admin exists...");
+  const result = await ensureSuperAdmin();
+  console.log(result === "created" ? "Super Admin created" : "Super Admin already exists");
   process.exit(0);
 }
 
