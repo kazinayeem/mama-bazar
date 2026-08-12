@@ -19,7 +19,7 @@ const ADD_NEW_VALUE = '__add_new__'
 
 interface ReferenceSelectProps {
   label: string
-  value: string
+  value?: string | number | null
   onChange: (value: string) => void
   options: ReferenceOption[]
   loading?: boolean
