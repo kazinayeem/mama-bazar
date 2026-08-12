@@ -15,13 +15,12 @@ const HomePage = () => {
   const { data: homepage, isLoading, isError, refetch } = useGetHomepageQuery()
 
   return (
-    <main className="relative overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.08),_transparent_34%),linear-gradient(180deg,#f8fafc_0%,#ffffff_16%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_28%),linear-gradient(180deg,#020617_0%,#020617_100%)]">
+    <main className="relative overflow-x-hidden bg-white dark:bg-[#020617]">
       <SEO
         title="Home"
         description="Discover premium products at unbeatable prices. Official warranty, free delivery, and 24/7 support."
         url="/"
       />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-64 bg-gradient-to-b from-primary/10 via-transparent to-transparent dark:from-primary/20" />
       <HomepageSections
         data={homepage}
         hasError={isError}

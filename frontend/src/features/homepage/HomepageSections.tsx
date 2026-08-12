@@ -73,7 +73,7 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
     if (hasError) return <HomepageErrorState onRetry={onRetry} />
     if (!loading) return null
     return (
-      <div className="space-y-6 bg-white py-4 dark:bg-slate-950">
+      <div className="space-y-4 bg-white py-3 dark:bg-slate-950">
         {/* Hero skeleton */}
         <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
           <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 dark:bg-slate-800 sm:h-[400px] lg:h-[480px]" />
@@ -127,7 +127,7 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
         switch (section.type) {
           case 'hero':
             return (
-              <div key={section.id} className="space-y-4">
+              <div key={section.id} className="space-y-3">
                 <HeroCarousel slides={heroSlides} />
                 {popularSearches.length > 0 && (
                   <section className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">

@@ -10,7 +10,7 @@ const TrustStrip = ({ items }: TrustStripProps) => {
   return (
     <section className="border-y border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-3 py-5 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 py-3 sm:gap-3 lg:grid-cols-4">
           {items.map((item, index) => {
             const Icon = iconByName(item.icon)
             return (

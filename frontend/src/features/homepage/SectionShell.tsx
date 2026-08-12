@@ -11,7 +11,7 @@ interface SectionShellProps {
 const bgClass = (background?: string) => {
   switch (background) {
     case 'muted':
-      return 'bg-slate-50 dark:bg-slate-900/60'
+      return 'bg-slate-50/40 dark:bg-slate-900/40'
     case 'dark':
       return 'bg-slate-950 dark:bg-slate-950'
     default:
@@ -35,10 +35,10 @@ const SectionShell = ({ section, children, id }: SectionShellProps) => {
   const showHeader = Boolean(title || subtitle || eyebrow)
 
   return (
-    <section className={`py-8 lg:py-12 ${bgClass(section.background)}`} id={id}>
+    <section className={`py-6 lg:py-8 ${bgClass(section.background)}`} id={id}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {showHeader && (
-          <div className="mb-6 flex items-end justify-between gap-4 lg:mb-8">
+          <div className="mb-4 flex items-end justify-between gap-4 lg:mb-6">
             <div className="min-w-0">
               {eyebrow && (
                 <span className={`mb-2.5 inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${eyebrowColor(section.background)}`}>

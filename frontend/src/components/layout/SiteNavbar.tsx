@@ -128,7 +128,7 @@ const SiteNavbar = () => {
             </NavLink>
           </div>
 
-          <div className="hidden lg:block w-full max-w-xl mx-4">
+          <div className="hidden lg:block w-full max-w-sm mx-4">
             <SearchBar />
           </div>
 
