@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell,
-  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   Search,
-  Sun,
   ChevronRight,
   ExternalLink,
   LogOut,
@@ -15,7 +13,7 @@ import {
 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { logout } from '@/store/slices/authSlice'
-import { toggleTheme } from '@/store/slices/uiSlice'
+
 import { adminApi } from '@/lib/adminApi'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -49,7 +47,6 @@ const AdminTopbar = ({ collapsed, onToggleCollapse, onOpenCommandPalette, onOpen
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
-  const theme = useAppSelector((state) => state.ui.theme)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<TopbarNotification[]>([])
 
