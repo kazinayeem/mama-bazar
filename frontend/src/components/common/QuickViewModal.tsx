@@ -84,7 +84,7 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
         >
           <button
             aria-label="Close quick view"
-            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-soft transition hover:bg-accent hover:text-white dark:bg-slate-800 dark:text-slate-200"
+            className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-soft transition hover:bg-accent hover:text-accent-foreground dark:bg-slate-800 dark:text-slate-200"
             onClick={onClose}
             type="button"
           >
@@ -100,8 +100,8 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
           </div>
 
           <div className="flex flex-col gap-3 p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{product.brandInfo?.name || product.brand || ''}</p>
-            <Link className="font-headline text-xl font-extrabold leading-tight text-slate-900 hover:text-primary dark:text-white" to={`/products/${product.slug}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground">{product.brandInfo?.name || product.brand || ''}</p>
+            <Link className="font-headline text-xl font-extrabold leading-tight text-slate-900 hover:text-primary-foreground dark:text-white" to={`/products/${product.slug}`}>
               {product.title}
             </Link>
             <div className="flex items-center gap-2">
@@ -112,7 +112,7 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
             <div className="mt-1 flex items-end gap-2">
               <p className="text-2xl font-extrabold text-slate-900 dark:text-white">{formatPrice(salePriceValue)}</p>
               {discount > 0 && <p className="pb-1 text-sm text-slate-400 line-through">{formatPrice(price)}</p>}
-              {discount > 0 && <span className="mb-1 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-bold text-accent">-{discount}%</span>}
+              {discount > 0 && <span className="mb-1 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-bold text-accent-foreground">-{discount}%</span>}
             </div>
 
             <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">{product.description}</p>
@@ -135,14 +135,14 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
 
             <div className="mt-auto flex flex-col gap-2 pt-3">
               <button
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white transition hover:bg-primary-700 active:scale-95"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary-700 active:scale-95"
                 onClick={handleAdd}
                 type="button"
               >
                 <ShoppingBag size={16} /> Add to Cart
               </button>
               <Link
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-100"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-100"
                 to={`/products/${product.slug}`}
                 onClick={onClose}
               >

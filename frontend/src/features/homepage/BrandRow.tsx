@@ -45,7 +45,7 @@ const BrandRow = ({ items }: BrandRowProps) => {
       {canLeft && (
         <button
           aria-label="Scroll brands left"
-          className="absolute -left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800"
+          className="absolute -left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800"
           onClick={() => scroll('left')}
           type="button"
         >
@@ -55,7 +55,7 @@ const BrandRow = ({ items }: BrandRowProps) => {
       {canRight && (
         <button
           aria-label="Scroll brands right"
-          className="absolute -right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800"
+          className="absolute -right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800"
           onClick={() => scroll('right')}
           type="button"
         >
@@ -85,11 +85,11 @@ const BrandRow = ({ items }: BrandRowProps) => {
                 />
               </span>
             ) : (
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 font-headline text-lg font-black text-primary">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 font-headline text-lg font-black text-primary-foreground">
                 {brand.name.slice(0, 1)}
               </span>
             )}
-            <p className="text-center text-xs font-bold text-slate-700 transition group-hover:text-primary dark:text-slate-200">
+            <p className="text-center text-xs font-bold text-slate-700 transition group-hover:text-primary-foreground dark:text-slate-200">
               {brand.name}
             </p>
           </Link>

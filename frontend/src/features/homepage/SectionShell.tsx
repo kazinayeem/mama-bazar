@@ -20,7 +20,7 @@ const bgClass = (background?: string) => {
 }
 
 const eyebrowColor = (background?: string) =>
-  background === 'dark' ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary'
+  background === 'dark' ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary-foreground'
 
 const titleColor = (background?: string) =>
   background === 'dark' ? 'text-white' : 'text-slate-900 dark:text-white'
@@ -61,7 +61,7 @@ const SectionShell = ({ section, children, id }: SectionShellProps) => {
                 className={`group hidden shrink-0 items-center gap-1.5 rounded-full border px-5 py-2.5 text-xs font-bold transition sm:inline-flex ${
                   section.background === 'dark'
                     ? 'border-white/20 text-white hover:border-white/50 hover:bg-white/10'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-primary hover:bg-primary hover:text-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-primary'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-primary hover:bg-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-primary'
                 }`}
                 to={section.ctaUrl}
               >
@@ -75,7 +75,7 @@ const SectionShell = ({ section, children, id }: SectionShellProps) => {
         {section.ctaText?.trim() && section.ctaUrl?.trim() && (
           <div className="mt-6 text-center sm:hidden">
             <Link
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
               to={section.ctaUrl}
             >
               {section.ctaText}

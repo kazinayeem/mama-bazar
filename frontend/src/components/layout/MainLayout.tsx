@@ -9,9 +9,14 @@ const MainLayout = () => {
   useThemeSync()
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white font-body text-slate-900 transition-colors dark:bg-slate-950 dark:text-white">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background font-body text-foreground transition-colors">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <SiteNavbar />
-      <Outlet />
+      <main className="flex-1" id="main-content" tabIndex={-1}>
+        <Outlet />
+      </main>
       <SiteFooter />
       <CartDrawer />
       <MobileBottomNav />

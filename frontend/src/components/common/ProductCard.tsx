@@ -96,7 +96,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
     : baseDiscount > 0
       ? { text: `-${baseDiscount}%`, className: 'bg-red-500 text-white' }
     : product.isFlashSale
-      ? { text: 'Flash Sale', className: 'bg-accent text-white' }
+      ? { text: 'Flash Sale', className: 'bg-accent text-accent-foreground' }
       : product.isNewArrival
         ? { text: 'New', className: 'bg-emerald-500 text-white' }
         : product.isBestSeller
@@ -150,10 +150,10 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         )}
 
         {/* Hover actions */}
-        <div className="absolute right-2.5 top-2.5 flex flex-col gap-1.5 sm:translate-x-2 sm:opacity-0 sm:transition-all sm:duration-200 sm:group-hover:translate-x-0 sm:group-hover:opacity-100">
+        <div className="absolute right-2.5 top-2.5 flex flex-col gap-1.5 sm:translate-x-2 sm:opacity-0 sm:transition-all sm:duration-200 sm:group-hover:translate-x-0 sm:group-hover:opacity-100 sm:group-focus-within:translate-x-0 sm:group-focus-within:opacity-100">
           <button
             aria-label="Quick view"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-slate-300"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:bg-primary hover:text-primary-foreground dark:bg-slate-800 dark:text-slate-300"
             onClick={(e) => { e.preventDefault(); onQuickView(product) }}
             type="button"
           >
@@ -161,7 +161,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
           </button>
           <button
             aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            className={`flex h-8 w-8 items-center justify-center rounded-full shadow-md transition ${
+            className={`flex h-11 w-11 items-center justify-center rounded-full shadow-md transition ${
               wishlisted ? 'bg-red-500 text-white' : 'bg-white text-slate-600 hover:bg-red-500 hover:text-white dark:bg-slate-800 dark:text-slate-300'
             }`}
             onClick={handleWishlist}
@@ -176,7 +176,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         {/* Brand + rating row */}
         <div className="flex items-center justify-between gap-2">
-          <p className="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-primary">
+          <p className="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             {brandName || '\u00A0'}
           </p>
           {(product.rating || product.reviewCount) ? (
@@ -190,7 +190,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         </div>
 
         <Link
-          className="line-clamp-2 min-h-[2.4rem] text-[13px] font-semibold leading-snug text-slate-800 transition hover:text-primary dark:text-slate-100"
+          className="line-clamp-2 min-h-[2.4rem] text-[13px] font-semibold leading-snug text-slate-800 transition hover:text-primary-foreground dark:text-slate-100"
           to={`/products/${product.slug}`}
         >
           {product.title}
@@ -203,7 +203,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             <span className="text-xs text-slate-400 line-through">{formatPrice(price)}</span>
           )}
           {isLowStock && !isOutOfStock && (
-            <span className="ml-auto shrink-0 text-[10px] font-bold text-accent">Only {product.stock} left</span>
+            <span className="ml-auto shrink-0 text-[10px] font-bold text-accent-foreground">Only {product.stock} left</span>
           )}
         </div>
 
@@ -229,8 +229,8 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
                 <button
                   className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold transition ${
                     activeSize === size
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-slate-200 text-slate-500 hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-400'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-slate-200 text-slate-500 hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-400'
                   }`}
                   key={size}
                   onClick={() => setActiveSize(size)}
@@ -249,7 +249,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition active:scale-95 ${
               isOutOfStock
                 ? 'cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800'
-                : 'bg-accent text-white hover:bg-accent-600'
+                : 'bg-accent text-accent-foreground hover:bg-accent-600'
             }`}
             disabled={isOutOfStock}
             onClick={handleAddToCart}
@@ -259,7 +259,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
           </button>
           <Link
-            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-accent bg-white py-2 text-xs font-bold text-accent transition hover:bg-accent hover:text-white active:scale-95 dark:bg-slate-800 dark:hover:bg-accent"
+            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-accent bg-white py-2 text-xs font-bold text-accent-foreground transition hover:bg-accent hover:text-accent-foreground active:scale-95 dark:bg-slate-800 dark:hover:bg-accent"
             to={`/products/${product.slug}`}
           >
             <ShoppingBag size={13} />

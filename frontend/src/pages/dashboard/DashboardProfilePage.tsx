@@ -140,7 +140,7 @@ const DashboardProfilePage = () => {
           <div>
             <label className="mb-2 block text-xs font-semibold text-slate-500">Full Name</label>
             <input
-              className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition ${
+              className={`w-full rounded-xl border px-4 py-3 text-sm transition ${
                 isEditing
                   ? 'border-slate-300 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
                   : 'border-slate-100 bg-slate-50'
@@ -155,7 +155,7 @@ const DashboardProfilePage = () => {
           <div>
             <label className="mb-2 block text-xs font-semibold text-slate-500">Phone Number</label>
             <input
-              className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition ${
+              className={`w-full rounded-xl border px-4 py-3 text-sm transition ${
                 phoneError
                   ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/10'
                   : isEditing
@@ -185,7 +185,7 @@ const DashboardProfilePage = () => {
           <div>
             <label className="mb-2 block text-xs font-semibold text-slate-500">Shipping Area</label>
             <input
-              className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition ${
+              className={`w-full rounded-xl border px-4 py-3 text-sm transition ${
                 isEditing
                   ? 'border-slate-300 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
                   : 'border-slate-100 bg-slate-50'
@@ -200,7 +200,7 @@ const DashboardProfilePage = () => {
           <div>
             <label className="mb-2 block text-xs font-semibold text-slate-500">Shipping Address</label>
             <input
-              className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition ${
+              className={`w-full rounded-xl border px-4 py-3 text-sm transition ${
                 isEditing
                   ? 'border-slate-300 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
                   : 'border-slate-100 bg-slate-50'

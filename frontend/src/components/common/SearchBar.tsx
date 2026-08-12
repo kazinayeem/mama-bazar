@@ -74,7 +74,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
         <Search size={16} className="shrink-0 text-slate-400" />
         <input
           aria-label="Search products"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+          className="w-full bg-transparent text-sm placeholder:text-slate-400"
           onFocus={() => setOpen(true)}
           onChange={(event) => {
             setQuery(event.target.value)
@@ -90,7 +90,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
             <X size={14} />
           </button>
         )}
-        <button aria-label="Voice search" className="shrink-0 rounded-full p-1 text-slate-400 transition hover:bg-primary/10 hover:text-primary" type="button">
+        <button aria-label="Voice search" className="shrink-0 rounded-full h-11 w-11 text-slate-400 transition hover:bg-primary/10 hover:text-primary-foreground" type="button">
           <Mic size={16} />
         </button>
       </div>
@@ -117,7 +117,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
                   ) : suggestions.length > 0 ? (
                     suggestions.map((product) => (
                       <button
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary dark:text-slate-200"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary-foreground dark:text-slate-200"
                         key={product.id}
                         onClick={() => submit(product.title)}
                         type="button"
@@ -129,7 +129,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
                         )}
                         <span className="min-w-0 flex-1">
                           <span className="block truncate">{product.title}</span>
-                          <span className="mt-0.5 block text-xs font-bold text-primary">
+                          <span className="mt-0.5 block text-xs font-bold text-primary-foreground">
                             {formatPrice(Number(product.salePrice || product.price))}
                           </span>
                         </span>
@@ -138,7 +138,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
                     ))
                   ) : (
                     <button
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary dark:text-slate-200"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary-foreground dark:text-slate-200"
                       onClick={() => submit()}
                       type="button"
                     >
@@ -156,7 +156,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
                       </p>
                       {recentSearches.map((term) => (
                         <button
-                          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary dark:text-slate-200"
+                          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary-foreground dark:text-slate-200"
                           key={term}
                           onClick={() => submit(term)}
                           type="button"
@@ -171,12 +171,12 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
                   {popularSearches.length > 0 && (
                     <>
                       <p className="flex items-center gap-1.5 px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                        <Flame size={11} className="text-accent" /> Popular Searches
+                        <Flame size={11} className="text-accent-foreground" /> Popular Searches
                       </p>
                       <div className="flex flex-wrap gap-1.5 px-2 pb-2">
                         {popularSearches.slice(0, 8).map((term) => (
                           <button
-                            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-slate-700 dark:text-slate-300"
+                            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-primary hover:bg-primary/5 hover:text-primary-foreground dark:border-slate-700 dark:text-slate-300"
                             key={term}
                             onClick={() => submit(term)}
                             type="button"
@@ -192,7 +192,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
                   <div className="grid grid-cols-2 gap-1 px-1 pb-2">
                     {categories.slice(0, 6).map((category) => (
                       <button
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary dark:text-slate-200"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-primary/5 hover:text-primary-foreground dark:text-slate-200"
                         key={category.slug}
                         onClick={() => {
                           setOpen(false)
@@ -204,7 +204,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
                         {category.image ? (
                           <img alt="" className="h-5 w-5 rounded-md object-cover" src={category.image} />
                         ) : (
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary-foreground">
                             {category.name.slice(0, 1)}
                           </span>
                         )}

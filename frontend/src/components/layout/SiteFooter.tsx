@@ -88,7 +88,7 @@ const SiteFooter = () => {
           {/* Brand column */}
           <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-brand text-white">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-brand text-white">
                 <Store size={17} className="fill-white" />
               </span>
               <span className="font-headline text-xl font-extrabold tracking-tight text-white">
@@ -138,7 +138,7 @@ const SiteFooter = () => {
               {socialLinks.map(({ icon, label }) => (
                 <a
                   aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-400 transition hover:border-accent hover:bg-accent hover:text-white"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-400 transition hover:border-accent hover:bg-accent hover:text-accent-foreground"
                   href="/contact"
                   key={label}
                 >

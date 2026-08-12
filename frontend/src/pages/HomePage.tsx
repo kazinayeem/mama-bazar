@@ -34,7 +34,7 @@ const HomePage = () => {
         {contactOpen && (
           <div className="flex flex-col items-end gap-2">
             <a
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/5 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/5 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
               href={MESSENGER_URL}
               rel="noopener noreferrer"
               target="_blank"
@@ -57,7 +57,7 @@ const HomePage = () => {
         <button
           aria-expanded={contactOpen}
           aria-label="Open contact options"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/25 transition hover:bg-primary-700 active:scale-95"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary-700 active:scale-95"
           onClick={() => setContactOpen((prev) => !prev)}
           type="button"
         >

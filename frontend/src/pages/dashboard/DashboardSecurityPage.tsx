@@ -43,7 +43,7 @@ const DashboardSecurityPage = () => {
         <div className="rounded-xl border border-slate-200 p-4">
           <label className="mb-2 block text-xs font-semibold text-slate-500">Current Password</label>
           <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 transition focus:border-slate-900"
             onChange={(event) => setOldPassword(event.target.value)}
             required
             type="password"
@@ -54,7 +54,7 @@ const DashboardSecurityPage = () => {
         <div className="rounded-xl border border-slate-200 p-4">
           <label className="mb-2 block text-xs font-semibold text-slate-500">New Password</label>
           <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 transition focus:border-slate-900"
             minLength={6}
             onChange={(event) => setNewPassword(event.target.value)}
             required

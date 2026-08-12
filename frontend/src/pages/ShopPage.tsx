@@ -155,7 +155,7 @@ const ShopPage = () => {
         <div className="space-y-1">
           <button
             className={`${filterRow} ${
-              !selectedCategory ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+              !selectedCategory ? 'bg-primary/10 text-primary-foreground' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
             }`}
             onClick={() => setParam('category', '')}
             type="button"
@@ -166,7 +166,7 @@ const ShopPage = () => {
             <button
               className={`${filterRow} ${
                 selectedCategory === category.slug
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-primary/10 text-primary-foreground'
                   : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
               key={category.slug}
@@ -177,7 +177,7 @@ const ShopPage = () => {
                 {category.image ? (
                   <img alt="" className="h-5 w-5 rounded-md object-cover" src={category.image} />
                 ) : (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary-foreground">
                     {category.name.slice(0, 1)}
                   </span>
                 )}
@@ -222,7 +222,7 @@ const ShopPage = () => {
             return (
               <button
                 className={`${filterRow} ${
-                  active ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  active ? 'bg-primary/10 text-primary-foreground' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                 }`}
                 key={brand.slug}
                 onClick={() => setParam('brand', active ? undefined : brand.slug)}
@@ -232,7 +232,7 @@ const ShopPage = () => {
                   {brand.logo ? (
                     <img alt="" className="h-5 w-5 rounded-md object-contain" src={brand.logo} />
                   ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary-foreground">
                       {brand.name.slice(0, 1)}
                     </span>
                   )}
@@ -250,7 +250,7 @@ const ShopPage = () => {
           {[4.5, 4, 3].map((rating) => (
             <button
               className={`${filterRow} ${
-                minRating === rating ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                minRating === rating ? 'bg-primary/10 text-primary-foreground' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
               key={rating}
               onClick={() => setParam('rating', minRating === rating ? undefined : rating)}
@@ -272,7 +272,7 @@ const ShopPage = () => {
           </label>
           <label className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
             <span className="flex items-center gap-1.5">
-              <Star size={13} className="text-accent" /> On Sale
+              <Star size={13} className="text-accent-foreground" /> On Sale
             </span>
             <input checked={onSaleOnly} className="h-4 w-4 accent-primary" onChange={() => toggleParam('sale')} type="checkbox" />
           </label>
@@ -281,7 +281,7 @@ const ShopPage = () => {
 
       {activeFilterCount > 0 && (
         <button
-          className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-accent hover:text-accent dark:border-slate-700 dark:text-slate-300"
+          className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-accent hover:text-accent-foreground dark:border-slate-700 dark:text-slate-300"
           onClick={clearAll}
           type="button"
         >
@@ -299,7 +299,7 @@ const ShopPage = () => {
         url={seoData.url}
       />
       <div className="mb-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Mama Bazar</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground">Mama Bazar</p>
         <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           {search ? `Results for "${search}"` : selectedCategoryName ? selectedCategoryName : 'Shop All Products'}
         </h1>
@@ -322,11 +322,11 @@ const ShopPage = () => {
             <div className="absolute inset-y-0 left-0 w-[86%] max-w-sm overflow-y-auto bg-slate-50 p-5 shadow-lift dark:bg-slate-950">
               <div className="mb-5 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 font-headline text-lg font-extrabold text-slate-900 dark:text-white">
-                  <SlidersHorizontal size={18} className="text-primary" /> Filters
+                  <SlidersHorizontal size={18} className="text-primary-foreground" /> Filters
                 </h2>
                 <button
                   aria-label="Close filters"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-600 shadow-soft dark:bg-slate-800 dark:text-slate-300"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-soft dark:bg-slate-800 dark:text-slate-300"
                   onClick={() => setMobileFiltersOpen(false)}
                   type="button"
                 >
@@ -345,7 +345,7 @@ const ShopPage = () => {
               onClick={() => setMobileFiltersOpen(true)}
               type="button"
             >
-              <SlidersHorizontal size={16} /> Filters {activeFilterCount > 0 && <span className="rounded-full bg-primary px-1.5 text-[10px] text-white">{activeFilterCount}</span>}
+              <SlidersHorizontal size={16} /> Filters {activeFilterCount > 0 && <span className="rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground">{activeFilterCount}</span>}
             </button>
 
             <div className="relative">
@@ -370,7 +370,7 @@ const ShopPage = () => {
               <span className="text-5xl">⚠️</span>
               <p className="mt-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Couldn&apos;t load products</p>
               <p className="mt-2 text-sm text-slate-500">Please check your connection and try again.</p>
-              <button className="mt-5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white" onClick={() => productsQuery.refetch()} type="button">
+              <button className="mt-5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground" onClick={() => productsQuery.refetch()} type="button">
                 Try Again
               </button>
             </div>
@@ -389,7 +389,7 @@ const ShopPage = () => {
               <span className="text-5xl">🔍</span>
               <p className="mt-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">No products found</p>
               <p className="mt-2 text-sm text-slate-500">Try adjusting your filters or search terms.</p>
-              <button className="mt-5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white" onClick={clearAll} type="button">
+              <button className="mt-5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground" onClick={clearAll} type="button">
                 Clear Filters
               </button>
             </div>
@@ -405,7 +405,7 @@ const ShopPage = () => {
                 <div className="mt-10 flex items-center justify-center gap-2">
                   <button
                     aria-label="Previous page"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300"
                     disabled={page <= 1}
                     onClick={() => goToPage(page - 1)}
                     type="button"
@@ -419,8 +419,8 @@ const ShopPage = () => {
                       <button
                         aria-label={`Go to page ${pageNumber}`}
                         aria-current={isActive ? 'page' : undefined}
-                        className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition ${
-                          isActive ? 'bg-primary text-white' : 'border border-slate-200 text-slate-600 hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-300'
+                        className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition ${
+                          isActive ? 'bg-primary text-primary-foreground' : 'border border-slate-200 text-slate-600 hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-300'
                         }`}
                         key={pageNumber}
                         onClick={() => goToPage(pageNumber)}
@@ -432,7 +432,7 @@ const ShopPage = () => {
                   })}
                   <button
                     aria-label="Next page"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300"
                     disabled={page >= totalPages}
                     onClick={() => goToPage(page + 1)}
                     type="button"

@@ -10,7 +10,7 @@ const MobileBottomNav = () => {
 
   const itemClass = ({ isActive }: { isActive: boolean }) =>
     `relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold transition ${
-      isActive ? 'text-primary' : 'text-slate-400'
+      isActive ? 'text-primary-foreground' : 'text-slate-400'
     }`
 
   return (
@@ -28,7 +28,7 @@ const MobileBottomNav = () => {
         <NavLink className={itemClass} to="/shop">
           <Heart size={20} /> Wishlist
           {wishlistCount > 0 && (
-            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-white">
+            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-accent-foreground">
               {wishlistCount}
             </span>
           )}
@@ -41,7 +41,7 @@ const MobileBottomNav = () => {
         >
           <ShoppingBag size={20} /> Cart
           {cartCount > 0 && (
-            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
+            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
               {cartCount}
             </span>
           )}

@@ -40,7 +40,7 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
 
   const renderButton = (text: string, url: string, primary: boolean) => {
     const className = primary
-      ? 'inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-600 hover:shadow-accent/40 active:scale-95'
+      ? 'inline-flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/25 transition hover:bg-accent-600 hover:shadow-accent/40 active:scale-95'
       : 'inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/15 px-6 py-2.5 text-sm font-bold backdrop-blur transition hover:bg-white/25 active:scale-95'
 
     const inner = (
@@ -116,7 +116,7 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
       >
         <div className="max-w-md sm:max-w-lg">
           {slide.badge && (
-            <span className="mb-3 inline-flex items-center rounded-full bg-accent px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
+            <span className="mb-3 inline-flex items-center rounded-full bg-accent px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-accent-foreground shadow-sm">
               {slide.badge}
             </span>
           )}

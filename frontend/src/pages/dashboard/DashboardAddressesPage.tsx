@@ -110,7 +110,7 @@ const DashboardAddressesPage = () => {
             <div>
               <label className="mb-2 block text-xs font-semibold text-slate-500">Recipient Name</label>
               <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 transition focus:border-slate-900"
                 onChange={(event) => setRecipientName(event.target.value)}
                 required
                 value={recipientName}
@@ -119,7 +119,7 @@ const DashboardAddressesPage = () => {
             <div>
               <label className="mb-2 block text-xs font-semibold text-slate-500">Phone</label>
               <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 transition focus:border-slate-900"
                 onChange={(event) => setAddressPhone(event.target.value)}
                 required
                 value={addressPhone}
@@ -128,7 +128,7 @@ const DashboardAddressesPage = () => {
             <div>
               <label className="mb-2 block text-xs font-semibold text-slate-500">Area</label>
               <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 transition focus:border-slate-900"
                 onChange={(event) => setAddressArea(event.target.value)}
                 required
                 value={addressArea}
@@ -137,7 +137,7 @@ const DashboardAddressesPage = () => {
             <div>
               <label className="mb-2 block text-xs font-semibold text-slate-500">Address</label>
               <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none transition focus:border-slate-900"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 transition focus:border-slate-900"
                 onChange={(event) => setAddressText(event.target.value)}
                 required
                 value={addressText}

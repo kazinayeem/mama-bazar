@@ -83,10 +83,10 @@ const SiteNavbar = () => {
   }
 
   const iconButton =
-    'relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+    'relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
 
   const cartButtonClass =
-    'relative flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+    'relative flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 text-slate-700 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
 
   return (
     <>
@@ -113,7 +113,7 @@ const SiteNavbar = () => {
           <div className="flex items-center gap-3">
             <button
               aria-label="Toggle menu"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 lg:hidden dark:border-slate-700 dark:text-slate-200"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-700 lg:hidden dark:border-slate-700 dark:text-slate-200"
               onClick={() => setMobileOpen((prev) => !prev)}
               type="button"
             >
@@ -123,7 +123,7 @@ const SiteNavbar = () => {
             <NavLink aria-label="Mama Bazar home" className="flex items-center gap-2" to="/">
               <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
               <span className="hidden font-headline text-lg font-extrabold tracking-tight text-slate-900 dark:text-white sm:block">
-                Mama<span className="text-primary">Bazar</span>
+                Mama<span className="text-primary-foreground">Bazar</span>
               </span>
             </NavLink>
           </div>
@@ -135,7 +135,7 @@ const SiteNavbar = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/dashboard/orders"
-              className="hidden xl:inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-white mr-2"
+              className="hidden xl:inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-primary-foreground dark:text-slate-400 dark:hover:text-white mr-2"
             >
               Track Order
             </Link>
@@ -143,7 +143,7 @@ const SiteNavbar = () => {
             <NavLink aria-label="Wishlist" className={`${iconButton} hidden sm:flex`} to="/shop">
               <Heart size={17} />
               {wishlistCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
                   {wishlistCount}
                 </span>
               )}
@@ -153,7 +153,7 @@ const SiteNavbar = () => {
               <ShoppingBag size={17} />
               <span className="hidden md:inline text-xs font-bold tracking-tight">{formatPrice(subtotal)}</span>
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                   {cartCount}
                 </span>
               )}
@@ -271,23 +271,23 @@ const SiteNavbar = () => {
         <div className="hidden lg:block border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
           <div className="mx-auto flex h-11 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8 text-sm">
             <div className="relative group py-2">
-              <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 hover:text-primary transition">
+              <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 hover:text-primary-foreground transition">
                 <Menu size={15} />
                 All Categories
                 <ChevronDown size={13} />
               </button>
-              <div className="absolute left-0 top-full z-50 hidden group-hover:block w-64 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-lift dark:border-slate-850 dark:bg-slate-900">
+              <div className="absolute left-0 top-full z-50 hidden group-hover:block group-focus-within:block w-64 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-lift dark:border-slate-850 dark:bg-slate-900">
                 <div className="max-h-[350px] overflow-y-auto pr-1">
                   {parentCategories.map((cat) => (
                     <Link
                       key={cat.id}
                       to={`/shop?category=${cat.slug}`}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-primary/5 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-primary/5 hover:text-primary-foreground dark:text-slate-300 dark:hover:bg-slate-800 transition"
                     >
                       {cat.image ? (
                         <img alt="" className="h-5 w-5 rounded object-cover shrink-0" src={cat.image} />
                       ) : (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-black text-primary">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-black text-primary-foreground">
                           {cat.name.slice(0, 1)}
                         </span>
                       )}
@@ -301,22 +301,22 @@ const SiteNavbar = () => {
             <span className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
 
             <nav className="flex flex-1 items-center gap-5" aria-label="Main Navigation">
-              <NavLink to="/" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-primary' : 'text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white'}`}>
+              <NavLink to="/" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-primary-foreground' : 'text-slate-600 hover:text-primary-foreground dark:text-slate-350 dark:hover:text-white'}`}>
                 Home
               </NavLink>
-              <NavLink to="/shop" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-primary' : 'text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white'}`}>
+              <NavLink to="/shop" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-primary-foreground' : 'text-slate-600 hover:text-primary-foreground dark:text-slate-350 dark:hover:text-white'}`}>
                 Shop
               </NavLink>
-              <NavLink to="/shop?sale=true" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
+              <NavLink to="/shop?sale=true" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary-foreground dark:text-slate-350 dark:hover:text-white transition">
                 Deals
               </NavLink>
-              <NavLink to="/shop" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
+              <NavLink to="/shop" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary-foreground dark:text-slate-350 dark:hover:text-white transition">
                 Brands
               </NavLink>
-              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary-foreground dark:text-slate-350 dark:hover:text-white transition">
                 About
               </NavLink>
-              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary dark:text-slate-350 dark:hover:text-white transition">
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-primary-foreground dark:text-slate-350 dark:hover:text-white transition">
                 Contact
               </NavLink>
             </nav>
@@ -346,12 +346,12 @@ const SiteNavbar = () => {
                 <NavLink className="flex items-center gap-2" onClick={() => setMobileOpen(false)} to="/">
                   <img alt="Mama Bazar logo" className="h-8 w-auto object-contain" src="/brandlogo.png" />
                   <span className="font-headline text-lg font-extrabold text-slate-900 dark:text-white">
-                    Mama<span className="text-primary">Bazar</span>
+                    Mama<span className="text-primary-foreground">Bazar</span>
                   </span>
                 </NavLink>
                 <button
                   aria-label="Close menu"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                   onClick={() => setMobileOpen(false)}
                   type="button"
                 >
@@ -384,7 +384,7 @@ const SiteNavbar = () => {
                   <NavLink
                     className={({ isActive }) =>
                       `mb-1 flex items-center justify-between rounded-xl px-4 py-2.5 text-[14px] font-semibold transition ${
-                        isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800'
+                        isActive ? 'bg-primary/10 text-primary-foreground' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800'
                       }`
                     }
                     key={link.label}
@@ -402,7 +402,7 @@ const SiteNavbar = () => {
                 <div className="grid grid-cols-2 gap-2">
                   {parentCategories.map((category) => (
                     <button
-                      className="flex items-center gap-2 rounded-xl border border-slate-100 px-3 py-2.5 text-left text-xs font-semibold text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:text-slate-200"
+                      className="flex items-center gap-2 rounded-xl border border-slate-100 px-3 py-2.5 text-left text-xs font-semibold text-slate-700 transition hover:border-primary hover:text-primary-foreground dark:border-slate-800 dark:text-slate-200"
                       key={category.slug}
                       onClick={() => {
                         navigate(`/shop?category=${category.slug}`)
@@ -413,7 +413,7 @@ const SiteNavbar = () => {
                       {category.image ? (
                         <img alt="" className="h-5 w-5 rounded object-cover" src={category.image} />
                       ) : (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-black text-primary">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-black text-primary-foreground">
                           {category.name.slice(0, 1)}
                         </span>
                       )}
@@ -437,7 +437,7 @@ const SiteNavbar = () => {
                     </button>
                   ) : (
                     <NavLink
-                      className="flex-1 rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-white"
+                      className="flex-1 rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground"
                       onClick={() => setMobileOpen(false)}
                       to="/auth/login"
                     >

@@ -16,7 +16,7 @@ const ReviewsSection = ({ items }: ReviewsSectionProps) => {
           key={review.id}
           className="relative flex flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card dark:border-slate-800 dark:bg-slate-900"
         >
-          <Quote size={26} className="absolute right-5 top-5 text-primary/10" />
+          <Quote size={26} className="absolute right-5 top-5 text-primary-foreground/10" />
           <div className="flex items-center justify-between gap-2">
             <StarRating rating={review.rating} size={14} />
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
@@ -35,7 +35,7 @@ const ReviewsSection = ({ items }: ReviewsSectionProps) => {
                 {review.customerName || 'Verified customer'}
               </p>
               {review.productSlug ? (
-                <Link className="block truncate text-[11px] text-slate-400 hover:text-primary" to={`/products/${review.productSlug}`}>
+                <Link className="block truncate text-[11px] text-slate-400 hover:text-primary-foreground" to={`/products/${review.productSlug}`}>
                   {review.productTitle?.slice(0, 40)}
                 </Link>
               ) : review.productTitle ? (

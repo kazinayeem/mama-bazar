@@ -51,7 +51,7 @@ const NewsletterBlock = ({ settings }: NewsletterBlockProps) => {
             <form className="flex flex-col gap-3 rounded-[20px] border border-white/25 bg-white/10 p-3 backdrop-blur-md sm:flex-row" onSubmit={handleSubmit}>
               <input
                 aria-label="Email address"
-                className="w-full rounded-full bg-white/95 px-5 py-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                className="w-full rounded-full bg-white/95 px-5 py-3.5 text-sm text-slate-900 placeholder:text-slate-400"
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="Enter your email address"
                 required
@@ -59,7 +59,8 @@ const NewsletterBlock = ({ settings }: NewsletterBlockProps) => {
                 value={email}
               />
               <button
-                className="shrink-0 rounded-full bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-soft transition hover:bg-accent-600 active:scale-95 disabled:opacity-60"
+                aria-busy={isLoading}
+                className="shrink-0 rounded-full bg-accent px-7 py-3.5 text-sm font-bold text-accent-foreground shadow-soft transition hover:bg-accent-600 active:scale-95 disabled:opacity-60"
                 disabled={isLoading}
                 type="submit"
               >

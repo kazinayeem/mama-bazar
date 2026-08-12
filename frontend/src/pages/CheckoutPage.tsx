@@ -372,7 +372,7 @@ const CheckoutPage = () => {
     }
   }
 
-  const inputClass = 'w-full border-b border-outline-variant/40 bg-transparent py-2 text-sm outline-none focus:border-tertiary'
+  const inputClass = 'w-full border-b border-input/40 bg-transparent py-2 text-sm transition focus:border-primary-foreground'
   const labelClass = 'mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant'
 
   return (
@@ -407,22 +407,22 @@ const CheckoutPage = () => {
               <p className="mt-1 text-sm text-slate-600">Login for a faster checkout experience.</p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 md:justify-start">
                 <span className="flex items-center gap-1">
-                  <CheckCircle size={14} className="text-primary" />
+                  <CheckCircle size={14} className="text-primary-foreground" />
                   Your details will be auto-filled
                 </span>
                 <span className="flex items-center gap-1">
-                  <CheckCircle size={14} className="text-primary" />
+                  <CheckCircle size={14} className="text-primary-foreground" />
                   View your previous orders
                 </span>
                 <span className="flex items-center gap-1">
-                  <CheckCircle size={14} className="text-primary" />
+                  <CheckCircle size={14} className="text-primary-foreground" />
                   Save your delivery address
                 </span>
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:bg-primary/90 hover:shadow-xl"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 hover:shadow-xl"
                 state={{ from: '/checkout' }}
                 to="/auth/login"
               >
@@ -477,7 +477,7 @@ const CheckoutPage = () => {
               <div className="mb-4">
                 <label className={labelClass}>Saved Address</label>
                 <select
-                  className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm outline-none"
+                  className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm "
                   disabled={addressesLoading}
                   onChange={(event) => {
                     const value = event.target.value
@@ -542,7 +542,7 @@ const CheckoutPage = () => {
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>House / Street Address</label>
-                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm outline-none focus:border-tertiary" onChange={(event) => set({ address: event.target.value })} required rows={2} value={form.address} />
+                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm  focus:border-tertiary" onChange={(event) => set({ address: event.target.value })} required rows={2} value={form.address} />
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>Apartment / Floor (optional)</label>
@@ -648,7 +648,7 @@ const CheckoutPage = () => {
                       
                       {/* Checkmark for selected */}
                       {active && (
-                        <CheckCircle size={20} className="shrink-0 text-primary" />
+                        <CheckCircle size={20} className="shrink-0 text-primary-foreground" />
                       )}
                     </button>
 
@@ -678,7 +678,7 @@ const CheckoutPage = () => {
                               <div className="mt-2 flex items-center gap-3">
                                 <span className="text-xl font-bold text-slate-900">{merchantNumber}</span>
                                 <button
-                                  className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                                  className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/20"
                                   onClick={() => copyToClipboard(merchantNumber)}
                                   type="button"
                                 >
@@ -844,7 +844,7 @@ const CheckoutPage = () => {
                 ) : (
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 border-b border-outline-variant/40 bg-transparent px-1 py-2 text-sm uppercase outline-none focus:border-tertiary"
+                      className="flex-1 border-b border-input/40 bg-transparent px-1 py-2 text-sm uppercase transition focus:border-primary-foreground"
                       onChange={(event) => {
                         setCouponCode(event.target.value)
                         setCouponError('')
@@ -853,7 +853,7 @@ const CheckoutPage = () => {
                       value={couponCode}
                     />
                     <button
-                      className="border border-primary px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-primary hover:bg-primary hover:text-white disabled:opacity-50"
+                      className="border border-primary px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
                       disabled={couponLoading || !couponCode.trim()}
                       onClick={applyCoupon}
                       type="button"
@@ -866,7 +866,7 @@ const CheckoutPage = () => {
               </div>
               <div>
                 <label className={labelClass}>Order Note (optional)</label>
-                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm outline-none focus:border-tertiary" onChange={(event) => setOrderNote(event.target.value)} rows={2} value={orderNote} />
+                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm  focus:border-tertiary" onChange={(event) => setOrderNote(event.target.value)} rows={2} value={orderNote} />
               </div>
             </div>
           </section>
@@ -887,7 +887,7 @@ const CheckoutPage = () => {
                     <p className="text-xs text-slate-500">Login to save your order to your account.</p>
                   </div>
                   <Link
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary/90"
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
                     state={{ from: '/checkout' }}
                     to="/auth/login"
                   >
@@ -909,7 +909,7 @@ const CheckoutPage = () => {
             {submitError && <p className="mt-3 rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">{submitError}</p>}
 
             <button
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 bg-accent py-4 text-xs font-bold uppercase tracking-[0.25em] text-white transition hover:bg-accent-600 disabled:opacity-70"
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 bg-accent py-4 text-xs font-bold uppercase tracking-[0.25em] text-accent-foreground transition hover:bg-accent-600 disabled:opacity-70"
               disabled={creating || !cart.length || shippingLoading}
               type="submit"
             >

@@ -38,7 +38,7 @@ const PromoCard = ({ banner }: { banner: Banner }) => {
           <p className="mt-2 text-xs leading-6 text-slate-200 sm:text-sm">{banner.subtitle}</p>
         )}
         {banner.buttonText && (
-          <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-600 active:scale-95">
+          <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-accent-foreground shadow-lg shadow-accent/25 transition hover:bg-accent-600 active:scale-95">
             {banner.buttonText}
             <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
           </span>

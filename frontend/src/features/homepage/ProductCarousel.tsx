@@ -67,7 +67,7 @@ const ProductCarousel = ({ products, onQuickView }: ProductCarouselProps) => {
       {canPrev && (
         <button
           aria-label="Previous products"
-          className="absolute -left-4 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          className="absolute -left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           onClick={() => scrollBy('left')}
           type="button"
         >
@@ -79,7 +79,7 @@ const ProductCarousel = ({ products, onQuickView }: ProductCarouselProps) => {
       {canNext && (
         <button
           aria-label="Next products"
-          className="absolute -right-4 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          className="absolute -right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           onClick={() => scrollBy('right')}
           type="button"
         >

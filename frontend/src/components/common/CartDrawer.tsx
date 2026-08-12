@@ -53,12 +53,12 @@ const CartDrawer = () => {
           >
             <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
               <h2 className="flex items-center gap-2 font-headline text-lg font-extrabold text-slate-900 dark:text-white">
-                <ShoppingBag size={20} className="text-primary" /> Your Cart
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{items.length}</span>
+                <ShoppingBag size={20} className="text-primary-foreground" /> Your Cart
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary-foreground">{items.length}</span>
               </h2>
               <button
                 aria-label="Close cart"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-accent hover:text-white dark:bg-slate-800 dark:text-slate-300"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-accent hover:text-accent-foreground dark:bg-slate-800 dark:text-slate-300"
                 onClick={() => dispatch(closeCart())}
                 type="button"
               >
@@ -74,7 +74,7 @@ const CartDrawer = () => {
                 <p className="text-lg font-bold text-slate-900 dark:text-white">Your cart is empty</p>
                 <p className="text-sm text-slate-500">Discover premium gadgets and appliances waiting for you.</p>
                 <Link
-                  className="mt-2 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white transition hover:bg-primary-700"
+                  className="mt-2 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary-700"
                   onClick={() => dispatch(closeCart())}
                   to="/shop"
                 >
@@ -95,7 +95,7 @@ const CartDrawer = () => {
                           <div className="flex min-w-0 flex-1 flex-col">
                             <div className="flex items-start justify-between gap-2">
                               <Link
-                                className="line-clamp-2 text-sm font-bold text-slate-900 hover:text-primary dark:text-white"
+                                className="line-clamp-2 text-sm font-bold text-slate-900 hover:text-primary-foreground dark:text-white"
                                 to={`/products/${item.product.slug}`}
                                 onClick={() => dispatch(closeCart())}
                               >
@@ -103,7 +103,7 @@ const CartDrawer = () => {
                               </Link>
                               <button
                                 aria-label="Remove item"
-                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-accent hover:text-white"
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-accent hover:text-accent-foreground"
                                 onClick={() => dispatch(removeFromCart(item.key))}
                                 type="button"
                               >
@@ -116,7 +116,7 @@ const CartDrawer = () => {
                               <div className="flex items-center gap-1 rounded-full border border-slate-200 dark:border-slate-700">
                                 <button
                                   aria-label="Decrease quantity"
-                                  className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:text-primary dark:text-slate-300"
+                                  className="flex h-11 w-11 items-center justify-center rounded-full text-slate-600 transition hover:text-primary-foreground dark:text-slate-300"
                                   onClick={() => dispatch(updateQuantity({ key: item.key, quantity: item.quantity - 1 }))}
                                   type="button"
                                 >
@@ -125,7 +125,7 @@ const CartDrawer = () => {
                                 <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
                                 <button
                                   aria-label="Increase quantity"
-                                  className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:text-primary dark:text-slate-300"
+                                  className="flex h-11 w-11 items-center justify-center rounded-full text-slate-600 transition hover:text-primary-foreground dark:text-slate-300"
                                   onClick={() => dispatch(updateQuantity({ key: item.key, quantity: item.quantity + 1 }))}
                                   type="button"
                                 >
@@ -152,7 +152,7 @@ const CartDrawer = () => {
                             to={`/products/${product.slug}`}
                           >
                             <img alt={product.title} className="aspect-square w-full object-cover" loading="lazy" src={product.images[0]} />
-                            <p className="line-clamp-2 p-2 text-[11px] font-semibold leading-snug text-slate-700 group-hover:text-primary dark:text-slate-200">
+                            <p className="line-clamp-2 p-2 text-[11px] font-semibold leading-snug text-slate-700 group-hover:text-primary-foreground dark:text-slate-200">
                               {product.title}
                             </p>
                           </Link>
@@ -176,7 +176,7 @@ const CartDrawer = () => {
                   </div>
 
                   <Link
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-5 py-3.5 text-sm font-bold text-white transition hover:bg-accent-600 active:scale-95"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-5 py-3.5 text-sm font-bold text-accent-foreground transition hover:bg-accent-600 active:scale-95"
                     onClick={() => dispatch(closeCart())}
                     to="/checkout"
                   >

@@ -84,7 +84,7 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
             <div className="flex items-center gap-4">
               <motion.span
                 animate={{ scale: [1, 1.12, 1] }}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-white shadow-lg shadow-accent/30"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-lg shadow-accent/30"
                 transition={{ duration: 1.4, repeat: Infinity }}
               >
                 <Flame size={22} className="fill-white" />

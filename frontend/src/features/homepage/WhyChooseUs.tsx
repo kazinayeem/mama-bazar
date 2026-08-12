@@ -24,7 +24,7 @@ const WhyChooseUs = ({ items, dark }: WhyChooseUsProps) => {
             >
               <span
                 className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                  dark ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary'
+                  dark ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary-foreground'
                 }`}
               >
                 <Icon size={22} />

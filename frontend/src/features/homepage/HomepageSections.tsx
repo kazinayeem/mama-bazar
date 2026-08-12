@@ -57,7 +57,7 @@ const HomepageErrorState = ({ onRetry }: { onRetry?: () => void }) => (
       </div>
       {onRetry && (
         <button
-          className="mt-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700 active:scale-95"
+          className="mt-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary-700 active:scale-95"
           onClick={onRetry}
           type="button"
         >
@@ -133,13 +133,13 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
                   <section className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col gap-3 rounded-3xl border border-slate-100 bg-white/90 px-4 py-4 shadow-soft backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Popular searches</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary-foreground">Popular searches</p>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Jump into the products shoppers are looking for right now.</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {popularSearches.map((term) => (
                           <Link
-                            className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-primary hover:bg-primary hover:text-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-primary hover:bg-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             to={`/shop?search=${encodeURIComponent(term)}`}
                             key={term}
                           >

@@ -6,26 +6,26 @@ export default {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#10B981', // Fresh/medium green
-          light: '#34D399',
-          dark: '#047857',
+          DEFAULT: '#F48721',
+          light: '#FF9A4D',
+          dark: '#C76A12',
         },
         primary: {
-          DEFAULT: '#064E3B', // Deep dark green
+          DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
-          50: '#ECFDF5',
-          100: '#D1FAE5',
-          500: '#10B981',
-          600: '#059669',
-          700: '#047857',
+          50: '#FFF6EC',
+          100: '#FFEBD3',
+          500: '#F48721',
+          600: '#E07A18',
+          700: '#C76A12',
         },
         accent: {
-          DEFAULT: '#F97316', // Bright orange
+          DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
-          50: '#FFF7ED',
-          100: '#FFEDD5',
-          500: '#F97316',
-          600: '#EA580C',
+          50: '#FFF6EC',
+          100: '#FFEBD3',
+          500: '#F48721',
+          600: '#E07A18',
         },
         success: {
           DEFAULT: '#10B981',
@@ -34,7 +34,7 @@ export default {
           500: '#10B981',
         },
         surface: {
-          DEFAULT: '#F9FAFB', // Very light neutral gray for background
+          DEFAULT: '#FBF9F5',
           card: '#FFFFFF',
         },
         background: 'hsl(var(--background))',
@@ -65,8 +65,8 @@ export default {
         ring: 'hsl(var(--ring))',
       },
       fontFamily: {
-        headline: ['Inter', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        headline: ['Open Sans', 'sans-serif'],
+        body: ['Open Sans', 'sans-serif'],
       },
       borderRadius: {
         '4xl': '2rem',

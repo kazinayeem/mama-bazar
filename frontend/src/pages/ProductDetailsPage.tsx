@@ -36,7 +36,7 @@ function getStockLabel(stock: number, product: Product): { text: string; classNa
     return { text: 'Out of Stock', className: 'bg-slate-100 text-slate-500' }
   }
   const alert = product.lowStockAlert || 5
-  if (stock <= alert) return { text: `Only ${stock} left`, className: 'bg-accent/10 text-accent' }
+  if (stock <= alert) return { text: `Only ${stock} left`, className: 'bg-accent/10 text-accent-foreground' }
   return { text: 'In Stock', className: 'bg-success/10 text-success' }
 }
 
@@ -289,7 +289,7 @@ const ProductDetailsPage = () => {
         <span className="text-5xl">🔍</span>
         <h1 className="mt-4 font-headline text-2xl font-extrabold text-slate-900 dark:text-white">Product not found</h1>
         <p className="mt-2 text-sm text-slate-500">The product you are looking for doesn&apos;t exist or is no longer available.</p>
-        <Link className="mt-6 inline-block rounded-full bg-primary px-6 py-3 text-sm font-bold text-white" to="/shop">
+        <Link className="mt-6 inline-block rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground" to="/shop">
           Back to Shop
         </Link>
       </main>
@@ -303,11 +303,11 @@ const ProductDetailsPage = () => {
       <SEO {...seoProps} />
 
       <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-400">
-        <Link className="transition hover:text-primary" to="/">Home</Link>
+        <Link className="transition hover:text-primary-foreground" to="/">Home</Link>
         <ChevronRight size={13} />
         {product.category && (
           <>
-            <Link className="transition hover:text-primary" to={`/shop?category=${product.category.slug}`}>
+            <Link className="transition hover:text-primary-foreground" to={`/shop?category=${product.category.slug}`}>
               {product.category.name}
             </Link>
             <ChevronRight size={13} />
@@ -315,7 +315,7 @@ const ProductDetailsPage = () => {
         )}
         {product.subCategory && (
           <>
-            <Link className="transition hover:text-primary" to={`/shop?category=${product.subCategory.slug}`}>
+            <Link className="transition hover:text-primary-foreground" to={`/shop?category=${product.subCategory.slug}`}>
               {product.subCategory.name}
             </Link>
             <ChevronRight size={13} />
@@ -323,7 +323,7 @@ const ProductDetailsPage = () => {
         )}
         {product.childCategory && (
           <>
-            <Link className="transition hover:text-primary" to={`/shop?category=${product.childCategory.slug}`}>
+            <Link className="transition hover:text-primary-foreground" to={`/shop?category=${product.childCategory.slug}`}>
               {product.childCategory.name}
             </Link>
             <ChevronRight size={13} />
@@ -365,7 +365,7 @@ const ProductDetailsPage = () => {
           {product.videoUrl && (
             <div className="mt-4">
               <a
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 href={product.videoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -379,7 +379,7 @@ const ProductDetailsPage = () => {
         <div className="flex flex-col">
           <div className="flex flex-wrap items-center gap-2">
             {product.brandInfo?.name && (
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-foreground">
                 {product.brandInfo.name}
               </span>
             )}
@@ -396,7 +396,7 @@ const ProductDetailsPage = () => {
               <span className="rounded-full bg-blue-500/10 px-3 py-1 text-[11px] font-bold text-blue-600">Official</span>
             )}
             {showDiscount && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent">
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent-foreground">
                 <Zap size={11} className="fill-accent" /> Save {discount}%
               </span>
             )}
@@ -484,7 +484,7 @@ const ProductDetailsPage = () => {
                       aria-label={`Select size ${size}`}
                       className={`flex h-11 min-w-[3rem] items-center justify-center rounded-lg border px-4 transition ${
                         activeSize === size
-                          ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/30'
+                          ? 'border-primary bg-primary/5 text-primary-foreground ring-1 ring-primary/30'
                           : isUnavailable
                             ? 'border-slate-100 text-slate-300 cursor-not-allowed line-through dark:border-slate-700 dark:text-slate-600'
                             : isOos
@@ -545,7 +545,7 @@ const ProductDetailsPage = () => {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-accent text-accent px-6 py-4 text-sm font-bold transition hover:bg-accent hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-accent text-accent-foreground px-6 py-4 text-sm font-bold transition hover:bg-accent hover:text-accent-foreground active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={Boolean(disableAddToCart)}
               onClick={() => handleAddToCart()}
               type="button"
@@ -553,7 +553,7 @@ const ProductDetailsPage = () => {
               <ShoppingBag size={17} /> Add to Cart
             </button>
             <button
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 py-4 text-sm font-bold text-white transition hover:bg-accent-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 py-4 text-sm font-bold text-accent-foreground transition hover:bg-accent-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={Boolean(disableAddToCart)}
               onClick={() => handleAddToCart(true)}
               type="button"
@@ -566,8 +566,8 @@ const ProductDetailsPage = () => {
             <button
               className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
                 wishlisted
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-slate-200 text-slate-700 hover:border-accent hover:text-accent dark:border-slate-700 dark:text-slate-200'
+                  ? 'border-accent bg-accent/10 text-accent-foreground'
+                  : 'border-slate-200 text-slate-700 hover:border-accent hover:text-accent-foreground dark:border-slate-700 dark:text-slate-200'
               }`}
               onClick={handleWishlist}
               type="button"
@@ -577,8 +577,8 @@ const ProductDetailsPage = () => {
             <button
               className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
                 compared
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-slate-200 text-slate-700 hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-200'
+                  ? 'border-primary bg-primary/10 text-primary-foreground'
+                  : 'border-slate-200 text-slate-700 hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-200'
               }`}
               onClick={handleCompare}
               type="button"
@@ -713,7 +713,7 @@ const ProductDetailsPage = () => {
 
       <section className="mt-16">
         <div className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Customer feedback</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground">Customer feedback</p>
           <h2 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Reviews ({product.reviewCount || reviews.length})
           </h2>
@@ -733,7 +733,7 @@ const ProductDetailsPage = () => {
                       onClick={() => setReviewRating(value)}
                       type="button"
                     >
-                      <Star size={22} className={value <= reviewRating ? 'fill-accent text-accent' : 'text-slate-300 dark:text-slate-600'} />
+                      <Star size={22} className={value <= reviewRating ? 'fill-accent text-accent-foreground' : 'text-slate-300 dark:text-slate-600'} />
                     </button>
                   ))}
                 </div>
@@ -754,7 +754,7 @@ const ProductDetailsPage = () => {
                   value={reviewComment}
                 />
                 <button
-                  className="w-full rounded-full bg-primary px-6 py-3 text-sm font-bold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={submittingReview}
                   type="submit"
                 >
@@ -764,7 +764,7 @@ const ProductDetailsPage = () => {
             ) : (
               <div className="rounded-[18px] border border-slate-100 bg-white p-6 text-center shadow-soft dark:border-slate-800 dark:bg-slate-900">
                 <p className="text-sm text-slate-500">Please log in to write a review.</p>
-                <Link className="mt-4 inline-block rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white" to="/auth/login">
+                <Link className="mt-4 inline-block rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground" to="/auth/login">
                   Login
                 </Link>
               </div>
@@ -794,7 +794,7 @@ const ProductDetailsPage = () => {
                   <article className="rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900" key={review.id}>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary-foreground">
                           {(review.customerName || 'Anonymous').slice(0, 1)}
                         </span>
                         <div>
@@ -820,10 +820,10 @@ const ProductDetailsPage = () => {
         <section className="mt-20">
           <div className="mb-8 flex items-end justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">You may also like</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground">You may also like</p>
               <h2 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Related Products</h2>
             </div>
-            <Link className="text-sm font-bold text-primary hover:underline" to={`/shop?category=${product.category?.slug || ''}`}>
+            <Link className="text-sm font-bold text-primary-foreground hover:underline" to={`/shop?category=${product.category?.slug || ''}`}>
               View more
             </Link>
           </div>
