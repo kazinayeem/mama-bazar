@@ -6,9 +6,9 @@ import { api } from '../../lib/api'
 import type { PaymentMethodInfo } from '../../types'
 
 const PAYMENT_STYLES: Record<string, string> = {
-  cod: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  cod: 'bg-brand-green-50 text-brand-green-600 border-brand-green-200',
   bkash: 'bg-pink-50 text-pink-600 border-pink-200',
-  nagad: 'bg-orange-50 text-orange-600 border-orange-200',
+  nagad: 'bg-brand-orange-50 text-brand-orange-600 border-brand-orange-200',
   rocket: 'bg-purple-50 text-purple-600 border-purple-200',
   bank: 'bg-blue-50 text-blue-600 border-blue-200',
   stripe: 'bg-indigo-50 text-indigo-600 border-indigo-200',

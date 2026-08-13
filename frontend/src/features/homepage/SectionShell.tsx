@@ -11,7 +11,7 @@ interface SectionShellProps {
 const bgClass = (background?: string) => {
   switch (background) {
     case 'muted':
-      return 'bg-slate-50/40'
+      return 'bg-brand-green-50'
     case 'dark':
       return 'bg-canvas-cream'
     default:
@@ -20,13 +20,13 @@ const bgClass = (background?: string) => {
 }
 
 const eyebrowColor = (background?: string) =>
-  background === 'dark' ? 'bg-emerald-50 text-emerald-700' : 'bg-accent/30 text-emerald-800'
+  background === 'dark'
+    ? 'bg-brand-green-100 text-brand-green-700'
+    : 'bg-brand-orange-50 text-brand-orange-600 border border-brand-orange-200'
 
-const titleColor = (background?: string) =>
-  background === 'dark' ? 'text-slate-900' : 'text-slate-900'
+const titleColor = (_background?: string) => 'text-slate-900'
 
-const subtitleColor = (background?: string) =>
-  background === 'dark' ? 'text-slate-600' : 'text-slate-500'
+const subtitleColor = (_background?: string) => 'text-slate-500'
 
 const SectionShell = ({ section, children, id }: SectionShellProps) => {
   const title = section.title?.trim()
@@ -58,11 +58,7 @@ const SectionShell = ({ section, children, id }: SectionShellProps) => {
             </div>
             {section.ctaText?.trim() && section.ctaUrl?.trim() && (
               <Link
-                className={`group hidden shrink-0 items-center gap-1.5 rounded-full border px-5 py-2.5 text-xs font-bold transition sm:inline-flex ${
-                  section.background === 'dark'
-                    ? 'border-slate-200 bg-white text-slate-700 hover:border-slate-900 hover:bg-slate-900 hover:text-white'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-primary hover:bg-primary hover:text-primary-foreground'
-                }`}
+                className="group hidden shrink-0 items-center gap-1.5 rounded-full border border-brand-orange-300 bg-brand-orange-500 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-brand-orange-600 sm:inline-flex"
                 to={section.ctaUrl}
               >
                 {section.ctaText}
@@ -75,7 +71,7 @@ const SectionShell = ({ section, children, id }: SectionShellProps) => {
         {section.ctaText?.trim() && section.ctaUrl?.trim() && (
           <div className="mt-6 text-center sm:hidden">
             <Link
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 transition hover:border-primary hover:bg-primary hover:text-primary-foreground"
+              className="inline-flex items-center gap-1.5 rounded-full border border-brand-orange-300 bg-brand-orange-500 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-brand-orange-600"
               to={section.ctaUrl}
             >
               {section.ctaText}

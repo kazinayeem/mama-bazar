@@ -8,7 +8,7 @@ interface TrustStripProps {
 const TrustStrip = ({ items }: TrustStripProps) => {
   if (items.length === 0) return null
   return (
-    <section className="border-y border-slate-100 bg-white">
+    <section className="border-y border-brand-green-100 bg-brand-green-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-2 py-3 sm:gap-3 lg:grid-cols-4">
           {items.map((item, index) => {
@@ -16,9 +16,9 @@ const TrustStrip = ({ items }: TrustStripProps) => {
             return (
               <div
                 key={`${item.title}-${index}`}
-                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3.5 transition hover:border-primary/20 hover:bg-primary/5"
+                className="flex items-center gap-3 rounded-2xl border border-brand-green-100 bg-white px-4 py-3.5 transition hover:border-brand-green-300 hover:bg-brand-green-50"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-700 text-white shadow-sm">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green-500 to-brand-green-dark text-white shadow-sm">
                   <Icon size={18} />
                 </span>
                 <div className="min-w-0">
