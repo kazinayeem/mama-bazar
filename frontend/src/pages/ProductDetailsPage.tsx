@@ -1,10 +1,11 @@
 import { ChevronRight, GitCompareArrows, Heart, Minus, Plus, Play, ShoppingBag, Star, Truck, Shield, Zap } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ProductCard from '../components/common/ProductCard'
 import { SEO, getProductSEO } from '../components/common/SEO'
 import StarRating from '../components/common/StarRating'
 import { useToast } from '../components/common/ToastProvider'
+import { setWhatsAppProduct } from '../lib/whatsapp'
 import { authStorage } from '../lib/authStorage'
 import { formatPrice } from '../lib/format'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
@@ -104,6 +105,11 @@ const ProductDetailsPage = () => {
 
   const productQuery = useGetProductBySlugQuery(slug || '')
   const product = productQuery.data
+
+  useEffect(() => {
+    setWhatsAppProduct(product?.title)
+    return () => setWhatsAppProduct(null)
+  }, [product])
 
   const [activeImage, setActiveImage] = useState(0)
   const [activeColor, setActiveColor] = useState<string | undefined>(product?.colorOptions?.[0]?.name)

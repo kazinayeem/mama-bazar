@@ -293,7 +293,7 @@ const CatalogCrudPage = <T extends { id: number }>({
           <div key={field.key} className={cls}>
             <Label>{field.label}</Label>
             <Select
-              value={String(value || '')}
+              value={value == null || value === '' ? '' : String(value)}
               onValueChange={(v) => setForm((prev) => ({ ...prev, [field.key]: v }))}
             >
               <SelectTrigger className="w-full">

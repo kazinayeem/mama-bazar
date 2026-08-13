@@ -54,7 +54,7 @@ const ReferenceSelect = ({
       <Skeleton className="h-10 w-full" />
     ) : (
      <Select
-  value={value != null ? String(value) : undefined}
+  value={value == null || value === '' ? '' : String(value)}
   disabled={disabled}
   onValueChange={(v) => {
     if (v === ADD_NEW_VALUE) {

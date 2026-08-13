@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import CartDrawer from '../common/CartDrawer'
 import MobileBottomNav from '../common/MobileBottomNav'
 import { useThemeSync } from '../../lib/useThemeSync'
+import WhatsAppButton from '../common/WhatsAppButton'
 import SiteFooter from './SiteFooter'
 import SiteNavbar from './SiteNavbar'
 
@@ -20,6 +21,7 @@ const MainLayout = () => {
       <SiteFooter />
       <CartDrawer />
       <MobileBottomNav />
+      <WhatsAppButton />
     </div>
   )
 }
