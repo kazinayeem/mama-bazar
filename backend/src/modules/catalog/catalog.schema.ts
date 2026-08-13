@@ -75,8 +75,8 @@ const collectionFields = {
   name: z.string().min(1, "Name is required"),
   slug: z.string().optional(),
   description: z.string().optional(),
-  image: z.string().optional(),
-  banner: z.string().optional(),
+  image: z.string().nullable().optional(),
+  banner: z.string().nullable().optional(),
   featured: z.union([z.boolean(), z.string()]).optional(),
   homepageVisibility: z.union([z.boolean(), z.string()]).optional(),
   sortOrder: z.union([z.string(), z.number()]).optional(),
@@ -116,7 +116,7 @@ const vendorSupplierFields = {
 export const vendorCreateSchema = z.object({
   body: z.object({
     ...vendorSupplierFields,
-    logo: z.string().optional(),
+    logo: z.string().nullable().optional(),
   }),
 });
 
@@ -125,14 +125,14 @@ export const vendorUpdateSchema = z.object({
   body: z.object({
     ...vendorSupplierFields,
     name: z.string().min(1).optional(),
-    logo: z.string().optional(),
+    logo: z.string().nullable().optional(),
   }),
 });
 
 export const supplierCreateSchema = z.object({
   body: z.object({
     ...vendorSupplierFields,
-    logo: z.string().optional(),
+    logo: z.string().nullable().optional(),
   }),
 });
 
@@ -141,7 +141,7 @@ export const supplierUpdateSchema = z.object({
   body: z.object({
     ...vendorSupplierFields,
     name: z.string().min(1).optional(),
-    logo: z.string().optional(),
+    logo: z.string().nullable().optional(),
   }),
 });
 

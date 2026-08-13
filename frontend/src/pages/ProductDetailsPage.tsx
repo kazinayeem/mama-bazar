@@ -7,7 +7,8 @@ import StarRating from '../components/common/StarRating'
 import { useToast } from '../components/common/ToastProvider'
 import { setWhatsAppProduct } from '../lib/whatsapp'
 import { authStorage } from '../lib/authStorage'
-import { formatPrice } from '../lib/format'
+import { formatPrice, salePrice } from '../lib/format'
+import { trackViewContent } from '../lib/pixel'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { addToCart } from '../store/slices/cartSlice'
 import { openCart, toggleCompare, toggleWishlist } from '../store/slices/uiSlice'
@@ -109,6 +110,16 @@ const ProductDetailsPage = () => {
   useEffect(() => {
     setWhatsAppProduct(product?.title)
     return () => setWhatsAppProduct(null)
+  }, [product])
+
+  useEffect(() => {
+    if (!product) return
+    trackViewContent({
+      title: product.title,
+      id: product.id,
+      value: salePrice(Number(product.price), product.discount),
+      category: product.brandInfo?.name || product.brand || undefined,
+    })
   }, [product])
 
   const [activeImage, setActiveImage] = useState(0)

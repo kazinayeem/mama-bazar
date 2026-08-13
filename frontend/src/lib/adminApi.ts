@@ -18,7 +18,7 @@ import type {
 } from '../types/admin'
 import type { AdminCoupon, ApiListResult, AuthUser, Category, ShippingMethod } from '../types'
 import type { ContactMessage, PolicyPage } from '../types'
-import type { AdminCheckoutNotice, AdminPaymentMethod } from '../types/admin'
+import type { AdminCheckoutNotice, AdminPaymentMethod, MarketingIntegration, MarketingIntegrationType } from '../types/admin'
 import type { HomepageConfig, NewsletterSubscriber } from '../types/homepage'
 
 
@@ -608,6 +608,33 @@ export const adminApi = {
 
   async setSetting(key: string, value: unknown): Promise<void> {
     await requestJson('/api/settings', { method: 'PUT', body: JSON.stringify({ key, value }) })
+  },
+
+  // ==================== Tracking / Meta Pixel ====================
+  async getTrackingIntegrations(): Promise<MarketingIntegration[]> {
+    const env = await requestJson<MarketingIntegration[]>('/api/tracking')
+    return env.data || []
+  },
+
+  async createTrackingIntegration(
+    input: { name: string; type: MarketingIntegrationType; pixelId?: string; status?: 'active' | 'inactive' },
+  ): Promise<MarketingIntegration> {
+    const env = await requestJson<MarketingIntegration>('/api/tracking', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+    return env.data!
+  },
+
+  async updateTrackingIntegration(
+    id: number,
+    input: { name?: string; type?: MarketingIntegrationType; pixelId?: string; status?: 'active' | 'inactive' },
+  ): Promise<MarketingIntegration> {
+    const env = await requestJson<MarketingIntegration>(`/api/tracking/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    })
+    return env.data!
   },
 
   async getMe(): Promise<AuthUser> {

@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { authStorage } from '../../lib/authStorage'
 import { API_BASE_URL } from '../../lib/apiConfig'
 import type { Category, Product, ProductReview } from '../../types'
-import type { Brand, Collection } from '../../types/admin'
+import type { Brand, Collection, TrackingConfig } from '../../types/admin'
 import type { HomepageData } from '../../types/homepage'
 
 type ApiEnvelope<T> = {
@@ -115,6 +115,11 @@ export const commerceApi = createApi({
       providesTags: [{ type: 'Homepage', id: 'LIST' }],
     }),
 
+    getTrackingConfig: builder.query<TrackingConfig, void>({
+      query: () => '/api/tracking/config',
+      transformResponse: (response: ApiEnvelope<TrackingConfig>) => response.data as TrackingConfig,
+    }),
+
     subscribeNewsletter: builder.mutation<{ email: string; alreadySubscribed: boolean }, { email: string; source?: string }>({
       query: (body) => ({
         url: '/api/homepage/newsletter/subscribe',
@@ -170,4 +175,5 @@ export const {
   useGetCollectionsQuery,
   useGetReviewsQuery,
   useAddReviewMutation,
+  useGetTrackingConfigQuery,
 } = commerceApi

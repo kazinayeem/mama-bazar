@@ -64,6 +64,10 @@ const MediaPicker = ({ open, onOpenChange, onSelect, multiple = true }: MediaPic
       const uploaded = await adminApi.uploadMedia(Array.from(files), 'products')
       if (multiple) {
         setSelected((prev) => [...prev, ...uploaded])
+      } else {
+        // Single-select mode: auto-select the first uploaded asset so "Use
+        // selected" works right after uploading, without a manual click.
+        setSelected(uploaded.slice(0, 1))
       }
       setAssets((prev) => [...uploaded, ...prev])
       toast.success(`${uploaded.length} file(s) uploaded`)

@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, Link } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { SEO } from '../components/common/SEO'
+import { trackPurchase } from '../lib/pixel'
 import type { Order, UserOrderItem } from '../types'
 import { currency } from '../lib/format'
 
@@ -32,6 +33,18 @@ const OrderSuccessPage = () => {
       navigate('/shop', { replace: true })
     }
   }, [state.orderId, state.order, navigate])
+
+  const purchaseTracked = useRef(false)
+  useEffect(() => {
+    if (!order || purchaseTracked.current) return
+    purchaseTracked.current = true
+    trackPurchase({
+      value: Number(order.totalPrice),
+      numItems: order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
+      contentIds: order.items?.map((item) => item.productId) || [],
+      contents: order.items?.map((item) => ({ id: String(item.productId), quantity: item.quantity })) || [],
+    })
+  }, [order])
 
   if (!order) {
     return (

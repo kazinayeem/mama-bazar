@@ -625,3 +625,33 @@ export interface TeamMember {
   phone: string
   role: UserRole
 }
+
+export type MarketingIntegrationType =
+  | 'google_tag_manager'
+  | 'google_analytics'
+  | 'facebook_pixel'
+  | 'facebook_conversion_api'
+  | 'tiktok_pixel'
+  | 'custom_script'
+
+export interface MarketingIntegration {
+  id: number
+  name: string
+  type: MarketingIntegrationType
+  pixelId?: string | null
+  scriptCode?: string | null
+  accessToken?: string | null
+  testEventCode?: string | null
+  status: 'active' | 'inactive'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TrackingConfig {
+  gtmId?: string
+  gaMeasurementId?: string
+  facebookPixelId?: string
+  tiktokPixelId?: string
+  customHeadScripts: string[]
+  customBodyScripts: string[]
+}

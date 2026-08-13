@@ -183,7 +183,18 @@ const CatalogCrudPage = <T extends { id: number }>({
   const openEdit = (item: T) => {
     const initial: Record<string, unknown> = {}
     fields.forEach((f) => {
-      initial[f.key] = (item as Record<string, unknown>)[f.key]
+      const raw = (item as Record<string, unknown>)[f.key]
+      if (f.type === 'switch') {
+        initial[f.key] = !!raw
+      } else if (f.type === 'number') {
+        initial[f.key] = typeof raw === 'number' ? raw : Number(raw || 0)
+      } else if (f.type === 'date') {
+        initial[f.key] = raw ?? null
+      } else {
+        // Nullable DB columns return null — normalize to '' so string fields
+        // never render "null" or submit a rejected `null` to the API.
+        initial[f.key] = raw ?? ''
+      }
     })
     setForm(initial)
     setEditing(item)
@@ -198,11 +209,17 @@ const CatalogCrudPage = <T extends { id: number }>({
     }
     setSaving(true)
     try {
+      // An empty image field means "no image" — send null so it persists as
+      // cleared, otherwise zod (string) would reject it.
+      const payload: Record<string, unknown> = {}
+      for (const [key, value] of Object.entries(form)) {
+        payload[key] = value === '' && fields.some((f) => f.key === key && f.type === 'image') ? null : value
+      }
       if (editing) {
-        await api.update(editing.id, form)
+        await api.update(editing.id, payload)
         toast.success(`${title.slice(0, -1)} updated`)
       } else {
-        await api.create(form)
+        await api.create(payload)
         toast.success(`${title.slice(0, -1)} created`)
       }
       setDialogOpen(false)
@@ -328,7 +345,7 @@ const CatalogCrudPage = <T extends { id: number }>({
                 <SmartImage src={String(value)} alt="" className="aspect-square w-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, [field.key]: undefined }))}
+                  onClick={() => setForm((prev) => ({ ...prev, [field.key]: '' }))}
                   className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                 >
                   <X className="h-3 w-3" />

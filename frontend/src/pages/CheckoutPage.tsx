@@ -5,6 +5,7 @@ import { LogIn, CheckCircle, Copy, Check } from 'lucide-react'
 import { SEO } from '../components/common/SEO'
 import { api } from '../lib/api'
 import { currency } from '../lib/format'
+import { trackInitiateCheckout } from '../lib/pixel'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { clearCart, removeFromCart } from '../store/slices/cartSlice'
 import { setAuthSession } from '../store/slices/authSlice'
@@ -209,6 +210,17 @@ const CheckoutPage = () => {
       clearTimeout(timer)
     }
   }, [subtotal, shippingLoading])
+
+  // ---------- Meta Pixel: InitiateCheckout (once per checkout visit) ----------
+  useEffect(() => {
+    const contents = cart.map((item) => ({ id: String(item.product.id), quantity: item.quantity }))
+    trackInitiateCheckout({
+      value: subtotal,
+      numItems: cart.reduce((sum, item) => sum + item.quantity, 0),
+      contents,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ---------- Load saved addresses ----------
   useEffect(() => {

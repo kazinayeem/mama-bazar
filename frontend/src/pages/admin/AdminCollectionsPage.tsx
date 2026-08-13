@@ -4,6 +4,7 @@ import CatalogCrudPage, { type CatalogField, type CatalogColumn } from '@/compon
 import { toListResult, removeResult, moveResult } from '@/components/admin/masterDataAdapters'
 import SmartImage from '@/components/common/SmartImage'
 import {
+  parseError,
   useLazyGetAdminCollectionsAdminQuery,
   useCreateCollectionMutation,
   useUpdateCollectionMutation,
@@ -97,11 +98,11 @@ const AdminCollectionsPage = () => {
         list,
         create: async (payload) => {
           const res = await createCollection(payload)
-          if (res.error) throw new Error('Create failed')
+          if (res.error) throw new Error(parseError(res.error))
         },
         update: async (id, payload) => {
           const res = await updateCollection({ id, payload })
-          if (res.error) throw new Error('Update failed')
+          if (res.error) throw new Error(parseError(res.error))
         },
         remove: async (id) => removeResult(await deleteCollection(id)),
         move: async (id, targetId) => moveResult(await moveCollectionProducts({ id, targetId })),

@@ -71,6 +71,10 @@ const AdminSettingsPage = () => {
   const [taxRate, setTaxRate] = useState('0')
   const [applyTaxToShipping, setApplyTaxToShipping] = useState(true)
 
+  const [pixelId, setPixelId] = useState('')
+  const [pixelEnabled, setPixelEnabled] = useState(false)
+  const [pixelSaving, setPixelSaving] = useState(false)
+
   const settingsMap = useMemo(() => new Map<string, string>(), [])
 
   const loadHeroBanners = useCallback(async () => {
@@ -85,6 +89,11 @@ const AdminSettingsPage = () => {
       settings.forEach((item) => settingsMap.set(item.key, item.value))
       await loadHeroBanners()
       setAdmins(customers.data.filter((user) => user.role === 'admin' || user.role === 'manager'))
+
+      const integrations = await adminApi.getTrackingIntegrations()
+      const pixel = integrations.find((item) => item.type === 'facebook_pixel')
+      setPixelId(pixel?.pixelId || '')
+      setPixelEnabled(pixel?.status === 'active')
 
       const savedStoreInfo = settingsMap.get('store_info')
       if (savedStoreInfo) {
@@ -180,6 +189,30 @@ const AdminSettingsPage = () => {
       toast.success('Shipping settings saved')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save shipping settings')
+    }
+  }
+
+  const savePixelSettings = async () => {
+    const id = pixelId.trim()
+    if (id && !/^\d{10,20}$/.test(id)) {
+      toast.error('Invalid Pixel ID. It should contain 10-20 digits.')
+      return
+    }
+    setPixelSaving(true)
+    try {
+      const integrations = await adminApi.getTrackingIntegrations()
+      const existing = integrations.find((item) => item.type === 'facebook_pixel')
+      const status: 'active' | 'inactive' = pixelEnabled ? 'active' : 'inactive'
+      if (existing) {
+        await adminApi.updateTrackingIntegration(existing.id, { name: 'Facebook Pixel', type: 'facebook_pixel', pixelId: id || undefined, status })
+      } else if (id) {
+        await adminApi.createTrackingIntegration({ name: 'Facebook Pixel', type: 'facebook_pixel', pixelId: id, status })
+      }
+      toast.success('Meta Pixel settings saved')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save Meta Pixel settings')
+    } finally {
+      setPixelSaving(false)
     }
   }
 
@@ -426,6 +459,33 @@ const AdminSettingsPage = () => {
               </div>
               <Button className="w-full" onClick={saveTaxSettings}>
                 Save Tax Settings
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-bold">Meta / Facebook Pixel</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Track visitor activity and ecommerce events (PageView, ViewContent, Search, AddToCart, InitiateCheckout, Purchase) on the storefront.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="pixel-id">Pixel ID</Label>
+                <Input
+                  id="pixel-id"
+                  value={pixelId}
+                  onChange={(e) => setPixelId(e.target.value)}
+                  placeholder="e.g. 123456789012345"
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Enable Pixel</span>
+                <Switch checked={pixelEnabled} onCheckedChange={setPixelEnabled} />
+              </div>
+              <Button className="w-full" onClick={savePixelSettings} disabled={pixelSaving}>
+                {pixelSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Meta Pixel
               </Button>
             </div>
           </div>

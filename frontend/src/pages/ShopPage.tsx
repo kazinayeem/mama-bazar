@@ -1,10 +1,11 @@
 import { ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, Star, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/common/ProductCard'
 import QuickViewModal from '../components/common/QuickViewModal'
 import { SEO } from '../components/common/SEO'
 import StarRating from '../components/common/StarRating'
+import { trackSearch } from '../lib/pixel'
 import { useGetBrandsQuery, useGetCategoriesQuery, useGetProductsQuery } from '../store/services/commerceApi'
 import type { Product } from '../types'
 
@@ -139,6 +140,11 @@ const ShopPage = () => {
   }, [search, selectedCategory, selectedBrand, selectedCategoryName, brands])
 
   const clearAll = () => setSearchParams(new URLSearchParams(), { replace: true })
+
+  useEffect(() => {
+    const term = search.trim()
+    if (term) trackSearch(term)
+  }, [search])
 
   const [localMax, setLocalMax] = useState(maxPrice || '')
   const [localMin, setLocalMin] = useState(minPrice || '')
