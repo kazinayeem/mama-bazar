@@ -60,7 +60,7 @@ const useCountdown = (target: number) => {
 
 const TimeUnit = ({ value, label }: { value: string; label: string }) => (
   <div className="flex flex-col items-center gap-0.5">
-    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white font-headline text-base font-black tabular-nums text-slate-900 shadow-md sm:h-11 sm:w-11">
+    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white font-headline text-base font-black tabular-nums text-brand-green-700 shadow-md sm:h-11 sm:w-11">
       {value}
     </span>
     <span className="text-[9px] font-bold uppercase tracking-wider text-white/70">{label}</span>
@@ -75,20 +75,20 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
   if (products.length === 0) return null
 
   return (
-    <section className="bg-slate-50/40 py-6 lg:py-8">
+    <section className="bg-brand-green-50 py-6 lg:py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Flash Deals header panel */}
-        <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-5 sm:rounded-3xl sm:px-7 sm:py-6 lg:mb-6">
-          <div className="pointer-events-none absolute -right-10 -top-10 hidden h-48 w-48 rounded-full bg-white/5 blur-3xl md:block" />
-          <div className="pointer-events-none absolute -bottom-16 left-1/3 hidden h-40 w-40 rounded-full bg-white/5 blur-3xl md:block" />
+        <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-green-dark via-brand-green-600 to-brand-green-dark px-5 py-5 sm:rounded-3xl sm:px-7 sm:py-6 lg:mb-6">
+          <div className="pointer-events-none absolute -right-10 -top-10 hidden h-48 w-48 rounded-full bg-brand-orange-500/10 blur-3xl md:block" />
+          <div className="pointer-events-none absolute -bottom-16 left-1/3 hidden h-40 w-40 rounded-full bg-brand-orange-400/15 blur-3xl md:block" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <motion.span
                 animate={reduceMotion ? undefined : { scale: [1, 1.12, 1] }}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white shadow-lg shadow-black/30"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-brand-orange-300/40 bg-brand-orange-500/20 text-brand-orange-300 shadow-lg shadow-black/30"
                 transition={reduceMotion ? undefined : { duration: 1.4, repeat: Infinity }}
               >
-                <Flame size={22} className="fill-white/90" />
+                <Flame size={22} className="fill-brand-orange-300" />
               </motion.span>
               <div>
                 <p className="font-headline text-xl font-light text-white tracking-tight sm:text-2xl">
@@ -101,7 +101,7 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-orange-300/40 bg-brand-orange-500/20 px-3 py-1.5 text-[11px] font-bold text-brand-orange-200">
                 <Timer size={12} /> Ends in
               </span>
               <div className="flex items-start gap-2">
@@ -111,7 +111,7 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
                 <TimeUnit label="Sec" value={pad(time.seconds)} />
               </div>
               <Link
-                className="group hidden items-center gap-1.5 rounded-full border border-white/25 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/10 lg:inline-flex"
+                className="group hidden items-center gap-1.5 rounded-full border border-brand-orange-400/50 bg-brand-orange-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-brand-orange-600 lg:inline-flex"
                 to="/shop?sale=true"
               >
                 View All

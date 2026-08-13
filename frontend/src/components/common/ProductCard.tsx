@@ -92,20 +92,20 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
 
   // Badge priority: sale > flash sale > new arrival > best seller
   const badge = variantDiscount > 0
-    ? { text: `-${variantDiscount}%`, className: 'bg-red-500 text-white' }
+    ? { text: `-${variantDiscount}%`, className: 'bg-brand-orange-500 text-white' }
     : baseDiscount > 0
-      ? { text: `-${baseDiscount}%`, className: 'bg-red-500 text-white' }
+      ? { text: `-${baseDiscount}%`, className: 'bg-brand-orange-500 text-white' }
     : product.isFlashSale
-      ? { text: 'Flash Sale', className: 'bg-accent text-accent-foreground' }
+      ? { text: '⚡ Flash Sale', className: 'bg-brand-orange-50 text-brand-orange-600 border border-brand-orange-200' }
       : product.isNewArrival
-        ? { text: 'New', className: 'bg-emerald-500 text-white' }
+        ? { text: 'New', className: 'bg-brand-green-500 text-white' }
         : product.isBestSeller
           ? { text: 'Best Seller', className: 'bg-amber-500 text-white' }
           : null
 
   return (
     <motion.article
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-slate-200 hover:shadow-card"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green-100 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-brand-green-200 hover:shadow-card"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-20px' }}
@@ -153,7 +153,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         <div className="absolute right-2.5 top-2.5 flex flex-col gap-1.5 sm:translate-x-2 sm:opacity-0 sm:transition-all sm:duration-200 sm:group-hover:translate-x-0 sm:group-hover:opacity-100 sm:group-focus-within:translate-x-0 sm:group-focus-within:opacity-100">
           <button
             aria-label="Quick view"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:bg-primary hover:text-primary-foreground"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:bg-brand-green-500 hover:text-white"
             onClick={(e) => { e.preventDefault(); onQuickView(product) }}
             type="button"
           >
@@ -176,7 +176,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         {/* Brand + rating row */}
         <div className="flex items-center justify-between gap-2">
-          <p className="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+          <p className="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-brand-green-600">
             {brandName || '\u00A0'}
           </p>
           {(product.rating || product.reviewCount) ? (
@@ -190,7 +190,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         </div>
 
         <Link
-          className="line-clamp-2 min-h-[2.4rem] text-[13px] font-semibold leading-snug text-slate-800 transition hover:text-emerald-600"
+          className="line-clamp-2 min-h-[2.4rem] text-[13px] font-semibold leading-snug text-slate-800 transition hover:text-brand-green-600"
           to={`/products/${product.slug}`}
         >
           {product.title}
@@ -203,7 +203,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             <span className="text-xs text-slate-400 line-through">{formatPrice(price)}</span>
           )}
           {isLowStock && !isOutOfStock && (
-            <span className="ml-auto shrink-0 text-[10px] font-bold text-accent-foreground">Only {product.stock} left</span>
+            <span className="ml-auto shrink-0 text-[10px] font-bold text-brand-green-600">Only {product.stock} left</span>
           )}
         </div>
 
@@ -229,8 +229,8 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
                 <button
                   className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold transition ${
                     activeSize === size
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-slate-200 text-slate-500 hover:border-primary hover:text-emerald-600'
+                      ? 'border-brand-green-500 bg-brand-green-500 text-white'
+                      : 'border-slate-200 text-slate-500 hover:border-brand-green-400 hover:text-brand-green-600'
                   }`}
                   key={size}
                   onClick={() => setActiveSize(size)}
@@ -249,7 +249,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition active:scale-95 ${
               isOutOfStock
                 ? 'cursor-not-allowed bg-slate-100 text-slate-400'
-                : 'bg-accent text-accent-foreground hover:bg-accent-600'
+                : 'bg-brand-orange-500 text-white hover:bg-brand-orange-600'
             }`}
             disabled={isOutOfStock}
             onClick={handleAddToCart}
@@ -259,7 +259,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
           </button>
           <Link
-            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-accent bg-white py-2 text-xs font-bold text-accent-foreground transition hover:bg-accent hover:text-accent-foreground active:scale-95"
+            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-brand-green-500 bg-white py-2 text-xs font-bold text-brand-green-600 transition hover:bg-brand-green-500 hover:text-white active:scale-95"
             to={`/products/${product.slug}`}
           >
             <ShoppingBag size={13} />
