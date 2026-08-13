@@ -5,71 +5,82 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* Shopifi semantic tokens */
-        ink: '#000000',
+        /* ── Mama Bazar brand palette ── */
+        /* Primary Green — brand identity, nav, header, trust, icons */
+        'brand-green': {
+          DEFAULT: '#176B3A',
+          50:  '#EAF6EF',
+          100: '#C6E9D3',
+          200: '#8FD4AE',
+          300: '#58BF89',
+          400: '#2EA665',
+          500: '#176B3A',
+          600: '#0F4D2C',
+          700: '#0A3820',
+          dark: '#0F4D2C',
+          light: '#EAF6EF',
+        },
+        /* Brand Orange — CTA, Add to Cart, Sale, Offer, Notifications */
+        'brand-orange': {
+          DEFAULT: '#F47B20',
+          50:  '#FFF1E6',
+          100: '#FFE0C2',
+          200: '#FFC08A',
+          300: '#FF9F52',
+          400: '#F88A34',
+          500: '#F47B20',
+          600: '#D96510',
+          700: '#B54E0A',
+          light: '#FFF1E6',
+        },
+        /* Semantic tokens */
+        ink: '#17221B',
         'on-primary': '#FFFFFF',
-        /* {colors.aloe-10} — light-track accent (featured tier, tags) */
-        aloe: {
-          DEFAULT: '#C1FBD4',
-          10: '#C1FBD4',
-        },
-        /* {colors.pistachio-10} — light-track band fill */
-        pistachio: {
-          DEFAULT: '#D4F9E0',
-          10: '#D4F9E0',
-        },
         /* Surfaces */
-        'canvas-night': {
-          DEFAULT: '#000000',
-          elevated: '#0A0A0A',
-        },
-        'surface-elevated-dark': '#1E2C31',
         'canvas-light': '#FFFFFF',
-        'canvas-cream': '#FBFBF5',
+        'canvas-cream': '#F8FAF8',
         'hairline-light': '#E4E4E7',
-        'hairline-dark': '#1E2C31',
         /* Shade ladder */
         'shade-30': '#D4D4D8',
         'shade-40': '#A1A1AA',
         'shade-50': '#71717A',
         'shade-60': '#52525B',
         'shade-70': '#3F3F46',
-        /* Cool link tones (tertiary links on dark) */
-        'link-cool-1': '#9DABAD',
-        'link-cool-2': '#9797A2',
-        'link-cool-3': '#BDBDCA',
-        'link-mint': '#99B3AD',
-        /* Legacy aliases (kept for compatibility) */
+        /* Legacy compat — mapped to new palette */
+        aloe: {
+          DEFAULT: '#C6E9D3',
+          10: '#EAF6EF',
+        },
         brand: {
-          DEFAULT: '#C1FBD4',
-          light: '#D4F9E0',
-          dark: '#9BE8B8',
+          DEFAULT: '#176B3A',
+          light: '#EAF6EF',
+          dark: '#0F4D2C',
         },
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
-          50: '#F4F4F5',
-          100: '#E4E4E7',
-          500: '#52525B',
-          600: '#3F3F46',
-          700: '#27272A',
+          50:  '#EAF6EF',
+          100: '#C6E9D3',
+          500: '#176B3A',
+          600: '#0F4D2C',
+          700: '#0A3820',
         },
         accent: {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
-          50: '#F2FDF6',
-          100: '#E2FBE9',
-          500: '#C1FBD4',
-          600: '#9BE8B8',
+          50:  '#FFF1E6',
+          100: '#FFE0C2',
+          500: '#F47B20',
+          600: '#D96510',
         },
         success: {
-          DEFAULT: '#10B981',
+          DEFAULT: '#176B3A',
           foreground: 'hsl(var(--success-foreground))',
-          50: '#ECFDF5',
-          500: '#10B981',
+          50: '#EAF6EF',
+          500: '#176B3A',
         },
         surface: {
-          DEFAULT: '#FBFBF5',
+          DEFAULT: '#F8FAF8',
           card: '#FFFFFF',
         },
         background: 'hsl(var(--background))',

@@ -88,27 +88,26 @@ const SiteNavbar = () => {
   }
 
   const iconButton =
-    'relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-900 transition hover:border-slate-400 hover:text-slate-900'
+    'relative flex h-11 w-11 items-center justify-center rounded-full border border-brand-green-100 bg-brand-green-50 text-brand-green-600 transition hover:border-brand-green-400 hover:bg-brand-green-100 hover:text-brand-green-700'
 
   const cartButtonClass =
-    'relative flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3.5 text-slate-900 transition hover:border-slate-400 hover:text-slate-900'
+    'relative flex h-11 items-center gap-2 rounded-full border border-brand-orange-200 bg-brand-orange-50 px-3.5 text-brand-orange-600 transition hover:border-brand-orange-400 hover:bg-brand-orange-100 hover:text-brand-orange-700'
 
   return (
     <>
       <header
         className={`sticky top-0 z-50 border-b transition-all duration-300 ${
           scrolled
-            ? 'border-slate-200 bg-white/90 shadow-soft backdrop-blur-xl'
-            : 'border-slate-200 bg-white'
+            ? 'border-brand-green-100 bg-white/95 shadow-soft backdrop-blur-xl'
+            : 'border-brand-green-100 bg-white'
         }`}
       >
         {announcement?.enabled && announcement.text && (
           <div
-            className="text-slate-900"
-            style={{ backgroundColor: announcement.backgroundColor || '#f8fafc', color: announcement.textColor || '#0f172a' }}
+            style={{ backgroundColor: announcement.backgroundColor || '#0F4D2C', color: announcement.textColor || '#ffffff' }}
           >
             <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-1.5 text-center text-[11px] font-medium sm:text-xs">
-              <Zap size={12} className="fill-emerald-500 text-emerald-600" />
+              <Zap size={12} className="fill-brand-orange-400 text-brand-orange-400" />
               <span className="truncate">{announcement.text}</span>
             </div>
           </div>
@@ -118,7 +117,7 @@ const SiteNavbar = () => {
           <div className="flex items-center gap-3">
             <button
               aria-label="Toggle menu"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-900 lg:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-green-100 bg-brand-green-50 text-brand-green-700 transition hover:bg-brand-green-100 lg:hidden"
               onClick={() => setMobileOpen((prev) => !prev)}
               type="button"
             >
@@ -128,7 +127,7 @@ const SiteNavbar = () => {
             <NavLink aria-label="Mama Bazar home" className="flex items-center gap-2" to="/">
               <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
               <span className="hidden font-headline text-lg font-light tracking-tight text-slate-900 sm:block">
-                Mama<span className="text-emerald-600">Bazar</span>
+                Mama<span className="text-brand-green-500">Bazar</span>
               </span>
             </NavLink>
           </div>
@@ -140,7 +139,7 @@ const SiteNavbar = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/dashboard/orders"
-              className="hidden xl:inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 mr-2"
+              className="hidden xl:inline-flex items-center text-xs font-bold uppercase tracking-wider text-brand-green-500 hover:text-brand-green-700 mr-2 transition"
             >
               Track Order
             </Link>
@@ -148,7 +147,7 @@ const SiteNavbar = () => {
             <NavLink aria-label="Wishlist" className={`${iconButton} hidden sm:flex`} to="/shop">
               <Heart size={17} />
               {wishlistCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-orange-500 px-1 text-[10px] font-bold text-white">
                   {wishlistCount}
                 </span>
               )}
@@ -158,7 +157,7 @@ const SiteNavbar = () => {
               <ShoppingBag size={17} />
               <span className="hidden md:inline text-xs font-bold tracking-tight">{formatPrice(subtotal)}</span>
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-orange-500 px-1 text-[10px] font-bold text-white">
                   {cartCount}
                 </span>
               )}
@@ -169,17 +168,17 @@ const SiteNavbar = () => {
                 <button
                   aria-label="Account menu"
                   aria-expanded={userMenuOpen}
-                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-2 transition hover:border-slate-400"
+                  className="flex items-center gap-2 rounded-full border border-brand-green-200 bg-brand-green-50 px-3 py-2 transition hover:border-brand-green-400 hover:bg-brand-green-100"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   type="button"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-bold text-ink">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-green-500 text-xs font-bold text-white">
                     {getUserInitials(authUser.name)}
                   </div>
-                  <span className="hidden md:block text-sm font-semibold text-slate-800 max-w-[120px] truncate">
+                  <span className="hidden md:block text-sm font-semibold text-brand-green-800 max-w-[120px] truncate">
                     {authUser.name.split(' ')[0]}
                   </span>
-                  <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`text-brand-green-600 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 <AnimatePresence>
@@ -189,16 +188,16 @@ const SiteNavbar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: 'easeOut' }}
-                      className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
+                      className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-brand-green-100 bg-white shadow-card"
                     >
-                      <div className="border-b border-slate-200 px-4 py-3">
+                      <div className="border-b border-brand-green-100 bg-brand-green-50 px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-ink">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-green-500 text-sm font-bold text-white">
                             {getUserInitials(authUser.name)}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 truncate">{authUser.name}</p>
-                            <p className="text-xs text-slate-500">{authUser.phone}</p>
+                            <p className="text-sm font-semibold text-brand-green-900 truncate">{authUser.name}</p>
+                            <p className="text-xs text-brand-green-600">{authUser.phone}</p>
                           </div>
                         </div>
                       </div>
@@ -207,51 +206,51 @@ const SiteNavbar = () => {
                         {isAdmin && (
                           <>
                             <Link
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-brand-green-50 hover:text-brand-green-700"
                               onClick={() => setUserMenuOpen(false)}
                               to="/admin/dashboard"
                             >
-                              <LayoutDashboard size={16} className="text-slate-500" />
+                              <LayoutDashboard size={16} className="text-brand-green-500" />
                               Admin Dashboard
                             </Link>
-                            <div className="my-1 border-t border-slate-200" />
+                            <div className="my-1 border-t border-slate-100" />
                           </>
                         )}
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-brand-green-50 hover:text-brand-green-700"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard"
                         >
-                          <Settings size={16} className="text-slate-500" />
+                          <Settings size={16} className="text-brand-green-500" />
                           My Account
                         </Link>
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-brand-green-50 hover:text-brand-green-700"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard/orders"
                         >
-                          <Package size={16} className="text-slate-500" />
+                          <Package size={16} className="text-brand-green-500" />
                           My Orders
                         </Link>
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-brand-green-50 hover:text-brand-green-700"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard/addresses"
                         >
-                          <MapPin size={16} className="text-slate-500" />
+                          <MapPin size={16} className="text-brand-green-500" />
                           My Addresses
                         </Link>
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-brand-green-50 hover:text-brand-green-700"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard/profile"
                         >
-                          <User size={16} className="text-slate-500" />
+                          <User size={16} className="text-brand-green-500" />
                           Profile Settings
                         </Link>
                       </div>
 
-                      <div className="border-t border-slate-200" />
+                      <div className="border-t border-slate-100" />
 
                       <div className="py-2">
                         <button
@@ -286,26 +285,26 @@ const SiteNavbar = () => {
           <SearchBar onNavigate={() => setMobileOpen(false)} />
         </div>
 
-        <div className="hidden lg:block border-t border-slate-200 bg-slate-50">
+        <div className="hidden lg:block border-t border-brand-green-100 bg-brand-green-600">
           <div className="mx-auto flex h-11 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8 text-sm">
             <div className="relative group py-2">
-              <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-800 hover:text-slate-900 transition">
+              <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white hover:text-brand-orange-300 transition">
                 <Menu size={15} />
                 All Categories
                 <ChevronDown size={13} />
               </button>
-              <div className="absolute left-0 top-full z-50 hidden group-hover:block group-focus-within:block w-64 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-card">
+              <div className="absolute left-0 top-full z-50 hidden group-hover:block group-focus-within:block w-64 rounded-2xl border border-brand-green-100 bg-white p-2.5 shadow-card">
                 <div className="max-h-[350px] overflow-y-auto pr-1">
                   {parentCategories.map((cat) => (
                     <Link
                       key={cat.id}
                       to={`/shop?category=${cat.slug}`}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-brand-green-50 hover:text-brand-green-700 transition"
                     >
                       {cat.image ? (
                         <img alt="" className="h-5 w-5 rounded object-cover shrink-0" src={cat.image} />
                       ) : (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[9px] font-black text-slate-900">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-brand-green-100 text-[9px] font-black text-brand-green-700">
                           {cat.name.slice(0, 1)}
                         </span>
                       )}
@@ -316,25 +315,25 @@ const SiteNavbar = () => {
               </div>
             </div>
 
-            <span className="h-4 w-px bg-slate-200" />
+            <span className="h-4 w-px bg-white/30" />
 
             <nav className="flex flex-1 items-center gap-5" aria-label="Main Navigation">
-              <NavLink to="/" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}>
+              <NavLink to="/" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-white underline underline-offset-4' : 'text-white/80 hover:text-white'}`}>
                 Home
               </NavLink>
-              <NavLink to="/shop" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}>
+              <NavLink to="/shop" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-white underline underline-offset-4' : 'text-white/80 hover:text-white'}`}>
                 Shop
               </NavLink>
-              <NavLink to="/shop?sale=true" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
-                Deals
+              <NavLink to="/shop?sale=true" className="text-xs font-bold uppercase tracking-wider text-brand-orange-300 hover:text-brand-orange-200 transition">
+                🔥 Deals
               </NavLink>
-              <NavLink to="/shop" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
+              <NavLink to="/shop" className="text-xs font-bold uppercase tracking-wider text-white/80 hover:text-white transition">
                 Brands
               </NavLink>
-              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-white/80 hover:text-white transition">
                 About
               </NavLink>
-              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-white/80 hover:text-white transition">
                 Contact
               </NavLink>
             </nav>
@@ -360,16 +359,17 @@ const SiteNavbar = () => {
               initial={{ x: '-100%' }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="flex items-center justify-between border-b border-slate-200 p-5">
+              {/* Drawer header */}
+              <div className="flex items-center justify-between border-b border-brand-green-100 bg-brand-green-600 p-5">
                 <NavLink className="flex items-center gap-2" onClick={() => setMobileOpen(false)} to="/">
                   <img alt="Mama Bazar logo" className="h-8 w-auto object-contain" src="/brandlogo.png" />
-                  <span className="font-headline text-lg font-light text-slate-900">
-                    Mama<span className="text-emerald-600">Bazar</span>
+                  <span className="font-headline text-lg font-light text-white">
+                    Mama<span className="text-brand-orange-300">Bazar</span>
                   </span>
                 </NavLink>
                 <button
                   aria-label="Close menu"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
                   onClick={() => setMobileOpen(false)}
                   type="button"
                 >
@@ -378,31 +378,33 @@ const SiteNavbar = () => {
               </div>
 
               {authUser && (
-                <div className="border-b border-slate-200 p-5">
+                <div className="border-b border-brand-green-100 bg-brand-green-50 p-5">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-sm font-bold text-ink">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-green-500 text-sm font-bold text-white">
                       {getUserInitials(authUser.name)}
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">{authUser.name}</p>
-                      <p className="text-sm text-slate-500">{authUser.phone}</p>
+                      <p className="font-semibold text-brand-green-900">{authUser.name}</p>
+                      <p className="text-sm text-brand-green-600">{authUser.phone}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <nav className="p-5 border-b border-slate-200" aria-label="Mobile Navigation">
+              <nav className="p-5 border-b border-brand-green-100" aria-label="Mobile Navigation">
                 {[
                   { label: 'Home', to: '/' },
                   { label: 'Shop', to: '/shop' },
-                  { label: 'Deals/Offers', to: '/shop?sale=true' },
+                  { label: '🔥 Deals / Offers', to: '/shop?sale=true' },
                   { label: 'Track Order', to: '/dashboard/orders' },
                   { label: 'Wishlist', to: '/shop' },
                 ].map((link) => (
                   <NavLink
                     className={({ isActive }) =>
                       `mb-1 flex items-center justify-between rounded-full px-4 py-2.5 text-[14px] font-semibold transition ${
-                        isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-800 hover:bg-slate-100'
+                        isActive
+                          ? 'bg-brand-green-50 text-brand-green-700'
+                          : 'text-slate-800 hover:bg-brand-green-50 hover:text-brand-green-700'
                       }`
                     }
                     key={link.label}
@@ -410,17 +412,17 @@ const SiteNavbar = () => {
                     to={link.to}
                   >
                     {link.label}
-                    <ChevronRight size={16} className="text-slate-500" />
+                    <ChevronRight size={16} className="text-brand-green-400" />
                   </NavLink>
                 ))}
               </nav>
 
               <div className="p-5">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Categories</p>
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green-600">Categories</p>
                 <div className="grid grid-cols-2 gap-2">
                   {parentCategories.map((category) => (
                     <button
-                      className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 transition hover:border-slate-400 hover:text-slate-900"
+                      className="flex items-center gap-2 rounded-full border border-brand-green-100 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 transition hover:border-brand-green-300 hover:bg-brand-green-50 hover:text-brand-green-700"
                       key={category.slug}
                       onClick={() => {
                         navigate(`/shop?category=${category.slug}`)
@@ -431,7 +433,7 @@ const SiteNavbar = () => {
                       {category.image ? (
                         <img alt="" className="h-5 w-5 rounded object-cover" src={category.image} />
                       ) : (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[9px] font-black text-slate-900">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-brand-green-100 text-[9px] font-black text-brand-green-700">
                           {category.name.slice(0, 1)}
                         </span>
                       )}
@@ -443,7 +445,7 @@ const SiteNavbar = () => {
                 <div className="mt-6 flex gap-3">
                   {authUser ? (
                     <button
-                      className="flex-1 rounded-full bg-white px-4 py-3 text-sm font-bold text-ink"
+                      className="flex-1 rounded-full border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100"
                       onClick={() => {
                         dispatch(logout())
                         setMobileOpen(false)
@@ -455,7 +457,7 @@ const SiteNavbar = () => {
                     </button>
                   ) : (
                     <NavLink
-                      className="flex-1 rounded-full bg-white px-4 py-3 text-center text-sm font-bold text-ink"
+                      className="flex-1 rounded-full bg-brand-green-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-brand-green-700"
                       onClick={() => setMobileOpen(false)}
                       to="/auth/login"
                     >
