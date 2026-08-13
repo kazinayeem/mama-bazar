@@ -45,7 +45,7 @@ const BrandRow = ({ items }: BrandRowProps) => {
       {canLeft && (
         <button
           aria-label="Scroll brands left"
-          className="absolute -left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800"
+          className="absolute -left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-emerald-500 hover:text-emerald-600"
           onClick={() => scroll('left')}
           type="button"
         >
@@ -55,7 +55,7 @@ const BrandRow = ({ items }: BrandRowProps) => {
       {canRight && (
         <button
           aria-label="Scroll brands right"
-          className="absolute -right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800"
+          className="absolute -right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white shadow-md text-slate-600 transition hover:border-emerald-500 hover:text-emerald-600"
           onClick={() => scroll('right')}
           type="button"
         >
@@ -71,12 +71,12 @@ const BrandRow = ({ items }: BrandRowProps) => {
         {items.map((brand) => (
           <Link
             key={brand.slug}
-            className="group flex w-[130px] shrink-0 flex-col items-center justify-center gap-2.5 rounded-2xl border border-slate-100 bg-white px-4 py-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card dark:border-slate-800 dark:bg-slate-900"
+            className="group flex w-[130px] shrink-0 flex-col items-center justify-center gap-2.5 rounded-2xl border border-slate-100 bg-white px-4 py-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card"
             style={{ scrollSnapAlign: 'start' }}
             to={`/shop?brand=${brand.slug}`}
           >
             {brand.logo ? (
-              <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-800">
+              <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-slate-50">
                 <img
                   alt={brand.name}
                   className="h-10 w-10 object-contain transition-transform duration-300 group-hover:scale-110"
@@ -85,11 +85,11 @@ const BrandRow = ({ items }: BrandRowProps) => {
                 />
               </span>
             ) : (
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 font-headline text-lg font-black text-primary-foreground">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 font-headline text-lg font-black text-emerald-700">
                 {brand.name.slice(0, 1)}
               </span>
             )}
-            <p className="text-center text-xs font-bold text-slate-700 transition group-hover:text-primary-foreground dark:text-slate-200">
+            <p className="text-center text-xs font-bold text-slate-700 transition group-hover:text-emerald-600">
               {brand.name}
             </p>
           </Link>

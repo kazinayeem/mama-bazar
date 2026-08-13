@@ -223,7 +223,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
   if (loading) {
     return (
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-        <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 sm:h-[400px] lg:h-[480px] dark:bg-slate-800" />
+        <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 sm:h-[400px] lg:h-[480px]" />
       </div>
     )
   }
@@ -267,7 +267,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
             <>
               <button
                 aria-label="Previous slide"
-                className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:left-5 dark:border-slate-700/60 dark:bg-slate-800/95 dark:text-white dark:hover:bg-slate-700"
+                className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:left-5"
                 onClick={prev}
                 type="button"
               >
@@ -275,7 +275,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
               </button>
               <button
                 aria-label="Next slide"
-                className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:right-5 dark:border-slate-700/60 dark:bg-slate-800/95 dark:text-white dark:hover:bg-slate-700"
+                className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:right-5"
                 onClick={next}
                 type="button"
               >

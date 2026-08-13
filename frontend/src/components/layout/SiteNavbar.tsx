@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, ChevronRight, Heart, LogIn, LogOut, Menu, Package, ShoppingBag, User, X, Zap, MapPin, Settings } from 'lucide-react'
+import { ChevronDown, ChevronRight, Heart, LayoutDashboard, LogIn, LogOut, Menu, Package, ShoppingBag, User, X, Zap, MapPin, Settings } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
@@ -31,6 +31,11 @@ const SiteNavbar = () => {
   const announcement = homepageData?.announcement
 
   const parentCategories = categories.filter((c) => !c.parentId)
+
+  const isAdmin = useMemo(
+    () => authUser?.role === 'admin' || authUser?.role === 'manager' || authUser?.role === 'super_admin',
+    [authUser],
+  )
 
   const getUserInitials = useCallback((name: string) => {
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -83,27 +88,27 @@ const SiteNavbar = () => {
   }
 
   const iconButton =
-    'relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-white/40 hover:text-white'
+    'relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-900 transition hover:border-slate-400 hover:text-slate-900'
 
   const cartButtonClass =
-    'relative flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 text-white transition hover:border-white/40 hover:text-white'
+    'relative flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3.5 text-slate-900 transition hover:border-slate-400 hover:text-slate-900'
 
   return (
     <>
       <header
         className={`sticky top-0 z-50 border-b transition-all duration-300 ${
           scrolled
-            ? 'border-white/10 bg-canvas-night/90 shadow-soft backdrop-blur-xl'
-            : 'border-white/10 bg-canvas-night'
+            ? 'border-slate-200 bg-white/90 shadow-soft backdrop-blur-xl'
+            : 'border-slate-200 bg-white'
         }`}
       >
         {announcement?.enabled && announcement.text && (
           <div
-            className="text-white dark:bg-slate-950"
-            style={{ backgroundColor: announcement.backgroundColor || '#1e293b', color: announcement.textColor || '#ffffff' }}
+            className="text-slate-900"
+            style={{ backgroundColor: announcement.backgroundColor || '#f8fafc', color: announcement.textColor || '#0f172a' }}
           >
             <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-1.5 text-center text-[11px] font-medium sm:text-xs">
-              <Zap size={12} className="fill-accent text-accent" />
+              <Zap size={12} className="fill-emerald-500 text-emerald-600" />
               <span className="truncate">{announcement.text}</span>
             </div>
           </div>
@@ -113,7 +118,7 @@ const SiteNavbar = () => {
           <div className="flex items-center gap-3">
             <button
               aria-label="Toggle menu"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white lg:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-900 lg:hidden"
               onClick={() => setMobileOpen((prev) => !prev)}
               type="button"
             >
@@ -122,8 +127,8 @@ const SiteNavbar = () => {
 
             <NavLink aria-label="Mama Bazar home" className="flex items-center gap-2" to="/">
               <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
-              <span className="hidden font-headline text-lg font-light tracking-tight text-white sm:block">
-                Mama<span className="text-primary-foreground">Bazar</span>
+              <span className="hidden font-headline text-lg font-light tracking-tight text-slate-900 sm:block">
+                Mama<span className="text-emerald-600">Bazar</span>
               </span>
             </NavLink>
           </div>
@@ -135,7 +140,7 @@ const SiteNavbar = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/dashboard/orders"
-              className="hidden xl:inline-flex items-center text-xs font-bold uppercase tracking-wider text-white/60 hover:text-white mr-2"
+              className="hidden xl:inline-flex items-center text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 mr-2"
             >
               Track Order
             </Link>
@@ -164,14 +169,14 @@ const SiteNavbar = () => {
                 <button
                   aria-label="Account menu"
                   aria-expanded={userMenuOpen}
-                  className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 transition hover:border-white/40"
+                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-2 transition hover:border-slate-400"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   type="button"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-bold text-ink">
                     {getUserInitials(authUser.name)}
                   </div>
-                  <span className="hidden md:block text-sm font-semibold text-white/85 max-w-[120px] truncate">
+                  <span className="hidden md:block text-sm font-semibold text-slate-800 max-w-[120px] truncate">
                     {authUser.name.split(' ')[0]}
                   </span>
                   <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
@@ -184,60 +189,73 @@ const SiteNavbar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: 'easeOut' }}
-                      className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-canvas-night-elevated shadow-dark-card"
+                      className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card"
                     >
-                      <div className="border-b border-white/10 px-4 py-3">
+                      <div className="border-b border-slate-200 px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-ink">
                             {getUserInitials(authUser.name)}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">{authUser.name}</p>
-                            <p className="text-xs text-white/55">{authUser.phone}</p>
+                            <p className="text-sm font-semibold text-slate-900 truncate">{authUser.name}</p>
+                            <p className="text-xs text-slate-500">{authUser.phone}</p>
                           </div>
                         </div>
                       </div>
 
                       <div className="py-2">
+                        {isAdmin && (
+                          <>
+                            <Link
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
+                              onClick={() => setUserMenuOpen(false)}
+                              to="/admin/dashboard"
+                            >
+                              <LayoutDashboard size={16} className="text-slate-500" />
+                              Admin Dashboard
+                            </Link>
+                            <div className="my-1 border-t border-slate-200" />
+                          </>
+                        )}
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/85 transition hover:bg-white/10"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard"
                         >
-                          <Settings size={16} className="text-white/50" />
+                          <Settings size={16} className="text-slate-500" />
                           My Account
                         </Link>
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/85 transition hover:bg-white/10"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard/orders"
                         >
-                          <Package size={16} className="text-white/50" />
+                          <Package size={16} className="text-slate-500" />
                           My Orders
                         </Link>
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/85 transition hover:bg-white/10"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard/addresses"
                         >
-                          <MapPin size={16} className="text-white/50" />
+                          <MapPin size={16} className="text-slate-500" />
                           My Addresses
                         </Link>
                         <Link
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/85 transition hover:bg-white/10"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 transition hover:bg-slate-100"
                           onClick={() => setUserMenuOpen(false)}
                           to="/dashboard/profile"
                         >
-                          <User size={16} className="text-white/50" />
+                          <User size={16} className="text-slate-500" />
                           Profile Settings
                         </Link>
                       </div>
 
-                      <div className="border-t border-white/10" />
+                      <div className="border-t border-slate-200" />
 
                       <div className="py-2">
                         <button
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition hover:bg-red-50"
                           onClick={() => {
                             setUserMenuOpen(false)
                             setShowLogoutModal(true)
@@ -268,26 +286,26 @@ const SiteNavbar = () => {
           <SearchBar onNavigate={() => setMobileOpen(false)} />
         </div>
 
-        <div className="hidden lg:block border-t border-white/10 bg-white/5">
+        <div className="hidden lg:block border-t border-slate-200 bg-slate-50">
           <div className="mx-auto flex h-11 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8 text-sm">
             <div className="relative group py-2">
-              <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/85 hover:text-white transition">
+              <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-800 hover:text-slate-900 transition">
                 <Menu size={15} />
                 All Categories
                 <ChevronDown size={13} />
               </button>
-              <div className="absolute left-0 top-full z-50 hidden group-hover:block group-focus-within:block w-64 rounded-2xl border border-white/10 bg-canvas-night-elevated p-2.5 shadow-dark-card">
+              <div className="absolute left-0 top-full z-50 hidden group-hover:block group-focus-within:block w-64 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-card">
                 <div className="max-h-[350px] overflow-y-auto pr-1">
                   {parentCategories.map((cat) => (
                     <Link
                       key={cat.id}
                       to={`/shop?category=${cat.slug}`}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition"
                     >
                       {cat.image ? (
                         <img alt="" className="h-5 w-5 rounded object-cover shrink-0" src={cat.image} />
                       ) : (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/10 text-[9px] font-black text-white">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[9px] font-black text-slate-900">
                           {cat.name.slice(0, 1)}
                         </span>
                       )}
@@ -298,25 +316,25 @@ const SiteNavbar = () => {
               </div>
             </div>
 
-            <span className="h-4 w-px bg-white/15" />
+            <span className="h-4 w-px bg-slate-200" />
 
             <nav className="flex flex-1 items-center gap-5" aria-label="Main Navigation">
-              <NavLink to="/" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-white' : 'text-white/70 hover:text-white'}`}>
+              <NavLink to="/" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}>
                 Home
               </NavLink>
-              <NavLink to="/shop" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-white' : 'text-white/70 hover:text-white'}`}>
+              <NavLink to="/shop" className={({ isActive }) => `text-xs font-bold uppercase tracking-wider transition ${isActive ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}>
                 Shop
               </NavLink>
-              <NavLink to="/shop?sale=true" className="text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition">
+              <NavLink to="/shop?sale=true" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
                 Deals
               </NavLink>
-              <NavLink to="/shop" className="text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition">
+              <NavLink to="/shop" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
                 Brands
               </NavLink>
-              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition">
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
                 About
               </NavLink>
-              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition">
+              <NavLink to="/contact" className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition">
                 Contact
               </NavLink>
             </nav>
@@ -337,21 +355,21 @@ const SiteNavbar = () => {
             />
             <motion.aside
               animate={{ x: 0 }}
-              className="fixed inset-y-0 left-0 z-[200] w-[82%] max-w-sm overflow-y-auto bg-canvas-night-elevated shadow-dark-card lg:hidden"
+              className="fixed inset-y-0 left-0 z-[200] w-[82%] max-w-sm overflow-y-auto bg-white shadow-card lg:hidden"
               exit={{ x: '-100%' }}
               initial={{ x: '-100%' }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="flex items-center justify-between border-b border-white/10 p-5">
+              <div className="flex items-center justify-between border-b border-slate-200 p-5">
                 <NavLink className="flex items-center gap-2" onClick={() => setMobileOpen(false)} to="/">
                   <img alt="Mama Bazar logo" className="h-8 w-auto object-contain" src="/brandlogo.png" />
-                  <span className="font-headline text-lg font-light text-white">
-                    Mama<span className="text-primary-foreground">Bazar</span>
+                  <span className="font-headline text-lg font-light text-slate-900">
+                    Mama<span className="text-emerald-600">Bazar</span>
                   </span>
                 </NavLink>
                 <button
                   aria-label="Close menu"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-600"
                   onClick={() => setMobileOpen(false)}
                   type="button"
                 >
@@ -360,20 +378,20 @@ const SiteNavbar = () => {
               </div>
 
               {authUser && (
-                <div className="border-b border-white/10 p-5">
+                <div className="border-b border-slate-200 p-5">
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-sm font-bold text-ink">
                       {getUserInitials(authUser.name)}
                     </div>
                     <div>
-                      <p className="font-semibold text-white">{authUser.name}</p>
-                      <p className="text-sm text-white/55">{authUser.phone}</p>
+                      <p className="font-semibold text-slate-900">{authUser.name}</p>
+                      <p className="text-sm text-slate-500">{authUser.phone}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <nav className="p-5 border-b border-white/10" aria-label="Mobile Navigation">
+              <nav className="p-5 border-b border-slate-200" aria-label="Mobile Navigation">
                 {[
                   { label: 'Home', to: '/' },
                   { label: 'Shop', to: '/shop' },
@@ -384,7 +402,7 @@ const SiteNavbar = () => {
                   <NavLink
                     className={({ isActive }) =>
                       `mb-1 flex items-center justify-between rounded-full px-4 py-2.5 text-[14px] font-semibold transition ${
-                        isActive ? 'bg-white/10 text-white' : 'text-white/85 hover:bg-white/10'
+                        isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-800 hover:bg-slate-100'
                       }`
                     }
                     key={link.label}
@@ -392,17 +410,17 @@ const SiteNavbar = () => {
                     to={link.to}
                   >
                     {link.label}
-                    <ChevronRight size={16} className="text-white/50" />
+                    <ChevronRight size={16} className="text-slate-500" />
                   </NavLink>
                 ))}
               </nav>
 
               <div className="p-5">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Categories</p>
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Categories</p>
                 <div className="grid grid-cols-2 gap-2">
                   {parentCategories.map((category) => (
                     <button
-                      className="flex items-center gap-2 rounded-full border border-white/15 px-3 py-2.5 text-left text-xs font-semibold text-white/85 transition hover:border-white/40 hover:text-white"
+                      className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 transition hover:border-slate-400 hover:text-slate-900"
                       key={category.slug}
                       onClick={() => {
                         navigate(`/shop?category=${category.slug}`)
@@ -413,7 +431,7 @@ const SiteNavbar = () => {
                       {category.image ? (
                         <img alt="" className="h-5 w-5 rounded object-cover" src={category.image} />
                       ) : (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/10 text-[9px] font-black text-white">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-[9px] font-black text-slate-900">
                           {category.name.slice(0, 1)}
                         </span>
                       )}
@@ -469,19 +487,19 @@ const SiteNavbar = () => {
               transition={{ duration: 0.2 }}
               className="fixed inset-0 z-[201] flex items-center justify-center p-4"
             >
-              <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
                 <div className="text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50">
-                    <LogOut size={24} className="text-red-600 dark:text-red-400" />
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                    <LogOut size={24} className="text-red-600" />
                   </div>
-                  <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">Logout from Mama Bazar?</h3>
-                  <p className="mt-2 text-sm text-white/55">
+                  <h3 className="mt-4 text-lg font-bold text-slate-900">Logout from Mama Bazar?</h3>
+                  <p className="mt-2 text-sm text-slate-500">
                     Are you sure you want to logout? You will need to login again to access your account.
                   </p>
                 </div>
                 <div className="mt-6 flex gap-3">
                   <button
-                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     onClick={() => setShowLogoutModal(false)}
                     type="button"
                   >

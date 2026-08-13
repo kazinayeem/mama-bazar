@@ -28,7 +28,7 @@ const NewsletterBlock = ({ settings }: NewsletterBlockProps) => {
   }
 
   return (
-    <section className="bg-white py-6 dark:bg-slate-950">
+    <section className="bg-white py-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-700 via-primary to-brand px-6 py-10 shadow-glow sm:px-12 lg:py-12">
           <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />

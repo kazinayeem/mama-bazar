@@ -29,39 +29,39 @@ const UserDashboardLayout = () => {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Profile Hero */}
-      <header className="mb-6 overflow-hidden rounded-2xl border border-slate-200/50 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700">
+      <header className="mb-6 overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-white">
         <div className="flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-5">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/20 text-2xl font-bold text-white ring-4 ring-white/10 sm:h-20 sm:w-20 sm:text-3xl">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-800 ring-4 ring-emerald-100/60 sm:h-20 sm:w-20 sm:text-3xl">
               {getUserInitials(user?.name || '')}
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-400">Customer Portal</p>
-              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-600">Customer Portal</p>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
                 Hi, {user?.name || 'User'}
               </h1>
-              <p className="mt-1 max-w-lg text-sm text-slate-300">
+              <p className="mt-1 max-w-lg text-sm text-slate-500">
                 Manage your profile, orders and delivery preferences from one place.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Orders</p>
-              <p className="mt-1 text-xl font-bold text-white">{userOrders.length}</p>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Orders</p>
+              <p className="mt-1 text-xl font-bold text-slate-900">{userOrders.length}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Phone</p>
-              <p className="mt-1 truncate text-sm font-semibold text-white">{user?.phone || '-'}</p>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Phone</p>
+              <p className="mt-1 truncate text-sm font-semibold text-slate-900">{user?.phone || '-'}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Area</p>
-              <p className="mt-1 truncate text-sm font-semibold text-white">{user?.shippingArea || 'Not set'}</p>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Area</p>
+              <p className="mt-1 truncate text-sm font-semibold text-slate-900">{user?.shippingArea || 'Not set'}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-300">Account</p>
-              <p className="mt-1 text-sm font-semibold uppercase text-emerald-400">Active</p>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Account</p>
+              <p className="mt-1 text-sm font-semibold uppercase text-emerald-600">Active</p>
             </div>
           </div>
         </div>

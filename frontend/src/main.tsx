@@ -9,6 +9,9 @@ import App from './App.tsx'
 import { ToastProvider } from './components/common/ToastProvider'
 import { store } from './store'
 
+// Light-only: ensure no dark class can ever be applied at boot.
+document.documentElement.classList.remove('dark')
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>

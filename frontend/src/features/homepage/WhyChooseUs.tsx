@@ -18,22 +18,22 @@ const WhyChooseUs = ({ items, dark }: WhyChooseUsProps) => {
             <div
               className={`h-full rounded-[18px] p-6 transition hover:-translate-y-1 ${
                 dark
-                  ? 'border border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/10'
-                  : 'border border-slate-100 bg-slate-50/70 shadow-soft hover:shadow-card dark:border-slate-800 dark:bg-slate-800/40'
+                  ? 'border border-slate-100 bg-white/70 hover:border-slate-200 hover:bg-white'
+                  : 'border border-slate-100 bg-slate-50/70 shadow-soft hover:shadow-card'
               }`}
             >
               <span
                 className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                  dark ? 'bg-accent/20 text-accent' : 'bg-primary/10 text-primary-foreground'
+                  dark ? 'bg-emerald-50 text-emerald-700' : 'bg-emerald-50 text-emerald-700'
                 }`}
               >
                 <Icon size={22} />
               </span>
-              <p className={`mt-4 font-headline text-base font-extrabold ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+              <p className={`mt-4 font-headline text-base font-extrabold ${dark ? 'text-slate-900' : 'text-slate-900'}`}>
                 {item.title}
               </p>
               {item.text && (
-                <p className={`mt-2 text-sm leading-6 ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>{item.text}</p>
+                <p className={`mt-2 text-sm leading-6 ${dark ? 'text-slate-600' : 'text-slate-500'}`}>{item.text}</p>
               )}
             </div>
           </MotionReveal>

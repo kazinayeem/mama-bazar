@@ -26,7 +26,7 @@ const CountdownTimer = ({ targetHours = 9 }: { targetHours?: number }) => {
     <div className="flex items-center gap-2" role="timer" aria-label="Deal countdown">
       {cells.map((cell, index) => (
         <div className="flex items-center gap-2" key={cell.label}>
-          <div className="flex min-w-[52px] flex-col items-center rounded-xl bg-slate-950 px-2 py-2 text-white shadow-soft dark:bg-slate-800">
+          <div className="flex min-w-[52px] flex-col items-center rounded-xl bg-slate-900 px-2 py-2 text-white shadow-soft">
             <span className="font-mono text-xl font-extrabold leading-none sm:text-2xl">{cell.value}</span>
             <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-slate-400">{cell.label}</span>
           </div>

@@ -21,10 +21,12 @@ const uiSlice = createSlice({
   initialState,
   reducers: {
     setTheme: (state, action: PayloadAction<ThemeMode>) => {
-      state.theme = action.payload
+      // Light-only site: theme is always 'light' regardless of payload
+      void action
+      state.theme = 'light'
     },
     toggleTheme: (state) => {
-      state.theme = state.theme === 'light' ? 'dark' : 'light'
+      state.theme = 'light'
     },
     openCart: (state) => {
       state.cartOpen = true

@@ -144,8 +144,8 @@ const ShopPage = () => {
   const [localMin, setLocalMin] = useState(minPrice || '')
 
   const filterSection =
-    'rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900'
-  const filterTitle = 'mb-3 text-xs font-extrabold uppercase tracking-[0.16em] text-slate-900 dark:text-white'
+    'rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft'
+  const filterTitle = 'mb-3 text-xs font-extrabold uppercase tracking-[0.16em] text-slate-900'
   const filterRow = 'flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition'
 
   const sidebar = (
@@ -155,7 +155,7 @@ const ShopPage = () => {
         <div className="space-y-1">
           <button
             className={`${filterRow} ${
-              !selectedCategory ? 'bg-primary/10 text-primary-foreground' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+              !selectedCategory ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'
             }`}
             onClick={() => setParam('category', '')}
             type="button"
@@ -166,8 +166,8 @@ const ShopPage = () => {
             <button
               className={`${filterRow} ${
                 selectedCategory === category.slug
-                  ? 'bg-primary/10 text-primary-foreground'
-                  : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-slate-600 hover:bg-slate-50'
               }`}
               key={category.slug}
               onClick={() => setParam('category', category.slug)}
@@ -177,7 +177,7 @@ const ShopPage = () => {
                 {category.image ? (
                   <img alt="" className="h-5 w-5 rounded-md object-cover" src={category.image} />
                 ) : (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary-foreground">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary">
                     {category.name.slice(0, 1)}
                   </span>
                 )}
@@ -193,7 +193,7 @@ const ShopPage = () => {
         <div className="mt-3 flex gap-2">
           <input
             aria-label="Minimum price"
-            className="w-full rounded-full border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800"
+            className="w-full rounded-full border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary"
             min="0"
             onChange={(event) => setLocalMin(event.target.value)}
             onBlur={() => setParam('minPrice', localMin === '' ? undefined : Number(localMin))}
@@ -203,7 +203,7 @@ const ShopPage = () => {
           />
           <input
             aria-label="Maximum price"
-            className="w-full rounded-full border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800"
+            className="w-full rounded-full border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary"
             min="0"
             onChange={(event) => setLocalMax(event.target.value)}
             onBlur={() => setParam('maxPrice', localMax === '' ? undefined : Number(localMax))}
@@ -222,7 +222,7 @@ const ShopPage = () => {
             return (
               <button
                 className={`${filterRow} ${
-                  active ? 'bg-primary/10 text-primary-foreground' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  active ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'
                 }`}
                 key={brand.slug}
                 onClick={() => setParam('brand', active ? undefined : brand.slug)}
@@ -232,7 +232,7 @@ const ShopPage = () => {
                   {brand.logo ? (
                     <img alt="" className="h-5 w-5 rounded-md object-contain" src={brand.logo} />
                   ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary-foreground">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-[9px] font-black text-primary">
                       {brand.name.slice(0, 1)}
                     </span>
                   )}
@@ -250,7 +250,7 @@ const ShopPage = () => {
           {[4.5, 4, 3].map((rating) => (
             <button
               className={`${filterRow} ${
-                minRating === rating ? 'bg-primary/10 text-primary-foreground' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                minRating === rating ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-50'
               }`}
               key={rating}
               onClick={() => setParam('rating', minRating === rating ? undefined : rating)}
@@ -266,11 +266,11 @@ const ShopPage = () => {
       <div className={filterSection}>
         <h3 className={filterTitle}>Availability</h3>
         <div className="space-y-2">
-          <label className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+          <label className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
             <span>In Stock Only</span>
             <input checked={inStockOnly} className="h-4 w-4 accent-primary" onChange={() => toggleParam('stock')} type="checkbox" />
           </label>
-          <label className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+          <label className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
             <span className="flex items-center gap-1.5">
               <Star size={13} className="text-accent-foreground" /> On Sale
             </span>
@@ -281,7 +281,7 @@ const ShopPage = () => {
 
       {activeFilterCount > 0 && (
         <button
-          className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-accent hover:text-accent-foreground dark:border-slate-700 dark:text-slate-300"
+          className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-accent hover:text-accent-foreground"
           onClick={clearAll}
           type="button"
         >
@@ -299,8 +299,8 @@ const ShopPage = () => {
         url={seoData.url}
       />
       <div className="mb-8">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground">Mama Bazar</p>
-        <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Mama Bazar</p>
+        <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight text-slate-900">
           {search ? `Results for "${search}"` : selectedCategoryName ? selectedCategoryName : 'Shop All Products'}
         </h1>
         <p className="mt-2 text-sm text-slate-500">
@@ -319,14 +319,14 @@ const ShopPage = () => {
         {mobileFiltersOpen && (
           <div className="fixed inset-0 z-[200] lg:hidden">
             <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileFiltersOpen(false)} />
-            <div className="absolute inset-y-0 left-0 w-[86%] max-w-sm overflow-y-auto bg-slate-50 p-5 shadow-lift dark:bg-slate-950">
+            <div className="absolute inset-y-0 left-0 w-[86%] max-w-sm overflow-y-auto bg-slate-50 p-5 shadow-lift">
               <div className="mb-5 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-headline text-lg font-extrabold text-slate-900 dark:text-white">
-                  <SlidersHorizontal size={18} className="text-primary-foreground" /> Filters
+                <h2 className="flex items-center gap-2 font-headline text-lg font-extrabold text-slate-900">
+                  <SlidersHorizontal size={18} className="text-primary" /> Filters
                 </h2>
                 <button
                   aria-label="Close filters"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-soft dark:bg-slate-800 dark:text-slate-300"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-soft"
                   onClick={() => setMobileFiltersOpen(false)}
                   type="button"
                 >
@@ -341,7 +341,7 @@ const ShopPage = () => {
         <section className="min-w-0 flex-1">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 lg:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 lg:hidden"
               onClick={() => setMobileFiltersOpen(true)}
               type="button"
             >
@@ -351,7 +351,7 @@ const ShopPage = () => {
             <div className="relative">
               <select
                 aria-label="Sort products"
-                className="w-full appearance-none rounded-full border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm font-semibold text-slate-700 outline-none focus:border-primary sm:w-auto dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                className="w-full appearance-none rounded-full border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm font-semibold text-slate-700 outline-none focus:border-primary sm:w-auto"
                 onChange={(event) => setParam('sort', event.target.value)}
                 value={sort || 'newest'}
               >
@@ -366,9 +366,9 @@ const ShopPage = () => {
           </div>
 
           {isError ? (
-            <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-20 text-center dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-20 text-center">
               <span className="text-5xl">⚠️</span>
-              <p className="mt-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Couldn&apos;t load products</p>
+              <p className="mt-4 font-headline text-xl font-extrabold text-slate-900">Couldn&apos;t load products</p>
               <p className="mt-2 text-sm text-slate-500">Please check your connection and try again.</p>
               <button className="mt-5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground" onClick={() => productsQuery.refetch()} type="button">
                 Try Again
@@ -377,17 +377,17 @@ const ShopPage = () => {
           ) : isLoading ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
-                <div className="animate-pulse rounded-[18px] border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900" key={index}>
-                  <div className="aspect-square rounded-xl bg-slate-100 dark:bg-slate-800" />
-                  <div className="mt-4 h-4 w-3/4 rounded bg-slate-100 dark:bg-slate-800" />
-                  <div className="mt-2 h-3 w-1/2 rounded bg-slate-100 dark:bg-slate-800" />
+                <div className="animate-pulse rounded-[18px] border border-slate-100 bg-white p-4" key={index}>
+                  <div className="aspect-square rounded-xl bg-slate-100" />
+                  <div className="mt-4 h-4 w-3/4 rounded bg-slate-100" />
+                  <div className="mt-2 h-3 w-1/2 rounded bg-slate-100" />
                 </div>
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-20 text-center dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-20 text-center">
               <span className="text-5xl">🔍</span>
-              <p className="mt-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">No products found</p>
+              <p className="mt-4 font-headline text-xl font-extrabold text-slate-900">No products found</p>
               <p className="mt-2 text-sm text-slate-500">Try adjusting your filters or search terms.</p>
               <button className="mt-5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground" onClick={clearAll} type="button">
                 Clear Filters
@@ -405,7 +405,7 @@ const ShopPage = () => {
                 <div className="mt-10 flex items-center justify-center gap-2">
                   <button
                     aria-label="Previous page"
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                     disabled={page <= 1}
                     onClick={() => goToPage(page - 1)}
                     type="button"
@@ -420,7 +420,7 @@ const ShopPage = () => {
                         aria-label={`Go to page ${pageNumber}`}
                         aria-current={isActive ? 'page' : undefined}
                         className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition ${
-                          isActive ? 'bg-primary text-primary-foreground' : 'border border-slate-200 text-slate-600 hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-300'
+                          isActive ? 'bg-primary text-primary-foreground' : 'border border-slate-200 text-slate-600 hover:border-primary hover:text-primary'
                         }`}
                         key={pageNumber}
                         onClick={() => goToPage(pageNumber)}
@@ -432,7 +432,7 @@ const ShopPage = () => {
                   })}
                   <button
                     aria-label="Next page"
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                     disabled={page >= totalPages}
                     onClick={() => goToPage(page + 1)}
                     type="button"

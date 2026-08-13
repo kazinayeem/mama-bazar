@@ -25,9 +25,9 @@ import {
   hasVariantPriceRange,
 } from '../types'
 
-const infoRow = 'flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0'
+const infoRow = 'flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0'
 const infoLabel = 'text-sm font-semibold text-slate-500'
-const infoValue = 'text-sm font-bold text-slate-900 dark:text-white'
+const infoValue = 'text-sm font-bold text-slate-900'
 
 function getStockLabel(stock: number, product: Product): { text: string; className: string } {
   if (product.unlimitedStock) return { text: 'In Stock', className: 'bg-success/10 text-success' }
@@ -263,19 +263,19 @@ const ProductDetailsPage = () => {
         <SEO title="Loading Product..." description="Loading product details..." noIndex />
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
           <div className="animate-pulse">
-            <div className="aspect-square rounded-[18px] bg-slate-100 dark:bg-slate-800" />
+            <div className="aspect-square rounded-[18px] bg-slate-100" />
             <div className="mt-4 grid grid-cols-4 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div className="aspect-square rounded-xl bg-slate-100 dark:bg-slate-800" key={i} />
+                <div className="aspect-square rounded-xl bg-slate-100" key={i} />
               ))}
             </div>
           </div>
           <div className="animate-pulse space-y-4">
-            <div className="h-6 w-24 rounded bg-slate-100 dark:bg-slate-800" />
-            <div className="h-10 w-3/4 rounded bg-slate-100 dark:bg-slate-800" />
-            <div className="h-5 w-40 rounded bg-slate-100 dark:bg-slate-800" />
-            <div className="h-12 w-52 rounded bg-slate-100 dark:bg-slate-800" />
-            <div className="h-24 w-full rounded bg-slate-100 dark:bg-slate-800" />
+            <div className="h-6 w-24 rounded bg-slate-100" />
+            <div className="h-10 w-3/4 rounded bg-slate-100" />
+            <div className="h-5 w-40 rounded bg-slate-100" />
+            <div className="h-12 w-52 rounded bg-slate-100" />
+            <div className="h-24 w-full rounded bg-slate-100" />
           </div>
         </div>
       </main>
@@ -287,7 +287,7 @@ const ProductDetailsPage = () => {
       <main className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6 lg:px-8">
         <SEO title="Product Not Found" description="The product you are looking for doesn't exist or is no longer available." noIndex />
         <span className="text-5xl">🔍</span>
-        <h1 className="mt-4 font-headline text-2xl font-extrabold text-slate-900 dark:text-white">Product not found</h1>
+        <h1 className="mt-4 font-headline text-2xl font-extrabold text-slate-900">Product not found</h1>
         <p className="mt-2 text-sm text-slate-500">The product you are looking for doesn&apos;t exist or is no longer available.</p>
         <Link className="mt-6 inline-block rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground" to="/shop">
           Back to Shop
@@ -302,12 +302,12 @@ const ProductDetailsPage = () => {
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <SEO {...seoProps} />
 
-      <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-400">
-        <Link className="transition hover:text-primary-foreground" to="/">Home</Link>
+      <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-600">
+        <Link className="transition hover:text-primary" to="/">Home</Link>
         <ChevronRight size={13} />
         {product.category && (
           <>
-            <Link className="transition hover:text-primary-foreground" to={`/shop?category=${product.category.slug}`}>
+            <Link className="transition hover:text-primary" to={`/shop?category=${product.category.slug}`}>
               {product.category.name}
             </Link>
             <ChevronRight size={13} />
@@ -315,7 +315,7 @@ const ProductDetailsPage = () => {
         )}
         {product.subCategory && (
           <>
-            <Link className="transition hover:text-primary-foreground" to={`/shop?category=${product.subCategory.slug}`}>
+            <Link className="transition hover:text-primary" to={`/shop?category=${product.subCategory.slug}`}>
               {product.subCategory.name}
             </Link>
             <ChevronRight size={13} />
@@ -323,18 +323,18 @@ const ProductDetailsPage = () => {
         )}
         {product.childCategory && (
           <>
-            <Link className="transition hover:text-primary-foreground" to={`/shop?category=${product.childCategory.slug}`}>
+            <Link className="transition hover:text-primary" to={`/shop?category=${product.childCategory.slug}`}>
               {product.childCategory.name}
             </Link>
             <ChevronRight size={13} />
           </>
         )}
-        <span className="text-slate-700 dark:text-slate-300">{product.title.slice(0, 30)}...</span>
+        <span className="text-slate-700">{product.title.slice(0, 30)}...</span>
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
         <div>
-          <div className="overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800">
+          <div className="overflow-hidden rounded-[18px] bg-slate-100">
             {product.images.length > 0 ? (
               <img
                 alt={`${product.title} - Mama Bazar`}
@@ -342,7 +342,7 @@ const ProductDetailsPage = () => {
                 src={variantImage || product.images[activeImage] || product.images[0]}
               />
             ) : (
-              <div className="flex aspect-square w-full items-center justify-center text-sm font-semibold text-slate-400">
+              <div className="flex aspect-square w-full items-center justify-center text-sm font-semibold text-slate-600">
                 No image available
               </div>
             )}
@@ -365,7 +365,7 @@ const ProductDetailsPage = () => {
           {product.videoUrl && (
             <div className="mt-4">
               <a
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-primary hover:text-primary"
                 href={product.videoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -379,7 +379,7 @@ const ProductDetailsPage = () => {
         <div className="flex flex-col">
           <div className="flex flex-wrap items-center gap-2">
             {product.brandInfo?.name && (
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-foreground">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
                 {product.brandInfo.name}
               </span>
             )}
@@ -397,45 +397,45 @@ const ProductDetailsPage = () => {
             )}
             {showDiscount && (
               <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent-foreground">
-                <Zap size={11} className="fill-accent" /> Save {discount}%
+                <Zap size={11} className="fill-emerald-500" /> Save {discount}%
               </span>
             )}
           </div>
 
-          <h1 className="mt-4 font-headline text-3xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+          <h1 className="mt-4 font-headline text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl">
             {product.title}
           </h1>
 
           <div className="mt-4 flex items-center gap-3">
             <StarRating rating={product.rating || 0} size={16} />
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <span className="text-sm font-semibold text-slate-700">
               {product.rating ? product.rating.toFixed(1) : 'No rating'}
             </span>
-            <span className="text-sm text-slate-400">({product.reviewCount || 0} reviews)</span>
+            <span className="text-sm text-slate-600">({product.reviewCount || 0} reviews)</span>
           </div>
 
           <div className="mt-6 flex flex-wrap items-end gap-3">
             {showSelectOptionsPrice ? (
-              <p className="font-headline text-2xl font-bold text-slate-400 dark:text-slate-500">
+              <p className="font-headline text-2xl font-bold text-slate-600">
                 Select options to see price
               </p>
             ) : (
               <>
-                <p className="font-headline text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                <p className="font-headline text-4xl font-black tracking-tight text-slate-900">
                   {formatPrice(finalPrice)}
                 </p>
                 {showOriginalPrice && displayPrice && (
-                  <p className="pb-1 text-lg text-slate-400 line-through">{formatPrice(displayPrice)}</p>
+                  <p className="pb-1 text-lg text-slate-600 line-through">{formatPrice(displayPrice)}</p>
                 )}
               </>
             )}
             {activeVariant?.sku && (
-              <span className="pb-1 text-xs text-slate-400">SKU: {activeVariant.sku}</span>
+              <span className="pb-1 text-xs text-slate-600">SKU: {activeVariant.sku}</span>
             )}
           </div>
 
           {(product.shortDescription || product.description) && (
-            <p className="mt-4 text-[15px] leading-8 text-slate-600 dark:text-slate-300">
+            <p className="mt-4 text-[15px] leading-8 text-slate-600">
               {product.shortDescription || product.description}
             </p>
           )}
@@ -443,7 +443,7 @@ const ProductDetailsPage = () => {
           {hasColor && (
             <div className="mt-7">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-                Color: <span className="text-slate-900 dark:text-white">{activeColor || 'Select'}</span>
+                Color: <span className="text-slate-900">{activeColor || 'Select'}</span>
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.colorOptions!.map((color) => (
@@ -452,7 +452,7 @@ const ProductDetailsPage = () => {
                     className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition ${
                       activeColor === color.name
                         ? 'border-primary ring-2 ring-primary/30'
-                        : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
                     key={color.name}
                     onClick={() => setActiveColor(color.name)}
@@ -470,7 +470,7 @@ const ProductDetailsPage = () => {
           {hasSize && (
             <div className="mt-5">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-                Size: <span className="text-slate-900 dark:text-white">{activeSize || 'Select'}</span>
+                Size: <span className="text-slate-900">{activeSize || 'Select'}</span>
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.sizeOptions!.map((size) => {
@@ -484,12 +484,12 @@ const ProductDetailsPage = () => {
                       aria-label={`Select size ${size}`}
                       className={`flex h-11 min-w-[3rem] items-center justify-center rounded-lg border px-4 transition ${
                         activeSize === size
-                          ? 'border-primary bg-primary/5 text-primary-foreground ring-1 ring-primary/30'
+                          ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/30'
                           : isUnavailable
-                            ? 'border-slate-100 text-slate-300 cursor-not-allowed line-through dark:border-slate-700 dark:text-slate-600'
+                            ? 'border-slate-100 text-slate-300 cursor-not-allowed line-through'
                             : isOos
-                              ? 'border-amber-200 text-amber-600 bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:bg-amber-950'
-                              : 'border-slate-200 text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:text-slate-200'
+                              ? 'border-amber-200 text-amber-600 bg-amber-50'
+                              : 'border-slate-200 text-slate-700 hover:border-slate-300'
                       }`}
                       disabled={isUnavailable}
                       key={size}
@@ -505,7 +505,7 @@ const ProductDetailsPage = () => {
           )}
 
           {needsOptions && allOptionsSelected && variantOutOfStock && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-700">
               This variant is currently out of stock
             </div>
           )}
@@ -513,10 +513,10 @@ const ProductDetailsPage = () => {
           <div className="mt-7 flex items-center gap-5">
             <div>
               <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Quantity</p>
-              <div className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-1.5 dark:border-slate-700">
+              <div className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-1.5">
                 <button
                   aria-label="Decrease quantity"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
                   disabled={quantity <= minQty}
                   onClick={() => setQuantity((q) => Math.max(minQty, q - 1))}
                   type="button"
@@ -526,7 +526,7 @@ const ProductDetailsPage = () => {
                 <span className="w-10 text-center font-bold">{quantity}</span>
                 <button
                   aria-label="Increase quantity"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
                   disabled={outOfStock || variantOutOfStock || quantity >= maxQty}
                   onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
                   type="button"
@@ -558,7 +558,7 @@ const ProductDetailsPage = () => {
               onClick={() => handleAddToCart(true)}
               type="button"
             >
-              <Zap size={16} className="fill-white" /> Buy Now
+              <Zap size={16} className="fill-accent-foreground" /> Buy Now
             </button>
           </div>
 
@@ -567,18 +567,18 @@ const ProductDetailsPage = () => {
               className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
                 wishlisted
                   ? 'border-accent bg-accent/10 text-accent-foreground'
-                  : 'border-slate-200 text-slate-700 hover:border-accent hover:text-accent-foreground dark:border-slate-700 dark:text-slate-200'
+                  : 'border-slate-200 text-slate-700 hover:border-accent hover:text-accent-foreground'
               }`}
               onClick={handleWishlist}
               type="button"
             >
-              <Heart size={16} className={wishlisted ? 'fill-accent' : ''} /> {wishlisted ? 'Saved' : 'Wishlist'}
+              <Heart size={16} className={wishlisted ? 'fill-emerald-500' : ''} /> {wishlisted ? 'Saved' : 'Wishlist'}
             </button>
             <button
               className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition ${
                 compared
-                  ? 'border-primary bg-primary/10 text-primary-foreground'
-                  : 'border-slate-200 text-slate-700 hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-200'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-slate-200 text-slate-700 hover:border-primary hover:text-primary'
               }`}
               onClick={handleCompare}
               type="button"
@@ -587,7 +587,7 @@ const ProductDetailsPage = () => {
             </button>
           </div>
 
-          <div className="mt-6 rounded-[18px] border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="mt-6 rounded-[18px] border border-slate-100 bg-slate-50/50 p-4">
             {product.warranty && (
               <div className={infoRow}>
                 <span className={`${infoLabel} flex items-center gap-1.5`}><Shield size={14} /> Warranty</span>
@@ -629,19 +629,19 @@ const ProductDetailsPage = () => {
       </div>
 
       <section className="mt-16">
-        <div className="rounded-[18px] border border-slate-100 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+        <div className="rounded-[18px] border border-slate-100 bg-white p-6 shadow-soft sm:p-8">
           {product.description && (
             <div className="mb-8">
-              <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Description</h2>
+              <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900">Description</h2>
               <div
-                className="prose prose-sm max-w-none text-slate-600 dark:text-slate-300
-                  [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-slate-900 [&_h2]:dark:text-white
+                className="prose prose-sm max-w-none text-slate-600
+                  [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-slate-900
                   [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold
                   [&_p]:mt-3 [&_p]:leading-7
                   [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5
                   [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:pl-5
                   [&_li]:mt-1 [&_li]:leading-7
-                  [&_strong]:font-semibold [&_strong]:text-slate-900 [&_strong]:dark:text-white
+                  [&_strong]:font-semibold [&_strong]:text-slate-900
                   [&_img]:mt-4 [&_img]:rounded-lg [&_img]:max-w-full
                   [&_table]:mt-4 [&_table]:w-full [&_table]:border [&_table]:border-slate-200
                   [&_th]:bg-slate-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-sm [&_th]:font-semibold
@@ -653,15 +653,15 @@ const ProductDetailsPage = () => {
 
           {specs.length > 0 && (
             <div className="mb-8">
-              <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Specifications</h2>
-              <div className="overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800">
+              <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900">Specifications</h2>
+              <div className="overflow-hidden rounded-xl border border-slate-100">
                 {specs.map((spec, i) => (
                   <div
-                    className={`flex items-center ${i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900'}`}
+                    className={`flex items-center ${i % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}
                     key={spec.id}
                   >
                     <span className="w-1/3 px-4 py-3 text-sm font-semibold text-slate-500">{spec.label}</span>
-                    <span className="w-2/3 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white">{spec.value}</span>
+                    <span className="w-2/3 px-4 py-3 text-sm font-bold text-slate-900">{spec.value}</span>
                   </div>
                 ))}
               </div>
@@ -670,10 +670,10 @@ const ProductDetailsPage = () => {
 
           {product.features && product.features.length > 0 && (
             <div className="mb-8">
-              <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Features</h2>
+              <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900">Features</h2>
               <ul className="space-y-2">
                 {product.features.map((feature, i) => (
-                  <li className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300" key={i}>
+                  <li className="flex items-start gap-2 text-sm text-slate-600" key={i}>
                     <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                     {feature}
                   </li>
@@ -684,11 +684,11 @@ const ProductDetailsPage = () => {
 
           {product.tags && product.tags.length > 0 && (
             <div>
-              <h2 className="mb-3 font-headline text-xl font-extrabold text-slate-900 dark:text-white">Tags</h2>
+              <h2 className="mb-3 font-headline text-xl font-extrabold text-slate-900">Tags</h2>
               <div className="flex flex-wrap gap-2">
                 {product.tags.map((tag) => (
                   <span
-                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600"
                     key={tag}
                   >
                     {tag}
@@ -702,28 +702,28 @@ const ProductDetailsPage = () => {
 
       {product.returnPolicy && (
         <section className="mt-6">
-          <div className="rounded-[18px] border border-slate-100 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-3 font-headline text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="rounded-[18px] border border-slate-100 bg-white p-6 shadow-soft">
+            <h2 className="mb-3 font-headline text-xl font-extrabold text-slate-900 flex items-center gap-2">
               <Truck size={18} /> Return Policy
             </h2>
-            <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">{product.returnPolicy}</p>
+            <p className="text-sm leading-7 text-slate-600">{product.returnPolicy}</p>
           </div>
         </section>
       )}
 
       <section className="mt-16">
         <div className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground">Customer feedback</p>
-          <h2 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Customer feedback</p>
+          <h2 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-slate-900">
             Reviews ({product.reviewCount || reviews.length})
           </h2>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div>
-            <h3 className="mb-4 font-headline text-lg font-extrabold text-slate-900 dark:text-white">Write a review</h3>
+            <h3 className="mb-4 font-headline text-lg font-extrabold text-slate-900">Write a review</h3>
             {isLoggedIn ? (
-              <form className="rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900" onSubmit={handleSubmitReview}>
+              <form className="rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft" onSubmit={handleSubmitReview}>
                 <div className="mb-4 flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((value) => (
                     <button
@@ -733,19 +733,19 @@ const ProductDetailsPage = () => {
                       onClick={() => setReviewRating(value)}
                       type="button"
                     >
-                      <Star size={22} className={value <= reviewRating ? 'fill-accent text-accent-foreground' : 'text-slate-300 dark:text-slate-600'} />
+                      <Star size={22} className={value <= reviewRating ? 'fill-emerald-500 text-accent-foreground' : 'text-slate-300'} />
                     </button>
                   ))}
                 </div>
                 <input
-                  className="mb-3 w-full rounded-full border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800"
+                  className="mb-3 w-full rounded-full border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-primary"
                   onChange={(event) => setReviewTitle(event.target.value)}
                   placeholder="Review title (optional)"
                   type="text"
                   value={reviewTitle}
                 />
                 <textarea
-                  className="mb-3 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-800"
+                  className="mb-3 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary"
                   maxLength={5000}
                   onChange={(event) => setReviewComment(event.target.value)}
                   placeholder="Share your experience with this product..."
@@ -762,7 +762,7 @@ const ProductDetailsPage = () => {
                 </button>
               </form>
             ) : (
-              <div className="rounded-[18px] border border-slate-100 bg-white p-6 text-center shadow-soft dark:border-slate-800 dark:bg-slate-900">
+              <div className="rounded-[18px] border border-slate-100 bg-white p-6 text-center shadow-soft">
                 <p className="text-sm text-slate-500">Please log in to write a review.</p>
                 <Link className="mt-4 inline-block rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground" to="/auth/login">
                   Login
@@ -775,39 +775,39 @@ const ProductDetailsPage = () => {
             {reviewsQuery.isLoading ? (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, index) => (
-                  <div className="animate-pulse rounded-[18px] border border-slate-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" key={index}>
-                    <div className="h-4 w-32 rounded bg-slate-100 dark:bg-slate-800" />
-                    <div className="mt-3 h-3 w-full rounded bg-slate-100 dark:bg-slate-800" />
-                    <div className="mt-2 h-3 w-2/3 rounded bg-slate-100 dark:bg-slate-800" />
+                  <div className="animate-pulse rounded-[18px] border border-slate-100 bg-white p-5" key={index}>
+                    <div className="h-4 w-32 rounded bg-slate-100" />
+                    <div className="mt-3 h-3 w-full rounded bg-slate-100" />
+                    <div className="mt-2 h-3 w-2/3 rounded bg-slate-100" />
                   </div>
                 ))}
               </div>
             ) : reviews.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-16 text-center dark:border-slate-700 dark:bg-slate-900">
+              <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-16 text-center">
                 <span className="text-4xl">💬</span>
-                <p className="mt-4 font-headline text-lg font-extrabold text-slate-900 dark:text-white">No reviews yet</p>
+                <p className="mt-4 font-headline text-lg font-extrabold text-slate-900">No reviews yet</p>
                 <p className="mt-2 text-sm text-slate-500">Be the first to share your experience with this product.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {reviews.map((review) => (
-                  <article className="rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft dark:border-slate-800 dark:bg-slate-900" key={review.id}>
+                  <article className="rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft" key={review.id}>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary-foreground">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary">
                           {(review.customerName || 'Anonymous').slice(0, 1)}
                         </span>
                         <div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">{review.customerName || 'Anonymous'}</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-sm font-bold text-slate-900">{review.customerName || 'Anonymous'}</p>
+                          <p className="text-xs text-slate-600">
                             {new Date(review.createdAt).toLocaleDateString('en-BD', { year: 'numeric', month: 'long', day: 'numeric' })}
                           </p>
                         </div>
                       </div>
                       <StarRating rating={review.rating} size={13} />
                     </div>
-                    {review.title && <h4 className="mt-4 text-sm font-extrabold text-slate-900 dark:text-white">{review.title}</h4>}
-                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{review.comment}</p>
+                    {review.title && <h4 className="mt-4 text-sm font-extrabold text-slate-900">{review.title}</h4>}
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{review.comment}</p>
                   </article>
                 ))}
               </div>
@@ -820,10 +820,10 @@ const ProductDetailsPage = () => {
         <section className="mt-20">
           <div className="mb-8 flex items-end justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-foreground">You may also like</p>
-              <h2 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Related Products</h2>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">You may also like</p>
+              <h2 className="mt-2 font-headline text-3xl font-extrabold tracking-tight text-slate-900">Related Products</h2>
             </div>
-            <Link className="text-sm font-bold text-primary-foreground hover:underline" to={`/shop?category=${product.category?.slug || ''}`}>
+            <Link className="text-sm font-bold text-primary hover:underline" to={`/shop?category=${product.category?.slug || ''}`}>
               View more
             </Link>
           </div>

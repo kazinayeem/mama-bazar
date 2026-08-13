@@ -6,20 +6,16 @@ export const useThemeSync = () => {
   const theme = useAppSelector((state) => state.ui.theme)
   const dispatch = useAppDispatch()
 
+  // The site is light-only: purge any persisted dark preference up front.
   useEffect(() => {
-    const stored = window.localStorage.getItem('technest-theme') as 'light' | 'dark' | null
-    if (stored && stored !== theme) {
-      dispatch(setTheme(stored))
+    const stored = window.localStorage.getItem('technest-theme')
+    if (stored && stored !== 'light') {
+      dispatch(setTheme('light'))
     }
   }, [dispatch, theme])
 
   useEffect(() => {
-    const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
-    }
-    window.localStorage.setItem('technest-theme', theme)
+    document.documentElement.classList.remove('dark')
+    window.localStorage.setItem('technest-theme', 'light')
   }, [theme])
 }

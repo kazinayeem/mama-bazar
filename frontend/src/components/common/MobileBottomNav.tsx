@@ -10,13 +10,13 @@ const MobileBottomNav = () => {
 
   const itemClass = ({ isActive }: { isActive: boolean }) =>
     `relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold transition ${
-      isActive ? 'text-primary-foreground' : 'text-slate-400'
+      isActive ? 'text-slate-900' : 'text-slate-400'
     }`
 
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-900 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <div className="mx-auto flex max-w-lg items-center px-2">
         <NavLink className={itemClass} to="/">

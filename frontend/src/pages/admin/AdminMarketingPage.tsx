@@ -220,7 +220,7 @@ const AdminMarketingPage = () => {
             </Card>
             <Card>
               <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 text-emerald-600">
                   <Calendar className="h-6 w-6" />
                 </div>
                 <div>

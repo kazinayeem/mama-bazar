@@ -15,7 +15,7 @@ const HomePage = () => {
   const { data: homepage, isLoading, isError, refetch } = useGetHomepageQuery()
 
   return (
-    <main className="relative overflow-x-hidden bg-white dark:bg-[#020617]">
+    <main className="relative overflow-x-hidden bg-white">
       <SEO
         title="Home"
         description="Discover premium products at unbeatable prices. Official warranty, free delivery, and 24/7 support."
@@ -33,7 +33,7 @@ const HomePage = () => {
         {contactOpen && (
           <div className="flex flex-col items-end gap-2">
             <a
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/5 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/5 transition hover:border-emerald-500 hover:text-emerald-600"
               href={MESSENGER_URL}
               rel="noopener noreferrer"
               target="_blank"
@@ -42,7 +42,7 @@ const HomePage = () => {
               Messenger
             </a>
             <a
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/5 transition hover:border-emerald-500 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/5 transition hover:border-emerald-500 hover:text-emerald-600"
               href={WHATSAPP_URL}
               rel="noopener noreferrer"
               target="_blank"

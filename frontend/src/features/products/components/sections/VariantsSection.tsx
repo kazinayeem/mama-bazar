@@ -210,7 +210,7 @@ const VariantsSection = () => {
   const isAllSelected = form.variants.length > 0 && form.variants.every((v) => selectedVariants.has(v.key))
   const isSomeSelected = selectedVariants.size > 0
 
-  const thClass = 'px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 border-b border-slate-200 dark:border-slate-700'
+  const thClass = 'px-2 py-2 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 border-b border-slate-200'
   const tdClass = 'px-2 py-2'
 
   const variantOptionsOf = (v: VariantFormValue): { color?: string; colorId?: number; size?: string; sizeId?: number } => {
@@ -391,11 +391,11 @@ const VariantsSection = () => {
 
           {/* Validation Errors */}
           {variantErrors.length > 0 && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
-              <p className="text-sm font-semibold text-red-700 dark:text-red-400">Validation Errors:</p>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm font-semibold text-red-700">Validation Errors:</p>
               <ul className="mt-1 list-inside list-disc space-y-0.5">
                 {variantErrors.map((err, i) => (
-                  <li key={i} className="text-xs text-red-600 dark:text-red-400">{err}</li>
+                  <li key={i} className="text-xs text-red-600">{err}</li>
                 ))}
               </ul>
             </div>
@@ -403,10 +403,10 @@ const VariantsSection = () => {
 
           {/* Variant Table */}
           {form.variants.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50">
+                  <tr className="bg-slate-50">
                     <th className={`${thClass} w-8`}>
                       <input
                         type="checkbox"
@@ -429,7 +429,7 @@ const VariantsSection = () => {
                   {form.variants.map((v, index) => {
                     const opts = variantOptionsOf(v)
                     return (
-                      <tr key={v.key} className={`border-t border-slate-100 dark:border-slate-800 ${index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/30'}`}>
+                      <tr key={v.key} className={`border-t border-slate-100 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
                         <td className={tdClass}>
                           <input
                             type="checkbox"

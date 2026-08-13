@@ -1,6 +1,6 @@
 const ProductCardSkeleton = () => {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[18px] bg-white shadow-card ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-800">
+    <div className="flex h-full flex-col overflow-hidden rounded-[18px] bg-white shadow-card ring-1 ring-slate-100">
       <div className="skeleton h-[180px] w-full shrink-0 sm:h-[200px]" />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="skeleton h-3 w-16 rounded-full" />

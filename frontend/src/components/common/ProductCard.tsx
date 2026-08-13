@@ -105,14 +105,14 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
 
   return (
     <motion.article
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-slate-200 hover:shadow-card dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-slate-200 hover:shadow-card"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-20px' }}
       transition={{ duration: 0.35, delay: Math.min((index % 5) * 0.05, 0.2), ease: [0.22, 1, 0.36, 1] }}
     >
       {/* Image area — fixed height, white bg, object-contain */}
-      <div className="relative h-[190px] shrink-0 overflow-hidden bg-white sm:h-[210px] dark:bg-slate-800">
+      <div className="relative h-[190px] shrink-0 overflow-hidden bg-white sm:h-[210px]">
         <Link to={`/products/${product.slug}`} aria-label={product.title} tabIndex={-1}>
           {activeImage && !imageFailed ? (
             <img
@@ -123,8 +123,8 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
               src={activeImage}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-slate-50 dark:bg-slate-800">
-              <ImageOff size={28} className="text-slate-300 dark:text-slate-600" />
+            <div className="flex h-full w-full items-center justify-center bg-slate-50">
+              <ImageOff size={28} className="text-slate-300" />
             </div>
           )}
         </Link>
@@ -144,7 +144,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
 
         {/* Out of stock overlay */}
         {isOutOfStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-[1px] dark:bg-slate-900/70">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
             <span className="rounded-md bg-slate-800 px-3 py-1 text-xs font-bold text-white">Out of Stock</span>
           </div>
         )}
@@ -153,7 +153,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         <div className="absolute right-2.5 top-2.5 flex flex-col gap-1.5 sm:translate-x-2 sm:opacity-0 sm:transition-all sm:duration-200 sm:group-hover:translate-x-0 sm:group-hover:opacity-100 sm:group-focus-within:translate-x-0 sm:group-focus-within:opacity-100">
           <button
             aria-label="Quick view"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:bg-primary hover:text-primary-foreground dark:bg-slate-800 dark:text-slate-300"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:bg-primary hover:text-primary-foreground"
             onClick={(e) => { e.preventDefault(); onQuickView(product) }}
             type="button"
           >
@@ -162,7 +162,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
           <button
             aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             className={`flex h-11 w-11 items-center justify-center rounded-full shadow-md transition ${
-              wishlisted ? 'bg-red-500 text-white' : 'bg-white text-slate-600 hover:bg-red-500 hover:text-white dark:bg-slate-800 dark:text-slate-300'
+              wishlisted ? 'bg-red-500 text-white' : 'bg-white text-slate-600 hover:bg-red-500 hover:text-white'
             }`}
             onClick={handleWishlist}
             type="button"
@@ -176,7 +176,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         {/* Brand + rating row */}
         <div className="flex items-center justify-between gap-2">
-          <p className="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+          <p className="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-emerald-600">
             {brandName || '\u00A0'}
           </p>
           {(product.rating || product.reviewCount) ? (
@@ -190,7 +190,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         </div>
 
         <Link
-          className="line-clamp-2 min-h-[2.4rem] text-[13px] font-semibold leading-snug text-slate-800 transition hover:text-primary-foreground dark:text-slate-100"
+          className="line-clamp-2 min-h-[2.4rem] text-[13px] font-semibold leading-snug text-slate-800 transition hover:text-emerald-600"
           to={`/products/${product.slug}`}
         >
           {product.title}
@@ -198,7 +198,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
 
         {/* Price row */}
         <div className="flex flex-wrap items-baseline gap-x-1.5 pt-0.5">
-          <span className="text-base font-extrabold text-slate-900 dark:text-white">{formatPrice(salePriceValue)}</span>
+          <span className="text-base font-extrabold text-slate-900">{formatPrice(salePriceValue)}</span>
           {baseDiscount > 0 && (
             <span className="text-xs text-slate-400 line-through">{formatPrice(price)}</span>
           )}
@@ -230,7 +230,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
                   className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold transition ${
                     activeSize === size
                       ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-slate-200 text-slate-500 hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-400'
+                      : 'border-slate-200 text-slate-500 hover:border-primary hover:text-emerald-600'
                   }`}
                   key={size}
                   onClick={() => setActiveSize(size)}
@@ -248,7 +248,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
           <button
             className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition active:scale-95 ${
               isOutOfStock
-                ? 'cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800'
+                ? 'cursor-not-allowed bg-slate-100 text-slate-400'
                 : 'bg-accent text-accent-foreground hover:bg-accent-600'
             }`}
             disabled={isOutOfStock}
@@ -259,7 +259,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
           </button>
           <Link
-            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-accent bg-white py-2 text-xs font-bold text-accent-foreground transition hover:bg-accent hover:text-accent-foreground active:scale-95 dark:bg-slate-800 dark:hover:bg-accent"
+            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-accent bg-white py-2 text-xs font-bold text-accent-foreground transition hover:bg-accent hover:text-accent-foreground active:scale-95"
             to={`/products/${product.slug}`}
           >
             <ShoppingBag size={13} />

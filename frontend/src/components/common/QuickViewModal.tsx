@@ -66,7 +66,7 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
     <AnimatePresence>
       <motion.div
         animate={{ opacity: 1 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         exit={{ opacity: 0 }}
         initial={{ opacity: 0 }}
         onClick={onClose}
@@ -76,7 +76,7 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
       >
         <motion.div
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="relative grid max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[18px] bg-white shadow-lift dark:bg-slate-900 md:grid-cols-2"
+          className="relative grid max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[18px] bg-white shadow-lift md:grid-cols-2"
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           initial={{ opacity: 0, scale: 0.96, y: 12 }}
           onClick={(event) => event.stopPropagation()}
@@ -84,14 +84,14 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
         >
           <button
             aria-label="Close quick view"
-            className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-soft transition hover:bg-accent hover:text-accent-foreground dark:bg-slate-800 dark:text-slate-200"
+            className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-soft transition hover:bg-accent hover:text-accent-foreground"
             onClick={onClose}
             type="button"
           >
             <X size={16} />
           </button>
 
-          <div className="bg-slate-100 dark:bg-slate-800">
+          <div className="bg-slate-100">
             <img
               alt={product.title}
               className="h-64 w-full object-cover md:h-full md:max-h-[70vh]"
@@ -100,8 +100,8 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
           </div>
 
           <div className="flex flex-col gap-3 p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground">{product.brandInfo?.name || product.brand || ''}</p>
-            <Link className="font-headline text-xl font-extrabold leading-tight text-slate-900 hover:text-primary-foreground dark:text-white" to={`/products/${product.slug}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">{product.brandInfo?.name || product.brand || ''}</p>
+            <Link className="font-headline text-xl font-extrabold leading-tight text-slate-900 hover:text-emerald-600" to={`/products/${product.slug}`}>
               {product.title}
             </Link>
             <div className="flex items-center gap-2">
@@ -110,12 +110,12 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
             </div>
 
             <div className="mt-1 flex items-end gap-2">
-              <p className="text-2xl font-extrabold text-slate-900 dark:text-white">{formatPrice(salePriceValue)}</p>
+              <p className="text-2xl font-extrabold text-slate-900">{formatPrice(salePriceValue)}</p>
               {discount > 0 && <p className="pb-1 text-sm text-slate-400 line-through">{formatPrice(price)}</p>}
               {discount > 0 && <span className="mb-1 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-bold text-accent-foreground">-{discount}%</span>}
             </div>
 
-            <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">{product.description}</p>
+            <p className="text-sm leading-6 text-slate-500">{product.description}</p>
 
             {product.images.length > 1 && (
               <div className="flex gap-2">
@@ -142,7 +142,7 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
                 <ShoppingBag size={16} /> Add to Cart
               </button>
               <Link
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 transition hover:border-primary hover:text-primary-foreground dark:border-slate-700 dark:text-slate-100"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 transition hover:border-primary hover:text-emerald-600"
                 to={`/products/${product.slug}`}
                 onClick={onClose}
               >

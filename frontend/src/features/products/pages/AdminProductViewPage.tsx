@@ -169,7 +169,7 @@ const AdminProductViewPage = () => {
           <CardContent>
             {product.description ? (
               <div
-                className="prose prose-sm max-w-none dark:prose-invert"
+                className="prose prose-sm max-w-none"
                 dangerouslySetInnerHTML={{ __html: product.description }}
               />
             ) : (

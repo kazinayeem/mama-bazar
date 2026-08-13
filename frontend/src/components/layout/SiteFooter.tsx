@@ -6,14 +6,14 @@ import { api } from '../../lib/api'
 import type { PaymentMethodInfo } from '../../types'
 
 const PAYMENT_STYLES: Record<string, string> = {
-  cod: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25',
-  bkash: 'bg-pink-500/15 text-pink-300 border-pink-500/25',
-  nagad: 'bg-orange-500/15 text-orange-300 border-orange-500/25',
-  rocket: 'bg-purple-500/15 text-purple-300 border-purple-500/25',
-  bank: 'bg-blue-500/15 text-blue-300 border-blue-500/25',
-  stripe: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/25',
-  sslcommerz: 'bg-amber-500/15 text-amber-300 border-amber-500/25',
-  paypal: 'bg-sky-500/15 text-sky-300 border-sky-500/25',
+  cod: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  bkash: 'bg-pink-50 text-pink-600 border-pink-200',
+  nagad: 'bg-orange-50 text-orange-600 border-orange-200',
+  rocket: 'bg-purple-50 text-purple-600 border-purple-200',
+  bank: 'bg-blue-50 text-blue-600 border-blue-200',
+  stripe: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+  sslcommerz: 'bg-amber-50 text-amber-600 border-amber-200',
+  paypal: 'bg-sky-50 text-sky-600 border-sky-200',
 }
 
 const socialLinks = [
@@ -81,21 +81,21 @@ const SiteFooter = () => {
     Boolean(contact?.phone || contact?.email || contact?.address || contact?.supportHours || contact?.hotline)
 
   return (
-    <footer className="border-t border-slate-800 bg-slate-950 text-slate-400" id="contact">
+    <footer className="border-t border-slate-200 bg-white text-slate-600" id="contact">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         {/* Main columns */}
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand column */}
           <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-brand text-white">
-                <Store size={17} className="fill-white" />
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-brand text-slate-900">
+                <Store size={17} className="fill-slate-900" />
               </span>
-              <span className="font-headline text-xl font-extrabold tracking-tight text-white">
-                Mama<span className="text-accent">Bazar</span>
+              <span className="font-headline text-xl font-extrabold tracking-tight text-slate-900">
+                Mama<span className="text-emerald-600">Bazar</span>
               </span>
             </div>
-            <p className="mt-4 max-w-xs text-[13px] leading-6 text-slate-400">
+            <p className="mt-4 max-w-xs text-[13px] leading-6 text-slate-600">
               Your trusted online store for home essentials and everyday groceries, delivered fast across the country.
             </p>
 
@@ -103,31 +103,31 @@ const SiteFooter = () => {
               <ul className="mt-5 space-y-2.5 text-xs">
                 {contact?.hotline && (
                   <li className="flex items-start gap-2.5">
-                    <Phone size={14} className="mt-0.5 shrink-0 text-accent" />
+                    <Phone size={14} className="mt-0.5 shrink-0 text-emerald-600" />
                     <span>Hotline: {contact.hotline}</span>
                   </li>
                 )}
                 {contact?.phone && (
                   <li className="flex items-start gap-2.5">
-                    <Phone size={14} className="mt-0.5 shrink-0 text-accent" />
+                    <Phone size={14} className="mt-0.5 shrink-0 text-emerald-600" />
                     <span>{contact.phone}</span>
                   </li>
                 )}
                 {contact?.email && (
                   <li className="flex items-start gap-2.5">
-                    <Mail size={14} className="mt-0.5 shrink-0 text-accent" />
+                    <Mail size={14} className="mt-0.5 shrink-0 text-emerald-600" />
                     <span className="break-all">{contact.email}</span>
                   </li>
                 )}
                 {contact?.address && (
                   <li className="flex items-start gap-2.5">
-                    <MapPin size={14} className="mt-0.5 shrink-0 text-accent" />
+                    <MapPin size={14} className="mt-0.5 shrink-0 text-emerald-600" />
                     <span>{contact.address}</span>
                   </li>
                 )}
                 {contact?.supportHours && (
                   <li className="flex items-start gap-2.5">
-                    <Clock size={14} className="mt-0.5 shrink-0 text-accent" />
+                    <Clock size={14} className="mt-0.5 shrink-0 text-emerald-600" />
                     <span>{contact.supportHours}</span>
                   </li>
                 )}
@@ -138,7 +138,7 @@ const SiteFooter = () => {
               {socialLinks.map(({ icon, label }) => (
                 <a
                   aria-label={label}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-400 transition hover:border-accent hover:bg-accent hover:text-accent-foreground"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600 transition hover:border-accent hover:bg-accent hover:text-accent-foreground"
                   href="/contact"
                   key={label}
                 >
@@ -152,28 +152,28 @@ const SiteFooter = () => {
 
           {/* Shop By (categories) */}
           <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-white">Shop By</p>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-900">Shop By</p>
             <ul className="space-y-2.5">
               {categories.slice(0, 6).map((category) => (
                 <li key={category.slug}>
-                  <Link className="text-xs text-slate-400 transition hover:text-accent" to={`/shop?category=${category.slug}`}>
+                  <Link className="text-xs text-slate-600 transition hover:text-emerald-600" to={`/shop?category=${category.slug}`}>
                     {category.name}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link className="text-xs font-bold text-accent" to="/shop">View All →</Link>
+                <Link className="text-xs font-bold text-emerald-600" to="/shop">View All →</Link>
               </li>
             </ul>
           </div>
 
           {/* Information */}
           <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-white">Information</p>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-900">Information</p>
             <ul className="space-y-2.5">
               {infoLinks.map((link) => (
                 <li key={link.label}>
-                  <Link className="text-xs text-slate-400 transition hover:text-accent" to={link.to}>
+                  <Link className="text-xs text-slate-600 transition hover:text-emerald-600" to={link.to}>
                     {link.label}
                   </Link>
                 </li>
@@ -183,11 +183,11 @@ const SiteFooter = () => {
 
           {/* Support */}
           <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-white">Customer Support</p>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-900">Customer Support</p>
             <ul className="space-y-2.5">
               {supportLinks.map((link) => (
                 <li key={link.label}>
-                  <Link className="text-xs text-slate-400 transition hover:text-accent" to={link.to}>
+                  <Link className="text-xs text-slate-600 transition hover:text-emerald-600" to={link.to}>
                     {link.label}
                   </Link>
                 </li>
@@ -197,7 +197,7 @@ const SiteFooter = () => {
         </div>
 
         {/* Bottom row */}
-        <div className="mt-12 border-t border-slate-800 pt-7">
+        <div className="mt-12 border-t border-slate-200 pt-7">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">We Accept</p>
@@ -205,7 +205,7 @@ const SiteFooter = () => {
                 {paymentMethods.length > 0 ? (
                   paymentMethods.map((method) => (
                     <span
-                      className={`rounded-md border px-3 py-1 text-[10px] font-bold tracking-wide ${PAYMENT_STYLES[method.code] || 'border-slate-700 bg-slate-900 text-slate-300'}`}
+                      className={`rounded-md border px-3 py-1 text-[10px] font-bold tracking-wide ${PAYMENT_STYLES[method.code] || 'border-slate-200 bg-slate-50 text-slate-600'}`}
                       key={method.code}
                     >
                       {method.name}
@@ -213,7 +213,7 @@ const SiteFooter = () => {
                   ))
                 ) : (
                   ['VISA', 'Mastercard', 'bKash', 'Nagad', 'COD'].map((m) => (
-                    <span className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1 text-[10px] font-bold text-slate-300" key={m}>
+                    <span className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-bold text-slate-600" key={m}>
                       {m}
                     </span>
                   ))
@@ -224,8 +224,8 @@ const SiteFooter = () => {
             <div className="flex flex-col gap-1.5 text-xs text-slate-500 lg:text-right">
               <p>© {year} Mama Bazar. All rights reserved.</p>
               <div className="flex gap-4 lg:justify-end">
-                <Link className="transition hover:text-accent" to="/privacy-policy">Privacy Policy</Link>
-                <Link className="transition hover:text-accent" to="/terms-and-conditions">Terms of Service</Link>
+                <Link className="transition hover:text-emerald-600" to="/privacy-policy">Privacy Policy</Link>
+                <Link className="transition hover:text-emerald-600" to="/terms-and-conditions">Terms of Service</Link>
               </div>
             </div>
           </div>
@@ -235,7 +235,7 @@ const SiteFooter = () => {
         <div className="mt-8 text-center text-[10px] uppercase tracking-[0.18em] text-slate-600">
           Product made by{' '}
           <a
-            className="text-slate-500 transition hover:text-accent"
+            className="text-slate-500 transition hover:text-emerald-600"
             href="https://bornosoft.bd"
             rel="noopener noreferrer"
             target="_blank"

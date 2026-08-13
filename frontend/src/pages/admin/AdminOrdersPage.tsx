@@ -43,9 +43,9 @@ const STATUS_COLORS: Record<string, string> = {
   payment_verification: 'bg-primary/10 text-primary',
   confirmed: 'bg-primary/10 text-primary',
   processing: 'bg-primary/10 text-primary',
-  packed: 'bg-accent/10 text-accent',
+  packed: 'bg-accent/10 text-emerald-600',
   shipped: 'bg-primary/10 text-primary',
-  out_for_delivery: 'bg-accent/10 text-accent',
+  out_for_delivery: 'bg-accent/10 text-emerald-600',
   delivered: 'bg-success/15 text-success',
   returned: 'bg-muted text-muted-foreground',
   cancelled: 'bg-destructive/10 text-destructive',
@@ -461,7 +461,7 @@ const AdminOrdersPage = () => {
                                 ? 'border-primary bg-primary text-white'
                                 : isNext
                                   ? 'border-primary/30 bg-primary/10 text-primary'
-                                  : 'border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500'
+                                  : 'border-slate-200 bg-slate-100 text-slate-400'
                             } ${isBlocked ? 'opacity-80' : ''}`}
                           >
                             {STATUS_LABELS[statusItem]}
@@ -476,7 +476,7 @@ const AdminOrdersPage = () => {
                       Locked from this state:
                       <span className="ml-2 flex flex-wrap gap-1.5 pt-2">
                         {blockedStatuses.map((statusItem) => (
-                          <span key={statusItem} className="rounded-full border border-slate-200 px-2.5 py-1 text-[11px] text-slate-400 dark:border-slate-700">
+                          <span key={statusItem} className="rounded-full border border-slate-200 px-2.5 py-1 text-[11px] text-slate-400">
                             {STATUS_LABELS[statusItem]}
                           </span>
                         ))}

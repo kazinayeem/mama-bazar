@@ -75,7 +75,7 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
   if (products.length === 0) return null
 
   return (
-    <section className="bg-slate-50/40 py-6 lg:py-8 dark:bg-slate-900/40">
+    <section className="bg-slate-50/40 py-6 lg:py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Flash Deals header panel */}
         <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-5 py-5 sm:rounded-3xl sm:px-7 sm:py-6 lg:mb-6">

@@ -21,7 +21,7 @@ export type PaymentStatus =
   | 'failed'
   | 'rejected'
   | 'refunded'
-export type UserRole = 'admin' | 'manager' | 'user'
+export type UserRole = 'admin' | 'manager' | 'user' | 'super_admin'
 
 export type MasterDataStatus = 'active' | 'inactive' | 'archived'
 
