@@ -22,6 +22,10 @@ const WhatsAppButton = () => {
           </a>
           <a
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-lg shadow-slate-900/5 transition hover:border-emerald-500 hover:text-emerald-600"
+            onClick={(e) => {
+              e.preventDefault()
+              window.open(buildWhatsAppUrl(), '_blank', 'noopener')
+            }}
             href={buildWhatsAppUrl()}
             rel="noopener noreferrer"
             target="_blank"
