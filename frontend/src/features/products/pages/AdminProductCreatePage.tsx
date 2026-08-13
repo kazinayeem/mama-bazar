@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import AdminLayout from '@/components/layout/AdminLayout'
@@ -10,12 +11,20 @@ import { SEO } from '@/components/common/SEO'
 const AdminProductCreatePage = () => {
   const navigate = useNavigate()
   const [createProduct, { isLoading }] = useCreateProductMutation()
+  // Guard against double-clicks / duplicate submissions while the request is in
+  // flight — the mutation's own isPending flag lags one render behind.
+  const submittingRef = useRef(false)
 
   const handleSubmit = async (payload: ProductInput, mode: SaveMode) => {
+    if (submittingRef.current) return
+    submittingRef.current = true
     try {
-      const product = await createProduct({ ...payload, productStatus: mode === 'publish' ? 'published' : 'draft' }).unwrap()
+      await createProduct({ ...payload, productStatus: mode === 'publish' ? 'published' : 'draft' }).unwrap()
       toast.success(mode === 'publish' ? 'Product published' : 'Draft saved')
-      navigate(`/admin/products/${product.id}/edit`)
+      // Redirect to the list. The successful mutation invalidated the Products
+      // tag, which drops the cached list (unsubscribed) — the list refetches on
+      // mount, so the new product appears immediately without a refresh.
+      navigate('/admin/products')
     } catch (err) {
       toast.error(parseError(err))
       const fieldErrors = (err as { data?: { errors?: Record<string, string> } })?.data?.errors
@@ -30,6 +39,8 @@ const AdminProductCreatePage = () => {
             .join('\n'),
         )
       }
+    } finally {
+      submittingRef.current = false
     }
   }
 

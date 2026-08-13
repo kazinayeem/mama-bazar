@@ -70,8 +70,8 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-4 py-2.5 transition focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200">
-        <Search size={16} className="shrink-0 text-slate-500" />
+      <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 py-1.5 pl-3.5 pr-1.5 transition focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200">
+        <Search size={12} className="shrink-0 text-slate-500" />
         <input
           aria-label="Search products"
           className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400"
@@ -87,11 +87,11 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
         />
         {query && (
           <button aria-label="Clear search" className="shrink-0 text-slate-500 hover:text-slate-900" onClick={() => setQuery('')} type="button">
-            <X size={14} />
+            <X size={13} />
           </button>
         )}
-        <button aria-label="Voice search" className="shrink-0 rounded-full h-11 w-11 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900" type="button">
-          <Mic size={16} />
+        <button aria-label="Voice search" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-900" type="button">
+          <Mic size={14} />
         </button>
       </div>
 
