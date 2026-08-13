@@ -10,13 +10,13 @@ const MobileBottomNav = () => {
 
   const itemClass = ({ isActive }: { isActive: boolean }) =>
     `relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold transition ${
-      isActive ? 'text-slate-900' : 'text-slate-400'
+      isActive ? 'text-brand-green-600' : 'text-slate-400 hover:text-brand-green-500'
     }`
 
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-green-100 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <div className="mx-auto flex max-w-lg items-center px-2">
         <NavLink className={itemClass} to="/">
@@ -28,20 +28,20 @@ const MobileBottomNav = () => {
         <NavLink className={itemClass} to="/shop">
           <Heart size={20} /> Wishlist
           {wishlistCount > 0 && (
-            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-accent-foreground">
+            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-green-500 px-1 text-[9px] font-bold text-white">
               {wishlistCount}
             </span>
           )}
         </NavLink>
         <button
           aria-label="Open cart"
-          className="relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold text-slate-400"
+          className="relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:text-brand-orange-500"
           onClick={() => dispatch(openCart())}
           type="button"
         >
           <ShoppingBag size={20} /> Cart
           {cartCount > 0 && (
-            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+            <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-orange-500 px-1 text-[9px] font-bold text-white">
               {cartCount}
             </span>
           )}
