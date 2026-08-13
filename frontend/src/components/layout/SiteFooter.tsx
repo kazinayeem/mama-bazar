@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Clock, Mail, MapPin, Phone, Store } from 'lucide-react'
+import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useGetCategoriesQuery } from '../../store/services/commerceApi'
 import { api } from '../../lib/api'
@@ -88,9 +88,7 @@ const SiteFooter = () => {
           {/* Brand column */}
           <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green-500 to-brand-green-dark text-white">
-                <Store size={17} className="fill-white" />
-              </span>
+              <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
               <span className="font-headline text-xl font-extrabold tracking-tight text-slate-900">
                 Mama<span className="text-brand-green-500">Bazar</span>
               </span>
