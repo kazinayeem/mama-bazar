@@ -21,6 +21,7 @@ const AdminProductCreatePage = lazy(() => import('./features/products/pages/Admi
 const AdminProductEditPage = lazy(() => import('./features/products/pages/AdminProductEditPage'))
 const AdminProductViewPage = lazy(() => import('./features/products/pages/AdminProductViewPage'))
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'))
+const AdminOrderInvoicePage = lazy(() => import('./pages/admin/AdminOrderInvoicePage'))
 const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage'))
 const AdminCustomersPage = lazy(() => import('./pages/admin/AdminCustomersPage'))
 const AdminCouponsPage = lazy(() => import('./pages/admin/AdminCouponsPage'))
@@ -116,6 +117,7 @@ function App() {
           <Route path="products/:id/edit" element={<AdminRoute><AdminProductEditPage /></AdminRoute>} />
           <Route path="products/:id" element={<AdminRoute><AdminProductViewPage /></AdminRoute>} />
           <Route path="orders" element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
+          <Route path="orders/:id/invoice" element={<AdminRoute><AdminOrderInvoicePage /></AdminRoute>} />
           <Route path="shipping" element={<AdminRoute><AdminShippingPage /></AdminRoute>} />
           <Route path="payment-methods" element={<AdminRoute><AdminPaymentMethodsPage /></AdminRoute>} />
           <Route path="checkout-notices" element={<AdminRoute><AdminCheckoutNoticesPage /></AdminRoute>} />

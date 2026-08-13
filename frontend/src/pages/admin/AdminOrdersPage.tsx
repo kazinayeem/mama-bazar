@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Check,
   Eye,
@@ -52,59 +53,8 @@ const STATUS_COLORS: Record<string, string> = {
   refunded: 'bg-destructive/10 text-destructive',
 }
 
-const openInvoice = (order: AdminOrder) => {
-  const win = window.open('', '_blank', 'width=800,height=900')
-  if (!win) return
-  const itemRows = (order.items || [])
-    .map(
-      (i) => {
-        const variantParts = [i.color, i.size].filter(Boolean)
-        const variantStr = variantParts.length > 0 ? ` (${variantParts.join(' / ')})` : ''
-        return `<tr>
-          <td>${i.product?.title || `Product #${i.productId}`}${variantStr}</td>
-          <td>${i.quantity}</td>
-          <td>Tk ${Number(i.price).toLocaleString()}</td>
-          <td class="right">Tk ${(Number(i.price) * i.quantity).toLocaleString()}</td>
-        </tr>`
-      },
-    )
-    .join('')
-  win.document.write(`<!DOCTYPE html><html><head><title>Invoice ${order.orderId}</title><style>
-    body{font-family:system-ui,sans-serif;color:#1a1a1a;margin:40px}
-    h1{font-size:22px;margin:0} h2{font-size:14px;margin:24px 0 8px}
-    .muted{color:#666;font-size:12px} .right{text-align:right}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}
-    .totals{margin-top:16px;font-size:13px}
-    .totals div{display:flex;justify-content:space-between;padding:3px 0}
-    .grand{font-size:16px;font-weight:700;border-top:2px solid #333;padding-top:8px}
-    .stamp{display:inline-block;border:2px solid #16a34a;color:#16a34a;padding:6px 14px;font-weight:700;letter-spacing:2px;margin-top:16px;text-transform:uppercase}
-  </style></head><body>
-    <div style="display:flex;justify-content:space-between">
-      <div><h1>Mama Bazar</h1><p class="muted">Home Appliances &amp; Gadgets<br/>Dhanmondi, Dhaka, Bangladesh</p></div>
-      <div style="text-align:right"><h2 style="margin-top:0">INVOICE</h2>
-        <p class="muted">Order #${order.orderId}<br/>${new Date(order.createdAt).toLocaleString()}</p></div>
-    </div>
-    <hr/>
-    <h2>Billed To</h2>
-    <p>${order.customerName}<br/>${order.phone}${order.alternativePhone ? `<br/>Alt: ${order.alternativePhone}` : ''}${order.email ? `<br/>${order.email}` : ''}<br/>${order.address}${order.area ? `<br/>${[order.division, order.district, order.upazila, order.area].filter(Boolean).join(', ')}` : ''}</p>
-    <h2>Items</h2>
-    <table><thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th class="right">Total</th></tr></thead><tbody>${itemRows}</tbody></table>
-    <div class="totals">
-      <div><span>Subtotal</span><span>Tk ${(Number(order.subtotal) || 0).toLocaleString()}</span></div>
-      ${Number(order.discount) > 0 ? `<div><span>Discount</span><span>Tk ${(Number(order.discount) || 0).toLocaleString()}</span></div>` : ''}
-      ${Number(order.tax) > 0 ? `<div><span>VAT</span><span>Tk ${(Number(order.tax) || 0).toLocaleString()}</span></div>` : ''}
-      <div><span>Shipping (${order.shippingMethodName || 'Standard'})</span><span>${Number(order.shippingCost) === 0 ? 'FREE' : `Tk ${Number(order.shippingCost).toLocaleString()}`}</span></div>
-      <div class="grand"><span>Total</span><span>Tk ${Number(order.totalPrice).toLocaleString()}</span></div>
-    </div>
-    <div style="margin-top:24px" class="muted">Payment: ${order.paymentMethod.toUpperCase()} — ${PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus}</div>
-    <div class="stamp">${order.status === 'delivered' ? 'Paid &amp; Delivered' : 'Pending'}</div>
-  </body></html>`)
-  win.document.close()
-  win.print()
-}
-
 const AdminOrdersPage = () => {
+  const navigate = useNavigate()
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -383,7 +333,14 @@ const AdminOrdersPage = () => {
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
                   {selectedOrder.orderId}
-                  <Button variant="outline" size="icon" className="h-7 w-7" title="Print invoice" onClick={() => openInvoice(selectedOrder)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7"
+                    title="View / print invoice"
+                    onClick={() => navigate(`/admin/orders/${selectedOrder.id}/invoice`)}
+                  >
                     <FileText className="h-3.5 w-3.5" />
                   </Button>
                 </SheetTitle>
