@@ -49,7 +49,7 @@ export interface RelationFormValue {
 export interface ProductFormValues {
   hasVariants: boolean
   title: string
-  slug?: string
+  slug: string
   description: string
   shortDescription: string
   returnPolicy: string
@@ -158,6 +158,7 @@ export const num = (v?: string | number | null): number | undefined => {
 export const emptyForm = (): ProductFormValues => ({
   hasVariants: false,
   title: '',
+  slug: '',
   description: '',
   shortDescription: '',
   returnPolicy: '',
@@ -234,6 +235,7 @@ export const emptyForm = (): ProductFormValues => ({
 export const productToFormValues = (product: AdminProduct): ProductFormValues => ({
   hasVariants: (product.variants?.length ?? 0) > 0,
   title: product.title || '',
+  slug: product.slug || '',
   description: product.description || '',
   shortDescription: product.shortDescription || '',
   returnPolicy: product.returnPolicy || '',
@@ -351,6 +353,7 @@ export const formValuesToPayload = (values: ProductFormValues): ProductInput => 
 
   return {
     title: values.title.trim(),
+    slug: values.slug.trim().toLowerCase() || undefined,
     description: values.description || undefined,
     shortDescription: values.shortDescription || undefined,
     returnPolicy: values.returnPolicy || undefined,

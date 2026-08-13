@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.importCsv = exports.exportCsv = exports.autoSaveDraft = exports.duplicate = exports.bulkAction = exports.remove = exports.update = exports.create = exports.getRelated = exports.getBySlug = exports.getById = exports.getAll = exports.fullQuery = exports.fetchRatingMap = exports.formatProductRow = exports.deriveStockStatus = exports.deriveProfitMargin = void 0;
+exports.importCsv = exports.exportCsv = exports.autoSaveDraft = exports.duplicate = exports.bulkAction = exports.remove = exports.update = exports.create = exports.getRelated = exports.getBySlug = exports.getById = exports.getAll = exports.fullQuery = exports.fetchRatingMap = exports.formatProductRow = exports.deriveStockStatus = exports.deriveProfitMargin = exports.ensureUniqueSlug = void 0;
 const db_1 = require("../../config/db");
 const AppError_1 = require("../../utils/AppError");
 const schema_1 = require("../../config/schema");
@@ -9,6 +9,32 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 12;
 const DEFAULT_STATUS = "active";
 const RELATED_LIMIT = 8;
+/**
+ * Ensure a slug is unique before inserting/updating.
+ * - `autoSuffix: true`  — generated slugs: append `-2`, `-3`, … until free.
+ * - `autoSuffix: false` — user-provided slug: throw a 409 with a clear message.
+ */
+const ensureUniqueSlug = async (slug, opts = {}) => {
+    let candidate = slug;
+    let suffix = 2;
+    for (;;) {
+        const existing = await db_1.db
+            .select({ id: schema_1.products.id })
+            .from(schema_1.products)
+            .where((0, drizzle_orm_1.eq)(schema_1.products.slug, candidate))
+            .limit(1);
+        const isFree = !existing.length || existing[0].id === opts.excludeId;
+        if (isFree)
+            return candidate;
+        if (!opts.autoSuffix) {
+            throw new AppError_1.AppError(409, `Slug "${slug}" is already in use by another product. Please choose a different slug.`);
+        }
+        candidate = `${slug}-${suffix++}`;
+        if (suffix > 1000)
+            return candidate;
+    }
+};
+exports.ensureUniqueSlug = ensureUniqueSlug;
 const toNum = (v) => {
     if (v === undefined || v === null || v === "")
         return null;

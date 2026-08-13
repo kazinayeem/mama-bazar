@@ -32,6 +32,9 @@ export interface ReferenceData {
 export interface ProductFormContextValue {
   form: ProductFormValues
   set: (patch: Partial<ProductFormValues>) => void
+  /** True once the user has manually edited the slug — title changes stop overwriting it. */
+  slugTouched: boolean
+  markSlugTouched: () => void
   reference: ReferenceData
   categoriesByParent: Map<string | number, Category[]>
   variantErrors: string[]

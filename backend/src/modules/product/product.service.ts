@@ -28,6 +28,36 @@ const DEFAULT_LIMIT = 12;
 const DEFAULT_STATUS = "active";
 const RELATED_LIMIT = 8;
 
+/**
+ * Ensure a slug is unique before inserting/updating.
+ * - `autoSuffix: true`  — generated slugs: append `-2`, `-3`, … until free.
+ * - `autoSuffix: false` — user-provided slug: throw a 409 with a clear message.
+ */
+export const ensureUniqueSlug = async (
+  slug: string,
+  opts: { excludeId?: number; autoSuffix?: boolean } = {}
+): Promise<string> => {
+  let candidate = slug;
+  let suffix = 2;
+  for (;;) {
+    const existing = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(eq(products.slug, candidate))
+      .limit(1);
+    const isFree = !existing.length || existing[0].id === opts.excludeId;
+    if (isFree) return candidate;
+    if (!opts.autoSuffix) {
+      throw new AppError(
+        409,
+        `Slug "${slug}" is already in use by another product. Please choose a different slug.`
+      );
+    }
+    candidate = `${slug}-${suffix++}`;
+    if (suffix > 1000) return candidate;
+  }
+};
+
 const toNum = (v: unknown): number | null => {
   if (v === undefined || v === null || v === "") return null;
   const n = Number(v);

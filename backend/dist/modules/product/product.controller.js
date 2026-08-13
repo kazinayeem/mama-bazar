@@ -32,13 +32,10 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.saveDraft = exports.importCsv = exports.exportCsv = exports.duplicate = exports.bulk = exports.remove = exports.update = exports.create = exports.getRelated = exports.getBySlug = exports.getById = exports.getAll = void 0;
 const productService = __importStar(require("./product.service"));
-const slugify_1 = __importDefault(require("slugify"));
+const slug_util_1 = require("./slug.util");
 const AppError_1 = require("../../utils/AppError");
 const cloud_1 = require("../../utils/cloud");
 const DEFAULT_PAGE = 1;
@@ -221,7 +218,13 @@ const create = async (req, res) => {
     const uploadedImages = await persistUploadedImages(files);
     const bodyImages = Array.isArray(body.images) ? body.images : parseArrayField(body.images);
     const images = [...(bodyImages || []), ...uploadedImages];
-    const slug = (0, slugify_1.default)(base.title, { lower: true, strict: true });
+    // Slug: use the user-provided value when given (zod already enforced ASCII),
+    // otherwise generate one from the title with Bangla → English transliteration.
+    const requestedSlug = typeof body.slug === "string" && body.slug.trim() ? body.slug.trim().toLowerCase() : null;
+    const generatedSlug = (0, slug_util_1.toAsciiSlug)(base.title) || "product";
+    const slug = await productService.ensureUniqueSlug(requestedSlug ?? generatedSlug, {
+        autoSuffix: !requestedSlug,
+    });
     const data = await productService.create({
         ...base,
         title: base.title,
@@ -243,9 +246,22 @@ const update = async (req, res) => {
     assertCloudinary(files);
     const uploadedImages = await persistUploadedImages(files);
     const updateData = { ...base };
-    if (base.title) {
-        updateData.title = base.title;
-        updateData.slug = (0, slugify_1.default)(base.title, { lower: true, strict: true });
+    // Slug: honor an explicitly provided slug (zod already enforced ASCII and
+    // uniqueness excludes this product). When the slug is absent but the title
+    // changed, regenerate from the title like before.
+    if (body.slug !== undefined) {
+        const requestedSlug = typeof body.slug === "string" && body.slug.trim() ? body.slug.trim().toLowerCase() : null;
+        const generatedSlug = (base.title ? (0, slug_util_1.toAsciiSlug)(base.title) : "") || "product";
+        updateData.slug = await productService.ensureUniqueSlug(requestedSlug ?? generatedSlug, {
+            excludeId: id,
+            autoSuffix: !requestedSlug,
+        });
+    }
+    else if (base.title) {
+        updateData.slug = await productService.ensureUniqueSlug((0, slug_util_1.toAsciiSlug)(base.title) || "product", {
+            excludeId: id,
+            autoSuffix: true,
+        });
     }
     if (body.images !== undefined || uploadedImages.length > 0) {
         const bodyImages = Array.isArray(body.images) ? body.images : parseArrayField(body.images);

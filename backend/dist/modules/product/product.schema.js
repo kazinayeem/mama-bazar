@@ -42,6 +42,11 @@ const relationSchema = zod_1.z.object({
 });
 const productFields = {
     title: zod_1.z.string().min(1, "Title is required"),
+    slug: zod_1.z
+        .string()
+        .max(255, "Slug must be 255 characters or fewer")
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug may only contain English letters, numbers and hyphens (e.g. samsung-tv-55). Bangla or Unicode characters are not allowed.")
+        .optional(),
     description: zod_1.z.string().optional(),
     shortDescription: zod_1.z.string().optional(),
     price: zod_1.z.union([zod_1.z.string(), zod_1.z.number()], { errorMap: () => ({ message: "Invalid price" }) }).pipe(zod_1.z.coerce.number().positive("Price must be positive")),

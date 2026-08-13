@@ -1,4 +1,13 @@
 import { CreateProductInput, UpdateProductInput, ProductQuery, ProductRelationType } from "./product.interface";
+/**
+ * Ensure a slug is unique before inserting/updating.
+ * - `autoSuffix: true`  — generated slugs: append `-2`, `-3`, … until free.
+ * - `autoSuffix: false` — user-provided slug: throw a 409 with a clear message.
+ */
+export declare const ensureUniqueSlug: (slug: string, opts?: {
+    excludeId?: number;
+    autoSuffix?: boolean;
+}) => Promise<string>;
 export declare const deriveProfitMargin: (selling: unknown, cost: unknown) => string;
 export declare const deriveStockStatus: (stock: number, lowStockAlert: number | null, unlimited: boolean | null, explicit?: string | null) => string;
 export declare const formatProductRow: (row: any, ratingInfo?: {

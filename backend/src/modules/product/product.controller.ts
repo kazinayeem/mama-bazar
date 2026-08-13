@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as productService from "./product.service";
-import slugify from "slugify";
+import { toAsciiSlug } from "./slug.util";
 import { AppError } from "../../utils/AppError";
 import { uploadBuffer, cloudinaryConfigured } from "../../utils/cloud";
 import { ProductRelationType, ProductVariantInput, ProductSpecInput } from "./product.interface";
@@ -193,7 +193,14 @@ export const create = async (req: Request, res: Response) => {
   const bodyImages = Array.isArray(body.images) ? body.images : parseArrayField<string>(body.images);
   const images = [...(bodyImages || []), ...uploadedImages];
 
-  const slug = slugify(base.title, { lower: true, strict: true });
+  // Slug: use the user-provided value when given (zod already enforced ASCII),
+  // otherwise generate one from the title with Bangla → English transliteration.
+  const requestedSlug =
+    typeof body.slug === "string" && body.slug.trim() ? body.slug.trim().toLowerCase() : null;
+  const generatedSlug = toAsciiSlug(base.title) || "product";
+  const slug = await productService.ensureUniqueSlug(requestedSlug ?? generatedSlug, {
+    autoSuffix: !requestedSlug,
+  });
 
   const data = await productService.create({
     ...base,
@@ -218,9 +225,23 @@ export const update = async (req: Request, res: Response) => {
   const uploadedImages = await persistUploadedImages(files);
 
   const updateData: any = { ...base };
-  if (base.title) {
-    updateData.title = base.title;
-    updateData.slug = slugify(base.title, { lower: true, strict: true });
+
+  // Slug: honor an explicitly provided slug (zod already enforced ASCII and
+  // uniqueness excludes this product). When the slug is absent but the title
+  // changed, regenerate from the title like before.
+  if (body.slug !== undefined) {
+    const requestedSlug =
+      typeof body.slug === "string" && body.slug.trim() ? body.slug.trim().toLowerCase() : null;
+    const generatedSlug = (base.title ? toAsciiSlug(base.title) : "") || "product";
+    updateData.slug = await productService.ensureUniqueSlug(requestedSlug ?? generatedSlug, {
+      excludeId: id,
+      autoSuffix: !requestedSlug,
+    });
+  } else if (base.title) {
+    updateData.slug = await productService.ensureUniqueSlug(toAsciiSlug(base.title) || "product", {
+      excludeId: id,
+      autoSuffix: true,
+    });
   }
 
   if (body.images !== undefined || uploadedImages.length > 0) {

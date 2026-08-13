@@ -331,6 +331,7 @@ export type ProductBulkAction = 'delete' | 'publish' | 'archive' | 'hide' | 'dra
 
 export interface ProductInput {
   title: string
+  slug?: string
   description?: string
   shortDescription?: string
   price: string | number

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, Loader2, Save, Send } from 'lucide-react'
 import { toast } from 'sonner'
@@ -28,6 +28,7 @@ import {
   type ProductFormValues,
   type ProductInput,
 } from '../lib/productForm'
+import { SLUG_PATTERN, slugifyAscii } from '../lib/slug'
 
 export type SaveMode = 'draft' | 'publish' | 'save'
 
@@ -43,6 +44,9 @@ interface ProductFormProps {
 const validate = (form: ProductFormValues): string[] => {
   const errors: string[] = []
   if (!form.title.trim()) errors.push('Product title is required')
+  if (form.slug.trim() && !SLUG_PATTERN.test(form.slug.trim())) {
+    errors.push('Slug may only contain English letters, numbers and hyphens (e.g. samsung-tv-55)')
+  }
   const variantResult = validateVariants(form)
   errors.push(...variantResult.errors)
   if (!form.hasVariants || form.variants.length === 0) {
@@ -57,8 +61,24 @@ const ProductForm = ({ initialValues, isEditing, submitting, onCancel, onSubmit,
   const reference = useReferenceData()
   const [form, setForm] = useState<ProductFormValues>(initialValues)
   const [variantErrors, setVariantErrors] = useState<string[]>([])
+  // On edit, the existing slug is user-managed: title changes must not overwrite
+  // it. On create, the slug follows the title until the user edits it manually.
+  const [slugTouched, setSlugTouched] = useState<boolean>(isEditing)
 
-  const set = (patch: Partial<ProductFormValues>) => setForm((prev) => ({ ...prev, ...patch }))
+  const set = useCallback(
+    (patch: Partial<ProductFormValues>) => {
+      setForm((prev) => {
+        const next = { ...prev, ...patch }
+        if (patch.title !== undefined && patch.slug === undefined && !slugTouched) {
+          next.slug = slugifyAscii(next.title)
+        }
+        return next
+      })
+    },
+    [slugTouched],
+  )
+
+  const markSlugTouched = useCallback(() => setSlugTouched(true), [])
 
   const categoriesByParent = useMemo(() => {
     const map = new Map<string | number, typeof reference.categories>()
@@ -71,8 +91,8 @@ const ProductForm = ({ initialValues, isEditing, submitting, onCancel, onSubmit,
   }, [reference])
 
   const contextValue = useMemo(
-    () => ({ form, set, reference, categoriesByParent, variantErrors, setVariantErrors }),
-    [form, reference, categoriesByParent, variantErrors],
+    () => ({ form, set, slugTouched, markSlugTouched, reference, categoriesByParent, variantErrors, setVariantErrors }),
+    [form, set, slugTouched, markSlugTouched, reference, categoriesByParent, variantErrors, setVariantErrors],
   )
 
   const handleSubmit = (mode: SaveMode) => {

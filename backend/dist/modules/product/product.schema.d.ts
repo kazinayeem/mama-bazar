@@ -2,6 +2,7 @@ import { z } from "zod";
 export declare const createProductSchema: z.ZodObject<{
     body: z.ZodEffects<z.ZodObject<{
         title: z.ZodString;
+        slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
         shortDescription: z.ZodOptional<z.ZodString>;
         price: z.ZodPipeline<z.ZodUnion<[z.ZodString, z.ZodNumber]>, z.ZodNumber>;
@@ -165,6 +166,7 @@ export declare const createProductSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         title: string;
         price: number;
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -267,6 +269,7 @@ export declare const createProductSchema: z.ZodObject<{
     }, {
         title: string;
         price: string | number;
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -369,6 +372,7 @@ export declare const createProductSchema: z.ZodObject<{
     }>, {
         title: string;
         price: number;
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -471,6 +475,7 @@ export declare const createProductSchema: z.ZodObject<{
     }, {
         title: string;
         price: string | number;
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -575,6 +580,7 @@ export declare const createProductSchema: z.ZodObject<{
     body: {
         title: string;
         price: number;
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -679,6 +685,7 @@ export declare const createProductSchema: z.ZodObject<{
     body: {
         title: string;
         price: string | number;
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -791,6 +798,7 @@ export declare const updateProductSchema: z.ZodObject<{
     body: z.ZodEffects<z.ZodObject<{
         title: z.ZodOptional<z.ZodString>;
         price: z.ZodOptional<z.ZodPipeline<z.ZodUnion<[z.ZodString, z.ZodNumber]>, z.ZodNumber>>;
+        slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
         shortDescription: z.ZodOptional<z.ZodString>;
         salePrice: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
@@ -951,6 +959,7 @@ export declare const updateProductSchema: z.ZodObject<{
             type: "frequently_bought_together" | "cross_sell" | "up_sell" | "accessories" | "similar";
         }>, "many">]>>;
     }, "strip", z.ZodTypeAny, {
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -1053,6 +1062,7 @@ export declare const updateProductSchema: z.ZodObject<{
         }[] | undefined;
         existingImages?: string | undefined;
     }, {
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -1155,6 +1165,7 @@ export declare const updateProductSchema: z.ZodObject<{
         }[] | undefined;
         existingImages?: string | undefined;
     }>, {
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -1257,6 +1268,7 @@ export declare const updateProductSchema: z.ZodObject<{
         }[] | undefined;
         existingImages?: string | undefined;
     }, {
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -1361,6 +1373,7 @@ export declare const updateProductSchema: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     body: {
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;
@@ -1468,6 +1481,7 @@ export declare const updateProductSchema: z.ZodObject<{
     };
 }, {
     body: {
+        slug?: string | undefined;
         brand?: string | undefined;
         description?: string | undefined;
         seoTitle?: string | undefined;

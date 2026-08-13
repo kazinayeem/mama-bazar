@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Info, ListFilter } from 'lucide-react'
+import { Info, ListFilter, RefreshCcw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -9,10 +9,23 @@ import TagInput from '../TagInput'
 import RichTextEditor from '../RichTextEditor'
 import AddEntityModal, { type MasterEntity, type AddEntityResult } from '../AddEntityModal'
 import { useProductForm } from '../ProductFormContext'
+import { sanitizeSlugInput, slugValidationError, slugifyAscii } from '../../lib/slug'
 
 const GeneralSection = () => {
-  const { form, set, reference } = useProductForm()
+  const { form, set, slugTouched, markSlugTouched, reference } = useProductForm()
   const [addEntity, setAddEntity] = useState<{ entity: MasterEntity; parent?: number | null } | null>(null)
+  const [slugError, setSlugError] = useState<string | null>(null)
+
+  const handleSlugChange = (value: string) => {
+    markSlugTouched()
+    set({ slug: sanitizeSlugInput(value) })
+    setSlugError(slugValidationError(value))
+  }
+
+  const resetSlugFromTitle = () => {
+    setSlugError(null)
+    set({ slug: slugifyAscii(form.title) })
+  }
 
   const rootCategories = useMemo(() => {
     const roots = reference.categories.filter((c) => !c.parentId)
@@ -78,6 +91,40 @@ const GeneralSection = () => {
             value={form.title}
             onChange={(e) => set({ title: e.target.value })}
           />
+        </div>
+
+        <div className="sm:col-span-2">
+          <Label htmlFor="product-slug">Slug (URL)</Label>
+          <div className="relative">
+            <Input
+              id="product-slug"
+              className={slugError ? 'border-destructive focus-visible:ring-destructive' : ''}
+              placeholder="auto-generated from title, e.g. samsung-tv"
+              value={form.slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+            />
+            {slugTouched && form.slug && (
+              <button
+                aria-label="Reset slug from title"
+                className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                onClick={resetSlugFromTitle}
+                title="Reset from title"
+                type="button"
+              >
+                <RefreshCcw className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          {slugError ? (
+            <p className="mt-1 text-xs text-destructive" role="alert">
+              {slugError}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Auto-generated from the title (Bangla is transliterated to English). You can edit it — only English
+              letters, numbers and hyphens are allowed.
+            </p>
+          )}
         </div>
 
         <div className="sm:col-span-2">

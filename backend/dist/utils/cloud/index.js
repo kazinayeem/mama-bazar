@@ -26,7 +26,6 @@ if (exports.cloudinaryConfigured) {
  */
 const uploadBuffer = async (buffer, opts) => {
     if (exports.cloudinaryConfigured) {
-        const publicId = `${opts.folder}/${Date.now()}-${crypto_1.default.randomBytes(6).toString("hex")}`;
         const result = await new Promise((resolve, reject) => {
             const stream = cloudinary_1.v2.uploader.upload_stream({
                 folder: opts.folder,
