@@ -38,6 +38,13 @@ const TEAM_MEMBERS: TeamMember[] = [
     image: '/shipon.jpeg',
     initials: 'SA',
   },
+    {
+    name: 'Abdullah Al Safi',
+    position: 'Brand Communication Executive',
+    role: 'Brand Communication Executive',
+    image: '/safi.jpeg',
+    initials: 'BCE',
+  },
 ]
 
 const TeamCard = ({ member }: { member: TeamMember }) => {

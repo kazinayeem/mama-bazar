@@ -244,6 +244,7 @@ const CheckoutPage = () => {
   }, [])
 
   // Re-estimate shipping when subtotal changes (free-shipping thresholds)
+  // Deduplicate by ID to prevent duplicate shipping methods
   useEffect(() => {
     if (shippingLoading) return
     let mounted = true
@@ -251,7 +252,14 @@ const CheckoutPage = () => {
       try {
         const methods = await api.estimateShipping(subtotal)
         if (!mounted) return
-        setShippingMethods(methods)
+        // Deduplicate by ID, keeping the last occurrence
+        const deduped = Array.from(new Map(methods.map((m) => [m.id, m])).values())
+        setShippingMethods(deduped)
+        // If current selection is no longer valid, select first available
+        setShippingMethodId((prev) => {
+          if (prev && deduped.some((m) => m.id === prev)) return prev
+          return deduped[0]?.id ?? null
+        })
       } catch {
         // keep last estimate
       }
