@@ -244,9 +244,9 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
         </div>
 
         {/* Action buttons */}
-        <div className="mt-auto flex items-center gap-2 pt-2">
+        <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row">
           <button
-            className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition active:scale-95 ${
+            className={`inline-flex w-full items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition active:scale-95 sm:w-auto sm:flex-1 ${
               isOutOfStock
                 ? 'cursor-not-allowed bg-slate-100 text-slate-400'
                 : 'bg-brand-orange-500 text-white hover:bg-brand-orange-600'
@@ -259,7 +259,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
           </button>
           <Link
-            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-brand-green-500 bg-white py-2 text-xs font-bold text-brand-green-600 transition hover:bg-brand-green-500 hover:text-white active:scale-95"
+            className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-brand-green-500 bg-white py-2 text-xs font-bold text-brand-green-600 transition hover:bg-brand-green-500 hover:text-white active:scale-95 sm:w-auto sm:flex-1"
             to={`/products/${product.slug}`}
           >
             <ShoppingBag size={13} />
