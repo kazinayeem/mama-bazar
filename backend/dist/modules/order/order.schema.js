@@ -32,7 +32,7 @@ exports.createOrderSchema = zod_1.z.object({
         couponCode: optStr,
         orderNote: zod_1.z.string().max(1000).optional().nullable(),
         checkoutNotes: optStr,
-        paymentMethod: zod_1.z.enum(order_interface_1.PAYMENT_METHODS).optional(),
+        paymentMethod: zod_1.z.string().min(1).optional(),
         transactionId: optStr,
         senderNumber: zod_1.z.string().max(30).optional().nullable(),
         paymentScreenshot: zod_1.z.string().url("Invalid screenshot URL").optional().nullable(),

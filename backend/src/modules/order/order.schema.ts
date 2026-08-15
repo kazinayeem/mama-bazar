@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PAYMENT_METHODS, ORDER_STATUSES } from "./order.interface";
+import { ORDER_STATUSES } from "./order.interface";
 
 const BD_PHONE_REGEX = /^(\+880|0)[1-9]\d{9}$/;
 
@@ -33,7 +33,7 @@ export const createOrderSchema = z.object({
     couponCode: optStr,
     orderNote: z.string().max(1000).optional().nullable(),
     checkoutNotes: optStr,
-    paymentMethod: z.enum(PAYMENT_METHODS).optional(),
+    paymentMethod: z.string().min(1).optional(),
     transactionId: optStr,
     senderNumber: z.string().max(30).optional().nullable(),
     paymentScreenshot: z.string().url("Invalid screenshot URL").optional().nullable(),

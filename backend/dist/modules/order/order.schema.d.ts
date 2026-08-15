@@ -19,7 +19,7 @@ export declare const createOrderSchema: z.ZodObject<{
         couponCode: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         orderNote: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         checkoutNotes: z.ZodNullable<z.ZodOptional<z.ZodString>>;
-        paymentMethod: z.ZodOptional<z.ZodEnum<["cod", "bkash", "nagad", "rocket", "bank", "stripe", "sslcommerz", "paypal"]>>;
+        paymentMethod: z.ZodOptional<z.ZodString>;
         transactionId: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         senderNumber: z.ZodNullable<z.ZodOptional<z.ZodString>>;
         paymentScreenshot: z.ZodNullable<z.ZodOptional<z.ZodString>>;
@@ -71,7 +71,7 @@ export declare const createOrderSchema: z.ZodObject<{
         couponCode?: string | null | undefined;
         orderNote?: string | null | undefined;
         checkoutNotes?: string | null | undefined;
-        paymentMethod?: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal" | undefined;
+        paymentMethod?: string | undefined;
         transactionId?: string | null | undefined;
         senderNumber?: string | null | undefined;
         paymentScreenshot?: string | null | undefined;
@@ -104,7 +104,7 @@ export declare const createOrderSchema: z.ZodObject<{
         couponCode?: string | null | undefined;
         orderNote?: string | null | undefined;
         checkoutNotes?: string | null | undefined;
-        paymentMethod?: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal" | undefined;
+        paymentMethod?: string | undefined;
         transactionId?: string | null | undefined;
         senderNumber?: string | null | undefined;
         paymentScreenshot?: string | null | undefined;
@@ -139,7 +139,7 @@ export declare const createOrderSchema: z.ZodObject<{
         couponCode?: string | null | undefined;
         orderNote?: string | null | undefined;
         checkoutNotes?: string | null | undefined;
-        paymentMethod?: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal" | undefined;
+        paymentMethod?: string | undefined;
         transactionId?: string | null | undefined;
         senderNumber?: string | null | undefined;
         paymentScreenshot?: string | null | undefined;
@@ -174,7 +174,7 @@ export declare const createOrderSchema: z.ZodObject<{
         couponCode?: string | null | undefined;
         orderNote?: string | null | undefined;
         checkoutNotes?: string | null | undefined;
-        paymentMethod?: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal" | undefined;
+        paymentMethod?: string | undefined;
         transactionId?: string | null | undefined;
         senderNumber?: string | null | undefined;
         paymentScreenshot?: string | null | undefined;

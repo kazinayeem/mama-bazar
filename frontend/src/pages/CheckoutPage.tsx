@@ -135,6 +135,7 @@ const CheckoutPage = () => {
   const [notices, setNotices] = useState<CheckoutNotice[]>([])
 
   const [transactionId, setTransactionId] = useState('')
+  const [paymentSenderNumber, setPaymentSenderNumber] = useState('')
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null)
 
   const [couponCode, setCouponCode] = useState('')
@@ -172,9 +173,9 @@ const CheckoutPage = () => {
   const selectedShippingMethod = shippingMethods.find((m) => m.id === shippingMethodId) || null
   const selectedPaymentMethod = paymentMethods.find((m) => m.id === selectedPaymentMethodId) || null
   const paymentMethod: PaymentMethod = selectedPaymentMethod?.code || 'cod'
-  const isMobileBanking = selectedPaymentMethod?.type === 'mobile_banking'
-  const isBankTransfer = selectedPaymentMethod?.type === 'bank'
-  const requiresTransactionId = isMobileBanking || isBankTransfer
+  const isCOD = selectedPaymentMethod?.code?.toLowerCase() === 'cod'
+  const requiresPaymentVerification = Boolean(selectedPaymentMethod && !isCOD)
+  const requiresTransactionId = requiresPaymentVerification
 
   const set = (patch: Partial<AddressFormState>) => setForm((prev) => ({ ...prev, ...patch }))
 
@@ -373,7 +374,10 @@ const CheckoutPage = () => {
     if (selectedShippingMethod && !selectedShippingMethod.codAvailable && paymentMethod === 'cod') {
       return `${displayName(selectedShippingMethod.name)} ক্যাশ অন ডেলিভারি সমর্থন করে না। / ${displayName(selectedShippingMethod.name)} does not support Cash on Delivery`
     }
-    if (requiresTransactionId && !transactionId.trim()) {
+    if (requiresPaymentVerification && !paymentSenderNumber.trim()) {
+      return 'পেমেন্ট নম্বর/অ্যাকাউন্ট দিন। / Please enter the sender account/mobile number.'
+    }
+    if (requiresPaymentVerification && !transactionId.trim()) {
       return 'ট্রানজেকশন আইডি লিখুন। / Please enter the Transaction ID'
     }
     if (!agreeTerms) return 'অনুগ্রহ করে শর্তাবলীতে সম্মত হন। / Please agree to the terms and conditions'
@@ -415,6 +419,7 @@ const CheckoutPage = () => {
         couponCode: couponApplied?.code,
         orderNote: orderNote.trim() || undefined,
         paymentMethod,
+        senderNumber: requiresPaymentVerification ? paymentSenderNumber.trim() : undefined,
         transactionId: transactionId.trim() || undefined,
         taxAmount: tax,
         items: cart.map((item) => ({
@@ -711,6 +716,38 @@ const CheckoutPage = () => {
                     </div>
                   )}
 
+                  {requiresPaymentVerification && (
+                    <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                      <div>
+                        <p className="text-sm font-bold text-primary">পেমেন্ট যাচাই / Payment Verification</p>
+                        <p className="mt-1 text-xs text-on-surface-variant bangla-text">
+                          পেমেন্ট করার পর নিচের তথ্য দিন। / After completing the payment, provide the following details.
+                        </p>
+                      </div>
+                      <div>
+                        <label className={labelClass}>যে নম্বর/অ্যাকাউন্ট থেকে টাকা পাঠিয়েছেন / Sender Account / Mobile Number</label>
+                        <input
+                          className={inputClass}
+                          inputMode="tel"
+                          onChange={(event) => setPaymentSenderNumber(event.target.value)}
+                          placeholder="01XXXXXXXXX"
+                          required
+                          value={paymentSenderNumber}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Transaction ID / ট্রানজেকশন আইডি</label>
+                        <input
+                          className={inputClass}
+                          onChange={(event) => setTransactionId(event.target.value)}
+                          placeholder="Enter your Transaction ID"
+                          required
+                          value={transactionId}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {selectedPaymentMethod.type === 'mobile_banking' && selectedPaymentMethod.config?.merchantNumber && (
                     <div className="space-y-4 rounded-lg bg-surface-variant/30 p-4">
                       <div>
@@ -732,10 +769,6 @@ const CheckoutPage = () => {
                       <div>
                         <p className="text-sm text-slate-700 bangla-text">১. উপরের {selectedPaymentMethod.name} নম্বরে পেমেন্ট করুন।<br />২. পেমেন্ট সম্পন্ন করার পর Transaction ID দিন।</p>
                       </div>
-                      <div>
-                        <label className={labelClass}>ট্রানজেকশন আইডি / Transaction ID</label>
-                        <input className={inputClass} onChange={(event) => setTransactionId(event.target.value)} placeholder="ট্রানজেকশন আইডি লিখুন / Enter Transaction ID" required value={transactionId} />
-                      </div>
                     </div>
                   )}
 
@@ -747,10 +780,6 @@ const CheckoutPage = () => {
                         {selectedPaymentMethod.config?.accountName && <p className="text-sm text-slate-700">Account Name: <strong>{selectedPaymentMethod.config.accountName}</strong></p>}
                         {selectedPaymentMethod.config?.accountNumber && <p className="text-sm text-slate-700">Account Number: <strong>{selectedPaymentMethod.config.accountNumber}</strong></p>}
                         {selectedPaymentMethod.config?.branch && <p className="text-sm text-slate-700">Branch: <strong>{selectedPaymentMethod.config.branch}</strong></p>}
-                      </div>
-                      <div>
-                        <label className={labelClass}>ট্রানজেকশন আইডি / রেফারেন্স / Transaction ID / Reference</label>
-                        <input className={inputClass} onChange={(event) => setTransactionId(event.target.value)} placeholder="ট্রানজেকশন আইডি বা রেফারেন্স নম্বর লিখুন" required value={transactionId} />
                       </div>
                     </div>
                   )}

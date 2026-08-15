@@ -37,7 +37,8 @@ export const PAYMENT_METHODS = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
-export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+// Payment method codes come from the payment-methods API and may be extended by admins.
+export type PaymentMethod = string;
 
 export interface IOrder {
   id: number;

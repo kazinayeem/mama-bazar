@@ -86,7 +86,6 @@ const STATUS_TRANSITIONS = {
     cancelled: ["cancelled"],
     refunded: ["refunded"],
 };
-const ONLINE_PAYMENT_METHODS = ["bkash", "nagad", "rocket", "bank", "stripe", "sslcommerz", "paypal"];
 function generateOrderId() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "GHB-";
@@ -389,20 +388,15 @@ const create = async (input) => {
         tax = 0;
     const totalPrice = subtotal - discount + tax + shippingCost;
     // ---------- 6. Payment state ----------
-    const isOnline = ONLINE_PAYMENT_METHODS.includes(paymentMethodCode);
     let paymentStatus;
     let orderStatus;
     if (paymentMethodCode === "cod") {
         paymentStatus = "success";
         orderStatus = "pending";
     }
-    else if (input.paymentScreenshot) {
+    else if (input.paymentScreenshot || input.transactionId || input.senderNumber) {
         paymentStatus = "payment_verification";
         orderStatus = "payment_verification";
-    }
-    else if (input.transactionId) {
-        paymentStatus = "verified";
-        orderStatus = "pending";
     }
     else {
         paymentStatus = "payment_pending";

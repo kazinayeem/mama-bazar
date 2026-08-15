@@ -3,7 +3,7 @@ export declare const PAYMENT_STATUSES: readonly ["pending", "payment_pending", "
 export declare const PAYMENT_METHODS: readonly ["cod", "bkash", "nagad", "rocket", "bank", "stripe", "sslcommerz", "paypal"];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
-export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+export type PaymentMethod = string;
 export interface IOrder {
     id: number;
     orderId: string;

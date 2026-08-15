@@ -186,6 +186,7 @@ const AdminOrdersPage = () => {
 
   const timeline = selectedOrder?.statusHistory || []
   const awaitingVerification = selectedOrder ? shouldShowPaymentVerificationPanel(selectedOrder) : false
+  const selectedOrderIsCOD = selectedOrder?.paymentMethod?.toLowerCase() === 'cod'
   const allowedNextStatuses = selectedOrder ? getAllowedNextStatuses(selectedOrder) : []
   const blockedStatuses = selectedOrder ? getBlockedStatuses(selectedOrder) : []
 
@@ -501,33 +502,33 @@ const AdminOrdersPage = () => {
                   </div>
                 </div>
 
-                {/* Payment details */}
-                <div className="rounded-lg border p-4">
-                  <p className="mb-2 text-sm font-semibold">Payment Details</p>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Method</span>
-                      <span className="font-medium">{selectedOrder.paymentMethod.toUpperCase()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status</span>
-                      <Badge variant={selectedOrder.paymentStatus === 'success' || selectedOrder.paymentStatus === 'verified' ? 'success' : 'warning'}>
-                        {PAYMENT_STATUS_LABELS[selectedOrder.paymentStatus] || selectedOrder.paymentStatus}
-                      </Badge>
-                    </div>
-                    {selectedOrder.transactionId && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">TrxID</span>
-                        <span className="font-mono font-medium">{selectedOrder.transactionId}</span>
-                      </div>
-                    )}
-                    {selectedOrder.senderNumber && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Sender</span>
-                        <span className="font-medium">{selectedOrder.senderNumber}</span>
-                      </div>
-                    )}
-                    {selectedOrder.amountSent && (
+                 {/* Payment information */}
+                 <div className="rounded-lg border p-4">
+                   <p className="mb-2 text-sm font-semibold">Payment Information / পেমেন্ট তথ্য</p>
+                   <div className="space-y-1 text-sm">
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Payment Method</span>
+                       <span className="font-medium">{selectedOrder.paymentMethod.toUpperCase()}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Payment Status</span>
+                       <Badge variant={selectedOrder.paymentStatus === 'success' || selectedOrder.paymentStatus === 'verified' ? 'success' : 'warning'}>
+                         {PAYMENT_STATUS_LABELS[selectedOrder.paymentStatus] || selectedOrder.paymentStatus}
+                       </Badge>
+                     </div>
+                     {!selectedOrderIsCOD && selectedOrder.transactionId && (
+                       <div className="flex justify-between">
+                         <span className="text-muted-foreground">Transaction ID</span>
+                         <span className="font-mono font-medium">{selectedOrder.transactionId}</span>
+                       </div>
+                     )}
+                     {!selectedOrderIsCOD && selectedOrder.senderNumber && (
+                       <div className="flex justify-between">
+                         <span className="text-muted-foreground">Sender Number</span>
+                         <span className="font-medium">{selectedOrder.senderNumber}</span>
+                       </div>
+                     )}
+                     {!selectedOrderIsCOD && selectedOrder.amountSent && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Amount Sent</span>
                         <span className="font-medium">{currency(Number(selectedOrder.amountSent))}</span>

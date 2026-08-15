@@ -59,8 +59,6 @@ const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   refunded: ["refunded"],
 };
 
-const ONLINE_PAYMENT_METHODS: PaymentMethod[] = ["bkash", "nagad", "rocket", "bank", "stripe", "sslcommerz", "paypal"];
-
 type CheckoutAuth = {
   token: string;
   user: {
@@ -408,19 +406,15 @@ export const create = async (input: CreateOrderInput) => {
   const totalPrice = subtotal - discount + tax + shippingCost;
 
   // ---------- 6. Payment state ----------
-  const isOnline = ONLINE_PAYMENT_METHODS.includes(paymentMethodCode);
   let paymentStatus: string;
   let orderStatus: OrderStatus;
 
   if (paymentMethodCode === "cod") {
     paymentStatus = "success";
     orderStatus = "pending";
-  } else if (input.paymentScreenshot) {
+  } else if (input.paymentScreenshot || input.transactionId || input.senderNumber) {
     paymentStatus = "payment_verification";
     orderStatus = "payment_verification";
-  } else if (input.transactionId) {
-    paymentStatus = "verified";
-    orderStatus = "pending";
   } else {
     paymentStatus = "payment_pending";
     orderStatus = "payment_pending";

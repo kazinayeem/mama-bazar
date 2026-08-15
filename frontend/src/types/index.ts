@@ -1,4 +1,5 @@
-export type PaymentMethod = 'cod' | 'bkash' | 'nagad' | 'rocket' | 'bank' | 'stripe' | 'sslcommerz' | 'paypal'
+// Payment methods are administered through the API, so new method codes must remain valid without a frontend release.
+export type PaymentMethod = string
 export type OrderStatus =
   | 'pending'
   | 'payment_pending'
