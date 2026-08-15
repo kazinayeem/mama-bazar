@@ -221,7 +221,7 @@ export declare const getOrderHistory: (userId: number) => Promise<{
     checkoutNotes: string | null;
     adminNotes: string | null;
     totalPrice: string;
-    paymentMethod: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal";
+    paymentMethod: string;
     transactionId: string | null;
     senderNumber: string | null;
     paymentScreenshot: string | null;

@@ -52,7 +52,7 @@ export declare const createPaymentMethodSchema: z.ZodObject<{
         }>>;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        type: "cod" | "online" | "bank" | "mobile_banking";
+        type: "cod" | "online" | "mobile_banking" | "bank";
         code: string;
         sortOrder?: string | number | undefined;
         enabled?: boolean | undefined;
@@ -74,7 +74,7 @@ export declare const createPaymentMethodSchema: z.ZodObject<{
         } | undefined;
     }, {
         name: string;
-        type: "cod" | "online" | "bank" | "mobile_banking";
+        type: "cod" | "online" | "mobile_banking" | "bank";
         code: string;
         sortOrder?: string | number | undefined;
         enabled?: boolean | undefined;
@@ -98,7 +98,7 @@ export declare const createPaymentMethodSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     body: {
         name: string;
-        type: "cod" | "online" | "bank" | "mobile_banking";
+        type: "cod" | "online" | "mobile_banking" | "bank";
         code: string;
         sortOrder?: string | number | undefined;
         enabled?: boolean | undefined;
@@ -122,7 +122,7 @@ export declare const createPaymentMethodSchema: z.ZodObject<{
 }, {
     body: {
         name: string;
-        type: "cod" | "online" | "bank" | "mobile_banking";
+        type: "cod" | "online" | "mobile_banking" | "bank";
         code: string;
         sortOrder?: string | number | undefined;
         enabled?: boolean | undefined;
@@ -205,7 +205,7 @@ export declare const updatePaymentMethodSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
-        type?: "cod" | "online" | "bank" | "mobile_banking" | undefined;
+        type?: "cod" | "online" | "mobile_banking" | "bank" | undefined;
         code?: string | undefined;
         enabled?: boolean | undefined;
         maintenanceMode?: boolean | undefined;
@@ -227,7 +227,7 @@ export declare const updatePaymentMethodSchema: z.ZodObject<{
     }, {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
-        type?: "cod" | "online" | "bank" | "mobile_banking" | undefined;
+        type?: "cod" | "online" | "mobile_banking" | "bank" | undefined;
         code?: string | undefined;
         enabled?: boolean | undefined;
         maintenanceMode?: boolean | undefined;
@@ -251,7 +251,7 @@ export declare const updatePaymentMethodSchema: z.ZodObject<{
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
-        type?: "cod" | "online" | "bank" | "mobile_banking" | undefined;
+        type?: "cod" | "online" | "mobile_banking" | "bank" | undefined;
         code?: string | undefined;
         enabled?: boolean | undefined;
         maintenanceMode?: boolean | undefined;
@@ -278,7 +278,7 @@ export declare const updatePaymentMethodSchema: z.ZodObject<{
     body: {
         name?: string | undefined;
         sortOrder?: string | number | undefined;
-        type?: "cod" | "online" | "bank" | "mobile_banking" | undefined;
+        type?: "cod" | "online" | "mobile_banking" | "bank" | undefined;
         code?: string | undefined;
         enabled?: boolean | undefined;
         maintenanceMode?: boolean | undefined;

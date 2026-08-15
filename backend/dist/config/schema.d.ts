@@ -2947,12 +2947,12 @@ export declare const orders: import("drizzle-orm/mysql-core").MySqlTableWithColu
             name: "payment_method";
             tableName: "orders";
             dataType: "string";
-            columnType: "MySqlEnumColumn";
-            data: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal";
-            driverParam: string;
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
             notNull: true;
             hasDefault: true;
-            enumValues: ["cod", "bkash", "nagad", "rocket", "bank", "stripe", "sslcommerz", "paypal"];
+            enumValues: [string, ...string[]];
             baseColumn: never;
         }, object>;
         transactionId: import("drizzle-orm/mysql-core").MySqlColumn<{
@@ -4359,7 +4359,7 @@ export declare const paymentMethods: import("drizzle-orm/mysql-core").MySqlTable
             tableName: "payment_methods";
             dataType: "string";
             columnType: "MySqlEnumColumn";
-            data: "cod" | "online" | "bank" | "mobile_banking";
+            data: "cod" | "online" | "mobile_banking" | "bank";
             driverParam: string;
             notNull: true;
             hasDefault: false;

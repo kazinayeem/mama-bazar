@@ -11,7 +11,7 @@ export declare const getByCode: (code: string) => Promise<{
     name: string;
     sortOrder: number;
     createdAt: Date;
-    type: "cod" | "online" | "bank" | "mobile_banking";
+    type: "cod" | "online" | "mobile_banking" | "bank";
     updatedAt: Date;
     code: string;
     enabled: boolean;
@@ -24,7 +24,7 @@ export declare const getAll: () => Promise<{
     name: string;
     sortOrder: number;
     createdAt: Date;
-    type: "cod" | "online" | "bank" | "mobile_banking";
+    type: "cod" | "online" | "mobile_banking" | "bank";
     updatedAt: Date;
     code: string;
     enabled: boolean;
@@ -35,7 +35,7 @@ export declare const getById: (id: number) => Promise<{
     name: string;
     sortOrder: number;
     createdAt: Date;
-    type: "cod" | "online" | "bank" | "mobile_banking";
+    type: "cod" | "online" | "mobile_banking" | "bank";
     updatedAt: Date;
     code: string;
     enabled: boolean;
@@ -47,7 +47,7 @@ export declare const create: (data: CreatePaymentMethodInput) => Promise<{
     name: string;
     sortOrder: number;
     createdAt: Date;
-    type: "cod" | "online" | "bank" | "mobile_banking";
+    type: "cod" | "online" | "mobile_banking" | "bank";
     updatedAt: Date;
     code: string;
     enabled: boolean;
@@ -59,7 +59,7 @@ export declare const update: (id: number, data: UpdatePaymentMethodInput) => Pro
     name: string;
     sortOrder: number;
     createdAt: Date;
-    type: "cod" | "online" | "bank" | "mobile_banking";
+    type: "cod" | "online" | "mobile_banking" | "bank";
     updatedAt: Date;
     code: string;
     enabled: boolean;

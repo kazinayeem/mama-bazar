@@ -93,11 +93,11 @@ const run = async () => {
             return r && r.length ? r[0].COLUMN_TYPE : null;
         };
         const paymentMethodType = await getColumnType("orders", "payment_method");
-        if (!paymentMethodType || !paymentMethodType.includes("bkash")) {
+        if (!paymentMethodType || !paymentMethodType.toLowerCase().includes("varchar")) {
             await db_1.db.execute((0, drizzle_orm_1.sql) `
-        ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cod','bkash','nagad','rocket','bank','stripe','sslcommerz','paypal') NOT NULL DEFAULT 'cod'
+        ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) NOT NULL DEFAULT 'cod'
       `);
-            console.log("orders.payment_method enum extended");
+            console.log("orders.payment_method changed to extensible varchar");
         }
         const paymentStatusType = await getColumnType("orders", "payment_status");
         if (!paymentStatusType || !paymentStatusType.includes("payment_verification")) {

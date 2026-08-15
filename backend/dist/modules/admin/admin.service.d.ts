@@ -25,7 +25,7 @@ export declare const getDashboard: (query: DashboardQuery) => Promise<{
     }[];
     statusBreakdown: Record<string, number>;
     paymentBreakdown: {
-        method: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal";
+        method: string;
         count: number;
         revenue: number;
     }[];
@@ -58,7 +58,7 @@ export declare const getDashboard: (query: DashboardQuery) => Promise<{
         checkoutNotes: string | null;
         adminNotes: string | null;
         totalPrice: string;
-        paymentMethod: "cod" | "bkash" | "nagad" | "rocket" | "bank" | "stripe" | "sslcommerz" | "paypal";
+        paymentMethod: string;
         transactionId: string | null;
         senderNumber: string | null;
         paymentScreenshot: string | null;
