@@ -73,7 +73,7 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden"
+      className="relative mt-2 h-full w-full overflow-hidden"
       style={{ backgroundColor: slide.backgroundColor || '#0b1220' }}
     >
       {/* The slide background is always painted underneath so the banner area
