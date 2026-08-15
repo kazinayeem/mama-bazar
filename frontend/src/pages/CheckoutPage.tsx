@@ -20,7 +20,6 @@ import type {
 } from '../types'
 
 const BD_PHONE_REGEX = /^(\+880|0)[1-9]\d{9}$/
-const TAX_RATE = 0.05
 
 const normalizeBdPhone = (value: string) => {
   const trimmed = value.trim()
@@ -108,6 +107,12 @@ const CheckoutPage = () => {
   const [submitError, setSubmitError] = useState('')
   const [agreeTerms, setAgreeTerms] = useState(false)
 
+  // Tax configuration comes from the admin "Tax Settings" (single source of truth).
+  const [taxSettings, setTaxSettings] = useState<{ taxRate: number; applyTaxToShipping: boolean }>({
+    taxRate: 0,
+    applyTaxToShipping: false,
+  })
+
   const subtotal = useMemo(
     () => cart.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0),
     [cart],
@@ -119,7 +124,9 @@ const CheckoutPage = () => {
   }, [shippingMethodId, shippingMethods])
 
   const discount = couponApplied?.discount ?? 0
-  const tax = Math.round((subtotal - discount) * TAX_RATE)
+  const taxRate = taxSettings.taxRate
+  const taxable = subtotal - discount + (taxSettings.applyTaxToShipping ? shippingCost : 0)
+  const tax = Math.round(Math.max(0, taxable) * (taxRate / 100))
   const total = subtotal - discount + tax + shippingCost
 
   const selectedShippingMethod = shippingMethods.find((m) => m.id === shippingMethodId) || null
@@ -167,10 +174,11 @@ const CheckoutPage = () => {
     let mounted = true
     const load = async () => {
       try {
-        const [methods, payments, noticeList] = await Promise.all([
+        const [methods, payments, noticeList, tax] = await Promise.all([
           api.estimateShipping(0),
           api.getPaymentMethods(),
           api.getCheckoutNotices(),
+          api.getTaxSettings(),
         ])
         if (!mounted) return
         setShippingMethods(methods)
@@ -180,6 +188,7 @@ const CheckoutPage = () => {
         const cod = payments.find((p) => p.code === 'cod')
         if (cod) setPaymentMethod('cod')
         setNotices(noticeList)
+        setTaxSettings(tax)
       } catch {
         if (!mounted) return
       } finally {
@@ -970,6 +979,30 @@ const CheckoutPage = () => {
                 {!cart.length && <p className="text-sm text-on-surface-variant">Your bag is empty.</p>}
               </div>
 
+              {/* Tax option — reflects the single tax rate configured in admin */}
+              <div className="mt-5 rounded-lg border border-outline-variant/20 bg-surface-variant/5 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Tax</p>
+                <div className="mt-2" role="radiogroup" aria-label="Tax option">
+                  <button
+                    aria-checked="true"
+                    className="flex w-full items-center gap-3 border border-tertiary bg-tertiary/5 px-4 py-3 text-left transition-colors"
+                    role="radio"
+                    type="button"
+                  >
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-tertiary">
+                      <span className="h-2.5 w-2.5 rounded-full bg-tertiary" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold">{taxRate > 0 ? `${taxRate}% Tax` : '0% — No Tax'}</span>
+                      <span className="block text-xs text-on-surface-variant">
+                        {taxRate > 0 ? 'Applied based on your order total.' : 'No tax is applied to this order.'}
+                      </span>
+                    </span>
+                    <span className="ml-auto shrink-0 text-sm font-bold">{currency(tax)}</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="mt-6 space-y-3 border-t border-outline-variant/20 pt-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-on-surface-variant">Subtotal</span>
@@ -986,7 +1019,7 @@ const CheckoutPage = () => {
                   <span className="font-semibold">{shippingCost === 0 ? 'FREE' : currency(shippingCost)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-on-surface-variant">VAT (5%)</span>
+                  <span className="text-on-surface-variant">Tax{taxRate > 0 ? ` (${taxRate}%)` : ''}</span>
                   <span className="font-semibold">{currency(tax)}</span>
                 </div>
                 <div className="flex items-end justify-between border-t border-outline-variant/20 pt-4">

@@ -135,6 +135,10 @@ const OrderSuccessPage = () => {
             <span className="text-on-surface-variant">Shipping{order.shippingMethodName ? ` (${order.shippingMethodName})` : ''}</span>
             <span>{Number(order.shippingCost) === 0 ? 'FREE' : currency(order.shippingCost)}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-on-surface-variant">Tax</span>
+            <span>{currency(Number(order.tax) || 0)}</span>
+          </div>
           <div className="flex items-center justify-between border-t border-outline-variant/20 pt-3">
             <span className="font-headline text-lg font-bold">Total</span>
             <span className="font-headline text-xl font-extrabold">{currency(order.totalPrice)}</span>

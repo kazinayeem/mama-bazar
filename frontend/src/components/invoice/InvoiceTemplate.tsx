@@ -154,7 +154,7 @@ const InvoiceTemplate = ({ order, showActions = false, onDownload, onPrint }: In
               />
               <div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: '#064E3B', letterSpacing: '-0.02em' }}>
-                  Mama<span style={{ color: '#10B981' }}>Bazar</span>
+                  <span style={{ color: '#176B3A' }}>Mama</span><span style={{ color: '#F47B20' }}>Bazar</span>
                 </div>
                 <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                   Home Appliances & Gadgets
@@ -345,12 +345,10 @@ const InvoiceTemplate = ({ order, showActions = false, onDownload, onPrint }: In
                       <span style={{ fontWeight: 500 }}>-{formatCurrency(discount)}</span>
                     </div>
                   )}
-                  {tax > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>VAT / Tax</span>
-                      <span style={{ fontWeight: 500 }}>{formatCurrency(tax)}</span>
-                    </div>
-                  )}
+<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Tax</span>
+                    <span style={{ fontWeight: 500 }}>{formatCurrency(tax)}</span>
+                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Shipping{order.shippingMethodName ? ` (${order.shippingMethodName})` : ''}</span>
                     <span style={{ fontWeight: 500 }}>{shippingCost === 0 ? 'FREE' : formatCurrency(shippingCost)}</span>

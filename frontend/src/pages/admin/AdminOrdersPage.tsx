@@ -490,12 +490,10 @@ const AdminOrdersPage = () => {
                         <span className="font-medium text-success">-{currency(Number(selectedOrder.discount))}</span>
                       </div>
                     )}
-                    {Number(selectedOrder.tax) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">VAT</span>
-                        <span className="font-medium">{currency(Number(selectedOrder.tax))}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span className="font-medium">{currency(Number(selectedOrder.tax) || 0)}</span>
+                    </div>
                     <div className="flex justify-between border-t pt-2 text-base font-bold">
                       <span>Total</span>
                       <span>{currency(selectedOrder.totalPrice)}</span>

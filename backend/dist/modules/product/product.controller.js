@@ -44,11 +44,17 @@ const DEFAULT_DISCOUNT = "0";
 const DEFAULT_STOCK = 0;
 const DEFAULT_STATUS = "active";
 const DEFAULT_PAYMENT_METHODS = ["cod"];
-const parseJsonField = (value) => {
+const parseJsonField = (value, field = "field") => {
     if (value === undefined || value === null || value === "")
         return undefined;
-    if (typeof value === "string")
-        return JSON.parse(value);
+    if (typeof value === "string") {
+        try {
+            return JSON.parse(value);
+        }
+        catch {
+            throw new AppError_1.AppError(400, `Invalid JSON in "${field}". Please check the value and try again.`);
+        }
+    }
     return value;
 };
 const parseArrayField = (value) => {
@@ -127,7 +133,7 @@ const extractBaseProduct = (body) => {
         canonicalUrl: toStr(body.canonicalUrl),
         ogImage: toStr(body.ogImage),
         twitterImage: toStr(body.twitterImage),
-        structuredData: parseJsonField(body.structuredData),
+        structuredData: parseJsonField(body.structuredData, "structuredData"),
         emiAvailable: labels("emiAvailable"),
         isFeatured: labels("isFeatured"),
         isTrending: labels("isTrending"),

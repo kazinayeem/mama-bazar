@@ -276,8 +276,8 @@ export declare const collectionCreateSchema: z.ZodObject<{
         name: z.ZodString;
         slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
-        image: z.ZodOptional<z.ZodString>;
-        banner: z.ZodOptional<z.ZodString>;
+        image: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        banner: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         featured: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         homepageVisibility: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         sortOrder: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
@@ -287,8 +287,8 @@ export declare const collectionCreateSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         name: string;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -299,8 +299,8 @@ export declare const collectionCreateSchema: z.ZodObject<{
     }, {
         name: string;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -313,8 +313,8 @@ export declare const collectionCreateSchema: z.ZodObject<{
     body: {
         name: string;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -327,8 +327,8 @@ export declare const collectionCreateSchema: z.ZodObject<{
     body: {
         name: string;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -343,8 +343,8 @@ export declare const collectionUpdateSchema: z.ZodObject<{
         name: z.ZodOptional<z.ZodString>;
         slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
-        image: z.ZodOptional<z.ZodString>;
-        banner: z.ZodOptional<z.ZodString>;
+        image: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        banner: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         featured: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         homepageVisibility: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         sortOrder: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodNumber]>>;
@@ -354,8 +354,8 @@ export declare const collectionUpdateSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         name?: string | undefined;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -366,8 +366,8 @@ export declare const collectionUpdateSchema: z.ZodObject<{
     }, {
         name?: string | undefined;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -387,8 +387,8 @@ export declare const collectionUpdateSchema: z.ZodObject<{
     body: {
         name?: string | undefined;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -404,8 +404,8 @@ export declare const collectionUpdateSchema: z.ZodObject<{
     body: {
         name?: string | undefined;
         slug?: string | undefined;
-        image?: string | undefined;
-        banner?: string | undefined;
+        image?: string | null | undefined;
+        banner?: string | null | undefined;
         description?: string | undefined;
         featured?: string | boolean | undefined;
         sortOrder?: string | number | undefined;
@@ -474,7 +474,7 @@ export declare const collectionMoveSchema: z.ZodObject<{
 }>;
 export declare const vendorCreateSchema: z.ZodObject<{
     body: z.ZodObject<{
-        logo: z.ZodOptional<z.ZodString>;
+        logo: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         name: z.ZodString;
         slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
@@ -489,7 +489,7 @@ export declare const vendorCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -500,7 +500,7 @@ export declare const vendorCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -513,7 +513,7 @@ export declare const vendorCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -526,7 +526,7 @@ export declare const vendorCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -537,7 +537,7 @@ export declare const vendorCreateSchema: z.ZodObject<{
 export declare const vendorUpdateSchema: z.ZodObject<{
     body: z.ZodObject<{
         name: z.ZodOptional<z.ZodString>;
-        logo: z.ZodOptional<z.ZodString>;
+        logo: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
         contact: z.ZodOptional<z.ZodString>;
@@ -551,7 +551,7 @@ export declare const vendorUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -562,7 +562,7 @@ export declare const vendorUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -582,7 +582,7 @@ export declare const vendorUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -598,7 +598,7 @@ export declare const vendorUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -611,7 +611,7 @@ export declare const vendorUpdateSchema: z.ZodObject<{
 }>;
 export declare const supplierCreateSchema: z.ZodObject<{
     body: z.ZodObject<{
-        logo: z.ZodOptional<z.ZodString>;
+        logo: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         name: z.ZodString;
         slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
@@ -626,7 +626,7 @@ export declare const supplierCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -637,7 +637,7 @@ export declare const supplierCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -650,7 +650,7 @@ export declare const supplierCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -663,7 +663,7 @@ export declare const supplierCreateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -674,7 +674,7 @@ export declare const supplierCreateSchema: z.ZodObject<{
 export declare const supplierUpdateSchema: z.ZodObject<{
     body: z.ZodObject<{
         name: z.ZodOptional<z.ZodString>;
-        logo: z.ZodOptional<z.ZodString>;
+        logo: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         slug: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
         contact: z.ZodOptional<z.ZodString>;
@@ -688,7 +688,7 @@ export declare const supplierUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -699,7 +699,7 @@ export declare const supplierUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -719,7 +719,7 @@ export declare const supplierUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;
@@ -735,7 +735,7 @@ export declare const supplierUpdateSchema: z.ZodObject<{
         slug?: string | undefined;
         description?: string | undefined;
         status?: "active" | "inactive" | "archived" | undefined;
-        logo?: string | undefined;
+        logo?: string | null | undefined;
         contact?: string | undefined;
         phone?: string | undefined;
         email?: string | undefined;

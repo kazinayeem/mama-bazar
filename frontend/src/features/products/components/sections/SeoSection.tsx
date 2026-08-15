@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import FormSection from '../FormSection'
 import { useProductForm } from '../ProductFormContext'
-import type { ProductFormValues } from '../../lib/productForm'
+import { isValidJsonText, type ProductFormValues } from '../../lib/productForm'
 
 const FLAG_SECTIONS: Array<{ key: keyof ProductFormValues; label: string; description: string }> = [
   { key: 'isFeatured', label: 'Featured', description: 'Show in featured sections' },
@@ -73,7 +73,20 @@ const SeoSection = () => {
         </div>
         <div className="sm:col-span-2 space-y-2">
           <Label htmlFor="structured-data">Structured Data (JSON-LD)</Label>
-          <Textarea id="structured-data" rows={4} placeholder='{"@type":"Product",…}' value={form.structuredData} onChange={(e) => set({ structuredData: e.target.value })} />
+          <Textarea
+            id="structured-data"
+            rows={4}
+            placeholder='{"@type":"Product",…}'
+            value={form.structuredData}
+            onChange={(e) => set({ structuredData: e.target.value })}
+            aria-invalid={form.structuredData.trim() && !isValidJsonText(form.structuredData) ? true : undefined}
+            aria-describedby={form.structuredData.trim() && !isValidJsonText(form.structuredData) ? 'structured-data-error' : undefined}
+          />
+          {form.structuredData.trim() && !isValidJsonText(form.structuredData) ? (
+            <p id="structured-data-error" className="text-xs font-medium text-destructive">
+              Invalid JSON. Please check the syntax before saving.
+            </p>
+          ) : null}
         </div>
       </div>
     </FormSection>

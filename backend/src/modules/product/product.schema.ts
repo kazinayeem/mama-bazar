@@ -96,7 +96,18 @@ const productFields = {
   canonicalUrl: z.string().optional(),
   ogImage: z.string().optional(),
   twitterImage: z.string().optional(),
-  structuredData: z.union([z.string(), z.record(z.any(), z.any())]).optional(),
+  structuredData: z
+    .union([z.string(), z.record(z.any(), z.any())])
+    .refine((v) => {
+      if (typeof v !== "string" || v.trim() === "") return true;
+      try {
+        JSON.parse(v);
+        return true;
+      } catch {
+        return false;
+      }
+    }, "Structured Data (JSON-LD) must be valid JSON")
+    .optional(),
   emiAvailable: boolish,
   isFeatured: boolish,
   isTrending: boolish,

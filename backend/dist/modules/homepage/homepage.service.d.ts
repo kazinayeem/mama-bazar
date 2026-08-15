@@ -31,6 +31,8 @@ export declare const getHomepage: (userId: number | null) => Promise<{
         limit?: number;
         columns?: number;
         background?: "default" | "muted" | "dark";
+        categoryId?: number | null;
+        categorySlug?: string | null;
     }[];
 }>;
 export declare const subscribeNewsletter: (email: string, source?: string) => Promise<{

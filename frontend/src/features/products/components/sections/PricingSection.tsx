@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import FormSection from '../FormSection'
 import { useProductForm } from '../ProductFormContext'
+import type { ProductFormValues } from '../../lib/productForm'
 
 interface PriceFieldProps {
   id: string
@@ -29,6 +30,52 @@ const PricingSection = () => {
   const { form, set } = useProductForm()
   const hasVariants = form.variants.length > 0
 
+  const toNum = (value: string): number => {
+    const n = Number(value)
+    return Number.isFinite(n) && value.trim() !== '' ? n : NaN
+  }
+
+  // Automatic discount <-> sale price calculation.
+  // Each handler only ever writes the OTHER field, so there is no update loop.
+  const handlePriceChange = (value: string) => {
+    const price = toNum(value)
+    const patch: Partial<ProductFormValues> = { price: value }
+    if (Number.isFinite(price) && price > 0) {
+      const discount = toNum(form.discount)
+      const salePrice = toNum(form.salePrice)
+      if (Number.isFinite(discount) && discount >= 0) {
+        // Case A — discount drives the sale price
+        const d = Math.min(discount, 100)
+        patch.salePrice = String(Math.round(price - (price * d) / 100))
+      } else if (Number.isFinite(salePrice) && salePrice > 0 && salePrice < price) {
+        // Case B — sale price drives the discount
+        patch.discount = String(Math.round(((price - salePrice) / price) * 100))
+      }
+    }
+    set(patch)
+  }
+
+  const handleSalePriceChange = (value: string) => {
+    const price = toNum(form.price)
+    const salePrice = toNum(value)
+    const patch: Partial<ProductFormValues> = { salePrice: value }
+    if (Number.isFinite(price) && price > 0 && Number.isFinite(salePrice) && salePrice >= 0 && salePrice < price) {
+      patch.discount = String(Math.round(((price - salePrice) / price) * 100))
+    }
+    set(patch)
+  }
+
+  const handleDiscountChange = (value: string) => {
+    const price = toNum(form.price)
+    const discount = toNum(value)
+    const patch: Partial<ProductFormValues> = { discount: value }
+    if (Number.isFinite(price) && price > 0 && Number.isFinite(discount) && discount >= 0) {
+      const d = Math.min(discount, 100)
+      patch.salePrice = String(Math.round(price - (price * d) / 100))
+    }
+    set(patch)
+  }
+
   return (
     <FormSection
       title="Pricing"
@@ -54,9 +101,9 @@ const PricingSection = () => {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <PriceField id="price" label="Price" required placeholder="45000" value={form.price} onChange={(v) => set({ price: v })} />
-          <PriceField id="sale-price" label="Sale Price" placeholder="42000" value={form.salePrice} onChange={(v) => set({ salePrice: v })} />
-          <PriceField id="discount" label="Discount (%)" placeholder="10" value={form.discount} onChange={(v) => set({ discount: v })} />
+          <PriceField id="price" label="Price" required placeholder="45000" value={form.price} onChange={handlePriceChange} />
+          <PriceField id="sale-price" label="Sale Price" placeholder="42000" value={form.salePrice} onChange={handleSalePriceChange} />
+          <PriceField id="discount" label="Discount (%)" placeholder="10" value={form.discount} onChange={handleDiscountChange} />
           <PriceField id="cost-price" label="Cost Price" placeholder="35000" value={form.costPrice} onChange={(v) => set({ costPrice: v })} />
           <PriceField
             id="profit-margin"

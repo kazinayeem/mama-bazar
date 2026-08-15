@@ -128,6 +128,39 @@ const DEFAULT_SECTIONS = [
         background: "muted",
     },
     {
+        id: "limited_edition",
+        type: "limited_edition",
+        enabled: true,
+        title: "Limited Edition",
+        subtitle: "Exclusive products available for a limited time.",
+        limit: 12,
+    },
+    {
+        id: "official",
+        type: "official",
+        enabled: true,
+        title: "Official Products",
+        subtitle: "100% authentic products from official sources.",
+        limit: 12,
+    },
+    {
+        id: "hot_deals",
+        type: "hot_deals",
+        enabled: true,
+        title: "Hot Deals",
+        subtitle: "The hottest deals you don't want to miss.",
+        limit: 12,
+        background: "muted",
+    },
+    {
+        id: "emi_available",
+        type: "emi_available",
+        enabled: true,
+        title: "EMI Available",
+        subtitle: "Buy now and pay in easy installments.",
+        limit: 12,
+    },
+    {
         id: "recommendations",
         type: "recommendations",
         enabled: true,
@@ -248,6 +281,10 @@ const resolveLabelProducts = async (label, limit) => {
         trending: schema_1.products.isTrending,
         new_arrival: schema_1.products.isNewArrival,
         flash_sale: schema_1.products.isFlashSale,
+        best_seller: schema_1.products.isBestSeller,
+        limited_edition: schema_1.products.isLimitedEdition,
+        official: schema_1.products.isOfficial,
+        hot_deal: schema_1.products.isHotDeal,
     };
     const orderBy = label === "flash_sale" ? (0, drizzle_orm_1.desc)((0, drizzle_orm_1.sql) `COALESCE(${schema_1.products.discount}, 0)`) : (0, drizzle_orm_1.desc)(schema_1.products.createdAt);
     if (label === "new_arrival") {
@@ -342,6 +379,25 @@ const resolveRecommendations = async (userId, limit) => {
         }
     }
     return resolveBestSellers(limit);
+};
+/**
+ * Category-driven product rail: products belonging to the selected category
+ * (matching category/sub-category/child-category links), newest first.
+ * Returns the category metadata so the storefront can title the section and
+ * link "View More" to the category page. Renames/deletes of the category are
+ * reflected automatically because we resolve by id on every request.
+ */
+const resolveCategoryProducts = async (categoryId, limit) => {
+    const catRows = await db_1.db
+        .select({ id: schema_1.categories.id, name: schema_1.categories.name, slug: schema_1.categories.slug })
+        .from(schema_1.categories)
+        .where((0, drizzle_orm_1.eq)(schema_1.categories.id, categoryId))
+        .limit(1);
+    const category = catRows[0];
+    if (!category)
+        return { category: null, products: [] };
+    const rows = await fetchProducts((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.products.status, "active"), (0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.products.categoryId, category.id), (0, drizzle_orm_1.eq)(schema_1.products.subCategoryId, category.id), (0, drizzle_orm_1.eq)(schema_1.products.childCategoryId, category.id))), limit, (0, drizzle_orm_1.desc)(schema_1.products.createdAt));
+    return { category, products: rows };
 };
 const resolveCategories = async (limit) => {
     const rows = await db_1.db
@@ -476,7 +532,19 @@ const getHomepage = async (userId) => {
         byType("reviews") ? resolveReviews(limits.reviews || 8) : Promise.resolve([]),
     ]);
     const promoBannerSections = enabled.filter((s) => s.type === "promo_banner");
-    const needsProducts = (t) => ["flash_deals", "featured", "best_sellers", "trending", "new_arrivals", "recommendations"].includes(t);
+    // Category-driven product sections resolve per-section against the configured
+    // category id so the admin-picked category is used and stays in sync with the DB.
+    const categoryProductSections = enabled.filter((s) => s.type === "category_products");
+    const categoryProductResults = {};
+    await Promise.all(categoryProductSections.map(async (section) => {
+        const categoryId = Number(section.categoryId);
+        if (!categoryId || !Number.isFinite(categoryId)) {
+            categoryProductResults[section.id] = { category: null, products: [] };
+            return;
+        }
+        categoryProductResults[section.id] = await resolveCategoryProducts(categoryId, sanitizeLimit(section.limit, 6));
+    }));
+    const needsProducts = (t) => ["flash_deals", "featured", "best_sellers", "trending", "new_arrivals", "recommendations", "limited_edition", "official", "hot_deals", "emi_available"].includes(t);
     // Flash sale window: the backend decides whether a sale is active.
     // If the window is enabled with dates but already expired, hide the section.
     const flashWindow = config.flashSaleWindow;
@@ -512,6 +580,18 @@ const getHomepage = async (userId) => {
             case "best_sellers":
                 productResults[type] = await resolveBestSellers(limit);
                 break;
+            case "limited_edition":
+                productResults[type] = await resolveLabelProducts("limited_edition", limit);
+                break;
+            case "official":
+                productResults[type] = await resolveLabelProducts("official", limit);
+                break;
+            case "hot_deals":
+                productResults[type] = await resolveLabelProducts("hot_deal", limit);
+                break;
+            case "emi_available":
+                productResults[type] = await fetchProducts((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.products.status, "active"), (0, drizzle_orm_1.eq)(schema_1.products.emiAvailable, true)), limit, (0, drizzle_orm_1.desc)(schema_1.products.createdAt));
+                break;
             case "recommendations":
                 productResults[type] = await resolveRecommendations(userId, limit);
                 break;
@@ -529,6 +609,12 @@ const getHomepage = async (userId) => {
             case "categories":
                 data.items = categoryRows;
                 break;
+            case "category_products": {
+                const resolved = categoryProductResults[section.id] || { category: null, products: [] };
+                data.category = resolved.category;
+                data.items = resolved.products;
+                break;
+            }
             case "brands":
                 data.items = brandRows;
                 break;

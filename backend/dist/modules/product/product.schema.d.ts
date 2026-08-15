@@ -43,7 +43,7 @@ export declare const createProductSchema: z.ZodObject<{
         canonicalUrl: z.ZodOptional<z.ZodString>;
         ogImage: z.ZodOptional<z.ZodString>;
         twitterImage: z.ZodOptional<z.ZodString>;
-        structuredData: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodAny, z.ZodAny>]>>;
+        structuredData: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodAny, z.ZodAny>]>, string | Record<any, any>, string | Record<any, any>>>;
         emiAvailable: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         isFeatured: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         isTrending: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
@@ -838,7 +838,7 @@ export declare const updateProductSchema: z.ZodObject<{
         canonicalUrl: z.ZodOptional<z.ZodString>;
         ogImage: z.ZodOptional<z.ZodString>;
         twitterImage: z.ZodOptional<z.ZodString>;
-        structuredData: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodAny, z.ZodAny>]>>;
+        structuredData: z.ZodOptional<z.ZodEffects<z.ZodUnion<[z.ZodString, z.ZodRecord<z.ZodAny, z.ZodAny>]>, string | Record<any, any>, string | Record<any, any>>>;
         emiAvailable: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         isFeatured: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;
         isTrending: z.ZodOptional<z.ZodUnion<[z.ZodBoolean, z.ZodString]>>;

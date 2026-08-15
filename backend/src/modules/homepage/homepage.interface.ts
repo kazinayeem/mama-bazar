@@ -2,6 +2,7 @@ export type HomepageSectionType =
   | "hero"
   | "trust_strip"
   | "categories"
+  | "category_products"
   | "promo_banner"
   | "flash_deals"
   | "featured"
@@ -10,6 +11,10 @@ export type HomepageSectionType =
   | "collections"
   | "trending"
   | "new_arrivals"
+  | "limited_edition"
+  | "official"
+  | "hot_deals"
+  | "emi_available"
   | "recommendations"
   | "why_choose_us"
   | "reviews"
@@ -49,6 +54,8 @@ export interface HomepageSectionConfig {
   limit?: number;
   columns?: number;
   background?: "default" | "muted" | "dark";
+  categoryId?: number | null;
+  categorySlug?: string | null;
 }
 
 export interface HomepageContentItem {

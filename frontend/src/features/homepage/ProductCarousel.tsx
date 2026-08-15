@@ -90,11 +90,11 @@ const ProductCarousel = ({ products, onQuickView }: ProductCarouselProps) => {
       {/* Track */}
       <div
         ref={trackRef}
-        className="no-scrollbar flex gap-3 overflow-x-auto"
+        className="no-scrollbar flex items-stretch gap-3 overflow-x-auto"
         style={{ scrollSnapType: 'x mandatory' }}
       >
         {products.map((product, index) => (
-          <div key={product.id} style={cardStyle}>
+          <div key={product.id} className="h-full" style={cardStyle}>
             <ProductCard index={index} onQuickView={onQuickView} product={product} />
           </div>
         ))}

@@ -3,6 +3,8 @@ import {
   ChevronDown,
   EyeOff,
   GripVertical,
+  Plus,
+  Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -18,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useGetAdminCategoriesQuery } from '@/store/services/adminProductsApi'
 import { SECTION_META, SECTION_ORDER } from './sectionMeta'
 import type { HomepageSectionConfig } from '../../../types/homepage'
 
@@ -29,11 +32,41 @@ interface LayoutBuilderProps {
 const SectionSettings = ({ section, onChange }: { section: HomepageSectionConfig; onChange: (next: HomepageSectionConfig) => void }) => {
   const canLimit = !['hero', 'trust_strip', 'promo_banner', 'why_choose_us', 'newsletter'].includes(section.type)
   const canColumns = ['categories'].includes(section.type)
+  const { data: categories = [] } = useGetAdminCategoriesQuery()
 
   const set = (patch: Partial<HomepageSectionConfig>) => onChange({ ...section, ...patch })
 
   return (
     <div className="grid gap-3 border-t border-border pt-3 sm:grid-cols-2 lg:grid-cols-4">
+      {section.type === 'category_products' && (
+        <div>
+          <Label className="text-xs">Category</Label>
+          <Select
+            onValueChange={(v) => {
+              const cat = categories.find((c) => String(c.id) === v)
+              const patch: Partial<HomepageSectionConfig> = {
+                categoryId: cat ? cat.id : null,
+                categorySlug: cat ? cat.slug : null,
+              }
+              if (!section.title?.trim() && cat) patch.title = cat.name
+              set(patch)
+            }}
+            value={section.categoryId ? String(section.categoryId) : 'none'}
+          >
+            <SelectTrigger className="mt-1 h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Select a category…</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       <div>
         <Label className="text-xs">Title</Label>
         <Input
@@ -116,7 +149,7 @@ const SectionSettings = ({ section, onChange }: { section: HomepageSectionConfig
   )
 }
 
-const SectionRow = ({ section, index, onChange }: { section: HomepageSectionConfig; index: number; onChange: (next: HomepageSectionConfig) => void }) => {
+const SectionRow = ({ section, index, onChange, onRemove }: { section: HomepageSectionConfig; index: number; onChange: (next: HomepageSectionConfig) => void; onRemove?: () => void }) => {
   const dragControls = useDragControls()
   const [open, setOpen] = useState(false)
   const meta = SECTION_META[section.type]
@@ -148,6 +181,11 @@ const SectionRow = ({ section, index, onChange }: { section: HomepageSectionConf
             </div>
             {!section.enabled && <EyeOff className="h-4 w-4 text-muted-foreground" />}
             <Switch checked={section.enabled} onCheckedChange={(v) => onChange({ ...section, enabled: v })} />
+            {onRemove && (
+              <Button aria-label={`Remove ${meta.label} section`} onClick={onRemove} size="icon" variant="ghost">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
             <Button onClick={() => setOpen((prev) => !prev)} size="sm" variant="ghost">
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
             </Button>
@@ -168,20 +206,34 @@ const HomepageLayoutBuilder = ({ sections, onChange }: LayoutBuilderProps) => {
   const unknown = sections.filter((s) => !knownTypes.has(s.type))
   const known = sections.filter((s) => knownTypes.has(s.type))
 
-  const sorted = [...known].sort((a, b) => SECTION_ORDER.indexOf(a.type) - SECTION_ORDER.indexOf(b.type))
+  // Sections must keep the order stored in the config — sorting here would undo
+  // every drag and made reordering appear broken.
+  const handleReorder = (next: HomepageSectionConfig[]) => {
+    const others = sections.filter((s) => !knownTypes.has(s.type))
+    onChange([...next, ...others])
+  }
+
+  const addCategoryProducts = () => {
+    const id = `category_products_${Date.now()}`
+    onChange([
+      ...sections,
+      { id, type: 'category_products', enabled: true, title: '', limit: 6 },
+    ])
+  }
 
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
         Drag to reorder, toggle to show or hide. Empty sections are automatically hidden on the storefront.
       </p>
-      <Reorder.Group axis="y" onReorder={(next) => onChange(next)} values={sorted}>
+      <Reorder.Group axis="y" onReorder={handleReorder} values={known}>
         <div className="space-y-2">
-          {sorted.map((section, index) => (
+          {known.map((section, index) => (
             <SectionRow
               index={index}
               key={section.id}
               onChange={(next) => onChange(sections.map((s) => (s.id === next.id ? next : s)))}
+              onRemove={section.type === 'category_products' ? () => onChange(sections.filter((s) => s.id !== section.id)) : undefined}
               section={section}
             />
           ))}
@@ -199,6 +251,9 @@ const HomepageLayoutBuilder = ({ sections, onChange }: LayoutBuilderProps) => {
           ))}
         </div>
       )}
+      <Button className="w-full border-dashed" onClick={addCategoryProducts} variant="outline">
+        <Plus className="h-4 w-4" /> Add Category Products section
+      </Button>
     </div>
   )
 }

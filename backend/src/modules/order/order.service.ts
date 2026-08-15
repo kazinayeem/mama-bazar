@@ -6,6 +6,7 @@ import { AppError } from "../../utils/AppError";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env";
+import * as settingsService from "../settings/settings.service";
 
 const DEFAULT_STATUS = "pending";
 const PERCENTAGE = "percentage";
@@ -303,8 +304,15 @@ export const create = async (input: CreateOrderInput) => {
       item.variantId = variant.id;
     } else {
       if (product.stock < item.quantity) throw new AppError(400, `Insufficient stock for ${product.title}`);
+      // Single source of truth for item price — must match the storefront rule:
+      // explicit sale price wins, otherwise the discount %, otherwise list price.
+      const salePrice = Number(product.salePrice || 0);
       const discountRate = Math.min(Number(product.discount || 0), 100);
-      itemPrice = Math.round(Number(product.price) * (1 - discountRate / 100));
+      itemPrice = salePrice > 0
+        ? Math.round(salePrice)
+        : discountRate > 0
+          ? Math.round(Number(product.price) * (1 - discountRate / 100))
+          : Math.round(Number(product.price));
     }
 
     const itemTotal = itemPrice * item.quantity;
@@ -384,11 +392,18 @@ export const create = async (input: CreateOrderInput) => {
   }
 
   // ---------- 5. Tax ----------
-  let tax = Number(input.taxAmount) || 0;
+  // Tax is a single source of truth driven by the admin `tax_settings`
+  // (global rate, default 0%). The client-sent taxAmount is ignored so the
+  // backend totals can never disagree with the configured rate. When the rate
+  // is 0% the tax is exactly 0, regardless of what the client sends.
+  const taxSettings = await settingsService.getJSON<{ taxRate?: number; applyTaxToShipping?: boolean }>("tax_settings", {
+    taxRate: 0,
+    applyTaxToShipping: false,
+  });
+  const taxRate = Math.min(Math.max(Number(taxSettings?.taxRate) || 0, 0), MAX_TAX_RATE);
+  const taxable = subtotal - discount + (taxSettings?.applyTaxToShipping ? shippingCost : 0);
+  let tax = Math.round(Math.max(0, taxable) * (taxRate / 100));
   if (tax < 0) tax = 0;
-  if (tax > (subtotal - discount) * (MAX_TAX_RATE / 100)) {
-    tax = (subtotal - discount) * (MAX_TAX_RATE / 100);
-  }
 
   const totalPrice = subtotal - discount + tax + shippingCost;
 

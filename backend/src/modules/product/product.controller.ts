@@ -12,9 +12,15 @@ const DEFAULT_STOCK = 0;
 const DEFAULT_STATUS = "active";
 const DEFAULT_PAYMENT_METHODS = ["cod"];
 
-const parseJsonField = <T>(value: unknown): T | undefined => {
+const parseJsonField = <T>(value: unknown, field = "field"): T | undefined => {
   if (value === undefined || value === null || value === "") return undefined;
-  if (typeof value === "string") return JSON.parse(value) as T;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      throw new AppError(400, `Invalid JSON in "${field}". Please check the value and try again.`);
+    }
+  }
   return value as T;
 };
 
@@ -102,7 +108,7 @@ const extractBaseProduct = (body: any) => {
     canonicalUrl: toStr(body.canonicalUrl),
     ogImage: toStr(body.ogImage),
     twitterImage: toStr(body.twitterImage),
-    structuredData: parseJsonField<Record<string, unknown>>(body.structuredData),
+    structuredData: parseJsonField<Record<string, unknown>>(body.structuredData, "structuredData"),
     emiAvailable: labels("emiAvailable"),
     isFeatured: labels("isFeatured"),
     isTrending: labels("isTrending"),

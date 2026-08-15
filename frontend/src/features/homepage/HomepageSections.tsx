@@ -15,12 +15,14 @@ import {
   asBanners,
   asBrands,
   asCategories,
+  asCategory,
   asCollections,
   asContentItems,
   asProducts,
   asReviews,
   asSlides,
   type HomepageData,
+  type HomepageSectionConfig,
 } from '../../types/homepage'
 import type { Product } from '../../types'
 
@@ -166,6 +168,23 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             )
           }
 
+          case 'category_products': {
+            const products = asProducts(section)
+            const category = asCategory(section)
+            if (products.length === 0 || !category) return null
+            const resolved: HomepageSectionConfig = {
+              ...section,
+              title: section.title?.trim() || category.name,
+              ctaText: section.ctaText?.trim() || 'View More',
+              ctaUrl: section.ctaUrl?.trim() || `/shop?category=${category.slug}`,
+            }
+            return (
+              <SectionShell key={section.id} section={resolved}>
+                <ProductCarousel onQuickView={onQuickView} products={products} />
+              </SectionShell>
+            )
+          }
+
           case 'promo_banner': {
             const items = asBanners(section)
             if (items.length === 0) return null
@@ -237,6 +256,10 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
           case 'best_sellers':
           case 'trending':
           case 'new_arrivals':
+          case 'limited_edition':
+          case 'official':
+          case 'hot_deals':
+          case 'emi_available':
           case 'recommendations': {
             const products = asProducts(section)
             if (products.length === 0) return null

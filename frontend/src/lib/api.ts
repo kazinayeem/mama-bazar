@@ -594,6 +594,23 @@ export const api = {
     return fetchJson('/api/settings')
   },
 
+  async getTaxSettings(): Promise<{ taxRate: number; applyTaxToShipping: boolean }> {
+    try {
+      const settings = await this.getSettings()
+      const raw = settings.find((s) => s.key === 'tax_settings')?.value
+      if (raw) {
+        const parsed = JSON.parse(raw) as { taxRate?: number; applyTaxToShipping?: boolean }
+        return {
+          taxRate: Math.max(0, Number(parsed.taxRate) || 0),
+          applyTaxToShipping: Boolean(parsed.applyTaxToShipping),
+        }
+      }
+    } catch {
+      // fall through to defaults
+    }
+    return { taxRate: 0, applyTaxToShipping: false }
+  },
+
   async setSetting(key: string, value: unknown): Promise<{ id: number; key: string; value: string }> {
     return fetchJson(
       '/api/settings',

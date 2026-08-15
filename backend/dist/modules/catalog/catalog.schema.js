@@ -66,8 +66,8 @@ const collectionFields = {
     name: zod_1.z.string().min(1, "Name is required"),
     slug: zod_1.z.string().optional(),
     description: zod_1.z.string().optional(),
-    image: zod_1.z.string().optional(),
-    banner: zod_1.z.string().optional(),
+    image: zod_1.z.string().nullable().optional(),
+    banner: zod_1.z.string().nullable().optional(),
     featured: zod_1.z.union([zod_1.z.boolean(), zod_1.z.string()]).optional(),
     homepageVisibility: zod_1.z.union([zod_1.z.boolean(), zod_1.z.string()]).optional(),
     sortOrder: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).optional(),
@@ -102,7 +102,7 @@ const vendorSupplierFields = {
 exports.vendorCreateSchema = zod_1.z.object({
     body: zod_1.z.object({
         ...vendorSupplierFields,
-        logo: zod_1.z.string().optional(),
+        logo: zod_1.z.string().nullable().optional(),
     }),
 });
 exports.vendorUpdateSchema = zod_1.z.object({
@@ -110,13 +110,13 @@ exports.vendorUpdateSchema = zod_1.z.object({
     body: zod_1.z.object({
         ...vendorSupplierFields,
         name: zod_1.z.string().min(1).optional(),
-        logo: zod_1.z.string().optional(),
+        logo: zod_1.z.string().nullable().optional(),
     }),
 });
 exports.supplierCreateSchema = zod_1.z.object({
     body: zod_1.z.object({
         ...vendorSupplierFields,
-        logo: zod_1.z.string().optional(),
+        logo: zod_1.z.string().nullable().optional(),
     }),
 });
 exports.supplierUpdateSchema = zod_1.z.object({
@@ -124,7 +124,7 @@ exports.supplierUpdateSchema = zod_1.z.object({
     body: zod_1.z.object({
         ...vendorSupplierFields,
         name: zod_1.z.string().min(1).optional(),
-        logo: zod_1.z.string().optional(),
+        logo: zod_1.z.string().nullable().optional(),
     }),
 });
 exports.vendorListSchema = listQuery;

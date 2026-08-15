@@ -1,4 +1,4 @@
-export type HomepageSectionType = "hero" | "trust_strip" | "categories" | "promo_banner" | "flash_deals" | "featured" | "best_sellers" | "brands" | "collections" | "trending" | "new_arrivals" | "recommendations" | "why_choose_us" | "reviews" | "newsletter";
+export type HomepageSectionType = "hero" | "trust_strip" | "categories" | "category_products" | "promo_banner" | "flash_deals" | "featured" | "best_sellers" | "brands" | "collections" | "trending" | "new_arrivals" | "limited_edition" | "official" | "hot_deals" | "emi_available" | "recommendations" | "why_choose_us" | "reviews" | "newsletter";
 export interface HomepageHeroSlide {
     id: string;
     desktopImage: string;
@@ -32,6 +32,8 @@ export interface HomepageSectionConfig {
     limit?: number;
     columns?: number;
     background?: "default" | "muted" | "dark";
+    categoryId?: number | null;
+    categorySlug?: string | null;
 }
 export interface HomepageContentItem {
     icon?: string;

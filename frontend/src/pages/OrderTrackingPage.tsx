@@ -347,6 +347,10 @@ const OrderTrackingPage = () => {
                     <span className="text-slate-500">Shipping{order.shippingMethodName ? ` (${order.shippingMethodName})` : ''}</span>
                     <span className="font-medium">{Number(order.shippingCost) === 0 ? 'FREE' : currency(order.shippingCost)}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Tax</span>
+                    <span className="font-medium">{currency(Number(order.tax) || 0)}</span>
+                  </div>
                   <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold">
                     <span>Total</span>
                     <span>{currency(order.totalPrice)}</span>

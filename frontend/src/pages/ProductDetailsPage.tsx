@@ -349,8 +349,8 @@ const ProductDetailsPage = () => {
         <span className="text-slate-700">{product.title.slice(0, 30)}...</span>
       </nav>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
-        <div>
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="lg:col-span-7">
           <div className="overflow-hidden rounded-[18px] bg-slate-100">
             {product.images.length > 0 ? (
               <img
@@ -393,7 +393,7 @@ const ProductDetailsPage = () => {
           )}
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex flex-col lg:col-span-5">
           <div className="flex flex-wrap items-center gap-2">
             {product.brandInfo?.name && (
               <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
@@ -560,7 +560,7 @@ const ProductDetailsPage = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 md:flex-row">
             <button
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-accent text-accent-foreground px-6 py-4 text-sm font-bold transition hover:bg-accent hover:text-accent-foreground active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={Boolean(disableAddToCart)}
@@ -736,7 +736,7 @@ const ProductDetailsPage = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
           <div>
             <h3 className="mb-4 font-headline text-lg font-extrabold text-slate-900">Write a review</h3>
             {isLoggedIn ? (

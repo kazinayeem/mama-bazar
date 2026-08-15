@@ -23,6 +23,7 @@ import RelatedProductsSection from './sections/RelatedProductsSection'
 import {
   PRODUCT_STATUSES,
   formValuesToPayload,
+  isValidJsonText,
   productTitle,
   validateVariants,
   type ProductFormValues,
@@ -49,6 +50,9 @@ const validate = (form: ProductFormValues): string[] => {
   }
   const variantResult = validateVariants(form)
   errors.push(...variantResult.errors)
+  if (form.structuredData.trim() && !isValidJsonText(form.structuredData)) {
+    errors.push('Structured Data (JSON-LD) must be valid JSON. Check the syntax in the SEO section.')
+  }
   if (!form.hasVariants || form.variants.length === 0) {
     const price = Number(form.price)
     if (!form.price.trim() || Number.isNaN(price) || price <= 0) errors.push('Price must be a positive number')

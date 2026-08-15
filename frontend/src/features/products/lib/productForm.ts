@@ -155,6 +155,32 @@ export const num = (v?: string | number | null): number | undefined => {
   return Number.isFinite(n) ? n : undefined
 }
 
+/**
+ * Normalize the stored Structured Data (JSON-LD) into a string for the editor.
+ * The API stores/returns an object, but the form field is a JSON string.
+ */
+export const structuredDataToString = (value?: string | Record<string, unknown> | null): string => {
+  if (value === undefined || value === null || value === '') return ''
+  if (typeof value === 'string') return value
+  try {
+    return JSON.stringify(value, null, 2)
+  } catch {
+    return ''
+  }
+}
+
+/** True when the given text is empty or parses as valid JSON. */
+export const isValidJsonText = (value: string): boolean => {
+  const trimmed = value.trim()
+  if (!trimmed) return true
+  try {
+    JSON.parse(trimmed)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export const emptyForm = (): ProductFormValues => ({
   hasVariants: false,
   title: '',
@@ -297,7 +323,7 @@ export const productToFormValues = (product: AdminProduct): ProductFormValues =>
   canonicalUrl: product.canonicalUrl || '',
   ogImage: product.ogImage || '',
   twitterImage: product.twitterImage || '',
-  structuredData: product.structuredData || '',
+  structuredData: structuredDataToString(product.structuredData),
 
   tags: product.tags || [],
   features: product.features || [],

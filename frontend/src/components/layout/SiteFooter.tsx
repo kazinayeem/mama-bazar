@@ -90,7 +90,7 @@ const SiteFooter = () => {
             <div className="flex items-center gap-2.5">
               <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
               <span className="font-headline text-xl font-extrabold tracking-tight text-slate-900">
-                Mama<span className="text-brand-green-500">Bazar</span>
+                <span className="text-brand-green-500">Mama</span><span className="text-brand-orange-500">Bazar</span>
               </span>
             </div>
             <p className="mt-4 max-w-xs text-[13px] leading-6 text-slate-600">
