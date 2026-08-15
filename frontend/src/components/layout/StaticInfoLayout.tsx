@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight, Home, MessageCircle, Phone } from 'lucide-react'
 import { SEO } from '../common/SEO'
+import { cn } from '@/lib/utils'
 
 export interface StaticTocItem {
   id: string
@@ -43,7 +44,7 @@ const StaticInfoLayout = ({
           <span className="font-medium text-brand-green-700">{title}</span>
         </nav>
 
-        <div className="mt-6 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div className={cn('mt-6 grid gap-8', toc.length > 0 && 'lg:grid-cols-[260px_minmax(0,1fr)]')}>
           {toc.length > 0 && (
             <aside className="order-2 lg:order-1">
               <div className="hidden rounded-md border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:block">

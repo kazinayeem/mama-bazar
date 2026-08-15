@@ -180,39 +180,45 @@ const ContactPage = () => {
         <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-orange-500">
           আমাদের সাথে যোগাযোগ করুন
         </p>
-        <p className="mt-3 text-[15px] leading-7 text-slate-700">
+        <p className="mt-3 max-w-3xl text-[15px] leading-7 text-slate-700">
           Have a question or need support? Our friendly team is always happy to help. Reach us through any of the
           channels below.
         </p>
-        <p className="mt-2 text-[15px] leading-7 text-slate-700">
+        <p className="mt-2 max-w-3xl text-[15px] leading-7 text-slate-700">
           যেকোনো প্রশ্ন বা সহায়তার জন্য আমাদের সাথে যোগাযোগ করুন। আমাদের বন্ধুত্বপূর্ণ টিম সবসময় আপনার পাশে আছে।
         </p>
       </section>
 
-      <section>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {CONTACT_ROWS.map(({ key, label, bangla, icon: Icon }) => {
-            const value = info[key]
-            if (!value) return null
-            return (
-              <div key={key} className="flex items-start gap-3 rounded-md border border-slate-200 bg-white p-3.5 shadow-sm">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-green-50 text-brand-orange-500">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    {label} · {bangla}
-                  </p>
-                  <p className="break-words text-sm font-medium text-brand-green-700">{value}</p>
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-8">
+        <div>
+          <h3 className="text-lg font-bold text-brand-green-700">Contact Information</h3>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-orange-500">
+            যোগাযোগের তথ্য
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {CONTACT_ROWS.map(({ key, label, bangla, icon: Icon }) => {
+              const value = info[key]
+              if (!value) return null
+              return (
+                <div key={key} className="flex items-start gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-green-50 text-brand-orange-500">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      {label} · {bangla}
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-brand-green-700">{value}</p>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
-      </section>
 
-      <section>
-        <ContactForm />
+        <div>
+          <ContactForm />
+        </div>
       </section>
     </StaticInfoLayout>
   )
