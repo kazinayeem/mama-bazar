@@ -499,12 +499,12 @@ const CheckoutPage = () => {
           <section>
             <h2 className="mb-4 flex items-center gap-2 font-headline text-lg font-bold">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-xs text-white">1</span>
-              Delivery Address
+              ডেলিভারি ঠিকানা / Delivery Address
             </h2>
 
             {authUser && (
               <div className="mb-4">
-                <label className={labelClass}>Saved Address</label>
+                <label className={labelClass}>সংরক্ষিত ঠিকানা / Saved Address</label>
                 <select
                   className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm "
                   disabled={addressesLoading}
@@ -518,10 +518,10 @@ const CheckoutPage = () => {
                   }}
                   value={selectedAddressId === 'new' ? 'new' : String(selectedAddressId)}
                 >
-                  <option value="new">Use a new address</option>
+                  <option value="new">নতুন ঠিকানা ব্যবহার করুন / Use a New Address</option>
                   {savedAddresses.map((addr) => (
                     <option key={addr.id} value={String(addr.id)}>
-                      {addr.recipientName} - {addr.area || addr.shippingArea || addr.district || ''} {addr.isDefault ? '(Default)' : ''}
+                      {addr.recipientName} - {addr.area || addr.shippingArea || addr.district || ''} {addr.isDefault ? '(ডিফল্ট / Default)' : ''}
                     </option>
                   ))}
                 </select>
@@ -530,51 +530,51 @@ const CheckoutPage = () => {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className={labelClass}>Full Name</label>
-                <input className={inputClass} onChange={(event) => set({ name: event.target.value })} required value={form.name} />
+                <label className={labelClass}>নাম / Full Name</label>
+                <input className={inputClass} onChange={(event) => set({ name: event.target.value })} placeholder="আপনার নাম লিখুন / Enter your name" required value={form.name} />
               </div>
               <div>
-                <label className={labelClass}>Phone</label>
+                <label className={labelClass}>ফোন নম্বর / Phone Number</label>
                 <input className={inputClass} onChange={(event) => set({ phone: event.target.value })} placeholder="01XXXXXXXXX" required value={form.phone} />
               </div>
               <div>
-                <label className={labelClass}>Alternative Phone (optional)</label>
+                <label className={labelClass}>বিকল্প ফোন নম্বর / Alternative Phone (Optional)</label>
                 <input className={inputClass} onChange={(event) => set({ alternativePhone: event.target.value })} placeholder="01XXXXXXXXX" value={form.alternativePhone} />
               </div>
               <div className="md:col-span-2">
-                <label className={labelClass}>Email (optional, for order updates)</label>
+                <label className={labelClass}>ইমেইল / Email (Optional)</label>
                 <input className={inputClass} onChange={(event) => set({ email: event.target.value })} type="email" value={form.email} />
               </div>
               <div>
-                <label className={labelClass}>Country</label>
+                <label className={labelClass}>দেশ / Country</label>
                 <input className={inputClass} onChange={(event) => set({ country: event.target.value })} value={form.country} />
               </div>
               <div>
-                <label className={labelClass}>Division</label>
+                <label className={labelClass}>বিভাগ / Division</label>
                 <input className={inputClass} onChange={(event) => set({ division: event.target.value })} placeholder="Dhaka" value={form.division} />
               </div>
               <div>
-                <label className={labelClass}>District</label>
+                <label className={labelClass}>জেলা / District</label>
                 <input className={inputClass} onChange={(event) => set({ district: event.target.value })} placeholder="Dhaka" value={form.district} />
               </div>
               <div>
-                <label className={labelClass}>Upazila / Thana</label>
+                <label className={labelClass}>উপজেলা / Upazila / Thana</label>
                 <input className={inputClass} onChange={(event) => set({ upazila: event.target.value })} placeholder="Gulshan" value={form.upazila} />
               </div>
               <div>
-                <label className={labelClass}>Area / Road</label>
+                <label className={labelClass}>এলাকা / Area / Road</label>
                 <input className={inputClass} onChange={(event) => set({ area: event.target.value })} placeholder="Gulshan 1" value={form.area} />
               </div>
               <div>
-                <label className={labelClass}>Postal Code (optional)</label>
+                <label className={labelClass}>পোস্টাল কোড / Postal Code (Optional)</label>
                 <input className={inputClass} onChange={(event) => set({ postalCode: event.target.value })} placeholder="1212" value={form.postalCode} />
               </div>
               <div className="md:col-span-2">
-                <label className={labelClass}>House / Street Address</label>
-                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm  focus:border-tertiary" onChange={(event) => set({ address: event.target.value })} required rows={2} value={form.address} />
+                <label className={labelClass}>বাড়ি / রাস্তার ঠিকানা / House / Street Address</label>
+                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm  focus:border-tertiary" onChange={(event) => set({ address: event.target.value })} placeholder="ঠিকানা লিখুন / Enter your address" required rows={2} value={form.address} />
               </div>
               <div className="md:col-span-2">
-                <label className={labelClass}>Apartment / Floor (optional)</label>
+                <label className={labelClass}>অ্যাপার্টমেন্ট / ফ্লোর / Apartment / Floor (Optional)</label>
                 <input className={inputClass} onChange={(event) => set({ apartment: event.target.value })} value={form.apartment} />
               </div>
             </div>
@@ -584,10 +584,10 @@ const CheckoutPage = () => {
           <section>
             <h2 className="mb-4 flex items-center gap-2 font-headline text-lg font-bold">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-xs text-white">2</span>
-              Shipping Method
+              ডেলিভারি পদ্ধতি / Shipping Method
             </h2>
             {shippingLoading ? (
-              <p className="text-sm text-on-surface-variant">Loading shipping options...</p>
+              <p className="text-sm text-on-surface-variant">শিপিং অপশন লোড হচ্ছে... / Loading shipping options...</p>
             ) : (
               <div className="space-y-3">
                 {shippingMethods.map((method) => {
@@ -602,20 +602,20 @@ const CheckoutPage = () => {
                       type="button"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold">{method.name}</p>
+                        <p className="text-sm font-semibold">{displayName(method.name)}</p>
                         <p className="mt-0.5 text-xs text-on-surface-variant">
-                          {method.estimatedDelivery ? `Delivery: ${method.estimatedDelivery}` : ''}
-                          {method.codAvailable ? ' · COD available' : ''}
+                          {method.estimatedDelivery ? `ডেলিভারি: / Delivery: ${method.estimatedDelivery}` : ''}
+                          {method.codAvailable ? ' · ক্যাশ অন ডেলিভারি উপলব্ধ / COD available' : ''}
                         </p>
                         {method.description && <p className="mt-0.5 text-xs text-on-surface-variant">{method.description}</p>}
                       </div>
                       <span className="shrink-0 text-sm font-bold">
-                        {free ? <span className="text-success">FREE</span> : currency(method.estimatedCost ?? 0)}
+                        {free ? <span className="text-success">ফ্রি / FREE</span> : currency(method.estimatedCost ?? 0)}
                       </span>
                     </button>
                   )
                 })}
-                {shippingMethods.length === 0 && <p className="text-sm text-on-surface-variant">No shipping options available.</p>}
+                {shippingMethods.length === 0 && <p className="text-sm text-on-surface-variant">কোনো শিপিং অপশন উপলব্ধ নেই। / No shipping options available.</p>}
               </div>
             )}
           </section>
@@ -624,7 +624,7 @@ const CheckoutPage = () => {
           <section>
             <h2 className="mb-4 flex items-center gap-2 font-headline text-lg font-bold">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-xs text-white">3</span>
-              Payment Method
+              পেমেন্ট পদ্ধতি / Payment Method
             </h2>
             <div className="space-y-3">
               {paymentMethods.map((method) => {
@@ -663,15 +663,15 @@ const CheckoutPage = () => {
                       
                       {/* Payment name and description */}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold">{method.name}</p>
+                        <p className="text-sm font-semibold">{displayName(method.name)}</p>
                         {method.code === 'cod' && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant">Pay in cash when your order is delivered</p>
+                          <p className="mt-0.5 text-xs text-on-surface-variant">পণ্য হাতে পাওয়ার সময় নগদ অর্থ প্রদান করুন। / Pay in cash when your order is delivered.</p>
                         )}
                         {method.type === 'mobile_banking' && merchantNumber && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant">Pay securely using {method.name}</p>
+                          <p className="mt-0.5 text-xs text-on-surface-variant">{displayName(method.name)} ব্যবহার করে নিরাপদে পেমেন্ট করুন / Pay securely using {displayName(method.name)}</p>
                         )}
                         {method.type === 'bank' && bankName && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant">Transfer to {bankName}</p>
+                          <p className="mt-0.5 text-xs text-on-surface-variant">{bankName} এ ট্রান্সফার করুন / Transfer to {bankName}</p>
                         )}
                       </div>
                       
@@ -702,7 +702,7 @@ const CheckoutPage = () => {
                             {/* Payment number with copy */}
                             <div className="rounded-lg bg-surface-variant/30 p-4">
                               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                Payment Number
+                                পেমেন্ট নম্বর / Payment Number
                               </p>
                               <div className="mt-2 flex items-center gap-3">
                                 <span className="text-xl font-bold text-slate-900">{merchantNumber}</span>
@@ -714,19 +714,19 @@ const CheckoutPage = () => {
                                   {copiedNumber === merchantNumber ? (
                                     <>
                                       <Check size={14} />
-                                      Copied!
+                                      কপি হয়েছে! / Copied!
                                     </>
                                   ) : (
                                     <>
                                       <Copy size={14} />
-                                      Copy
+                                      কপি / Copy
                                     </>
                                   )}
                                 </button>
                               </div>
                               {method.config?.merchantName && (
                                 <p className="mt-2 text-sm text-slate-600">
-                                  Account Name: {method.config.merchantName}
+                                  অ্যাকাউন্টের নাম: / Account Name: {method.config.merchantName}
                                 </p>
                               )}
                             </div>
@@ -740,15 +740,15 @@ const CheckoutPage = () => {
                                 <p className="mt-1 text-sm text-slate-700">
                                   ১. উপরের {method.name} নম্বরে Send Money/Payment করুন।<br />
                                   ২. পেমেন্ট সম্পন্ন করার পর Transaction ID নিচের ঘরে দিন।<br />
-                                  ৩. তারপর Place Order করুন।
+                                  ৩. তারপর অর্ডার নিশ্চিত করুন (Place Order)।
                                 </p>
                               </div>
                               <div>
                                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                  English Instructions
+                                  ইংরেজি নির্দেশনা / English Instructions
                                 </p>
                                 <p className="mt-1 text-sm text-slate-700">
-                                  1. Send the required payment amount to the {method.name} number above.<br />
+                                  1. Send the required payment amount to the {displayName(method.name)} number above.<br />
                                   2. After completing the payment, enter the Transaction ID below.<br />
                                   3. Then confirm your order.
                                 </p>
@@ -757,11 +757,11 @@ const CheckoutPage = () => {
 
                             {/* Transaction ID input */}
                             <div>
-                              <label className={labelClass}>Transaction ID</label>
+                              <label className={labelClass}>ট্রানজেকশন আইডি / Transaction ID</label>
                               <input
                                 className={inputClass}
                                 onChange={(event) => setTransactionId(event.target.value)}
-                                placeholder="Enter Transaction ID"
+                                placeholder="ট্রানজেকশন আইডি লিখুন / Enter Transaction ID"
                                 required
                                 value={transactionId}
                               />
@@ -775,30 +775,30 @@ const CheckoutPage = () => {
                             {/* Bank information */}
                             <div className="rounded-lg bg-surface-variant/30 p-4">
                               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                Bank Information
+                                ব্যাংক তথ্য / Bank Information
                               </p>
                               <div className="mt-3 space-y-2">
                                 {bankName && (
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">Bank Name:</span>
+                                    <span className="text-sm text-slate-600">ব্যাংকের নাম: / Bank Name:</span>
                                     <span className="text-sm font-semibold text-slate-900">{bankName}</span>
                                   </div>
                                 )}
                                 {accountName && (
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">Account Name:</span>
+                                    <span className="text-sm text-slate-600">অ্যাকাউন্টের নাম: / Account Name:</span>
                                     <span className="text-sm font-semibold text-slate-900">{accountName}</span>
                                   </div>
                                 )}
                                 {accountNumber && (
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">Account Number:</span>
+                                    <span className="text-sm text-slate-600">অ্যাকাউন্ট নম্বর: / Account Number:</span>
                                     <span className="text-sm font-semibold text-slate-900">{accountNumber}</span>
                                   </div>
                                 )}
                                 {branch && (
                                   <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">Branch:</span>
+                                    <span className="text-sm text-slate-600">শাখা: / Branch:</span>
                                     <span className="text-sm font-semibold text-slate-900">{branch}</span>
                                   </div>
                                 )}
@@ -819,7 +819,7 @@ const CheckoutPage = () => {
                               </div>
                               <div>
                                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                  English Instructions
+                                  ইংরেজি নির্দেশনা / English Instructions
                                 </p>
                                 <p className="mt-1 text-sm text-slate-700">
                                   1. Transfer the required amount to the bank account above.<br />
@@ -831,11 +831,11 @@ const CheckoutPage = () => {
 
                             {/* Transaction ID input */}
                             <div>
-                              <label className={labelClass}>Transaction ID / Reference</label>
+                              <label className={labelClass}>ট্রানজেকশন আইডি / রেফারেন্স / Transaction ID / Reference</label>
                               <input
                                 className={inputClass}
                                 onChange={(event) => setTransactionId(event.target.value)}
-                                placeholder="Enter Transaction ID or Reference Number"
+                                placeholder="ট্রানজেকশন আইডি বা রেফারেন্স নম্বর লিখুন / Enter Transaction ID or Reference Number"
                                 required
                                 value={transactionId}
                               />
@@ -848,7 +848,7 @@ const CheckoutPage = () => {
                 )
               })}
               {paymentMethods.length === 0 && (
-                <p className="text-sm text-on-surface-variant">No payment methods available.</p>
+                <p className="text-sm text-on-surface-variant">কোনো পেমেন্ট পদ্ধতি উপলব্ধ নেই। / No payment methods available.</p>
               )}
             </div>
           </section>
@@ -857,17 +857,17 @@ const CheckoutPage = () => {
           <section>
             <h2 className="mb-4 flex items-center gap-2 font-headline text-lg font-bold">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-xs text-white">4</span>
-              Coupon & Notes
+              কুপন ও নোট / Coupon & Notes
             </h2>
             <div className="space-y-4">
               <div>
                 {couponApplied ? (
                   <div className="flex items-center justify-between rounded-md bg-success/10 px-4 py-3 text-sm">
                     <span className="font-semibold text-success">
-                      Coupon {couponApplied.code} applied - {currency(couponApplied.discount)} off
+                      কুপন {couponApplied.code} প্রয়োগ হয়েছে — {currency(couponApplied.discount)} ছাড় / Coupon {couponApplied.code} applied - {currency(couponApplied.discount)} off
                     </span>
                     <button className="text-xs font-bold uppercase tracking-widest" onClick={() => setCouponApplied(null)} type="button">
-                      Remove
+                      মুছে ফেলুন / Remove
                     </button>
                   </div>
                 ) : (
@@ -878,7 +878,7 @@ const CheckoutPage = () => {
                         setCouponCode(event.target.value)
                         setCouponError('')
                       }}
-                      placeholder="Enter coupon code"
+                      placeholder="কুপন কোড লিখুন / Enter Coupon Code"
                       value={couponCode}
                     />
                     <button
@@ -887,15 +887,15 @@ const CheckoutPage = () => {
                       onClick={applyCoupon}
                       type="button"
                     >
-                      {couponLoading ? '...' : 'Apply'}
+                      {couponLoading ? '...' : 'প্রয়োগ করুন / Apply'}
                     </button>
                   </div>
                 )}
                 {couponError && <p className="mt-1 text-xs text-destructive">{couponError}</p>}
               </div>
               <div>
-                <label className={labelClass}>Order Note (optional)</label>
-                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm  focus:border-tertiary" onChange={(event) => setOrderNote(event.target.value)} rows={2} value={orderNote} />
+                <label className={labelClass}>অর্ডার নোট (ঐচ্ছিক) / Order Note (Optional)</label>
+                <textarea className="w-full border border-outline-variant/40 bg-transparent px-3 py-2.5 text-sm  focus:border-tertiary" onChange={(event) => setOrderNote(event.target.value)} placeholder="অর্ডার সম্পর্কে অতিরিক্ত তথ্য / Additional order notes" rows={2} value={orderNote} />
               </div>
             </div>
           </section>
@@ -904,7 +904,7 @@ const CheckoutPage = () => {
           <section className="border-t border-outline-variant/20 pt-6">
             <h2 className="mb-4 flex items-center gap-2 font-headline text-lg font-bold">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-xs text-white">5</span>
-              Review & Confirm
+              পর্যালোচনা ও নিশ্চিতকরণ / Review & Confirm
             </h2>
 
             {/* Login reminder for guest users */}
@@ -912,8 +912,8 @@ const CheckoutPage = () => {
               <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
                   <div className="text-center sm:text-left">
-                    <p className="text-sm font-semibold text-slate-900">Have an account?</p>
-                    <p className="text-xs text-slate-500">Login to save your order to your account.</p>
+                    <p className="text-sm font-semibold text-slate-900">অ্যাকাউন্ট আছে? / Have an account?</p>
+                    <p className="text-xs text-slate-500">আপনার অর্ডার অ্যাকাউন্টে সংরক্ষণ করতে লগইন করুন। / Login to save your order to your account.</p>
                   </div>
                   <Link
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
@@ -921,7 +921,7 @@ const CheckoutPage = () => {
                     to="/auth/login"
                   >
                     <LogIn size={14} />
-                    Login
+                    লগইন / Login
                   </Link>
                 </div>
               </div>
@@ -930,8 +930,9 @@ const CheckoutPage = () => {
             <label className="flex items-start gap-3 text-sm text-on-surface-variant">
               <input checked={agreeTerms} className="mt-0.5" onChange={(event) => setAgreeTerms(event.target.checked)} type="checkbox" />
               <span>
-                I agree to the <span className="font-semibold text-tertiary">Terms & Conditions</span> and understand that my order will be processed after
-                confirmation {requiresTransactionId && 'and payment verification'}.
+                আমি <span className="font-semibold text-tertiary">Terms &amp; Conditions</span>-এ সম্মত এবং বুঝতে পারছি যে নিশ্চিত করার পর আমার অর্ডারটি প্রক্রিয়াজাত করা হবে। / I agree to the{' '}
+                <span className="font-semibold text-tertiary">Terms &amp; Conditions</span> and understand that my order will be processed after confirmation{' '}
+                {requiresTransactionId && 'and payment verification'}.
               </span>
             </label>
 
@@ -945,10 +946,10 @@ const CheckoutPage = () => {
               {creating ? (
                 <>
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                  Placing Order...
+                  অর্ডার প্রক্রিয়াজাত হচ্ছে... / Placing Order...
                 </>
               ) : (
-                `Place Order · ${currency(total)}`
+                `অর্ডার নিশ্চিত করুন / Place Order • ${currency(total)}`
               )}
             </button>
           </section>
@@ -958,7 +959,7 @@ const CheckoutPage = () => {
         <aside className="lg:col-span-5">
           <div className="sticky top-24 space-y-6">
             <div className="border border-outline-variant/20 bg-white p-6 shadow-panel">
-              <h2 className="border-b border-outline-variant/20 pb-4 font-headline text-xl font-bold tracking-tight">Order Summary</h2>
+              <h2 className="border-b border-outline-variant/20 pb-4 font-headline text-xl font-bold tracking-tight">অর্ডার সারাংশ / Order Summary</h2>
 
               <div className="mt-5 max-h-72 space-y-4 overflow-y-auto">
                 {cart.map((item) => (
@@ -968,8 +969,8 @@ const CheckoutPage = () => {
                       <p className="truncate text-sm font-semibold">{item.product.title}</p>
                       <p className="text-xs text-on-surface-variant">
                         {item.quantity} × {currency(Number(item.product.price))}
-                        {item.size ? ` · Size: ${item.size}` : ''}
-                        {item.color ? ` · Color: ${item.color}` : ''}
+                        {item.size ? ` · সাইজ: / Size: ${item.size}` : ''}
+                        {item.color ? ` · রং: / Color: ${item.color}` : ''}
                       </p>
                     </div>
                     <div className="text-right">
@@ -979,17 +980,17 @@ const CheckoutPage = () => {
                         onClick={() => dispatch(removeFromCart(item.key))}
                         type="button"
                       >
-                        Remove
+                        মুছে ফেলুন / Remove
                       </button>
                     </div>
                   </div>
                 ))}
-                {!cart.length && <p className="text-sm text-on-surface-variant">Your bag is empty.</p>}
+                {!cart.length && <p className="text-sm text-on-surface-variant">আপনার ব্যাগ খালি। / Your bag is empty.</p>}
               </div>
 
               {/* Tax option — reflects the single tax rate configured in admin */}
               <div className="mt-5 rounded-lg border border-outline-variant/20 bg-surface-variant/5 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Tax</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">ট্যাক্স / Tax</p>
                 <div className="mt-2" role="radiogroup" aria-label="Tax option">
                   <button
                     aria-checked="true"
@@ -1001,9 +1002,9 @@ const CheckoutPage = () => {
                       <span className="h-2.5 w-2.5 rounded-full bg-tertiary" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-semibold">{taxRate > 0 ? `${taxRate}% Tax` : '0% — No Tax'}</span>
+                      <span className="block text-sm font-semibold">{taxRate > 0 ? `${taxRate}% কর / ${taxRate}% Tax` : '০% — কর নেই / 0% — No Tax'}</span>
                       <span className="block text-xs text-on-surface-variant">
-                        {taxRate > 0 ? 'Applied based on your order total.' : 'No tax is applied to this order.'}
+                        {taxRate > 0 ? 'আপনার অর্ডার মোটের উপর প্রয়োগ করা হয়েছে। / Applied based on your order total.' : 'এই অর্ডারে কোনো কর প্রযোজ্য নয়। / No tax is applied to this order.'}
                       </span>
                     </span>
                     <span className="ml-auto shrink-0 text-sm font-bold">{currency(tax)}</span>
@@ -1013,35 +1014,35 @@ const CheckoutPage = () => {
 
               <div className="mt-6 space-y-3 border-t border-outline-variant/20 pt-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-on-surface-variant">Subtotal</span>
+                  <span className="text-on-surface-variant">সাবটোটাল / Subtotal</span>
                   <span className="font-semibold">{currency(subtotal)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-success">
-                    <span>Coupon Discount</span>
+                    <span>কুপন ডিসকাউন্ট / Coupon Discount</span>
                     <span className="font-semibold">-{currency(discount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-on-surface-variant">Shipping</span>
-                  <span className="font-semibold">{shippingCost === 0 ? 'FREE' : currency(shippingCost)}</span>
+                  <span className="text-on-surface-variant">ডেলিভারি চার্জ / Shipping</span>
+                  <span className="font-semibold">{shippingCost === 0 ? 'ফ্রি / FREE' : currency(shippingCost)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-on-surface-variant">Tax{taxRate > 0 ? ` (${taxRate}%)` : ''}</span>
+                  <span className="text-on-surface-variant">ট্যাক্স / Tax{taxRate > 0 ? ` (${taxRate}%)` : ''}</span>
                   <span className="font-semibold">{currency(tax)}</span>
                 </div>
                 <div className="flex items-end justify-between border-t border-outline-variant/20 pt-4">
-                  <span className="font-headline text-lg font-bold">Total</span>
+                  <span className="font-headline text-lg font-bold">মোট / Total</span>
                   <span className="font-headline text-2xl font-extrabold">{currency(total)}</span>
                 </div>
                 {selectedPaymentMethod?.config?.extraFeePercent ? (
-                  <p className="text-xs text-on-surface-variant">Note: payment gateway fees may apply.</p>
+                  <p className="text-xs text-on-surface-variant">দ্রষ্টব্য: পেমেন্ট গেটওয়ে ফি প্রযোজ্য হতে পারে। / Note: payment gateway fees may apply.</p>
                 ) : null}
               </div>
             </div>
 
             <p className="text-center text-xs text-on-surface-variant">
-              Need help? Call us at <span className="font-semibold">01711111111</span>
+              সাহায্য দরকার? আমাদের কল করুন / Need help? Call us at <span className="font-semibold">01711111111</span>
             </p>
           </div>
         </aside>
