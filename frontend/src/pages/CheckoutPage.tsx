@@ -790,12 +790,12 @@ const CheckoutPage = () => {
                       value={couponCode}
                     />
                     <button
-                      className="border border-primary px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                      className="border border-primary bg-primary px-5 py-2 text-xs font-bold tracking-wide text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-100 disabled:text-gray-400"
                       disabled={couponLoading || !couponCode.trim()}
                       onClick={applyCoupon}
                       type="button"
                     >
-                      {couponLoading ? '...' : 'প্রয়োগ করুন / Apply'}
+                      {couponLoading ? "..." : "প্রয়োগ করুন / Apply"}
                     </button>
                   </div>
                 )}
