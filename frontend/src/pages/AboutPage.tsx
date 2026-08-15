@@ -32,37 +32,42 @@ const AboutPage = () => {
         { title: 'Cookie Policy', to: '/cookie-policy' },
       ]}
     >
-      {/* About MamaBazar */}
-      <section>
-        <SectionHeading id="about" bangla="MamaBazar সম্পর্কে সংক্ষিপ্ত পরিচিতি" english="About MamaBazar" />
-        <p className="mt-3 text-[15px] leading-7 text-slate-700">
-          <strong className="font-semibold text-brand-green-700">MamaBazar</strong> is a trusted online store
-          dedicated to bringing quality products to customers across Bangladesh. We combine a carefully curated
-          catalogue with fast, reliable delivery and friendly customer support — so shopping from home is easy,
-          safe, and enjoyable.
-        </p>
-        <p className="mt-4 text-[15px] leading-7 text-slate-700">
-          <strong className="font-semibold text-brand-green-700">MamaBazar</strong> একটি বিশ্বস্ত অনলাইন শপ, যেখানে আমরা
-          বাংলাদেশের সর্বত্র গ্রাহকদের কাছে মানসম্মত পণ্য পৌঁছে দিতে প্রতিশ্রুতিবদ্ধ। আমরা যত্ন করে বাছাই করা ক্যাটালগ,
-          দ্রুত ও নির্ভরযোগ্য ডেলিভারি এবং বন্ধুত্বপূর্ণ গ্রাহক সাপোর্টের মাধ্যমে ঘরে বসে কেনাকাটাকে সহজ, নিরাপদ এবং
-          আনন্দময় করে তুলি।
-        </p>
-      </section>
+      {/* About MamaBazar + Our Mission — balanced two-column desktop layout */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
+        <div className="space-y-8">
+          <section>
+            <SectionHeading id="about" bangla="MamaBazar সম্পর্কে সংক্ষিপ্ত পরিচিতি" english="About MamaBazar" />
+            <p className="mt-3 text-[15px] leading-7 text-slate-700">
+              <strong className="font-semibold text-brand-green-700">MamaBazar</strong> is a trusted online store
+              dedicated to bringing quality products to customers across Bangladesh. We combine a carefully curated
+              catalogue with fast, reliable delivery and friendly customer support — so shopping from home is easy,
+              safe, and enjoyable.
+            </p>
+            <p className="mt-4 text-[15px] leading-7 text-slate-700">
+              <strong className="font-semibold text-brand-green-700">MamaBazar</strong> একটি বিশ্বস্ত অনলাইন শপ, যেখানে আমরা
+              বাংলাদেশের সর্বত্র গ্রাহকদের কাছে মানসম্মত পণ্য পৌঁছে দিতে প্রতিশ্রুতিবদ্ধ। আমরা যত্ন করে বাছাই করা ক্যাটালগ,
+              দ্রুত ও নির্ভরযোগ্য ডেলিভারি এবং বন্ধুত্বপূর্ণ গ্রাহক সাপোর্টের মাধ্যমে ঘরে বসে কেনাকাটাকে সহজ, নিরাপদ এবং
+              আনন্দময় করে তুলি।
+            </p>
+          </section>
+        </div>
 
-      {/* Our Mission */}
-      <section>
-        <SectionHeading id="mission" bangla="আমাদের লক্ষ্য" english="Our Mission" />
-        <p className="mt-3 text-[15px] leading-7 text-slate-700">
-          Our mission is simple: to make quality products accessible to every household in Bangladesh at fair
-          prices. We work with trusted suppliers, verify every product, and continuously improve our delivery
-          network so you always get the best value for your money.
-        </p>
-        <p className="mt-4 text-[15px] leading-7 text-slate-700">
-          আমাদের লক্ষ্য খুবই সহজ — বাংলাদেশের প্রতিটি পরিবারে সঠিক মূল্যে মানসম্মত পণ্য পৌঁছে দেওয়া। আমরা নির্ভরযোগ্য
-          সরবরাহকারীদের সাথে কাজ করি, প্রতিটি পণ্য যাচাই করি এবং ডেলিভারি নেটওয়ার্ককে প্রতিনিয়ত উন্নত করি, যাতে আপনি
-          সর্বদা সঠিক মূল্যে সেরা পণ্য পান।
-        </p>
-      </section>
+        <div className="space-y-8">
+          <section>
+            <SectionHeading id="mission" bangla="আমাদের লক্ষ্য" english="Our Mission" />
+            <p className="mt-3 text-[15px] leading-7 text-slate-700">
+              Our mission is simple: to make quality products accessible to every household in Bangladesh at fair
+              prices. We work with trusted suppliers, verify every product, and continuously improve our delivery
+              network so you always get the best value for your money.
+            </p>
+            <p className="mt-4 text-[15px] leading-7 text-slate-700">
+              আমাদের লক্ষ্য খুবই সহজ — বাংলাদেশের প্রতিটি পরিবারে সঠিক মূল্যে মানসম্মত পণ্য পৌঁছে দেওয়া। আমরা নির্ভরযোগ্য
+              সরবরাহকারীদের সাথে কাজ করি, প্রতিটি পণ্য যাচাই করি এবং ডেলিভারি নেটওয়ার্ককে প্রতিনিয়ত উন্নত করি, যাতে আপনি
+              সর্বদা সঠিক মূল্যে সেরা পণ্য পান।
+            </p>
+          </section>
+        </div>
+      </div>
 
       {/* Our Services */}
       <section>
@@ -94,9 +99,6 @@ const AboutPage = () => {
           <li>🔁 Easy returns and refunds — সহজ রিটার্ন ও রিফান্ড</li>
         </ul>
       </section>
-
-      {/* Our Team */}
-      <TeamSection />
 
       {/* Our Customer Promise */}
       <section>
@@ -137,6 +139,9 @@ const AboutPage = () => {
           </Link>
         </p>
       </section>
+
+      {/* Our Team */}
+      <TeamSection />
     </StaticInfoLayout>
   )
 }

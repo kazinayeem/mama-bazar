@@ -45,6 +45,14 @@ const PAYMENT_ICONS: Record<string, string> = {
   paypal: '🅿️',
 }
 
+// Well-known method names are shown bilingually; any other database value is left untouched.
+const BILINGUAL_NAMES: Record<string, string> = {
+  Standard: 'স্ট্যান্ডার্ড / Standard',
+  'Cash on Delivery': 'ক্যাশ অন ডেলিভারি / Cash on Delivery',
+}
+
+const displayName = (name: string) => BILINGUAL_NAMES[name] ?? name
+
 interface AddressFormState {
   name: string
   phone: string
@@ -306,7 +314,7 @@ const CheckoutPage = () => {
       setCouponCode('')
     } catch (error) {
       setCouponApplied(null)
-      setCouponError(error instanceof Error ? error.message : 'Invalid coupon')
+      setCouponError(error instanceof Error ? error.message : 'কুপনটি সঠিক নয়। / Invalid coupon')
     } finally {
       setCouponLoading(false)
     }
@@ -314,21 +322,21 @@ const CheckoutPage = () => {
 
   // ---------- Validation ----------
   const validate = (): string | null => {
-    if (!form.name.trim()) return 'Please enter your full name'
+    if (!form.name.trim()) return 'আপনার সম্পূর্ণ নাম লিখুন। / Please enter your full name'
     const phone = normalizeBdPhone(form.phone)
-    if (!BD_PHONE_REGEX.test(phone)) return 'Please enter a valid Bangladeshi phone number (e.g. 01712345678)'
+    if (!BD_PHONE_REGEX.test(phone)) return 'সঠিক বাংলাদেশি ফোন নম্বর লিখুন (যেমন: 01712345678)। / Please enter a valid Bangladeshi phone number (e.g. 01712345678)'
     if (form.alternativePhone && !BD_PHONE_REGEX.test(normalizeBdPhone(form.alternativePhone))) {
-      return 'Alternative phone number is invalid'
+      return 'বিকল্প ফোন নম্বরটি সঠিক নয়। / Alternative phone number is invalid'
     }
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return 'Please enter a valid email address'
-    if (!form.address.trim()) return 'Please enter your delivery address'
+    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) return 'সঠিক ইমেইল ঠিকানা লিখুন। / Please enter a valid email address'
+    if (!form.address.trim()) return 'আপনার ডেলিভারি ঠিকানা লিখুন। / Please enter your delivery address'
     if (selectedShippingMethod && !selectedShippingMethod.codAvailable && paymentMethod === 'cod') {
-      return `${selectedShippingMethod.name} does not support Cash on Delivery`
+      return `${displayName(selectedShippingMethod.name)} ক্যাশ অন ডেলিভারি সমর্থন করে না। / ${displayName(selectedShippingMethod.name)} does not support Cash on Delivery`
     }
     if (requiresTransactionId && !transactionId.trim()) {
-      return 'Please enter the Transaction ID'
+      return 'ট্রানজেকশন আইডি লিখুন। / Please enter the Transaction ID'
     }
-    if (!agreeTerms) return 'Please agree to the terms and conditions'
+    if (!agreeTerms) return 'অনুগ্রহ করে শর্তাবলীতে সম্মত হন। / Please agree to the terms and conditions'
     return null
   }
 
@@ -424,20 +432,20 @@ const CheckoutPage = () => {
         <div className="mb-8 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 p-6">
           <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:justify-between">
             <div className="text-center md:text-left">
-              <h2 className="font-headline text-xl font-bold text-slate-900">Already have an account?</h2>
-              <p className="mt-1 text-sm text-slate-600">Login for a faster checkout experience.</p>
+              <h2 className="font-headline text-xl font-bold text-slate-900">আগে থেকে অ্যাকাউন্ট আছে? / Already have an account?</h2>
+              <p className="mt-1 text-sm text-slate-600">দ্রুত চেকআউটের জন্য লগইন করুন। / Login for a faster checkout experience.</p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500 md:justify-start">
                 <span className="flex items-center gap-1">
                   <CheckCircle size={14} className="text-primary-foreground" />
-                  Your details will be auto-filled
+                  আপনার তথ্য স্বয়ংক্রিয়ভাবে পূরণ হবে / Your details will be auto-filled
                 </span>
                 <span className="flex items-center gap-1">
                   <CheckCircle size={14} className="text-primary-foreground" />
-                  View your previous orders
+                  আপনার আগের অর্ডার দেখুন / View your previous orders
                 </span>
                 <span className="flex items-center gap-1">
                   <CheckCircle size={14} className="text-primary-foreground" />
-                  Save your delivery address
+                  আপনার ডেলিভারি ঠিকানা সংরক্ষণ করুন / Save your delivery address
                 </span>
               </div>
             </div>
@@ -448,7 +456,7 @@ const CheckoutPage = () => {
                 to="/auth/login"
               >
                 <LogIn size={16} />
-                Login / Register
+                লগইন / রেজিস্টার / Login / Register
               </Link>
               <button
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
@@ -473,8 +481,8 @@ const CheckoutPage = () => {
               <CheckCircle size={20} className="text-success" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900">Welcome back, {authUser.name}!</p>
-              <p className="text-xs text-slate-500">Your information will be auto-filled from your account.</p>
+              <p className="text-sm font-semibold text-slate-900">স্বাগতম, {authUser.name}! / Welcome back, {authUser.name}!</p>
+              <p className="text-xs text-slate-500">আপনার তথ্য আপনার অ্যাকাউন্ট থেকে স্বয়ংক্রিয়ভাবে পূরণ হবে। / Your information will be auto-filled from your account.</p>
             </div>
           </div>
         </div>
@@ -483,8 +491,8 @@ const CheckoutPage = () => {
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
         <form className="space-y-10 lg:col-span-7" id="checkout-form" onSubmit={onSubmit}>
           <div>
-            <h1 className="font-headline text-3xl font-extrabold tracking-tight">Checkout</h1>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">{cart.length} items in your bag</p>
+            <h1 className="font-headline text-3xl font-extrabold tracking-tight">চেকআউট / Checkout</h1>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">{cart.length} টি আইটেম আপনার ব্যাগে / {cart.length} items in your bag</p>
           </div>
 
           {/* ==================== 1. Address ==================== */}
