@@ -12,6 +12,11 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import PolicyPage from './pages/PolicyPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage'
+import CookiePolicyPage from './pages/CookiePolicyPage'
 import NotFoundPage from './pages/NotFoundPage'
 import UserDashboardPage from './pages/UserDashboardPage'
 
@@ -81,14 +86,15 @@ function App() {
           <Route path="refund-policy" element={<PolicyPage slug="return-refund" />} />
           <Route path="return-refund-policy" element={<PolicyPage slug="return-refund" />} />
           <Route path="shipping-policy" element={<PolicyPage slug="shipping" />} />
-          <Route path="privacy-policy" element={<PolicyPage slug="privacy" />} />
-          <Route path="terms-and-conditions" element={<PolicyPage slug="terms" />} />
-          <Route path="cookie-policy" element={<PolicyPage slug="cookie" />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="terms-and-conditions" element={<TermsAndConditionsPage />} />
+          <Route path="cookie-policy" element={<CookiePolicyPage />} />
           <Route path="payment-policy" element={<PolicyPage slug="payment" />} />
           <Route path="cancellation-policy" element={<PolicyPage slug="cancellation" />} />
           <Route path="warranty-policy" element={<PolicyPage slug="warranty" />} />
           <Route path="faq" element={<PolicyPage slug="faq" />} />
-          <Route path="contact" element={<PolicyPage slug="contact" />} />
+          <Route path="contact" element={<ContactPage />} />
           <Route
             path="dashboard"
             element={
