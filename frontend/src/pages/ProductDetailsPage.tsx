@@ -562,7 +562,7 @@ const ProductDetailsPage = () => {
 
           <div className="mt-8 flex flex-col gap-3 md:flex-row">
             <button
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-accent text-accent-foreground px-6 py-4 text-sm font-bold transition hover:bg-accent hover:text-accent-foreground active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-accent bg-white px-6 py-4 text-sm font-bold text-brand-green-600 transition hover:bg-accent hover:text-accent-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={Boolean(disableAddToCart)}
               onClick={() => handleAddToCart()}
               type="button"
