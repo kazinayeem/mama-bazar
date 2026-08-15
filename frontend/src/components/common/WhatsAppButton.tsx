@@ -8,7 +8,7 @@ const WhatsAppButton = () => {
   const [contactOpen, setContactOpen] = useState(false)
 
   return (
-    <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+80px)] right-5 z-40 flex flex-col items-end gap-3 md:bottom-5">
       {contactOpen && (
         <div className="flex flex-col items-end gap-2">
           <a
