@@ -690,9 +690,9 @@ const CheckoutPage = () => {
           <section>
             <h2 className="mb-4 flex items-center gap-2 font-headline text-lg font-bold">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-xs text-white">3</span>
-              পেমেন্ট পদ্ধতি / Payment Method
+              <span className="bangla-text">পেমেন্ট পদ্ধতি / Payment Method</span>
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-3" role="radiogroup" aria-label="Payment method">
               {paymentMethods.map((method) => {
                 const active = paymentMethod === method.code
                 const merchantNumber = method.config?.merchantNumber
@@ -700,13 +700,16 @@ const CheckoutPage = () => {
                 const accountName = method.config?.accountName
                 const accountNumber = method.config?.accountNumber
                 const branch = method.config?.branch
+                const instructions = method.config?.instructions
 
                 return (
-                  <div key={method.code} className="rounded-xl border transition-all duration-200">
-                    {/* Payment method header */}
+                  <div key={method.code} className="rounded-xl transition-all duration-200">
+                    {/* Payment method card — fully clickable */}
                     <button
-                      className={`flex w-full items-center gap-4 px-4 py-4 text-left transition-colors ${
-                        active ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-surface-variant/30'
+                      className={`flex w-full items-center gap-4 px-4 py-4 text-left transition-all duration-200 ${
+                        active
+                          ? 'border-2 border-primary bg-primary/5 shadow-[0_0_0_1px_rgba(23,107,58,0.15)]'
+                          : 'border border-slate-200 bg-white hover:border-primary/50 hover:bg-primary/2.5'
                       }`}
                       onClick={() => {
                         setPaymentMethod(method.code)
@@ -714,9 +717,12 @@ const CheckoutPage = () => {
                         setSubmitError('')
                       }}
                       type="button"
+                      role="radio"
+                      aria-checked={active}
+                      aria-label={displayName(method.name)}
                     >
                       {/* Radio indicator */}
-                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                         active ? 'border-primary' : 'border-slate-300'
                       }`}>
                         {active && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
@@ -729,31 +735,41 @@ const CheckoutPage = () => {
                       
                       {/* Payment name and description */}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold">{displayName(method.name)}</p>
+                        <p className="text-sm font-semibold bangla-text">{renderBilingual(displayName(method.name))}</p>
                         {method.code === 'cod' && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant">পণ্য হাতে পাওয়ার সময় নগদ অর্থ প্রদান করুন। / Pay in cash when your order is delivered.</p>
+                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">পণ্য হাতে পাওয়ার সময় নগদ অর্থ প্রদান করুন। / Pay in cash when your order is delivered.</p>
                         )}
                         {method.type === 'mobile_banking' && merchantNumber && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant">{displayName(method.name)} ব্যবহার করে নিরাপদে পেমেন্ট করুন / Pay securely using {displayName(method.name)}</p>
+                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">{displayName(method.name)} ব্যবহার করে নিরাপদে পেমেন্ট করুন / Pay securely using {displayName(method.name)}</p>
                         )}
                         {method.type === 'bank' && bankName && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant">{bankName} এ ট্রান্সফার করুন / Transfer to {bankName}</p>
+                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">{bankName} এ ট্রান্সফার করুন / Transfer to {bankName}</p>
                         )}
                       </div>
                       
                       {/* Checkmark for selected */}
                       {active && (
-                        <CheckCircle size={20} className="shrink-0 text-primary-foreground" />
+                        <CheckCircle size={20} className="shrink-0 text-primary" />
                       )}
                     </button>
 
                     {/* Expanded payment details */}
                     {active && (
-                      <div className="border-t border-outline-variant/20 px-4 py-5">
+                      <div className="border-t border-primary/20 px-4 py-5 bg-primary/2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {/* Generic instructions from config.instructions */}
+                        {instructions && (
+                          <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 mb-4">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                              নির্দেশনা / Instructions
+                            </p>
+                            <p className="mt-2 text-sm text-slate-700 bangla-text whitespace-pre-line">{instructions}</p>
+                          </div>
+                        )}
+
                         {/* COD instructions */}
                         {method.code === 'cod' && (
                           <div className="rounded-lg bg-surface-variant/30 p-4">
-                            <p className="text-sm font-medium text-slate-700">
+                            <p className="text-sm font-medium text-slate-700 bangla-text">
                               বাংলা: ডেলিভারি পাওয়ার সময় ক্যাশ পেমেন্ট করতে হবে।
                             </p>
                             <p className="mt-2 text-sm text-slate-600">
@@ -791,7 +807,7 @@ const CheckoutPage = () => {
                                 </button>
                               </div>
                               {method.config?.merchantName && (
-                                <p className="mt-2 text-sm text-slate-600">
+                                <p className="mt-2 text-sm text-slate-600 bangla-text">
                                   অ্যাকাউন্টের নাম: / Account Name: {method.config.merchantName}
                                 </p>
                               )}
@@ -803,7 +819,7 @@ const CheckoutPage = () => {
                                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
                                   বাংলা নির্দেশনা
                                 </p>
-                                <p className="mt-1 text-sm text-slate-700">
+                                <p className="mt-1 text-sm text-slate-700 bangla-text">
                                   ১. উপরের {method.name} নম্বরে Send Money/Payment করুন।<br />
                                   ২. পেমেন্ট সম্পন্ন করার পর Transaction ID নিচের ঘরে দিন।<br />
                                   ৩. তারপর অর্ডার নিশ্চিত করুন (Place Order)।
