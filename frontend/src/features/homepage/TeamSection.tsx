@@ -39,7 +39,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     initials: 'SA',
   },
     {
-    name: 'Abdullah Al Safi',
+    name: 'Abdur Al Safi',
     position: 'Brand Communication Executive',
     role: 'Brand Communication Executive',
     image: '/safi.jpeg',
