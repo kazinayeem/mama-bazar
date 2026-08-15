@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
 import UserDashboardLayout from './components/layout/UserDashboardLayout'
@@ -73,6 +74,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => (
 function App() {
   return (
     <Suspense fallback={<PageFallback />}>
+      <Analytics />
       <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<HomePage />} />

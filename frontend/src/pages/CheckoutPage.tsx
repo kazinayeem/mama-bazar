@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, CheckCircle, Copy, Check } from 'lucide-react'
@@ -44,6 +44,14 @@ const PAYMENT_ICONS: Record<string, string> = {
   sslcommerz: '🔒',
   paypal: '🅿️',
 }
+
+// Well-known method names are shown bilingually; any other database value is left untouched.
+const BILINGUAL_NAMES: Record<string, string> = {
+  Standard: 'স্ট্যান্ডার্ড / Standard',
+  'Cash on Delivery': 'ক্যাশ অন ডেলিভারি / Cash on Delivery',
+}
+
+const displayName = (name: string) => BILINGUAL_NAMES[name] ?? name
 
 // Bilingual label helper — splits "Bangla / English" and styles each part appropriately
 const renderBilingual = (label: string) => {
@@ -162,7 +170,8 @@ const CheckoutPage = () => {
 
   const shippingCost = useMemo(() => {
     if (shippingMethodId === null) return 0
-    return shippingMethods.find((m) => m.id === shippingMethodId)?.estimatedCost ?? 0
+    const method = shippingMethods.find((m) => m.id === shippingMethodId)
+    return method ? getShippingDisplayCost(method) : 0
   }, [shippingMethodId, shippingMethods])
 
   const discount = couponApplied?.discount ?? 0
@@ -533,8 +542,8 @@ const CheckoutPage = () => {
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
         <form className="space-y-10 lg:col-span-7" id="checkout-form" onSubmit={onSubmit}>
           <div>
-            <h1 className="font-headline text-3xl font-extrabold tracking-tight">চেকআউট / Checkout</h1>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">{cart.length} টি আইটেম আপনার ব্যাগে / {cart.length} items in your bag</p>
+            <h1 className="font-headline text-3xl font-extrabold tracking-tight">{renderBilingual('চেকআউট / Checkout')}</h1>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant">{renderBilingual(`${cart.length} টি আইটেম আপনার ব্যাগে / ${cart.length} items in your bag`)}</p>
           </div>
 
           {/* ==================== 1. Address ==================== */}
@@ -633,7 +642,8 @@ const CheckoutPage = () => {
             ) : (
               <div className="space-y-3">
                 {shippingMethods.map((method) => {
-                  const free = method.estimatedCost === 0
+                  const displayCost = getShippingDisplayCost(method)
+                  const free = isShippingFree(method)
                   return (
                     <button
                       className={`flex w-full items-center justify-between gap-4 border px-4 py-3.5 text-left transition-colors ${
@@ -644,20 +654,34 @@ const CheckoutPage = () => {
                       type="button"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold">{displayName(method.name)}</p>
-                        <p className="mt-0.5 text-xs text-on-surface-variant">
-                          {method.estimatedDelivery ? `ডেলিভারি: / Delivery: ${method.estimatedDelivery}` : ''}
-                          {method.codAvailable ? ' · ক্যাশ অন ডেলিভারি উপলব্ধ / COD available' : ''}
+                        <p className="text-sm font-semibold">{renderBilingual(getShippingLabel(method.name))}</p>
+                        <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">
+                          {method.estimatedDelivery
+                            ? `ডেলিভারি: ${method.estimatedDelivery} / Delivery: ${method.estimatedDelivery}`
+                            : ''}
+                          {method.codAvailable
+                            ? ' · ক্যাশ অন ডেলিভারি উপলব্ধ / COD available'
+                            : ''}
                         </p>
-                        {method.description && <p className="mt-0.5 text-xs text-on-surface-variant">{method.description}</p>}
+                        {method.description && (
+                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">{method.description}</p>
+                        )}
                       </div>
                       <span className="shrink-0 text-sm font-bold">
-                        {free ? <span className="text-success">ফ্রি / FREE</span> : currency(method.estimatedCost ?? 0)}
+                        {free ? (
+                          <span className="text-success bangla-text">ফ্রি / FREE</span>
+                        ) : (
+                          currency(displayCost)
+                        )}
                       </span>
                     </button>
                   )
                 })}
-                {shippingMethods.length === 0 && <p className="text-sm text-on-surface-variant">কোনো শিপিং অপশন উপলব্ধ নেই। / No shipping options available.</p>}
+                {shippingMethods.length === 0 && (
+                  <p className="text-sm text-on-surface-variant bangla-text">
+                    কোনো শিপিং অপশন উপলব্ধ নেই। / No shipping options available.
+                  </p>
+                )}
               </div>
             )}
           </section>
