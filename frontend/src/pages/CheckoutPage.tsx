@@ -34,17 +34,6 @@ const NOTICE_ICONS: Record<string, string> = {
   discount: '🏷️',
 }
 
-const PAYMENT_ICONS: Record<string, string> = {
-  cod: '💵',
-  bkash: '৳',
-  nagad: '৳',
-  rocket: '৳',
-  bank: '🏦',
-  stripe: '💳',
-  sslcommerz: '🔒',
-  paypal: '🅿️',
-}
-
 // Well-known method names are shown bilingually; any other database value is left untouched.
 const BILINGUAL_NAMES: Record<string, string> = {
   Standard: 'স্ট্যান্ডার্ড / Standard',
@@ -142,7 +131,7 @@ const CheckoutPage = () => {
   const [shippingLoading, setShippingLoading] = useState(true)
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>([])
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod')
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | null>(null)
   const [notices, setNotices] = useState<CheckoutNotice[]>([])
 
   const [transactionId, setTransactionId] = useState('')
@@ -181,7 +170,8 @@ const CheckoutPage = () => {
   const total = subtotal - discount + tax + shippingCost
 
   const selectedShippingMethod = shippingMethods.find((m) => m.id === shippingMethodId) || null
-  const selectedPaymentMethod = paymentMethods.find((m) => m.code === paymentMethod) || null
+  const selectedPaymentMethod = paymentMethods.find((m) => m.id === selectedPaymentMethodId) || null
+  const paymentMethod: PaymentMethod = selectedPaymentMethod?.code || 'cod'
   const isMobileBanking = selectedPaymentMethod?.type === 'mobile_banking'
   const isBankTransfer = selectedPaymentMethod?.type === 'bank'
   const requiresTransactionId = isMobileBanking || isBankTransfer
@@ -236,8 +226,7 @@ const CheckoutPage = () => {
         const first = methods[0]
         if (first) setShippingMethodId(first.id)
         setPaymentMethods(payments)
-        const cod = payments.find((p) => p.code === 'cod')
-        if (cod) setPaymentMethod('cod')
+        if (payments[0]) setSelectedPaymentMethodId(payments[0].id)
         setNotices(noticeList)
         setTaxSettings(tax)
       } catch {
@@ -640,44 +629,37 @@ const CheckoutPage = () => {
             {shippingLoading ? (
               <p className="text-sm text-on-surface-variant">শিপিং অপশন লোড হচ্ছে... / Loading shipping options...</p>
             ) : (
-              <div className="space-y-3">
-                {shippingMethods.map((method) => {
-                  const displayCost = getShippingDisplayCost(method)
-                  const free = isShippingFree(method)
-                  return (
-                    <button
-                      className={`flex w-full items-center justify-between gap-4 border px-4 py-3.5 text-left transition-colors ${
-                        shippingMethodId === method.id ? 'border-tertiary bg-tertiary/5' : 'border-outline-variant/30 hover:border-outline-variant'
-                      }`}
-                      key={method.id}
-                      onClick={() => setShippingMethodId(method.id)}
-                      type="button"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold">{renderBilingual(getShippingLabel(method.name))}</p>
-                        <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">
-                          {method.estimatedDelivery
-                            ? `ডেলিভারি: ${method.estimatedDelivery} / Delivery: ${method.estimatedDelivery}`
-                            : ''}
-                          {method.codAvailable
-                            ? ' · ক্যাশ অন ডেলিভারি উপলব্ধ / COD available'
-                            : ''}
-                        </p>
-                        {method.description && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">{method.description}</p>
-                        )}
-                      </div>
-                      <span className="shrink-0 text-sm font-bold">
-                        {free ? (
-                          <span className="text-success bangla-text">ফ্রি / FREE</span>
-                        ) : (
-                          currency(displayCost)
-                        )}
-                      </span>
-                    </button>
-                  )
-                })}
-                {shippingMethods.length === 0 && (
+              <div>
+                {shippingMethods.length > 0 ? (
+                  <>
+                    <div className="relative">
+                      <select
+                        aria-label="Shipping method"
+                        className="w-full appearance-none rounded-[10px] border border-brand-green-200 bg-white px-4 py-3 pr-10 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-brand-green-500 focus:ring-2 focus:ring-brand-green-100"
+                        onChange={(event) => setShippingMethodId(Number(event.target.value))}
+                        value={shippingMethodId ?? ''}
+                      >
+                        {shippingMethods.map((method) => {
+                          const cost = getShippingDisplayCost(method)
+                          return (
+                            <option key={method.id} value={method.id}>
+                              {getShippingLabel(method.name)} — {isShippingFree(method) ? 'ফ্রি / FREE' : currency(cost)}
+                            </option>
+                          )
+                        })}
+                      </select>
+                      <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-brand-green-600">⌄</span>
+                    </div>
+                    {selectedShippingMethod && (
+                      <p className="mt-2 text-xs text-on-surface-variant bangla-text">
+                        {selectedShippingMethod.estimatedDelivery
+                          ? `ডেলিভারি: ${selectedShippingMethod.estimatedDelivery} / Delivery: ${selectedShippingMethod.estimatedDelivery}`
+                          : ''}
+                        {selectedShippingMethod.codAvailable ? ' · ক্যাশ অন ডেলিভারি উপলব্ধ / COD available' : ''}
+                      </p>
+                    )}
+                  </>
+                ) : (
                   <p className="text-sm text-on-surface-variant bangla-text">
                     কোনো শিপিং অপশন উপলব্ধ নেই। / No shipping options available.
                   </p>
@@ -692,244 +674,88 @@ const CheckoutPage = () => {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tertiary text-xs text-white">3</span>
               <span className="bangla-text">পেমেন্ট পদ্ধতি / Payment Method</span>
             </h2>
-            <div className="space-y-3" role="radiogroup" aria-label="Payment method">
-              {paymentMethods.map((method) => {
-                const active = paymentMethod === method.code
-                const merchantNumber = method.config?.merchantNumber
-                const bankName = method.config?.bankName
-                const accountName = method.config?.accountName
-                const accountNumber = method.config?.accountNumber
-                const branch = method.config?.branch
-                const instructions = method.config?.instructions
-
-                return (
-                  <div key={method.code} className="rounded-xl transition-all duration-200">
-                    {/* Payment method card — fully clickable */}
-                    <button
-                      className={`flex w-full items-center gap-4 px-4 py-4 text-left transition-all duration-200 ${
-                        active
-                          ? 'border-2 border-primary bg-primary/5 shadow-[0_0_0_1px_rgba(23,107,58,0.15)]'
-                          : 'border border-slate-200 bg-white hover:border-primary/50 hover:bg-primary/2.5'
-                      }`}
-                      onClick={() => {
-                        setPaymentMethod(method.code)
+            <div className="space-y-4">
+              {paymentMethods.length > 0 && selectedPaymentMethod ? (
+                <>
+                  <div className="relative">
+                    <select
+                      aria-label="Payment method"
+                      className="w-full appearance-none rounded-[10px] border border-brand-green-200 bg-white px-4 py-3 pr-10 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-brand-green-500 focus:ring-2 focus:ring-brand-green-100"
+                      onChange={(event) => {
+                        setSelectedPaymentMethodId(Number(event.target.value))
                         setTransactionId('')
                         setSubmitError('')
                       }}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      aria-label={displayName(method.name)}
+                      value={selectedPaymentMethodId ?? ''}
                     >
-                      {/* Radio indicator */}
-                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                        active ? 'border-primary' : 'border-slate-300'
-                      }`}>
-                        {active && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
-                      </div>
-                      
-                      {/* Payment icon */}
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-variant/20 text-lg font-bold">
-                        {PAYMENT_ICONS[method.code] || '💳'}
-                      </span>
-                      
-                      {/* Payment name and description */}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold bangla-text">{renderBilingual(displayName(method.name))}</p>
-                        {method.code === 'cod' && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">পণ্য হাতে পাওয়ার সময় নগদ অর্থ প্রদান করুন। / Pay in cash when your order is delivered.</p>
-                        )}
-                        {method.type === 'mobile_banking' && merchantNumber && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">{displayName(method.name)} ব্যবহার করে নিরাপদে পেমেন্ট করুন / Pay securely using {displayName(method.name)}</p>
-                        )}
-                        {method.type === 'bank' && bankName && (
-                          <p className="mt-0.5 text-xs text-on-surface-variant bangla-text">{bankName} এ ট্রান্সফার করুন / Transfer to {bankName}</p>
-                        )}
-                      </div>
-                      
-                      {/* Checkmark for selected */}
-                      {active && (
-                        <CheckCircle size={20} className="shrink-0 text-primary" />
-                      )}
-                    </button>
-
-                    {/* Expanded payment details */}
-                    {active && (
-                      <div className="border-t border-primary/20 px-4 py-5 bg-primary/2.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                        {/* Generic instructions from config.instructions */}
-                        {instructions && (
-                          <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 mb-4">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                              নির্দেশনা / Instructions
-                            </p>
-                            <p className="mt-2 text-sm text-slate-700 bangla-text whitespace-pre-line">{instructions}</p>
-                          </div>
-                        )}
-
-                        {/* COD instructions */}
-                        {method.code === 'cod' && (
-                          <div className="rounded-lg bg-surface-variant/30 p-4">
-                            <p className="text-sm font-medium text-slate-700 bangla-text">
-                              বাংলা: ডেলিভারি পাওয়ার সময় ক্যাশ পেমেন্ট করতে হবে।
-                            </p>
-                            <p className="mt-2 text-sm text-slate-600">
-                              English: Pay in cash when your order is delivered.
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Mobile banking instructions */}
-                        {method.type === 'mobile_banking' && merchantNumber && (
-                          <div className="space-y-4">
-                            {/* Payment number with copy */}
-                            <div className="rounded-lg bg-surface-variant/30 p-4">
-                              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                পেমেন্ট নম্বর / Payment Number
-                              </p>
-                              <div className="mt-2 flex items-center gap-3">
-                                <span className="text-xl font-bold text-slate-900">{merchantNumber}</span>
-                                <button
-                                  className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/20"
-                                  onClick={() => copyToClipboard(merchantNumber)}
-                                  type="button"
-                                >
-                                  {copiedNumber === merchantNumber ? (
-                                    <>
-                                      <Check size={14} />
-                                      কপি হয়েছে! / Copied!
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Copy size={14} />
-                                      কপি / Copy
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                              {method.config?.merchantName && (
-                                <p className="mt-2 text-sm text-slate-600 bangla-text">
-                                  অ্যাকাউন্টের নাম: / Account Name: {method.config.merchantName}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Bilingual instructions */}
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                  বাংলা নির্দেশনা
-                                </p>
-                                <p className="mt-1 text-sm text-slate-700 bangla-text">
-                                  ১. উপরের {method.name} নম্বরে Send Money/Payment করুন।<br />
-                                  ২. পেমেন্ট সম্পন্ন করার পর Transaction ID নিচের ঘরে দিন।<br />
-                                  ৩. তারপর অর্ডার নিশ্চিত করুন (Place Order)।
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                  ইংরেজি নির্দেশনা / English Instructions
-                                </p>
-                                <p className="mt-1 text-sm text-slate-700">
-                                  1. Send the required payment amount to the {displayName(method.name)} number above.<br />
-                                  2. After completing the payment, enter the Transaction ID below.<br />
-                                  3. Then confirm your order.
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Transaction ID input */}
-                            <div>
-                              <label className={labelClass}>ট্রানজেকশন আইডি / Transaction ID</label>
-                              <input
-                                className={inputClass}
-                                onChange={(event) => setTransactionId(event.target.value)}
-                                placeholder="ট্রানজেকশন আইডি লিখুন / Enter Transaction ID"
-                                required
-                                value={transactionId}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Bank transfer instructions */}
-                        {method.type === 'bank' && (
-                          <div className="space-y-4">
-                            {/* Bank information */}
-                            <div className="rounded-lg bg-surface-variant/30 p-4">
-                              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                ব্যাংক তথ্য / Bank Information
-                              </p>
-                              <div className="mt-3 space-y-2">
-                                {bankName && (
-                                  <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">ব্যাংকের নাম: / Bank Name:</span>
-                                    <span className="text-sm font-semibold text-slate-900">{bankName}</span>
-                                  </div>
-                                )}
-                                {accountName && (
-                                  <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">অ্যাকাউন্টের নাম: / Account Name:</span>
-                                    <span className="text-sm font-semibold text-slate-900">{accountName}</span>
-                                  </div>
-                                )}
-                                {accountNumber && (
-                                  <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">অ্যাকাউন্ট নম্বর: / Account Number:</span>
-                                    <span className="text-sm font-semibold text-slate-900">{accountNumber}</span>
-                                  </div>
-                                )}
-                                {branch && (
-                                  <div className="flex justify-between">
-                                    <span className="text-sm text-slate-600">শাখা: / Branch:</span>
-                                    <span className="text-sm font-semibold text-slate-900">{branch}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Bilingual instructions */}
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                  বাংলা নির্দেশনা
-                                </p>
-                                <p className="mt-1 text-sm text-slate-700">
-                                  ১. উপরের ব্যাংক অ্যাকাউন্টে নির্ধারিত পরিমাণ টাকা ট্রান্সফার করুন।<br />
-                                  ২. ট্রান্সফার সম্পন্ন করার পর Transaction ID/Reference Number দিন।<br />
-                                  ৩. তারপর অর্ডার কনফার্ম করুন।
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
-                                  ইংরেজি নির্দেশনা / English Instructions
-                                </p>
-                                <p className="mt-1 text-sm text-slate-700">
-                                  1. Transfer the required amount to the bank account above.<br />
-                                  2. After completing the transfer, enter the Transaction ID/Reference Number.<br />
-                                  3. Confirm your order.
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Transaction ID input */}
-                            <div>
-                              <label className={labelClass}>ট্রানজেকশন আইডি / রেফারেন্স / Transaction ID / Reference</label>
-                              <input
-                                className={inputClass}
-                                onChange={(event) => setTransactionId(event.target.value)}
-                                placeholder="ট্রানজেকশন আইডি বা রেফারেন্স নম্বর লিখুন / Enter Transaction ID or Reference Number"
-                                required
-                                value={transactionId}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      {paymentMethods.map((method) => (
+                        <option key={method.id} value={method.id}>
+                          {displayName(method.name)}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-brand-green-600">⌄</span>
                   </div>
-                )
-              })}
-              {paymentMethods.length === 0 && (
+
+                  {selectedPaymentMethod.config?.instructions && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">নির্দেশনা / Instructions</p>
+                      <p className="mt-2 whitespace-pre-line text-sm text-slate-700 bangla-text">{selectedPaymentMethod.config.instructions}</p>
+                    </div>
+                  )}
+
+                  {paymentMethod === 'cod' && (
+                    <div className="rounded-lg bg-surface-variant/30 p-4">
+                      <p className="text-sm font-medium text-slate-700 bangla-text">বাংলা: ডেলিভারি পাওয়ার সময় ক্যাশ পেমেন্ট করতে হবে।</p>
+                      <p className="mt-2 text-sm text-slate-600">English: Pay in cash when your order is delivered.</p>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod.type === 'mobile_banking' && selectedPaymentMethod.config?.merchantNumber && (
+                    <div className="space-y-4 rounded-lg bg-surface-variant/30 p-4">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">পেমেন্ট নম্বর / Payment Number</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          <span className="text-xl font-bold text-slate-900">{selectedPaymentMethod.config.merchantNumber}</span>
+                          <button
+                            className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/20"
+                            onClick={() => copyToClipboard(selectedPaymentMethod.config?.merchantNumber || '')}
+                            type="button"
+                          >
+                            {copiedNumber === selectedPaymentMethod.config.merchantNumber ? <><Check size={14} /> কপি হয়েছে! / Copied!</> : <><Copy size={14} /> কপি / Copy</>}
+                          </button>
+                        </div>
+                        {selectedPaymentMethod.config.merchantName && (
+                          <p className="mt-2 text-sm text-slate-600 bangla-text">অ্যাকাউন্টের নাম: / Account Name: {selectedPaymentMethod.config.merchantName}</p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-700 bangla-text">১. উপরের {selectedPaymentMethod.name} নম্বরে পেমেন্ট করুন।<br />২. পেমেন্ট সম্পন্ন করার পর Transaction ID দিন।</p>
+                      </div>
+                      <div>
+                        <label className={labelClass}>ট্রানজেকশন আইডি / Transaction ID</label>
+                        <input className={inputClass} onChange={(event) => setTransactionId(event.target.value)} placeholder="ট্রানজেকশন আইডি লিখুন / Enter Transaction ID" required value={transactionId} />
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod.type === 'bank' && (
+                    <div className="space-y-4 rounded-lg bg-surface-variant/30 p-4">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">ব্যাংক তথ্য / Bank Information</p>
+                        {selectedPaymentMethod.config?.bankName && <p className="text-sm text-slate-700">Bank Name: <strong>{selectedPaymentMethod.config.bankName}</strong></p>}
+                        {selectedPaymentMethod.config?.accountName && <p className="text-sm text-slate-700">Account Name: <strong>{selectedPaymentMethod.config.accountName}</strong></p>}
+                        {selectedPaymentMethod.config?.accountNumber && <p className="text-sm text-slate-700">Account Number: <strong>{selectedPaymentMethod.config.accountNumber}</strong></p>}
+                        {selectedPaymentMethod.config?.branch && <p className="text-sm text-slate-700">Branch: <strong>{selectedPaymentMethod.config.branch}</strong></p>}
+                      </div>
+                      <div>
+                        <label className={labelClass}>ট্রানজেকশন আইডি / রেফারেন্স / Transaction ID / Reference</label>
+                        <input className={inputClass} onChange={(event) => setTransactionId(event.target.value)} placeholder="ট্রানজেকশন আইডি বা রেফারেন্স নম্বর লিখুন" required value={transactionId} />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
                 <p className="text-sm text-on-surface-variant">কোনো পেমেন্ট পদ্ধতি উপলব্ধ নেই। / No payment methods available.</p>
               )}
             </div>
