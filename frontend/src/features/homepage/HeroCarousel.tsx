@@ -230,6 +230,14 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
 
   if (count === 0) return null
 
+  // Current slide's mobile image — used only as a height spacer on mobile
+  const currentSlide = slides[safeIndex]
+  const currentMobileImage =
+    resolveHeroUrl(currentSlide.mobileImage) ||
+    resolveHeroUrl(currentSlide.tabletImage) ||
+    resolveHeroUrl(currentSlide.desktopImage) ||
+    ''
+
   return (
     <section aria-label="Promotions" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div
@@ -237,8 +245,15 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* Fixed compact height — the critical fix */}
-        <div className="relative h-[300px] w-full overflow-hidden sm:h-[400px] lg:h-[480px]">
+        {/* Mobile height spacer — image establishes natural height, removing black bars */}
+        {currentMobileImage && (
+          <div className="sm:hidden" aria-hidden="true">
+            <img alt="" className="block w-full" src={currentMobileImage} />
+          </div>
+        )}
+
+        {/* Fixed height on tablet/desktop only — mobile height comes from the spacer above */}
+        <div className="absolute inset-0 hidden sm:block sm:h-[400px] lg:h-[480px]">
           <AnimatePresence custom={direction} initial={false} mode="popLayout">
             <motion.div
               key={slides[safeIndex].id}
