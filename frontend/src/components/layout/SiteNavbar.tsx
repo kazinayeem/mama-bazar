@@ -127,7 +127,8 @@ const SiteNavbar = () => {
             <NavLink aria-label="Mama Bazar home" className="flex items-center gap-2" to="/">
               <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
               <span className="hidden font-headline text-lg font-light tracking-tight text-slate-900 sm:block">
-                <span className="text-brand-green-500 text-bold gap-2"> Mama</span><span className="text-brand-orange-500">{" "}Bazar</span>
+               <span className="text-brand-green-500 font-bold gap-2">Mama</span>
+                <span className="text-brand-orange-500 font-bold">{" "}Bazar</span>
               </span>
             </NavLink>
           </div>
