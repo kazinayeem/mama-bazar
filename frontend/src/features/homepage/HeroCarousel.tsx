@@ -245,15 +245,15 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* Mobile height spacer — image establishes natural height, removing black bars */}
+        {/* Mobile height spacer — image establishes natural height, no black bars */}
         {currentMobileImage && (
           <div className="sm:hidden" aria-hidden="true">
             <img alt="" className="block w-full" src={currentMobileImage} />
           </div>
         )}
 
-        {/* Fixed height on tablet/desktop only — mobile height comes from the spacer above */}
-        <div className="absolute inset-0 hidden sm:block sm:h-[400px] lg:h-[480px]">
+        {/* Slides — absolute on mobile (fills spacer height), relative on sm+ with fixed height */}
+        <div className="absolute inset-0 sm:relative sm:h-[400px] lg:h-[480px] sm:overflow-hidden">
           <AnimatePresence custom={direction} initial={false} mode="popLayout">
             <motion.div
               key={slides[safeIndex].id}
@@ -276,50 +276,50 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
               <HeroSlide priority={safeIndex === 0} slide={slides[safeIndex]} />
             </motion.div>
           </AnimatePresence>
-
-          {/* Arrows */}
-          {count > 1 && (
-            <>
-              <button
-                aria-label="Previous slide"
-                className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:left-5"
-                onClick={prev}
-                type="button"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                aria-label="Next slide"
-                className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:right-5"
-                onClick={next}
-                type="button"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
-
-          {/* Dots */}
-          {count > 1 && (
-            <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2">
-              {slides.map((slide, dotIndex) => (
-                <button
-                  aria-label={`Go to slide ${dotIndex + 1}`}
-                  className="flex h-11 items-center px-1"
-                  key={slide.id}
-                  onClick={() => go(dotIndex, dotIndex > safeIndex ? 1 : -1)}
-                  type="button"
-                >
-                  <span
-                    className={`block h-2 rounded-full shadow-sm transition-all duration-300 ${
-                      dotIndex === safeIndex ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* Arrows */}
+        {count > 1 && (
+          <>
+            <button
+              aria-label="Previous slide"
+              className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:left-5"
+              onClick={prev}
+              type="button"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              aria-label="Next slide"
+              className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:right-5"
+              onClick={next}
+              type="button"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </>
+        )}
+
+        {/* Dots */}
+        {count > 1 && (
+          <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2">
+            {slides.map((slide, dotIndex) => (
+              <button
+                aria-label={`Go to slide ${dotIndex + 1}`}
+                className="flex h-11 items-center px-1"
+                key={slide.id}
+                onClick={() => go(dotIndex, dotIndex > safeIndex ? 1 : -1)}
+                type="button"
+              >
+                <span
+                  className={`block h-2 rounded-full shadow-sm transition-all duration-300 ${
+                    dotIndex === safeIndex ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
