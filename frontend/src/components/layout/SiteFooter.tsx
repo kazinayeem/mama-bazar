@@ -37,6 +37,7 @@ const socialLinks = [
 
 const infoLinks = [
   { label: 'About Us', to: '/about' },
+  { label: 'Our Team', to: '/about#our-team' },
   { label: 'Contact Us', to: '/contact' },
   { label: 'Privacy Policy', to: '/privacy-policy' },
   { label: 'Terms & Conditions', to: '/terms-and-conditions' },

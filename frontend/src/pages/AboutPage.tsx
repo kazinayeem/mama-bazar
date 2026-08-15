@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { HeartHandshake, Leaf, PackageCheck, Phone, ShoppingBag, ShieldCheck, Star, Truck } from 'lucide-react'
 import StaticInfoLayout from '@/components/layout/StaticInfoLayout'
+import TeamSection from '@/features/homepage/TeamSection'
 
 const SectionHeading = ({ id, bangla, english }: { id: string; bangla: string; english: string }) => (
   <div id={id} className="scroll-mt-28">
@@ -93,6 +94,9 @@ const AboutPage = () => {
           <li>🔁 Easy returns and refunds — সহজ রিটার্ন ও রিফান্ড</li>
         </ul>
       </section>
+
+      {/* Our Team */}
+      <TeamSection />
 
       {/* Our Customer Promise */}
       <section>
