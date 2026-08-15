@@ -4,6 +4,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Bangla typography utilities — Bengali font with natural spacing */
+.bangla {
+  font-family: 'Noto Sans Bengali', 'Noto Sans', system-ui, sans-serif;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-variant: normal;
+}
+
+.bangla-text {
+  font-family: 'Noto Sans Bengali', 'Noto Sans', system-ui, sans-serif;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.6;
+}
+
+.bangla-label {
+  font-family: 'Noto Sans Bengali', 'Noto Sans', system-ui, sans-serif;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.5;
+}
+
+.english-label {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.bilingual-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bilingual-label .bangla-part {
+  font-family: 'Noto Sans Bengali', 'Noto Sans', system-ui, sans-serif;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.4;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+.bilingual-label .english-part {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
 :root {
   /* UI tier: Inter Variable (420–550 body). Display tier: NHGD -> Helvetica/Arial fallback */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

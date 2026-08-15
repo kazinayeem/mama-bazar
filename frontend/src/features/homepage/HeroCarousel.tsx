@@ -222,7 +222,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-[1600px] px-3 sm:px-5 lg:px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 sm:h-[400px] lg:h-[480px]" />
       </div>
     )
@@ -231,7 +231,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
   if (count === 0) return null
 
   return (
-    <section aria-label="Promotions" className="mx-auto max-w-[1600px] px-3 sm:px-5 lg:px-6">
+    <section aria-label="Promotions" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div
         className="group relative select-none overflow-hidden rounded-2xl shadow-lift sm:rounded-3xl"
         onMouseEnter={() => setPaused(true)}

@@ -77,12 +77,12 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
     return (
       <div className="space-y-4 bg-white py-3">
         {/* Hero skeleton */}
-        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 sm:h-[400px] lg:h-[480px]" />
         </div>
 
         {/* Trust strip skeleton */}
-        <div className="mx-auto max-w-7xl px-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
@@ -97,7 +97,7 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
         </div>
 
         {/* Category carousel skeleton */}
-        <div className="mx-auto max-w-7xl px-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-4 h-6 w-48 animate-pulse rounded bg-slate-100" />
           <div className="flex gap-3 overflow-hidden">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -111,7 +111,7 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
 
         {/* Product rail skeleton x2 */}
         {[1, 2].map((k) => (
-          <div key={k} className="mx-auto max-w-7xl px-4">
+          <div key={k} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-4 h-6 w-48 animate-pulse rounded bg-slate-100" />
             <ProductRowSkeleton />
           </div>
@@ -132,7 +132,7 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
               <div key={section.id} className="space-y-3">
                 <HeroCarousel slides={heroSlides} />
                 {popularSearches.length > 0 && (
-                  <section className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+                  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col items-start gap-3 rounded-3xl border border-slate-100 bg-white/90 px-4 py-4 shadow-soft backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-5">
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-900">Popular searches</p>

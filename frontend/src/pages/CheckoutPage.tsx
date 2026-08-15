@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, CheckCircle, Copy, Check } from 'lucide-react'
@@ -45,13 +45,47 @@ const PAYMENT_ICONS: Record<string, string> = {
   paypal: '🅿️',
 }
 
-// Well-known method names are shown bilingually; any other database value is left untouched.
-const BILINGUAL_NAMES: Record<string, string> = {
-  Standard: 'স্ট্যান্ডার্ড / Standard',
-  'Cash on Delivery': 'ক্যাশ অন ডেলিভারি / Cash on Delivery',
+// Bilingual label helper — splits "Bangla / English" and styles each part appropriately
+const renderBilingual = (label: string) => {
+  const parts = label.split(' / ').map((s) => s.trim())
+  if (parts.length === 2) {
+    return (
+      <span className="bilingual-label">
+        <span className="bangla-part">{parts[0]}</span>
+        <span className="english-part">{parts[1]}</span>
+      </span>
+    )
+  }
+  // Fallback for single-language labels
+  return <span className="bangla-text">{label}</span>
 }
 
-const displayName = (name: string) => BILINGUAL_NAMES[name] ?? name
+// Format shipping method name bilingually from known mappings
+const BILINGUAL_SHIPPING: Record<string, string> = {
+  Dhaka: 'ঢাকা / Dhaka',
+  'outside dhaka': 'ঢাকার বাইরে / Outside Dhaka',
+  'Outside Dhaka': 'ঢাকার বাইরে / Outside Dhaka',
+}
+
+const getShippingLabel = (name: string) => BILINGUAL_SHIPPING[name] ?? name
+
+// Calculate the actual shipping cost for display — use charge when estimatedCost is 0 but charge > 0
+const getShippingDisplayCost = (method: ShippingMethod): number => {
+  const estimatedCost = Number(method.estimatedCost ?? 0)
+  const charge = Number(method.charge ?? 0)
+  // If estimatedCost is explicitly 0 AND charge > 0 AND freeShippingMinAmount is 0, it's NOT free
+  // Use charge as fallback when estimatedCost is 0 but charge > 0
+  if (estimatedCost === 0 && charge > 0 && (Number(method.freeShippingMinAmount ?? 0) === 0)) {
+    return charge
+  }
+  return estimatedCost > 0 ? estimatedCost : charge
+}
+
+// Check if shipping is genuinely free
+const isShippingFree = (method: ShippingMethod): boolean => {
+  const displayCost = getShippingDisplayCost(method)
+  return displayCost === 0
+}
 
 interface AddressFormState {
   name: string
