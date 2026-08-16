@@ -9,13 +9,13 @@ export declare const createAdmin: (data: {
     email: string;
     phone: string;
     password: string;
-    role: string;
+    role: "admin" | "manager";
 }) => Promise<{
     id: number;
     name: string;
     email: string;
     phone: string;
-    role: string;
+    role: "admin" | "manager";
 }>;
 export declare const login: (data: LoginInput) => Promise<{
     token: string;

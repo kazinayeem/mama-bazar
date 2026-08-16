@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { CheckCircle, AlertCircle, Edit3, X, Loader2 } from 'lucide-react'
-import { api } from '../../lib/api'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { fetchMyProfile } from '../../store/slices/authSlice'
+import { setAuthUser } from '../../store/slices/authSlice'
+import { useUpdateMyProfileMutation } from '../../store/services/commerceApi'
 import { SEO } from '../../components/common/SEO'
 
 const BD_PHONE_REGEX = /^(\+880|0)[1-9]\d{9}$/
@@ -21,6 +21,7 @@ const DashboardProfilePage = () => {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [phoneError, setPhoneError] = useState('')
+  const [updateMyProfile] = useUpdateMyProfileMutation()
 
   useEffect(() => {
     setName(user?.name || '')
@@ -65,13 +66,13 @@ const DashboardProfilePage = () => {
     }
 
     try {
-      await api.updateMyProfile({
+      const updated = await updateMyProfile({
         name: name.trim(),
         phone: phone.trim(),
         shippingArea: shippingArea.trim() || undefined,
         shippingAddress: shippingAddress.trim() || undefined,
-      })
-      await dispatch(fetchMyProfile({ force: true }))
+      }).unwrap()
+      dispatch(setAuthUser(updated))
       setMessage('Profile updated successfully.')
       setIsEditing(false)
     } catch (submitError) {

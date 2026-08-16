@@ -1,8 +1,8 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { LayoutDashboard, Package, User, MapPin, Shield } from 'lucide-react'
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { fetchMyOrders, fetchMyProfile } from '../../store/slices/authSlice'
+import { useAppSelector } from '../../store/hooks'
+import { useGetCurrentUserQuery, useGetMyOrdersQuery } from '../../store/services/commerceApi'
 
 const navItems = [
   { label: 'Overview', href: '/dashboard/overview', icon: LayoutDashboard },
@@ -13,13 +13,11 @@ const navItems = [
 ]
 
 const UserDashboardLayout = () => {
-  const dispatch = useAppDispatch()
   const { user, userOrders } = useAppSelector((state) => state.auth)
+  const token = useAppSelector((state) => state.auth.token)
 
-  useEffect(() => {
-    dispatch(fetchMyProfile())
-    dispatch(fetchMyOrders())
-  }, [dispatch])
+  useGetCurrentUserQuery(undefined, { skip: !token })
+  useGetMyOrdersQuery(undefined, { skip: !token })
 
   const getUserInitials = useCallback((name: string) => {
     if (!name) return 'U'

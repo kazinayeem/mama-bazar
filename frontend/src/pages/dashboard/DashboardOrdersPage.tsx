@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import LoadingBlock from '../../components/common/LoadingBlock'
 import PaginationControls from '../../components/common/PaginationControls'
 import { currency } from '../../lib/format'
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { fetchMyOrders } from '../../store/slices/authSlice'
+import { useAppSelector } from '../../store/hooks'
+import { useGetMyOrdersQuery } from '../../store/services/commerceApi'
 import type { UserOrderWithItems } from '../../types'
 import { formatOrderStatus, getOrderStatusBadge } from './dashboardUtils'
 import { SEO } from '../../components/common/SEO'
@@ -25,8 +25,9 @@ const getOrderSummary = (userOrders: UserOrderWithItems[]) => {
 }
 
 const DashboardOrdersPage = () => {
-  const dispatch = useAppDispatch()
   const { userOrders, ordersLoading } = useAppSelector((state) => state.auth)
+  const token = useAppSelector((state) => state.auth.token)
+  const { refetch: refetchOrders } = useGetMyOrdersQuery(undefined, { skip: !token })
   const [page, setPage] = useState(1)
 
   const totalPages = Math.max(1, Math.ceil(userOrders.length / PER_PAGE))
@@ -38,7 +39,7 @@ const DashboardOrdersPage = () => {
   }, [page, userOrders])
 
   const refreshOrders = () => {
-    dispatch(fetchMyOrders({ force: true }))
+    refetchOrders()
   }
 
   return (

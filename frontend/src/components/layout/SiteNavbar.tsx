@@ -3,9 +3,9 @@ import { ChevronDown, ChevronRight, Heart, LayoutDashboard, LogIn, LogOut, Menu,
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { fetchMyProfile, logout } from '../../store/slices/authSlice'
+import { logout } from '../../store/slices/authSlice'
 import { openCart } from '../../store/slices/uiSlice'
-import { useGetCategoriesQuery, useGetHomepageQuery } from '../../store/services/commerceApi'
+import { useGetCategoriesQuery, useGetCurrentUserQuery, useGetHomepageQuery } from '../../store/services/commerceApi'
 import SearchBar from '../common/SearchBar'
 import { formatPrice } from '../../lib/format'
 
@@ -30,6 +30,8 @@ const SiteNavbar = () => {
   const { data: homepageData } = useGetHomepageQuery()
   const announcement = homepageData?.announcement
 
+  useGetCurrentUserQuery(undefined, { skip: !token })
+
   const parentCategories = categories.filter((c) => !c.parentId)
 
   const isAdmin = useMemo(
@@ -40,12 +42,6 @@ const SiteNavbar = () => {
   const getUserInitials = useCallback((name: string) => {
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
   }, [])
-
-  useEffect(() => {
-    if (token && !authUser) {
-      dispatch(fetchMyProfile())
-    }
-  }, [authUser, dispatch, token])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)

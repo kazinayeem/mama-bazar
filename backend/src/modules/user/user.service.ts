@@ -69,7 +69,7 @@ export const createAdmin = async (data: {
   email: string;
   phone: string;
   password: string;
-  role: string;
+  role: "admin" | "manager";
 }) => {
   const existingByPhone = await db.select().from(users).where(eq(users.phone, data.phone)).limit(1);
   if (existingByPhone[0]) throw new AppError(409, "An account with this phone number already exists");
