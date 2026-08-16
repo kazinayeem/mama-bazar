@@ -39,13 +39,6 @@ import MediaPicker from '@/components/admin/MediaPicker'
 import type { AdminCustomer, Banner } from '@/types/admin'
 import { SEO } from '../../components/common/SEO'
 
-const defaultPaymentMethods = [
-  { name: 'bKash', enabled: true, icon: '💳' },
-  { name: 'Nagad', enabled: true, icon: '📱' },
-  { name: 'Cash on Delivery', enabled: true, icon: '🏪' },
-  { name: 'Credit Card', enabled: false, icon: '💰' },
-]
-
 const AdminSettingsPage = () => {
   const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(true)
@@ -59,7 +52,6 @@ const AdminSettingsPage = () => {
   const [bannerLink, setBannerLink] = useState('')
   const [bannerImage, setBannerImage] = useState('')
 
-  const [paymentMethods, setPaymentMethods] = useState(defaultPaymentMethods)
   const [storeInfo, setStoreInfo] = useState({
     storeName: 'Mama Bazar',
     email: '',
@@ -132,16 +124,6 @@ const AdminSettingsPage = () => {
           const parsed = JSON.parse(savedTax)
           setTaxRate(String(parsed.taxRate || 0))
           setApplyTaxToShipping(Boolean(parsed.applyTaxToShipping))
-        } catch {
-          /* ignore malformed value */
-        }
-      }
-
-      const savedPayments = settingsMap.get('payment_methods')
-      if (savedPayments) {
-        try {
-          const parsed = JSON.parse(savedPayments)
-          if (Array.isArray(parsed)) setPaymentMethods(parsed)
         } catch {
           /* ignore malformed value */
         }
