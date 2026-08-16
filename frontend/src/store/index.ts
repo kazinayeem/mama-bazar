@@ -36,7 +36,7 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   matcher: commerceApi.endpoints.getCurrentUser.matchRejected,
   effect: (action, listenerApi) => {
-    if (action.error?.status === 401 || action.error?.status === 403) {
+    if (action.error && 'status' in action.error && (action.error.status === 401 || action.error.status === 403)) {
       listenerApi.dispatch(logout())
     }
   },

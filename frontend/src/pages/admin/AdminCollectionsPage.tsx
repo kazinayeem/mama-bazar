@@ -3,6 +3,7 @@ import { FolderOpen } from 'lucide-react'
 import CatalogCrudPage, { type CatalogField, type CatalogColumn } from '@/components/admin/CatalogCrudPage'
 import { toListResult, removeResult, moveResult } from '@/components/admin/masterDataAdapters'
 import SmartImage from '@/components/common/SmartImage'
+import { useGetCollectionsQuery } from '@/store/services/commerceApi'
 import {
   parseError,
   useLazyGetAdminCollectionsAdminQuery,
@@ -10,7 +11,6 @@ import {
   useUpdateCollectionMutation,
   useDeleteCollectionMutation,
   useMoveCollectionProductsMutation,
-  useGetAdminCollectionsQuery,
 } from '@/store/services/adminProductsApi'
 import type { Collection } from '@/types/admin'
 import { SEO } from '../../components/common/SEO'
@@ -35,7 +35,7 @@ const FIELDS: CatalogField[] = [
 
 const AdminCollectionsPage = () => {
   const [trigger] = useLazyGetAdminCollectionsAdminQuery()
-  const { data: allCollections = [] } = useGetAdminCollectionsQuery()
+  const { data: allCollections = [] } = useGetCollectionsQuery()
   const [createCollection] = useCreateCollectionMutation()
   const [updateCollection] = useUpdateCollectionMutation()
   const [deleteCollection] = useDeleteCollectionMutation()

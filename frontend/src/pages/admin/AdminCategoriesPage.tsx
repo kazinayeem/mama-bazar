@@ -35,9 +35,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import SmartImage from '@/components/common/SmartImage'
 import CropImageField from '@/components/admin/CropImageField'
 import UsageAlertDialog from '@/components/admin/UsageAlertDialog'
+import { useGetCategoriesQuery } from '@/store/services/commerceApi'
 import {
   useLazyGetAdminCategoriesAdminQuery,
-  useGetAdminCategoriesQuery,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
@@ -76,7 +76,7 @@ const buildTreeRows = (categories: Category[]): TreeRow[] => {
 const ADMIN_PAGE_SIZE = 20
 
 const AdminCategoriesPage = () => {
-  const { data: allCategories = [] } = useGetAdminCategoriesQuery()
+  const { data: allCategories = [] } = useGetCategoriesQuery()
   const [trigger] = useLazyGetAdminCategoriesAdminQuery()
   const [createCategory] = useCreateCategoryMutation()
   const [updateCategory] = useUpdateCategoryMutation()
