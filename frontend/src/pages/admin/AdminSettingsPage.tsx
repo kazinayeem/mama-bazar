@@ -182,14 +182,6 @@ const AdminSettingsPage = () => {
     }
   }
 
-  const savePaymentSettings = async () => {
-    try {
-      await adminApi.setSetting('payment_methods', JSON.stringify(paymentMethods))
-      toast.success('Payment settings saved')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save payment settings')
-    }
-  }
 
   const savePixelSettings = async () => {
     const id = pixelId.trim()
@@ -390,29 +382,6 @@ const AdminSettingsPage = () => {
                 </article>
               ))}
             </div>
-          </div>
-
-          <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold">Payment Methods</h2>
-            <div className="space-y-4">
-              {paymentMethods.map((method, index) => (
-                <div key={method.name} className="flex items-center justify-between border-b pb-3 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{method.icon}</span>
-                    <p className="font-medium">{method.name}</p>
-                  </div>
-                  <Switch
-                    checked={method.enabled}
-                    onCheckedChange={(checked) =>
-                      setPaymentMethods((prev) => prev.map((item, idx) => (idx === index ? { ...item, enabled: checked } : item)))
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-            <Button className="mt-4 w-full" onClick={savePaymentSettings}>
-              Save Payment Methods
-            </Button>
           </div>
 
           <div className="rounded-xl border bg-card p-6 shadow-sm">
