@@ -78,7 +78,6 @@ const authSlice = createSlice({
         state.loading = false
         state.token = action.payload.token
         state.user = action.payload.user
-        state.profileFetchedAt = Date.now()
         authStorage.setToken(action.payload.token)
         authStorage.setUser(action.payload.user)
       })
@@ -94,7 +93,6 @@ const authSlice = createSlice({
         state.loading = false
         state.token = action.payload.token
         state.user = action.payload.user
-        state.profileFetchedAt = Date.now()
         authStorage.setToken(action.payload.token)
         authStorage.setUser(action.payload.user)
       })
@@ -110,36 +108,12 @@ const authSlice = createSlice({
         state.loading = false
         state.token = action.payload.token
         state.user = action.payload.user
-        state.profileFetchedAt = Date.now()
         authStorage.setToken(action.payload.token)
         authStorage.setUser(action.payload.user)
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || 'Registration failed'
-      })
-      .addCase(fetchMyProfile.fulfilled, (state, action) => {
-        state.user = action.payload
-        state.profileFetchedAt = Date.now()
-        authStorage.setUser(action.payload)
-      })
-      .addCase(fetchMyProfile.rejected, (state) => {
-        state.token = null
-        state.user = null
-        state.profileFetchedAt = null
-        authStorage.clearToken()
-        authStorage.clearUser()
-      })
-      .addCase(fetchMyOrders.pending, (state) => {
-        state.ordersLoading = true
-      })
-      .addCase(fetchMyOrders.fulfilled, (state, action) => {
-        state.ordersLoading = false
-        state.userOrders = action.payload
-        state.ordersFetchedAt = Date.now()
-      })
-      .addCase(fetchMyOrders.rejected, (state) => {
-        state.ordersLoading = false
       })
   },
 })
