@@ -338,25 +338,31 @@ export declare const orderListSchema: z.ZodObject<{
     };
 }>;
 export declare const trackOrderSchema: z.ZodObject<{
-    body: z.ZodObject<{
-        orderId: z.ZodString;
-        phone: z.ZodString;
+    body: z.ZodEffects<z.ZodObject<{
+        orderId: z.ZodOptional<z.ZodString>;
+        phone: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        phone: string;
-        orderId: string;
+        phone?: string | undefined;
+        orderId?: string | undefined;
     }, {
-        phone: string;
-        orderId: string;
+        phone?: string | undefined;
+        orderId?: string | undefined;
+    }>, {
+        phone?: string | undefined;
+        orderId?: string | undefined;
+    }, {
+        phone?: string | undefined;
+        orderId?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     body: {
-        phone: string;
-        orderId: string;
+        phone?: string | undefined;
+        orderId?: string | undefined;
     };
 }, {
     body: {
-        phone: string;
-        orderId: string;
+        phone?: string | undefined;
+        orderId?: string | undefined;
     };
 }>;
 //# sourceMappingURL=order.schema.d.ts.map

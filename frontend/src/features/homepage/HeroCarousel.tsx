@@ -10,7 +10,7 @@ interface HeroCarouselProps {
   loading?: boolean
 }
 
-const AUTOPLAY_MS = 5000
+const AUTOPLAY_MS = 4500
 
 /**
  * Hero slide images are stored as Cloudinary `secure_url`s. Those URLs are
@@ -30,7 +30,14 @@ const pickImage = (slide: HomepageHeroSlide) => {
 const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: boolean }) => {
   const images = pickImage(slide)
   const [imageFailed, setImageFailed] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
   const isExternal = (url?: string) => !!url && /^https?:\/\//.test(url)
+
+  // Cached images can already be complete when the ref attaches — surface that
+  // state so the skeleton fades out immediately instead of waiting for onLoad.
+  const setImgRef = useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete) setImageLoaded(true)
+  }, [])
 
   // A slide with the overlay switched off is a light track: keep the image at
   // full brightness and default to dark text so it stays readable.
@@ -85,18 +92,26 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
         </div>
       )}
 
+      {/* Lightweight skeleton while the image loads — fades out on first paint. */}
+      {showImage && !imageLoaded && (
+        <div aria-hidden="true" className="absolute inset-0 animate-pulse bg-slate-200/60" />
+      )}
+
       {showImage && (
         <picture>
           {images.desktop && <source media="(min-width: 1024px)" srcSet={images.desktop} />}
           {images.tablet && <source media="(min-width: 640px)" srcSet={images.tablet} />}
           <img
+            ref={setImgRef}
             alt={slide.title || slide.badge || 'Promotional banner'}
-            className="absolute inset-0 h-full w-full object-contain object-center"
+            className="absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-500"
             draggable={false}
             fetchPriority={priority ? 'high' : 'auto'}
             loading={priority ? 'eager' : 'lazy'}
             onError={() => setImageFailed(true)}
+            onLoad={() => setImageLoaded(true)}
             src={images.mobile}
+            style={{ opacity: imageLoaded ? 1 : 0 }}
           />
         </picture>
       )}
@@ -201,6 +216,9 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
   const next = useCallback(() => go(safeIndex + 1, 1), [go, safeIndex])
   const prev = useCallback(() => go(safeIndex - 1, -1), [go, safeIndex])
 
+  // Auto-play. Keyed on `safeIndex` so every change — manual or automatic —
+  // tears down the previous timer and starts a fresh countdown (reset after
+  // user interaction). The cleanup guarantees a single live timer at a time.
   useEffect(() => {
     if (count <= 1 || paused || reduceMotion) return
     const timer = setTimeout(next, AUTOPLAY_MS)
@@ -241,7 +259,10 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
   return (
     <section aria-label="Promotions" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div
+        aria-roledescription="carousel"
         className="group relative select-none overflow-hidden rounded-2xl shadow-lift sm:rounded-3xl"
+        onBlur={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -254,10 +275,9 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
 
         {/* Slides — absolute on mobile (fills spacer height), relative on sm+ with fixed height */}
         <div className="absolute inset-0 sm:relative sm:h-[400px] lg:h-[480px] sm:overflow-hidden">
-          <AnimatePresence custom={direction} initial={false} mode="popLayout">
+          <AnimatePresence custom={direction} initial={false}>
             <motion.div
               key={slides[safeIndex].id}
-              aria-hidden={safeIndex !== index}
               className="absolute inset-0 h-full w-full"
               custom={direction}
               variants={variants}
@@ -281,22 +301,28 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
         {/* Arrows */}
         {count > 1 && (
           <>
-            <button
+            <motion.button
               aria-label="Previous slide"
-              className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:left-5"
+              className="absolute bottom-0 left-3 top-0 z-20 my-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur hover:bg-white sm:left-5"
               onClick={prev}
               type="button"
+              transition={{ duration: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ChevronLeft size={20} />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               aria-label="Next slide"
-              className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur transition hover:scale-105 hover:bg-white active:scale-95 sm:right-5"
+              className="absolute bottom-0 right-3 top-0 z-20 my-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-white/90 text-slate-800 shadow-lg shadow-slate-900/10 backdrop-blur hover:bg-white sm:right-5"
               onClick={next}
               type="button"
+              transition={{ duration: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ChevronRight size={20} />
-            </button>
+            </motion.button>
           </>
         )}
 
@@ -305,16 +331,22 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
           <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2">
             {slides.map((slide, dotIndex) => (
               <button
+                aria-current={dotIndex === safeIndex ? 'true' : undefined}
                 aria-label={`Go to slide ${dotIndex + 1}`}
                 className="flex h-11 items-center px-1"
                 key={slide.id}
                 onClick={() => go(dotIndex, dotIndex > safeIndex ? 1 : -1)}
                 type="button"
               >
-                <span
-                  className={`block h-2 rounded-full shadow-sm transition-all duration-300 ${
-                    dotIndex === safeIndex ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
-                  }`}
+                <motion.span
+                  animate={
+                    dotIndex === safeIndex
+                      ? { width: 32, opacity: 1, scale: 1 }
+                      : { width: 8, opacity: 0.5, scale: 1 }
+                  }
+                  className="block h-2 rounded-full bg-white shadow-sm"
+                  initial={false}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
                 />
               </button>
             ))}

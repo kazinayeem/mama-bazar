@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { Eye, Heart, ImageOff, Plus, ShoppingBag } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Check, Eye, Heart, ImageOff, Plus, ShoppingBag } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from './ToastProvider'
@@ -29,6 +29,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
   const [activeColor, setActiveColor] = useState<string | undefined>(product.colorOptions?.[0]?.name)
   const [activeSize, setActiveSize] = useState<string | undefined>(product.sizeOptions?.[0])
   const [imageFailed, setImageFailed] = useState(false)
+  const [added, setAdded] = useState(false)
 
   const hasColorOptions = Boolean(product.colorOptions?.length)
   const hasSizeOptions = Boolean(product.sizeOptions?.length)
@@ -81,6 +82,8 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
       }),
     )
     toast.success('Added to cart')
+    setAdded(true)
+    window.setTimeout(() => setAdded(false), 900)
   }
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -245,19 +248,46 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
 
         {/* Action buttons */}
         <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row">
-          <button
+          <motion.button
+            whileTap={!isOutOfStock ? { scale: 0.96 } : undefined}
             className={`inline-flex w-full items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold transition active:scale-95 sm:w-auto sm:flex-1 ${
               isOutOfStock
                 ? 'cursor-not-allowed bg-slate-100 text-slate-400'
-                : 'bg-brand-orange-500 text-white hover:bg-brand-orange-600'
+                : added
+                  ? 'bg-brand-green-500 text-white hover:bg-brand-green-600'
+                  : 'bg-brand-orange-500 text-white hover:bg-brand-orange-600'
             }`}
             disabled={isOutOfStock}
             onClick={handleAddToCart}
             type="button"
           >
-            <Plus size={13} />
-            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
-          </button>
+            <AnimatePresence initial={false} mode="wait">
+              {added ? (
+                <motion.span
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="inline-flex items-center gap-1"
+                  exit={{ opacity: 0, scale: 0.6 }}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  key="added"
+                  transition={{ duration: 0.16 }}
+                >
+                  <Check size={13} /> Added
+                </motion.span>
+              ) : (
+                <motion.span
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="inline-flex items-center gap-1"
+                  exit={{ opacity: 0, scale: 0.6 }}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  key="idle"
+                  transition={{ duration: 0.16 }}
+                >
+                  <Plus size={13} />
+                  {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
           <Link
             className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-brand-green-500 bg-white py-2 text-xs font-bold text-brand-green-600 transition hover:bg-brand-green-500 hover:text-white active:scale-95 sm:w-auto sm:flex-1"
             to={`/products/${product.slug}`}

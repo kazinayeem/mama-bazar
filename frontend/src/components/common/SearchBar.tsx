@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Clock, Flame, Mic, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -21,6 +21,7 @@ const loadRecent = (): string[] => {
 
 const SearchBar = ({ onNavigate }: SearchBarProps) => {
   const navigate = useNavigate()
+  const reduceMotion = useReducedMotion()
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>(loadRecent)
@@ -102,7 +103,7 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
             className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-card"
             exit={{ opacity: 0, y: -6 }}
             initial={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: reduceMotion ? 0 : 0.18 }}
           >
             <div className="max-h-[22rem] overflow-y-auto p-2">
               {debouncedQuery ? (

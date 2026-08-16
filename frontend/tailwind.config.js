@@ -130,8 +130,8 @@ export default {
           'Inter',
           'sans-serif',
         ],
-        /* UI tier: Inter Variable */
-        body: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        /* UI tier: Inter Variable, with Noto Sans Bengali as the Bengali glyph provider */
+        body: ['Inter', 'Noto Sans Bengali', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       borderRadius: {

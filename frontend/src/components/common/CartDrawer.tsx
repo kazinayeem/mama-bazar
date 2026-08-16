@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
@@ -10,6 +10,7 @@ import { closeCart } from '../../store/slices/uiSlice'
 
 const CartDrawer = () => {
   const dispatch = useAppDispatch()
+  const reduceMotion = useReducedMotion()
   const items = useAppSelector((state) => state.cart.items)
   const open = useAppSelector((state) => state.ui.cartOpen)
 
@@ -43,10 +44,10 @@ const CartDrawer = () => {
             onClick={() => dispatch(closeCart())}
           />
           <motion.aside
-            animate={{ x: 0 }}
+            animate={{ x: reduceMotion ? 0 : 0 }}
             className="fixed inset-y-0 right-0 z-[200] flex w-full max-w-md flex-col bg-white shadow-lift"
-            exit={{ x: '100%' }}
-            initial={{ x: '100%' }}
+            exit={{ x: reduceMotion ? '0%' : '100%' }}
+            initial={{ x: reduceMotion ? '0%' : '100%' }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             role="dialog"
             aria-label="Shopping cart"
@@ -176,7 +177,15 @@ const CartDrawer = () => {
                   </div>
 
                   <Link
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-5 py-3.5 text-sm font-bold text-accent-foreground transition hover:bg-accent-600 active:scale-95"
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-brand-green-200 bg-white px-5 py-3 text-sm font-bold text-brand-green-700 transition hover:border-brand-green-400 hover:bg-brand-green-50"
+                    onClick={() => dispatch(closeCart())}
+                    to="/cart"
+                  >
+                    View Full Cart
+                  </Link>
+
+                  <Link
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-5 py-3.5 text-sm font-bold text-accent-foreground transition hover:bg-accent-600 active:scale-95"
                     onClick={() => dispatch(closeCart())}
                     to="/checkout"
                   >

@@ -17,6 +17,7 @@ import type {
   OrderStatus,
   PaymentMethodInfo,
   Product,
+  PublicOrderTrackingResult,
   ShippingMethod,
   UserAddress,
   UserOrderItem,
@@ -209,10 +210,10 @@ export const api = {
     return data.data || { url: '' }
   },
 
-  async trackOrder(orderId: string, phone: string): Promise<Order & { items?: UserOrderItem[] }> {
+  async trackOrder(params: { orderId?: string; phone?: string }): Promise<PublicOrderTrackingResult> {
     return await fetchJson('/api/order/track', {
       method: 'POST',
-      body: JSON.stringify({ orderId, phone }),
+      body: JSON.stringify(params),
     })
   },
 

@@ -147,7 +147,7 @@ exports.getMyOrders = getMyOrders;
 const trackOrder = async (req, res) => {
     const { orderId, phone } = req.body;
     const data = await orderService.trackOrder(orderId, phone);
-    res.json({ success: true, data });
+    res.json({ success: true, data: { orders: data } });
 };
 exports.trackOrder = trackOrder;
 const getInvoice = async (req, res) => {

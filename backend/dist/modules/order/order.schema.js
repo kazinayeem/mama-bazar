@@ -75,9 +75,22 @@ exports.orderListSchema = zod_1.z.object({
     }),
 });
 exports.trackOrderSchema = zod_1.z.object({
-    body: zod_1.z.object({
-        orderId: zod_1.z.string().min(1, "Order ID is required"),
-        phone: zod_1.z.string().regex(BD_PHONE_REGEX, "Invalid phone number format"),
+    body: zod_1.z
+        .object({
+        orderId: zod_1.z
+            .string()
+            .trim()
+            .min(1, "Order ID is required")
+            .optional(),
+        phone: zod_1.z
+            .string()
+            .trim()
+            .regex(BD_PHONE_REGEX, "Invalid phone number format")
+            .optional(),
+    })
+        .refine((data) => (data.orderId && data.orderId.length > 0) || (data.phone && data.phone.length > 0), {
+        message: "Provide either an Order ID or a Mobile Number",
+        path: ["body"],
     }),
 });
 //# sourceMappingURL=order.schema.js.map

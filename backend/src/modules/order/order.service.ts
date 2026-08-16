@@ -751,15 +751,65 @@ export const getMyOrders = async (userId: number) => {
   return Promise.all(data.map((order) => attachItemsAndHistory(order)));
 };
 
-export const trackOrder = async (orderId: string, phone: string) => {
-  const rows = await db
-    .select()
-    .from(orders)
-    .where(and(eq(orders.orderId, orderId), eq(orders.phone, phone)))
-    .limit(1);
-  const order = rows[0];
-  if (!order) throw new AppError(404, "Order not found");
-  return attachItemsAndHistory(order);
+const normalizeBdPhone = (value: string) => {
+  const trimmed = value.trim();
+  if (trimmed.startsWith("+880")) return `0${trimmed.slice(4)}`;
+  return trimmed;
+};
+
+// Public tracking projection — deliberately whitelists safe fields only.
+// Never expose address, email, alternative phone, transaction details,
+// admin notes, or any other private customer/order data.
+const toPublicTrackingOrder = (order: any) => ({
+  orderId: order.orderId,
+  createdAt: order.createdAt,
+  status: order.status,
+  paymentStatus: order.paymentStatus,
+  paymentMethod: order.paymentMethod,
+  shippingMethodName: order.shippingMethodName || null,
+  courierTrackingNumber: order.courierTrackingNumber || null,
+  subtotal: order.subtotal,
+  shippingCost: order.shippingCost,
+  discount: order.discount,
+  tax: order.tax,
+  totalPrice: order.totalPrice,
+  items: (order.items || []).map((item: any) => ({
+    id: item.id,
+    productId: item.productId,
+    variantId: item.variantId,
+    size: item.size,
+    color: item.color,
+    quantity: item.quantity,
+    price: item.price,
+    variantName: item.variantName || null,
+    product: item.product || null,
+  })),
+  statusHistory: (order.statusHistory || []).map((entry: any) => ({
+    id: entry.id,
+    status: entry.status,
+    createdAt: entry.createdAt,
+  })),
+});
+
+export const trackOrder = async (orderId?: string, phone?: string) => {
+  const idQuery = orderId?.trim();
+  const phoneQuery = phone?.trim() ? normalizeBdPhone(phone) : undefined;
+
+  let rows: typeof orders.$inferSelect[] = [];
+
+  if (idQuery) {
+    rows = await db.select().from(orders).where(eq(orders.orderId, idQuery)).limit(1);
+  } else if (phoneQuery) {
+    rows = await db
+      .select()
+      .from(orders)
+      .where(or(eq(orders.phone, phoneQuery), eq(orders.alternativePhone, phoneQuery)))
+      .orderBy(desc(orders.createdAt))
+      .limit(10);
+  }
+
+  const withDetails = await Promise.all(rows.map((order) => attachItemsAndHistory(order)));
+  return withDetails.map(toPublicTrackingOrder);
 };
 
 // ==================== INVOICE ====================

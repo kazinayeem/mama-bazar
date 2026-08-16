@@ -139,7 +139,7 @@ const SiteNavbar = () => {
 
           <div className="flex items-center gap-2">
             <Link
-              to="/dashboard/orders"
+              to="/track"
               className="hidden xl:inline-flex items-center text-xs font-bold uppercase tracking-wider text-brand-green-500 hover:text-brand-green-700 mr-2 transition"
             >
               Track Order
@@ -397,7 +397,7 @@ const SiteNavbar = () => {
                   { label: 'Home', to: '/' },
                   { label: 'Shop', to: '/shop' },
                   { label: '🔥 Deals / Offers', to: '/shop?sale=true' },
-                  { label: 'Track Order', to: '/dashboard/orders' },
+                  { label: 'Track Order', to: '/track' },
                   { label: 'Wishlist', to: '/shop' },
                 ].map((link) => (
                   <NavLink

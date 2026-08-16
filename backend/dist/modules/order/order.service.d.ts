@@ -17,7 +17,22 @@ export declare const updateStatus: (id: number, input: UpdateOrderStatusInput) =
 export declare const verifyPayment: (id: number, input: VerifyPaymentInput) => Promise<any>;
 export declare const updateAdminNotes: (id: number, note: string, userId?: number) => Promise<any>;
 export declare const getMyOrders: (userId: number) => Promise<any[]>;
-export declare const trackOrder: (orderId: string, phone: string) => Promise<any>;
+export declare const trackOrder: (orderId?: string, phone?: string) => Promise<{
+    orderId: any;
+    createdAt: any;
+    status: any;
+    paymentStatus: any;
+    paymentMethod: any;
+    shippingMethodName: any;
+    courierTrackingNumber: any;
+    subtotal: any;
+    shippingCost: any;
+    discount: any;
+    tax: any;
+    totalPrice: any;
+    items: any;
+    statusHistory: any;
+}[]>;
 export declare const getInvoice: (id: number) => Promise<any>;
 export declare const getCustomerInvoice: (id: number, userId: number) => Promise<any>;
 export declare const remove: (id: number) => Promise<{

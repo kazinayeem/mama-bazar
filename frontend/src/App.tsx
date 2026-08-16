@@ -2,24 +2,28 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import ProtectedRoute from './components/common/ProtectedRoute'
+import { PageSkeleton } from './components/common/Skeletons'
 import MainLayout from './components/layout/MainLayout'
 import UserDashboardLayout from './components/layout/UserDashboardLayout'
 import HomePage from './pages/HomePage'
-import ShopPage from './pages/ShopPage'
-import ProductDetailsPage from './pages/ProductDetailsPage'
-import CheckoutPage from './pages/CheckoutPage'
-import OrderSuccessPage from './pages/OrderSuccessPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import PolicyPage from './pages/PolicyPage'
-import AboutPage from './pages/AboutPage'
-import ContactPage from './pages/ContactPage'
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
-import TermsAndConditionsPage from './pages/TermsAndConditionsPage'
-import CookiePolicyPage from './pages/CookiePolicyPage'
-import NotFoundPage from './pages/NotFoundPage'
-import UserDashboardPage from './pages/UserDashboardPage'
+
+const ShopPage = lazy(() => import('./pages/ShopPage'))
+const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'))
+const CartPage = lazy(() => import('./pages/CartPage'))
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
+const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage'))
+const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const PolicyPage = lazy(() => import('./pages/PolicyPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
+const TermsAndConditionsPage = lazy(() => import('./pages/TermsAndConditionsPage'))
+const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const UserDashboardPage = lazy(() => import('./pages/UserDashboardPage'))
 
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
 const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'))
@@ -58,29 +62,22 @@ const DashboardProfilePage = lazy(() => import('./pages/dashboard/DashboardProfi
 const DashboardAddressesPage = lazy(() => import('./pages/dashboard/DashboardAddressesPage'))
 const DashboardSecurityPage = lazy(() => import('./pages/dashboard/DashboardSecurityPage'))
 
-const PageFallback = () => (
-  <div className="flex min-h-[50vh] items-center justify-center">
-    <div className="flex flex-col items-center gap-3">
-      <span className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary" />
-      <p className="text-sm font-semibold text-slate-400">Loading...</p>
-    </div>
-  </div>
-)
-
 const AdminRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute allowedRoles={['admin', 'manager']}>{children}</ProtectedRoute>
 )
 
 function App() {
   return (
-    <Suspense fallback={<PageFallback />}>
+    <Suspense fallback={<PageSkeleton />}>
       <Analytics />
       <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<HomePage />} />
           <Route path="shop" element={<ShopPage />} />
           <Route path="products/:slug" element={<ProductDetailsPage />} />
+          <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="track" element={<OrderTrackingPage />} />
           <Route path="order/success" element={<OrderSuccessPage />} />
           <Route path="auth/login" element={<LoginPage />} />
           <Route path="auth/register" element={<RegisterPage />} />

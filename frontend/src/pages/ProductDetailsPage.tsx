@@ -2,6 +2,7 @@ import { ChevronRight, GitCompareArrows, Heart, Minus, Plus, Play, ShoppingBag, 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ProductCard from '../components/common/ProductCard'
+import ProductGallery from '../components/common/ProductGallery'
 import { SEO, getProductSEO } from '../components/common/SEO'
 import StarRating from '../components/common/StarRating'
 import { useToast } from '../components/common/ToastProvider'
@@ -149,7 +150,7 @@ const ProductDetailsPage = () => {
 
   const activeVariant = useMemo(
     () => (product?.variants ? findVariantByOptions(product.variants, activeColor, activeSize) : undefined),
-    [product?.variants, activeColor, activeSize],
+    [product, activeColor, activeSize],
   )
 
   const variantImage = useMemo(() => {
@@ -280,7 +281,7 @@ const ProductDetailsPage = () => {
         <SEO title="Loading Product..." description="Loading product details..." noIndex />
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
           <div className="animate-pulse">
-            <div className="aspect-square rounded-[18px] bg-slate-100" />
+            <div className="aspect-square rounded-2xl bg-slate-100" />
             <div className="mt-4 grid grid-cols-4 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div className="aspect-square rounded-xl bg-slate-100" key={i} />
@@ -350,35 +351,14 @@ const ProductDetailsPage = () => {
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
-        <div className="lg:col-span-7">
-          <div className="overflow-hidden rounded-[18px] bg-slate-100">
-            {product.images.length > 0 ? (
-              <img
-                alt={`${product.title} - Mama Bazar`}
-                className="aspect-square w-full object-cover transition-transform duration-700 hover:scale-105"
-                src={variantImage || product.images[activeImage] || product.images[0]}
-              />
-            ) : (
-              <div className="flex aspect-square w-full items-center justify-center text-sm font-semibold text-slate-600">
-                No image available
-              </div>
-            )}
-          </div>
-          {product.images.length > 1 && (
-            <div className="mt-4 grid grid-cols-4 gap-3">
-              {product.images.map((image, index) => (
-                <button
-                  aria-label={`View image ${index + 1}`}
-                  className={`overflow-hidden rounded-xl transition ${(variantImage ? false : activeImage === index) ? 'ring-2 ring-primary ring-offset-2' : 'opacity-70 hover:opacity-100'}`}
-                  key={image}
-                  onClick={() => setActiveImage(index)}
-                  type="button"
-                >
-                  <img alt={`${product.title} ${index + 1}`} className="aspect-square w-full object-cover" src={image} />
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="lg:col-span-6">
+          <ProductGallery
+            activeIndex={activeImage}
+            currentSrc={variantImage || product.images[activeImage] || product.images[0]}
+            images={product.images}
+            onSelect={setActiveImage}
+            title={product.title}
+          />
           {product.videoUrl && (
             <div className="mt-4">
               <a
@@ -393,7 +373,7 @@ const ProductDetailsPage = () => {
           )}
         </div>
 
-        <div className="flex flex-col lg:col-span-5">
+        <div className="flex flex-col lg:col-span-6">
           <div className="flex flex-wrap items-center gap-2">
             {product.brandInfo?.name && (
               <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary">

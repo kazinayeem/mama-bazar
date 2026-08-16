@@ -1,10 +1,8 @@
 import { Heart, Home, LayoutGrid, ShoppingBag, User } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { openCart } from '../../store/slices/uiSlice'
+import { useAppSelector } from '../../store/hooks'
 
 const MobileBottomNav = () => {
-  const dispatch = useAppDispatch()
   const cartCount = useAppSelector((state) => state.cart.items.reduce((sum, item) => sum + item.quantity, 0))
   const wishlistCount = useAppSelector((state) => state.ui.wishlist.length)
 
@@ -33,19 +31,14 @@ const MobileBottomNav = () => {
             </span>
           )}
         </NavLink>
-        <button
-          aria-label="Open cart"
-          className="relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:text-brand-orange-500"
-          onClick={() => dispatch(openCart())}
-          type="button"
-        >
+        <NavLink aria-label="Open cart" className={itemClass} to="/cart">
           <ShoppingBag size={20} /> Cart
           {cartCount > 0 && (
             <span className="absolute right-3 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-orange-500 px-1 text-[9px] font-bold text-white">
               {cartCount}
             </span>
           )}
-        </button>
+        </NavLink>
         <NavLink className={itemClass} to="/auth/login">
           <User size={20} /> Account
         </NavLink>

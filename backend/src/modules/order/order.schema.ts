@@ -82,8 +82,21 @@ export const orderListSchema = z.object({
 });
 
 export const trackOrderSchema = z.object({
-  body: z.object({
-    orderId: z.string().min(1, "Order ID is required"),
-    phone: z.string().regex(BD_PHONE_REGEX, "Invalid phone number format"),
-  }),
+  body: z
+    .object({
+      orderId: z
+        .string()
+        .trim()
+        .min(1, "Order ID is required")
+        .optional(),
+      phone: z
+        .string()
+        .trim()
+        .regex(BD_PHONE_REGEX, "Invalid phone number format")
+        .optional(),
+    })
+    .refine((data) => (data.orderId && data.orderId.length > 0) || (data.phone && data.phone.length > 0), {
+      message: "Provide either an Order ID or a Mobile Number",
+      path: ["body"],
+    }),
 });

@@ -381,6 +381,45 @@ export interface OrderStatusHistory {
   createdAt: string
 }
 
+export interface PublicOrderItem {
+  id: number
+  productId: number
+  variantId?: number | null
+  size?: string | null
+  color?: string | null
+  quantity: number
+  price: string
+  variantName?: string | null
+  product?: { title: string; image: string | null } | null
+}
+
+export interface PublicOrderStatusEntry {
+  id: number
+  status: OrderStatus
+  createdAt: string
+}
+
+export interface PublicOrder {
+  orderId: string
+  createdAt: string
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+  paymentMethod: string
+  shippingMethodName?: string | null
+  courierTrackingNumber?: string | null
+  subtotal: string
+  shippingCost: string
+  discount: string
+  tax: string
+  totalPrice: string
+  items: PublicOrderItem[]
+  statusHistory: PublicOrderStatusEntry[]
+}
+
+export interface PublicOrderTrackingResult {
+  orders: PublicOrder[]
+}
+
 export interface ApiListResult<T> {
   data: T[]
   total: number

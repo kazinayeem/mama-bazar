@@ -1,6 +1,8 @@
-import { Outlet } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
+import { Outlet, useLocation } from 'react-router-dom'
 import CartDrawer from '../common/CartDrawer'
 import MobileBottomNav from '../common/MobileBottomNav'
+import PageTransition from '../common/PageTransition'
 import { useThemeSync } from '../../lib/useThemeSync'
 import PixelTracker from '../common/PixelTracker'
 import WhatsAppButton from '../common/WhatsAppButton'
@@ -9,6 +11,7 @@ import SiteNavbar from './SiteNavbar'
 
 const MainLayout = () => {
   useThemeSync()
+  const location = useLocation()
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background font-body text-foreground transition-colors">
@@ -17,7 +20,11 @@ const MainLayout = () => {
       </a>
       <SiteNavbar />
       <main className="flex-1" id="main-content" tabIndex={-1}>
-        <Outlet />
+        <AnimatePresence initial={false} mode="wait">
+          <PageTransition key={location.pathname}>
+            <Outlet />
+          </PageTransition>
+        </AnimatePresence>
       </main>
       <SiteFooter />
       <CartDrawer />

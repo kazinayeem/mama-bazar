@@ -6,6 +6,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { Toaster } from 'sonner'
 import './index.css'
 import App from './App.tsx'
+import ScrollToTop from './components/common/ScrollToTop'
 import { ToastProvider } from './components/common/ToastProvider'
 import { store } from './store'
 
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')!).render(
       <HelmetProvider>
         <ToastProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <App />
           </BrowserRouter>
           <Toaster position="top-right" richColors />

@@ -1,10 +1,8 @@
 import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit'
 import authReducer from './slices/authSlice'
 import cartReducer, { addToCart } from './slices/cartSlice'
-import categoriesReducer from './slices/categoriesSlice'
 import dashboardReducer from './slices/dashboardSlice'
 import ordersReducer from './slices/ordersSlice'
-import productsReducer from './slices/productsSlice'
 import settingsReducer from './slices/settingsSlice'
 import uiReducer from './slices/uiSlice'
 import { commerceApi } from './services/commerceApi'
@@ -31,8 +29,6 @@ export const store = configureStore({
     [commerceApi.reducerPath]: commerceApi.reducer,
     [adminProductsApi.reducerPath]: adminProductsApi.reducer,
     auth: authReducer,
-    products: productsReducer,
-    categories: categoriesReducer,
     cart: cartReducer,
     orders: ordersReducer,
     dashboard: dashboardReducer,

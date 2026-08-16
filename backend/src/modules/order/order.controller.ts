@@ -119,7 +119,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
 export const trackOrder = async (req: Request, res: Response) => {
   const { orderId, phone } = req.body;
   const data = await orderService.trackOrder(orderId, phone);
-  res.json({ success: true, data });
+  res.json({ success: true, data: { orders: data } });
 };
 
 export const getInvoice = async (req: Request, res: Response) => {

@@ -145,7 +145,10 @@ export const commerceApi = createApi({
       query: ({ productId, limit }) =>
         `/api/reviews${toQueryString({ productId, limit } as ProductsQueryParams)}`,
       transformResponse: (response: ApiEnvelope<ProductReview[]>) => response.data || [],
-      providesTags: (_result, _error, args) => [{ type: 'Reviews' as const, id: args?.productId ?? 'LIST' }],
+      providesTags: (_result, _error, args) => [
+        { type: 'Reviews' as const, id: args?.productId ?? 'LIST' },
+        { type: 'Reviews' as const, id: 'LIST' },
+      ],
     }),
 
     addReview: builder.mutation<ProductReview, { productId: number; rating: number; title?: string; comment: string }>({
@@ -157,7 +160,8 @@ export const commerceApi = createApi({
       transformResponse: (response: ApiEnvelope<ProductReview>) => response.data as ProductReview,
       invalidatesTags: (_result, _error, args) => [
         { type: 'Reviews' as const, id: args.productId },
-        { type: 'Product' as const, id: 'LIST' },
+        { type: 'Reviews' as const, id: 'LIST' },
+        { type: 'Product' as const, id: args.productId },
       ],
     }),
   }),
