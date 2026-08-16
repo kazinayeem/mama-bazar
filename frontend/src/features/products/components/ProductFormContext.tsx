@@ -3,9 +3,11 @@ import type { Brand, Collection, Color, Size, Supplier, Vendor } from '@/types/a
 import type { Category } from '@/types'
 import type { ProductFormValues } from '../lib/productForm'
 import {
-  useGetAdminBrandsQuery,
-  useGetAdminCategoriesQuery,
-  useGetAdminCollectionsQuery,
+  useGetBrandsQuery,
+  useGetCategoriesQuery,
+  useGetCollectionsQuery,
+} from '@/store/services/commerceApi'
+import {
   useGetAdminColorsQuery,
   useGetAdminSizesQuery,
   useGetAdminSuppliersQuery,
@@ -50,9 +52,9 @@ export const useProductForm = (): ProductFormContextValue => {
 }
 
 export const useReferenceData = (): ReferenceData => {
-  const { data: categories, isLoading: categoriesLoading } = useGetAdminCategoriesQuery()
-  const { data: brands, isLoading: brandsLoading } = useGetAdminBrandsQuery()
-  const { data: collections, isLoading: collectionsLoading } = useGetAdminCollectionsQuery()
+  const { data: categories, isLoading: categoriesLoading } = useGetCategoriesQuery()
+  const { data: brands, isLoading: brandsLoading } = useGetBrandsQuery()
+  const { data: collections, isLoading: collectionsLoading } = useGetCollectionsQuery()
   const { data: vendors, isLoading: vendorsLoading } = useGetAdminVendorsQuery()
   const { data: suppliers, isLoading: suppliersLoading } = useGetAdminSuppliersQuery()
   const { data: colors, isLoading: colorsLoading } = useGetAdminColorsQuery()

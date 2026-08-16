@@ -27,14 +27,14 @@ listenerMiddleware.startListening({
 // components reading `state.auth.user` / `state.auth.userOrders` keep working
 // while the data itself is owned by the centralized API cache.
 listenerMiddleware.startListening({
-  matcher: baseApi.endpoints.getCurrentUser.matchFulfilled,
+  matcher: commerceApi.endpoints.getCurrentUser.matchFulfilled,
   effect: (action, listenerApi) => {
     listenerApi.dispatch(setAuthUser(action.payload))
   },
 })
 
 listenerMiddleware.startListening({
-  matcher: baseApi.endpoints.getCurrentUser.matchRejected,
+  matcher: commerceApi.endpoints.getCurrentUser.matchRejected,
   effect: (action, listenerApi) => {
     if (action.error?.status === 401 || action.error?.status === 403) {
       listenerApi.dispatch(logout())
@@ -43,14 +43,14 @@ listenerMiddleware.startListening({
 })
 
 listenerMiddleware.startListening({
-  matcher: baseApi.endpoints.getMyOrders.matchPending,
+  matcher: commerceApi.endpoints.getMyOrders.matchPending,
   effect: (_action, listenerApi) => {
     listenerApi.dispatch(setAuthOrdersLoading(true))
   },
 })
 
 listenerMiddleware.startListening({
-  matcher: baseApi.endpoints.getMyOrders.matchFulfilled,
+  matcher: commerceApi.endpoints.getMyOrders.matchFulfilled,
   effect: (action, listenerApi) => {
     listenerApi.dispatch(setAuthOrders(action.payload))
     listenerApi.dispatch(setAuthOrdersLoading(false))
@@ -58,7 +58,7 @@ listenerMiddleware.startListening({
 })
 
 listenerMiddleware.startListening({
-  matcher: baseApi.endpoints.getMyOrders.matchRejected,
+  matcher: commerceApi.endpoints.getMyOrders.matchRejected,
   effect: (_action, listenerApi) => {
     listenerApi.dispatch(setAuthOrdersLoading(false))
   },

@@ -1,5 +1,7 @@
-import type { Category, ShippingMethod, AdminCoupon, AdminCustomer, AuthUser, AdminOrder } from '../../types'
+import type { Category, ShippingMethod, AdminCoupon, PolicyPage, ContactMessage } from '../../types'
 import type {
+  AdminCustomer,
+  AdminOrder,
   AdminCheckoutNotice,
   AdminListResult,
   AdminPaymentMethod,
@@ -7,6 +9,8 @@ import type {
   AdminProductFilters,
   AdminProductListResult,
   Banner,
+  Brand,
+  Collection,
   Color,
   DashboardData,
   MarketingIntegration,

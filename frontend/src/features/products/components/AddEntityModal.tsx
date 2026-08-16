@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import CropImageField from '@/components/admin/CropImageField'
+import { useGetCategoriesQuery } from '@/store/services/commerceApi'
 import {
   useCreateCategoryMutation,
   useCreateBrandMutation,
@@ -27,7 +28,6 @@ import {
   useCreateSupplierMutation,
   useCreateColorMutation,
   useCreateSizeMutation,
-  useGetAdminCategoriesQuery,
 } from '@/store/services/adminProductsApi'
 
 export type MasterEntity = 'category' | 'brand' | 'collection' | 'vendor' | 'supplier' | 'color' | 'size'
@@ -75,7 +75,7 @@ const AddEntityModal = ({
   defaultParentId,
   onCreated,
 }: AddEntityModalProps) => {
-  const { data: allCategories = [] } = useGetAdminCategoriesQuery()
+  const { data: allCategories = [] } = useGetCategoriesQuery()
   const [createCategory] = useCreateCategoryMutation()
   const [createBrand] = useCreateBrandMutation()
   const [createCollection] = useCreateCollectionMutation()

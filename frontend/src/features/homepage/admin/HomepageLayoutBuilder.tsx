@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useGetAdminCategoriesQuery } from '@/store/services/adminProductsApi'
+import { useGetCategoriesQuery } from '@/store/services/commerceApi'
 import { SECTION_META, SECTION_ORDER } from './sectionMeta'
 import type { HomepageSectionConfig } from '../../../types/homepage'
 
@@ -32,7 +32,7 @@ interface LayoutBuilderProps {
 const SectionSettings = ({ section, onChange }: { section: HomepageSectionConfig; onChange: (next: HomepageSectionConfig) => void }) => {
   const canLimit = !['hero', 'trust_strip', 'promo_banner', 'why_choose_us', 'newsletter'].includes(section.type)
   const canColumns = ['categories'].includes(section.type)
-  const { data: categories = [] } = useGetAdminCategoriesQuery()
+  const { data: categories = [] } = useGetCategoriesQuery()
 
   const set = (patch: Partial<HomepageSectionConfig>) => onChange({ ...section, ...patch })
 

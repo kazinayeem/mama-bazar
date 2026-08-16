@@ -21,14 +21,16 @@ import ProductTable from '../components/ProductTable'
 import { DEFAULT_FILTERS, type ListFilters } from '../lib/types'
 import { parseError } from '@/store/services/adminProductsApi'
 import {
+  useGetBrandsQuery,
+  useGetCategoriesQuery,
+  useGetCollectionsQuery,
+} from '@/store/services/commerceApi'
+import {
   adminProductsApi,
   useBulkProductActionMutation,
   useDeleteProductMutation,
   useDuplicateProductMutation,
   useExportProductsCsvMutation,
-  useGetAdminBrandsQuery,
-  useGetAdminCategoriesQuery,
-  useGetAdminCollectionsQuery,
   useGetAdminProductsQuery,
   useGetAdminSuppliersQuery,
   useGetAdminVendorsQuery,
@@ -95,11 +97,11 @@ const AdminProductListPage = () => {
 
   const { data, isFetching, isLoading, isError, error, refetch } = useGetAdminProductsQuery(queryArgs)
 
-  const { data: categories = [], isLoading: categoriesLoading } = useGetAdminCategoriesQuery()
-  const { data: brands = [], isLoading: brandsLoading } = useGetAdminBrandsQuery()
+  const { data: categories = [], isLoading: categoriesLoading } = useGetCategoriesQuery()
+  const { data: brands = [], isLoading: brandsLoading } = useGetBrandsQuery()
   const { data: suppliers = [], isLoading: suppliersLoading } = useGetAdminSuppliersQuery()
   const { data: vendors = [], isLoading: vendorsLoading } = useGetAdminVendorsQuery()
-  const { data: collections = [], isLoading: collectionsLoading } = useGetAdminCollectionsQuery()
+  const { data: collections = [], isLoading: collectionsLoading } = useGetCollectionsQuery()
 
   const [bulkAction, { isLoading: bulkBusy }] = useBulkProductActionMutation()
   const [deleteProduct] = useDeleteProductMutation()

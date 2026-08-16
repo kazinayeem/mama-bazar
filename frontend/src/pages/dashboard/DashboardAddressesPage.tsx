@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import LoadingBlock from '../../components/common/LoadingBlock'
-import { api } from '../../lib/api'
 import { useAppSelector } from '../../store/hooks'
-import type { UserAddress } from '../../types'
+import {
+  useCreateMyAddressMutation,
+  useDeleteMyAddressMutation,
+  useGetMyAddressesQuery,
+  useUpdateMyAddressMutation,
+} from '../../store/services/commerceApi'
 import { SEO } from '../../components/common/SEO'
 
 const DashboardAddressesPage = () => {
   const { user } = useAppSelector((state) => state.auth)
-  const [addresses, setAddresses] = useState<UserAddress[]>([])
-  const [addressesLoading, setAddressesLoading] = useState(false)
+  const { data: addressesData, isLoading: addressesLoading } = useGetMyAddressesQuery()
+  const addresses = addressesData || []
   const [addressSaving, setAddressSaving] = useState(false)
   const [addressMessage, setAddressMessage] = useState<string | null>(null)
   const [addressError, setAddressError] = useState<string | null>(null)
@@ -17,28 +21,14 @@ const DashboardAddressesPage = () => {
   const [addressPhone, setAddressPhone] = useState('')
   const [addressArea, setAddressArea] = useState('')
   const [addressText, setAddressText] = useState('')
-
-  const loadAddresses = async () => {
-    setAddressesLoading(true)
-    setAddressError(null)
-    try {
-      const list = await api.getMyAddresses()
-      setAddresses(list)
-    } catch (loadError) {
-      setAddressError(loadError instanceof Error ? loadError.message : 'Failed to load addresses')
-    } finally {
-      setAddressesLoading(false)
-    }
-  }
+  const [createMyAddress] = useCreateMyAddressMutation()
+  const [updateMyAddress] = useUpdateMyAddressMutation()
+  const [deleteMyAddress] = useDeleteMyAddressMutation()
 
   useEffect(() => {
     setRecipientName(user?.name || '')
     setAddressPhone(user?.phone || '')
   }, [user])
-
-  useEffect(() => {
-    loadAddresses()
-  }, [])
 
   const submitAddress = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -51,14 +41,13 @@ const DashboardAddressesPage = () => {
         throw new Error('Maximum 5 addresses allowed')
       }
 
-      const list = await api.createMyAddress({
+      await createMyAddress({
         recipientName,
         phone: addressPhone,
         shippingArea: addressArea,
         address: addressText,
-      })
+      }).unwrap()
 
-      setAddresses(list)
       setAddressArea('')
       setAddressText('')
       setAddressMessage('Address added successfully.')
@@ -73,8 +62,7 @@ const DashboardAddressesPage = () => {
     setAddressError(null)
     setAddressMessage(null)
     try {
-      const list = await api.updateMyAddress(id, { isDefault: true })
-      setAddresses(list)
+      await updateMyAddress({ id, payload: { isDefault: true } }).unwrap()
       setAddressMessage('Default address updated.')
     } catch (setDefaultError) {
       setAddressError(setDefaultError instanceof Error ? setDefaultError.message : 'Failed to update default address')
@@ -85,8 +73,7 @@ const DashboardAddressesPage = () => {
     setAddressError(null)
     setAddressMessage(null)
     try {
-      const list = await api.deleteMyAddress(id)
-      setAddresses(list)
+      await deleteMyAddress(id).unwrap()
       setAddressMessage('Address removed.')
     } catch (removeError) {
       setAddressError(removeError instanceof Error ? removeError.message : 'Failed to remove address')

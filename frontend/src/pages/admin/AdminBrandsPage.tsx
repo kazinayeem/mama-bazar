@@ -27,9 +27,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import SmartImage from '@/components/common/SmartImage'
 import CropImageField from '@/components/admin/CropImageField'
 import UsageAlertDialog from '@/components/admin/UsageAlertDialog'
+import { useGetBrandsQuery } from '@/store/services/commerceApi'
 import {
   useLazyGetAdminBrandsAdminQuery,
-  useGetAdminBrandsQuery,
   useCreateBrandMutation,
   useUpdateBrandMutation,
   useDeleteBrandMutation,
@@ -42,7 +42,7 @@ import { SEO } from '../../components/common/SEO'
 const PAGE_SIZE = 20
 
 const AdminBrandsPage = () => {
-  const { data: allBrands = [] } = useGetAdminBrandsQuery()
+  const { data: allBrands = [] } = useGetBrandsQuery()
   const [trigger] = useLazyGetAdminBrandsAdminQuery()
   const [createBrand] = useCreateBrandMutation()
   const [updateBrand] = useUpdateBrandMutation()

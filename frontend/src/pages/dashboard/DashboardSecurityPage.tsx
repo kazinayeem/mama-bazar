@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { api } from '../../lib/api'
+import { useChangeMyPasswordMutation } from '../../store/services/commerceApi'
 import { SEO } from '../../components/common/SEO'
 
 const DashboardSecurityPage = () => {
@@ -9,6 +9,7 @@ const DashboardSecurityPage = () => {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [changeMyPassword] = useChangeMyPasswordMutation()
 
   const submitPassword = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -17,7 +18,7 @@ const DashboardSecurityPage = () => {
     setMessage(null)
 
     try {
-      const response = await api.changeMyPassword({ oldPassword, newPassword })
+      const response = await changeMyPassword({ oldPassword, newPassword }).unwrap()
       setMessage(response.message)
       setOldPassword('')
       setNewPassword('')
