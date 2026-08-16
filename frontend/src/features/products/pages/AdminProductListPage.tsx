@@ -41,7 +41,7 @@ import { useAppDispatch } from '@/store/hooks'
 import { store } from '@/store'
 import type { AdminProduct, AdminProductFilters, AdminProductListResult, ProductBulkAction } from '@/types/admin'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 const BULK_STATUS_MAP: Record<string, { productStatus: 'draft' | 'published' | 'hidden' | 'archived'; status: 'active' | 'inactive' }> = {
   publish: { productStatus: 'published', status: 'active' },
