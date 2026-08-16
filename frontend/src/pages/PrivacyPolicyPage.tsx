@@ -1,4 +1,5 @@
 import StaticInfoLayout from '@/components/layout/StaticInfoLayout'
+import { useGetStoreInfoQuery } from '@/store/services/commerceApi'
 
 const SectionHeading = ({ id, bangla, english }: { id: string; bangla: string; english: string }) => (
   <div id={id} className="scroll-mt-28">
@@ -8,6 +9,8 @@ const SectionHeading = ({ id, bangla, english }: { id: string; bangla: string; e
 )
 
 const PrivacyPolicyPage = () => {
+  const { data: storeInfo } = useGetStoreInfoQuery()
+  const storeEmail = storeInfo?.email || 'support@mamabazar.com'
   return (
     <StaticInfoLayout
       kicker="Privacy Policy"
@@ -122,8 +125,8 @@ const PrivacyPolicyPage = () => {
         <SectionHeading id="contact" bangla="যোগাযোগ" english="Contact Information" />
         <p className="mt-3 text-[15px] leading-7 text-slate-700">
           For any privacy-related questions, contact us at{' '}
-          <a className="font-medium text-brand-orange-500 underline underline-offset-4" href="mailto:support@mamabazar.com">
-            support@mamabazar.com
+          <a className="font-medium text-brand-orange-500 underline underline-offset-4" href={`mailto:${storeEmail}`}>
+            {storeEmail}
           </a>{' '}
           or via our Contact page.
         </p>

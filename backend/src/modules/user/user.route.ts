@@ -3,6 +3,7 @@ import {
 	register,
 	login,
 	devLogin,
+	createAdmin,
 	getProfile,
 	updateProfile,
 	getOrderHistory,
@@ -22,6 +23,7 @@ import { validate } from "../../middleware/validate";
 import {
 	registerSchema,
 	loginSchema,
+	createAdminSchema,
 	passwordResetRequestSchema,
 	passwordResetSchema,
 	changePasswordSchema,
@@ -53,6 +55,7 @@ router.put("/addresses/:id", authMiddleware, validate(updateAddressSchema), asyn
 router.delete("/addresses/:id", authMiddleware, validate(addressIdSchema), asyncHandler(deleteAddress));
 
 // Admin only
+router.post("/admin", authMiddleware, adminOnly, validate(createAdminSchema), asyncHandler(createAdmin));
 router.get("/", authMiddleware, adminOnly, asyncHandler(getAll));
 router.delete("/:id", authMiddleware, adminOnly, asyncHandler(remove));
 

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.remove = exports.getAll = exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.updateProfile = exports.getProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.devLogin = exports.login = exports.register = void 0;
+exports.remove = exports.getAll = exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.updateProfile = exports.getProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.createAdmin = exports.devLogin = exports.login = exports.register = void 0;
 const userService = __importStar(require("./user.service"));
 const register = async (req, res) => {
     const { name, phone, password } = req.body;
@@ -55,6 +55,12 @@ const devLogin = async (req, res) => {
     res.json({ success: true, data });
 };
 exports.devLogin = devLogin;
+const createAdmin = async (req, res) => {
+    const { name, email, phone, password, role } = req.body;
+    const data = await userService.createAdmin({ name, email, phone, password, role });
+    res.status(201).json({ success: true, data, message: "Admin created successfully" });
+};
+exports.createAdmin = createAdmin;
 const requestPasswordReset = async (req, res) => {
     const { phone } = req.body;
     await userService.requestPasswordReset({ phone });

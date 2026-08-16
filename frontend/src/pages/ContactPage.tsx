@@ -1,24 +1,13 @@
-import { useEffect, useState } from 'react'
-import { Clock, Loader2, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react'
+import { useState } from 'react'
+import { Loader2, Mail, MapPin, Phone, Send } from 'lucide-react'
 import StaticInfoLayout from '@/components/layout/StaticInfoLayout'
+import { useGetStoreInfoQuery } from '@/store/services/commerceApi'
 import { api } from '@/lib/api'
 
-const STATIC_CONTACT: Record<string, string> = {
-  hotline: '+880 1790-612788',
-  phone: '+880 1790-612788',
-  whatsapp: '+880 1790-612788',
-  email: 'support@mamabazar.com',
-  address: 'Dhaka, Bangladesh',
-  hours: 'Saturday – Thursday, 9:00 AM – 9:00 PM',
-}
-
-const CONTACT_ROWS: { key: string; label: string; bangla: string; icon: typeof Phone }[] = [
-  { key: 'hotline', label: 'Hotline', bangla: 'হটলাইন', icon: Phone },
+const CONTACT_ROWS: { key: 'phone' | 'email' | 'address'; label: string; bangla: string; icon: typeof Phone }[] = [
   { key: 'phone', label: 'Phone', bangla: 'ফোন', icon: Phone },
-  { key: 'whatsapp', label: 'WhatsApp', bangla: 'হোয়াটসঅ্যাপ', icon: MessageCircle },
   { key: 'email', label: 'Email', bangla: 'ইমেইল', icon: Mail },
   { key: 'address', label: 'Address', bangla: 'ঠিকানা', icon: MapPin },
-  { key: 'hours', label: 'Support Hours', bangla: 'সাপোর্ট সময়', icon: Clock },
 ]
 
 const ContactForm = () => {
@@ -144,22 +133,12 @@ const ContactForm = () => {
 }
 
 const ContactPage = () => {
-  const [info, setInfo] = useState<Record<string, string>>(STATIC_CONTACT)
-
-  useEffect(() => {
-    let mounted = true
-    api
-      .getContactSetting()
-      .then((setting) => {
-        if (mounted && setting && Object.keys(setting).length > 0) {
-          setInfo((current) => ({ ...STATIC_CONTACT, ...current, ...setting }))
-        }
-      })
-      .catch(() => {})
-    return () => {
-      mounted = false
-    }
-  }, [])
+  const { data: storeInfo } = useGetStoreInfoQuery()
+  const info: Record<string, string> = {
+    phone: storeInfo?.primaryPhone || '',
+    email: storeInfo?.email || '',
+    address: storeInfo?.contactAddress || '',
+  }
 
   return (
     <StaticInfoLayout

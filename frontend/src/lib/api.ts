@@ -289,6 +289,19 @@ export const api = {
     return raw || {}
   },
 
+  async getStoreInfo(): Promise<Record<string, string>> {
+    const res = await requestEnvelope<Record<string, string> | string>('/api/settings/store-info')
+    const raw = res.data
+    if (typeof raw === 'string') {
+      try {
+        return JSON.parse(raw)
+      } catch {
+        return {}
+      }
+    }
+    return raw || {}
+  },
+
   async submitContactMessage(payload: { name: string; phone: string; email?: string; message: string }): Promise<{ id?: number }> {
     return fetchJson('/api/pages/contact', {
       method: 'POST',

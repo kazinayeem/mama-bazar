@@ -9,16 +9,8 @@ interface AuthState {
   loading: boolean
   ordersLoading: boolean
   userOrders: UserOrderWithItems[]
-  profileFetchedAt: number | null
-  ordersFetchedAt: number | null
   error: string | null
 }
-
-type FetchOptions = {
-  force?: boolean
-}
-
-const DASHBOARD_CACHE_TTL_MS = 2 * 60 * 1000
 
 const initialState: AuthState = {
   token: authStorage.getToken(),
@@ -26,8 +18,6 @@ const initialState: AuthState = {
   loading: false,
   ordersLoading: false,
   userOrders: [],
-  profileFetchedAt: null,
-  ordersFetchedAt: null,
   error: null,
 }
 
@@ -44,36 +34,6 @@ export const registerUser = createAsyncThunk('auth/registerUser', async (payload
   return api.login({ phone: payload.phone, password: payload.password })
 })
 
-export const fetchMyProfile = createAsyncThunk<AuthUser, FetchOptions | undefined, { state: { auth: AuthState } }>(
-  'auth/fetchMyProfile',
-  async () => {
-    return api.getMyProfile()
-  },
-  {
-    condition: (options, { getState }) => {
-      if (options?.force) return true
-      const state = getState().auth
-      if (!state.user || !state.profileFetchedAt) return true
-      return Date.now() - state.profileFetchedAt > DASHBOARD_CACHE_TTL_MS
-    },
-  },
-)
-
-export const fetchMyOrders = createAsyncThunk<UserOrderWithItems[], FetchOptions | undefined, { state: { auth: AuthState } }>(
-  'auth/fetchMyOrders',
-  async () => {
-    return api.getMyOrders()
-  },
-  {
-    condition: (options, { getState }) => {
-      if (options?.force) return true
-      const state = getState().auth
-      if (!state.ordersFetchedAt) return true
-      return Date.now() - state.ordersFetchedAt > DASHBOARD_CACHE_TTL_MS
-    },
-  },
-)
-
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -82,16 +42,24 @@ const authSlice = createSlice({
       state.token = action.payload.token
       state.user = action.payload.user
       state.error = null
-      state.profileFetchedAt = Date.now()
       authStorage.setToken(action.payload.token)
       authStorage.setUser(action.payload.user)
+    },
+    setAuthUser: (state, action: { payload: AuthUser | null }) => {
+      state.user = action.payload
+      if (action.payload) authStorage.setUser(action.payload)
+      else authStorage.clearUser()
+    },
+    setAuthOrders: (state, action: { payload: UserOrderWithItems[] }) => {
+      state.userOrders = action.payload
+    },
+    setAuthOrdersLoading: (state, action: { payload: boolean }) => {
+      state.ordersLoading = action.payload
     },
     logout: (state) => {
       state.token = null
       state.user = null
       state.userOrders = []
-      state.profileFetchedAt = null
-      state.ordersFetchedAt = null
       state.error = null
       authStorage.clearToken()
       authStorage.clearUser()

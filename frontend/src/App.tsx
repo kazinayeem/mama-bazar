@@ -17,6 +17,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const PolicyPage = lazy(() => import('./pages/PolicyPage'))
+const FaqPage = lazy(() => import('./pages/FaqPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
@@ -92,7 +93,7 @@ function App() {
           <Route path="payment-policy" element={<PolicyPage slug="payment" />} />
           <Route path="cancellation-policy" element={<PolicyPage slug="cancellation" />} />
           <Route path="warranty-policy" element={<PolicyPage slug="warranty" />} />
-          <Route path="faq" element={<PolicyPage slug="faq" />} />
+          <Route path="faq" element={<FaqPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route
             path="dashboard"

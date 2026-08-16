@@ -527,3 +527,13 @@ export interface UserOrderItem {
 export interface UserOrderWithItems extends Order {
   items?: UserOrderItem[]
 }
+
+export interface StoreInfo {
+  storeName: string
+  email: string
+  primaryPhone: string
+  alternativePhone: string
+  contactAddress: string
+  city: string
+  country: string
+}

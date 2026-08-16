@@ -479,6 +479,7 @@ exports.users = (0, mysql_core_1.mysqlTable)("users", {
     name: (0, mysql_core_1.varchar)("name", { length: 255 }).notNull(),
     password: (0, mysql_core_1.varchar)("password", { length: 255 }).notNull(),
     phone: (0, mysql_core_1.varchar)("phone", { length: 20 }).notNull().unique(),
+    email: (0, mysql_core_1.varchar)("email", { length: 255 }),
     shippingArea: (0, mysql_core_1.varchar)("shipping_area", { length: 100 }),
     shippingAddress: (0, mysql_core_1.text)("shipping_address"),
     role: (0, mysql_core_1.mysqlEnum)("role", ["admin", "manager", "user"]).default("user").notNull(),

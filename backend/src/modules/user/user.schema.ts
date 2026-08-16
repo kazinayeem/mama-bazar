@@ -71,3 +71,19 @@ export const updateAddressSchema = z.object({
 export const addressIdSchema = z.object({
   params: z.object({ id: z.string() }),
 });
+
+export const createAdminSchema = z.object({
+  body: z
+    .object({
+      name: z.string().min(1, "Name is required"),
+      email: z.string().min(1, "Email is required").email("Invalid email address"),
+      phone: z.string().regex(phoneRegex, "Invalid phone number. Use format: 01XXXXXXXXX or +880XXXXXXXXX"),
+      password: z.string().min(6, "Password must be at least 6 characters"),
+      confirmPassword: z.string(),
+      role: z.enum(["admin", "manager"]).default("admin"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    }),
+});

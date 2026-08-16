@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ImagePlus, Loader2, Trash2 } from 'lucide-react'
+import { ImagePlus, Loader2, Trash2, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminLayout from '../../components/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,13 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,15 +33,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { adminApi } from '@/lib/adminApi'
+import { useAppDispatch } from '@/store/hooks'
+import { commerceApi } from '@/store/services/commerceApi'
 import MediaPicker from '@/components/admin/MediaPicker'
 import type { AdminCustomer, Banner } from '@/types/admin'
 import { SEO } from '../../components/common/SEO'
-
-type ShippingZone = {
-  zone: string
-  rate: string
-  deliveryDays: string
-}
 
 const defaultPaymentMethods = [
   { name: 'bKash', enabled: true, icon: '💳' },
@@ -43,13 +46,8 @@ const defaultPaymentMethods = [
   { name: 'Credit Card', enabled: false, icon: '💰' },
 ]
 
-const defaultShipping: ShippingZone[] = [
-  { zone: 'Dhaka', rate: '50', deliveryDays: '1-2' },
-  { zone: 'Outside Dhaka', rate: '100', deliveryDays: '3-5' },
-  { zone: 'Hill Tracts', rate: '150', deliveryDays: '5-7' },
-]
-
 const AdminSettingsPage = () => {
+  const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(true)
   const [admins, setAdmins] = useState<AdminCustomer[]>([])
   const [removeAdminTarget, setRemoveAdminTarget] = useState<AdminCustomer | null>(null)
@@ -62,11 +60,14 @@ const AdminSettingsPage = () => {
   const [bannerImage, setBannerImage] = useState('')
 
   const [paymentMethods, setPaymentMethods] = useState(defaultPaymentMethods)
-  const [shippingZones, setShippingZones] = useState(defaultShipping)
   const [storeInfo, setStoreInfo] = useState({
     storeName: 'Mama Bazar',
     email: '',
-    phone: '',
+    primaryPhone: '',
+    alternativePhone: '',
+    contactAddress: '',
+    city: '',
+    country: '',
   })
   const [taxRate, setTaxRate] = useState('0')
   const [applyTaxToShipping, setApplyTaxToShipping] = useState(true)
@@ -74,6 +75,18 @@ const AdminSettingsPage = () => {
   const [pixelId, setPixelId] = useState('')
   const [pixelEnabled, setPixelEnabled] = useState(false)
   const [pixelSaving, setPixelSaving] = useState(false)
+
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false)
+  const [adminSaving, setAdminSaving] = useState(false)
+  const [adminErrors, setAdminErrors] = useState<Record<string, string>>({})
+  const [adminForm, setAdminForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    role: 'admin' as 'admin' | 'manager',
+  })
 
   const settingsMap = useMemo(() => new Map<string, string>(), [])
 
@@ -102,7 +115,11 @@ const AdminSettingsPage = () => {
           setStoreInfo({
             storeName: parsed.storeName || 'Mama Bazar',
             email: parsed.email || '',
-            phone: parsed.phone || '',
+            primaryPhone: parsed.primaryPhone || '',
+            alternativePhone: parsed.alternativePhone || '',
+            contactAddress: parsed.contactAddress || '',
+            city: parsed.city || '',
+            country: parsed.country || '',
           })
         } catch {
           /* ignore malformed value */
@@ -129,16 +146,6 @@ const AdminSettingsPage = () => {
           /* ignore malformed value */
         }
       }
-
-      const savedShipping = settingsMap.get('shipping_zones')
-      if (savedShipping) {
-        try {
-          const parsed = JSON.parse(savedShipping)
-          if (Array.isArray(parsed)) setShippingZones(parsed)
-        } catch {
-          /* ignore malformed value */
-        }
-      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load settings')
     } finally {
@@ -153,7 +160,8 @@ const AdminSettingsPage = () => {
   const saveStoreInfo = async () => {
     try {
       await adminApi.setSetting('store_info', JSON.stringify(storeInfo))
-      toast.success('Store information saved')
+      dispatch(commerceApi.util.invalidateTags([{ type: 'StoreInfo', id: 'DETAIL' }]))
+      toast.success('Store information updated successfully.')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save store info')
     }
@@ -183,15 +191,6 @@ const AdminSettingsPage = () => {
     }
   }
 
-  const saveShippingSettings = async () => {
-    try {
-      await adminApi.setSetting('shipping_zones', JSON.stringify(shippingZones))
-      toast.success('Shipping settings saved')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save shipping settings')
-    }
-  }
-
   const savePixelSettings = async () => {
     const id = pixelId.trim()
     if (id && !/^\d{10,20}$/.test(id)) {
@@ -213,6 +212,52 @@ const AdminSettingsPage = () => {
       toast.error(err instanceof Error ? err.message : 'Failed to save Meta Pixel settings')
     } finally {
       setPixelSaving(false)
+    }
+  }
+
+  const updateAdminForm = (key: keyof typeof adminForm, value: string) => {
+    setAdminForm((prev) => ({ ...prev, [key]: value }) as typeof adminForm)
+    setAdminErrors((prev) => ({ ...prev, [key]: '' }))
+  }
+
+  const validateAdminForm = () => {
+    const errors: Record<string, string> = {}
+    if (!adminForm.name.trim()) errors.name = 'Name is required.'
+    if (!adminForm.email.trim()) errors.email = 'Email is required.'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminForm.email.trim())) errors.email = 'Invalid email address.'
+    if (!adminForm.phone.trim()) errors.phone = 'Phone number is required.'
+    else if (!/^(\+880|0)[1-9]\d{9}$/.test(adminForm.phone.trim()))
+      errors.phone = 'Enter a valid Bangladeshi phone number (01XXXXXXXXX).'
+    if (!adminForm.password) errors.password = 'Password is required.'
+    else if (adminForm.password.length < 6) errors.password = 'Password must be at least 6 characters.'
+    if (adminForm.confirmPassword !== adminForm.password) errors.confirmPassword = 'Passwords do not match.'
+    return errors
+  }
+
+  const handleCreateAdmin = async () => {
+    const errors = validateAdminForm()
+    setAdminErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
+    setAdminSaving(true)
+    try {
+      await adminApi.createAdmin({
+        name: adminForm.name.trim(),
+        email: adminForm.email.trim(),
+        phone: adminForm.phone.trim(),
+        password: adminForm.password,
+        role: adminForm.role,
+      })
+      toast.success('Admin created successfully.')
+      setAdminDialogOpen(false)
+      setAdminForm({ name: '', email: '', phone: '', password: '', confirmPassword: '', role: 'admin' })
+      setAdminErrors({})
+      const customers = await adminApi.getCustomers()
+      setAdmins(customers.data.filter((user) => user.role === 'admin' || user.role === 'manager'))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create admin.')
+    } finally {
+      setAdminSaving(false)
     }
   }
 
@@ -371,39 +416,10 @@ const AdminSettingsPage = () => {
           </div>
 
           <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold">Shipping Zones</h2>
-            <div className="space-y-3">
-              {shippingZones.map((zone, index) => (
-                <div key={zone.zone} className="rounded-lg border p-3">
-                  <p className="mb-2 font-medium">{zone.zone}</p>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <Input
-                      value={zone.rate}
-                      onChange={(e) =>
-                        setShippingZones((prev) => prev.map((item, idx) => (idx === index ? { ...item, rate: e.target.value } : item)))
-                      }
-                      placeholder="Rate"
-                    />
-                    <Input
-                      value={zone.deliveryDays}
-                      onChange={(e) =>
-                        setShippingZones((prev) =>
-                          prev.map((item, idx) => (idx === index ? { ...item, deliveryDays: e.target.value } : item)),
-                        )
-                      }
-                      placeholder="Delivery days"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Button className="mt-4 w-full" onClick={saveShippingSettings}>
-              Save Shipping Rules
-            </Button>
-          </div>
-
-          <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold">Store Information</h2>
+            <h2 className="mb-1 text-lg font-bold">Store Contact & Business Information</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Used across the website (footer, contact page, invoice, and support areas). This is the single source of truth for store contact details.
+            </p>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="store-name">Store Name</Label>
@@ -415,7 +431,7 @@ const AdminSettingsPage = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="store-email">Email</Label>
+                <Label htmlFor="store-email">Store Email</Label>
                 <Input
                   id="store-email"
                   type="email"
@@ -424,18 +440,60 @@ const AdminSettingsPage = () => {
                   className="mt-1"
                 />
               </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="store-primary-phone">Primary Phone</Label>
+                  <Input
+                    id="store-primary-phone"
+                    type="tel"
+                    value={storeInfo.primaryPhone}
+                    onChange={(e) => setStoreInfo((prev) => ({ ...prev, primaryPhone: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="store-alternative-phone">Alternative Phone</Label>
+                  <Input
+                    id="store-alternative-phone"
+                    type="tel"
+                    value={storeInfo.alternativePhone}
+                    onChange={(e) => setStoreInfo((prev) => ({ ...prev, alternativePhone: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
               <div>
-                <Label htmlFor="store-phone">Phone</Label>
+                <Label htmlFor="store-address">Contact Address</Label>
                 <Input
-                  id="store-phone"
-                  type="tel"
-                  value={storeInfo.phone}
-                  onChange={(e) => setStoreInfo((prev) => ({ ...prev, phone: e.target.value }))}
+                  id="store-address"
+                  value={storeInfo.contactAddress}
+                  onChange={(e) => setStoreInfo((prev) => ({ ...prev, contactAddress: e.target.value }))}
+                  placeholder="House/Road/Area, City, Bangladesh"
                   className="mt-1"
                 />
               </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="store-city">City</Label>
+                  <Input
+                    id="store-city"
+                    value={storeInfo.city}
+                    onChange={(e) => setStoreInfo((prev) => ({ ...prev, city: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="store-country">Country</Label>
+                  <Input
+                    id="store-country"
+                    value={storeInfo.country}
+                    onChange={(e) => setStoreInfo((prev) => ({ ...prev, country: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
               <Button className="w-full" onClick={saveStoreInfo}>
-                Save Store Info
+                Save Store Information
               </Button>
             </div>
           </div>
@@ -491,14 +549,20 @@ const AdminSettingsPage = () => {
           </div>
 
           <div className="rounded-xl border bg-card p-6 shadow-sm md:col-span-2">
-            <h2 className="mb-4 text-lg font-bold">Admin Users</h2>
-            <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-lg font-bold">Admin Users</h2>
+              <Button onClick={() => setAdminDialogOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" /> Add Admin
+              </Button>
+            </div>
+            <div className="mt-4 space-y-3">
               {admins.length === 0 && <p className="text-sm text-muted-foreground">No admin users found.</p>}
               {admins.map((user) => (
                 <div key={user.id} className="flex items-center justify-between border-b pb-3 last:border-0">
                   <div>
                     <p className="font-medium">{user.name}</p>
                     <p className="text-xs text-muted-foreground">{user.phone}</p>
+                    {user.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs font-medium uppercase text-muted-foreground">{user.role}</span>
@@ -564,6 +628,95 @@ const AdminSettingsPage = () => {
           setPickerOpen(false)
         }}
       />
+
+      <Dialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Admin</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="admin-name">Full Name</Label>
+              <Input
+                id="admin-name"
+                value={adminForm.name}
+                onChange={(e) => updateAdminForm('name', e.target.value)}
+                placeholder="e.g. Rahim Uddin"
+                className="mt-1"
+              />
+              {adminErrors.name && <p className="mt-1 text-xs text-destructive">{adminErrors.name}</p>}
+            </div>
+            <div>
+              <Label htmlFor="admin-email">Email</Label>
+              <Input
+                id="admin-email"
+                type="email"
+                value={adminForm.email}
+                onChange={(e) => updateAdminForm('email', e.target.value)}
+                placeholder="e.g. admin@mamabazar.com"
+                className="mt-1"
+              />
+              {adminErrors.email && <p className="mt-1 text-xs text-destructive">{adminErrors.email}</p>}
+            </div>
+            <div>
+              <Label htmlFor="admin-phone">Phone Number</Label>
+              <Input
+                id="admin-phone"
+                type="tel"
+                value={adminForm.phone}
+                onChange={(e) => updateAdminForm('phone', e.target.value)}
+                placeholder="e.g. 01712345678"
+                className="mt-1"
+              />
+              {adminErrors.phone && <p className="mt-1 text-xs text-destructive">{adminErrors.phone}</p>}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="admin-password">Password</Label>
+                <Input
+                  id="admin-password"
+                  type="password"
+                  value={adminForm.password}
+                  onChange={(e) => updateAdminForm('password', e.target.value)}
+                  placeholder="Min. 6 characters"
+                  className="mt-1"
+                />
+                {adminErrors.password && <p className="mt-1 text-xs text-destructive">{adminErrors.password}</p>}
+              </div>
+              <div>
+                <Label htmlFor="admin-confirm-password">Confirm Password</Label>
+                <Input
+                  id="admin-confirm-password"
+                  type="password"
+                  value={adminForm.confirmPassword}
+                  onChange={(e) => updateAdminForm('confirmPassword', e.target.value)}
+                  className="mt-1"
+                />
+                {adminErrors.confirmPassword && <p className="mt-1 text-xs text-destructive">{adminErrors.confirmPassword}</p>}
+              </div>
+            </div>
+            <div>
+              <Label>Role</Label>
+              <Select value={adminForm.role} onValueChange={(value) => updateAdminForm('role', value)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdminDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateAdmin} disabled={adminSaving}>
+              {adminSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add Admin
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={removeAdminTarget !== null} onOpenChange={(open) => !open && setRemoveAdminTarget(null)}>
         <AlertDialogContent>

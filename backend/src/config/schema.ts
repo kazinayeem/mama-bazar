@@ -518,6 +518,7 @@ export const users = mysqlTable("users", {
   name: varchar("name", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 20 }).notNull().unique(),
+  email: varchar("email", { length: 255 }),
   shippingArea: varchar("shipping_area", { length: 100 }),
   shippingAddress: text("shipping_address"),
   role: mysqlEnum("role", ["admin", "manager", "user"]).default("user").notNull(),

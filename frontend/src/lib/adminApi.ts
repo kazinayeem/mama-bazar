@@ -566,6 +566,20 @@ export const adminApi = {
     await requestJson(`/api/users/${id}`, { method: 'DELETE' })
   },
 
+  async createAdmin(payload: {
+    name: string
+    email: string
+    phone: string
+    password: string
+    role: 'admin' | 'manager'
+  }): Promise<AdminCustomer> {
+    const env = await requestJson<AdminCustomer>('/api/users/admin', {
+      method: 'POST',
+      body: JSON.stringify({ ...payload, confirmPassword: payload.password }),
+    })
+    return env.data!
+  },
+
   // ==================== Coupons ====================
   async getCoupons(): Promise<AdminCoupon[]> {
     const env = await requestJson<AdminCoupon[]>('/api/coupons')

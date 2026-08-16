@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { AdminOrder } from '@/types/admin'
 import type { UserOrderWithItems } from '@/types'
+import { useGetStoreInfoQuery } from '@/store/services/commerceApi'
 
 type InvoiceOrder = AdminOrder | UserOrderWithItems
 
@@ -64,6 +65,12 @@ const formatDate = (date: string | Date) => {
 }
 
 const InvoiceTemplate = ({ order, showActions = false, onDownload, onPrint }: InvoiceTemplateProps) => {
+  const { data: storeInfo } = useGetStoreInfoQuery()
+  const storeName = storeInfo?.storeName || 'Mama Bazar'
+  const storePhone = storeInfo?.primaryPhone || ''
+  const storeEmail = storeInfo?.email || ''
+  const storeAddress = storeInfo?.contactAddress || ''
+
   const items = useMemo(() => {
     return order.items || []
   }, [order.items])
@@ -154,7 +161,7 @@ const InvoiceTemplate = ({ order, showActions = false, onDownload, onPrint }: In
               />
               <div>
                 <div style={{ fontSize: '18px', fontWeight: 800, color: '#064E3B', letterSpacing: '-0.02em' }}>
-                  <span style={{ color: '#176B3A' }}>Mama</span><span style={{ color: '#F47B20' }}>Bazar</span>
+                  {storeName}
                 </div>
                 <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                   Home Appliances & Gadgets
@@ -181,10 +188,10 @@ const InvoiceTemplate = ({ order, showActions = false, onDownload, onPrint }: In
                 From
               </div>
               <div style={{ fontSize: '11px', lineHeight: '1.6', color: '#374151' }}>
-                <div style={{ fontWeight: 700 }}>Mama Bazar</div>
-                <div>Dhanmondi, Dhaka, Bangladesh</div>
-                <div>Phone: +880 1XXX-XXXXXX</div>
-                <div>Email: support@mamabazar.com</div>
+                <div style={{ fontWeight: 700 }}>{storeName}</div>
+                {storeAddress && <div>{storeAddress}</div>}
+                {storePhone && <div>Phone: {storePhone}</div>}
+                {storeEmail && <div>Email: {storeEmail}</div>}
                 <div>Web: www.mamabazar.com</div>
               </div>
             </div>
@@ -383,8 +390,8 @@ const InvoiceTemplate = ({ order, showActions = false, onDownload, onPrint }: In
             color: '#6b7280',
           }}>
             <div style={{ lineHeight: '1.6' }}>
-              <div style={{ fontWeight: 600, color: '#064E3B', marginBottom: '2px' }}>Thank you for shopping with Mama Bazar!</div>
-              <div>For support: +880 1XXX-XXXXXX | support@mamabazar.com</div>
+              <div style={{ fontWeight: 600, color: '#064E3B', marginBottom: '2px' }}>Thank you for shopping with {storeName}!</div>
+              <div>For support: {storePhone}{storePhone && storeEmail ? ' | ' : ''}{storeEmail}</div>
               <div>Terms & conditions apply. Return policy at www.mamabazar.com/return-refund</div>
             </div>
             <div style={{ textAlign: 'right', fontSize: '8px', color: '#9ca3af' }}>

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.getProfile = exports.updateProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.remove = exports.getById = exports.getAll = exports.devLogin = exports.login = exports.register = void 0;
+exports.deleteAddress = exports.updateAddress = exports.createAddress = exports.getAddresses = exports.getOrderHistory = exports.getProfile = exports.updateProfile = exports.changePassword = exports.resetPassword = exports.requestPasswordReset = exports.remove = exports.getById = exports.getAll = exports.devLogin = exports.login = exports.createAdmin = exports.register = void 0;
 const db_1 = require("../../config/db");
 const schema_1 = require("../../config/schema");
 const drizzle_orm_1 = require("drizzle-orm");
@@ -50,6 +50,34 @@ const register = async (data) => {
     return { id: result[0].insertId, name: data.name, phone: data.phone };
 };
 exports.register = register;
+const createAdmin = async (data) => {
+    const existingByPhone = await db_1.db.select().from(schema_1.users).where((0, drizzle_orm_1.eq)(schema_1.users.phone, data.phone)).limit(1);
+    if (existingByPhone[0])
+        throw new AppError_1.AppError(409, "An account with this phone number already exists");
+    const existingByEmail = await db_1.db
+        .select()
+        .from(schema_1.users)
+        .where((0, drizzle_orm_1.eq)(schema_1.users.email, data.email))
+        .limit(1);
+    if (existingByEmail[0])
+        throw new AppError_1.AppError(409, "An admin with this email already exists");
+    const hashedPassword = await bcryptjs_1.default.hash(data.password, SALT_ROUNDS);
+    const result = await db_1.db.insert(schema_1.users).values({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: hashedPassword,
+        role: data.role,
+    });
+    return {
+        id: result[0].insertId,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+    };
+};
+exports.createAdmin = createAdmin;
 const login = async (data) => {
     const rows = await db_1.db.select().from(schema_1.users).where((0, drizzle_orm_1.eq)(schema_1.users.phone, data.phone)).limit(1);
     const user = rows[0];

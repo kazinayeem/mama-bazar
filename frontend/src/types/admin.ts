@@ -449,6 +449,7 @@ export interface AdminCustomer {
   id: number
   name: string
   phone: string
+  email?: string | null
   role: UserRole
   shippingArea?: string | null
   shippingAddress?: string | null

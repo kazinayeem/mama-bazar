@@ -245,4 +245,60 @@ export declare const addressIdSchema: z.ZodObject<{
         id: string;
     };
 }>;
+export declare const createAdminSchema: z.ZodObject<{
+    body: z.ZodEffects<z.ZodObject<{
+        name: z.ZodString;
+        email: z.ZodString;
+        phone: z.ZodString;
+        password: z.ZodString;
+        confirmPassword: z.ZodString;
+        role: z.ZodDefault<z.ZodEnum<["admin", "manager"]>>;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        phone: string;
+        email: string;
+        password: string;
+        role: "admin" | "manager";
+        confirmPassword: string;
+    }, {
+        name: string;
+        phone: string;
+        email: string;
+        password: string;
+        confirmPassword: string;
+        role?: "admin" | "manager" | undefined;
+    }>, {
+        name: string;
+        phone: string;
+        email: string;
+        password: string;
+        role: "admin" | "manager";
+        confirmPassword: string;
+    }, {
+        name: string;
+        phone: string;
+        email: string;
+        password: string;
+        confirmPassword: string;
+        role?: "admin" | "manager" | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    body: {
+        name: string;
+        phone: string;
+        email: string;
+        password: string;
+        role: "admin" | "manager";
+        confirmPassword: string;
+    };
+}, {
+    body: {
+        name: string;
+        phone: string;
+        email: string;
+        password: string;
+        confirmPassword: string;
+        role?: "admin" | "manager" | undefined;
+    };
+}>;
 //# sourceMappingURL=user.schema.d.ts.map

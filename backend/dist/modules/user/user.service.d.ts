@@ -4,6 +4,19 @@ export declare const register: (data: CreateUserInput) => Promise<{
     name: string;
     phone: string;
 }>;
+export declare const createAdmin: (data: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    role: string;
+}) => Promise<{
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+}>;
 export declare const login: (data: LoginInput) => Promise<{
     token: string;
     user: {
@@ -33,6 +46,7 @@ export declare const getAll: () => Promise<{
     status: "active" | "inactive";
     createdAt: Date;
     phone: string;
+    email: string | null;
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";
@@ -45,6 +59,7 @@ export declare const getById: (id: number) => Promise<{
     status: "active" | "inactive";
     createdAt: Date;
     phone: string;
+    email: string | null;
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";
@@ -79,6 +94,7 @@ export declare const updateProfile: (userId: number, data: UpdateProfileInput) =
     status: "active" | "inactive";
     createdAt: Date;
     phone: string;
+    email: string | null;
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";
@@ -89,6 +105,7 @@ export declare const getProfile: (userId: number) => Promise<{
     status: "active" | "inactive";
     createdAt: Date;
     phone: string;
+    email: string | null;
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";

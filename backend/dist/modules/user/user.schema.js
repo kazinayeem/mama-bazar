@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addressIdSchema = exports.updateAddressSchema = exports.createAddressSchema = exports.updateProfileSchema = exports.changePasswordSchema = exports.passwordResetSchema = exports.passwordResetRequestSchema = exports.loginSchema = exports.registerSchema = void 0;
+exports.createAdminSchema = exports.addressIdSchema = exports.updateAddressSchema = exports.createAddressSchema = exports.updateProfileSchema = exports.changePasswordSchema = exports.passwordResetSchema = exports.passwordResetRequestSchema = exports.loginSchema = exports.registerSchema = void 0;
 const zod_1 = require("zod");
 // Phone validation regex for Bangladesh numbers: 01XXXXXXXXX or +880XXXXXXXXX
 const phoneRegex = /^(\+880|0)[1-9]\d{9}$/;
@@ -63,5 +63,20 @@ exports.updateAddressSchema = zod_1.z.object({
 });
 exports.addressIdSchema = zod_1.z.object({
     params: zod_1.z.object({ id: zod_1.z.string() }),
+});
+exports.createAdminSchema = zod_1.z.object({
+    body: zod_1.z
+        .object({
+        name: zod_1.z.string().min(1, "Name is required"),
+        email: zod_1.z.string().min(1, "Email is required").email("Invalid email address"),
+        phone: zod_1.z.string().regex(phoneRegex, "Invalid phone number. Use format: 01XXXXXXXXX or +880XXXXXXXXX"),
+        password: zod_1.z.string().min(6, "Password must be at least 6 characters"),
+        confirmPassword: zod_1.z.string(),
+        role: zod_1.z.enum(["admin", "manager"]).default("admin"),
+    })
+        .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+    }),
 });
 //# sourceMappingURL=user.schema.js.map

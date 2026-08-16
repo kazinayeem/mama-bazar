@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAll, get, set, getHeroSlides, addHeroSlide, deleteHeroSlide, addHeroSlideByLink } from "./settings.controller";
+import { getAll, get, set, getStoreInfo, getHeroSlides, addHeroSlide, deleteHeroSlide, addHeroSlideByLink } from "./settings.controller";
 import { authMiddleware, adminOnly } from "../../middleware/auth";
 import { asyncHandler } from "../../middleware/asyncHandler";
 import { validate } from "../../middleware/validate";
@@ -11,6 +11,7 @@ const router = Router();
 // Public
 router.get("/", asyncHandler(getAll));
 router.get("/hero-slides", asyncHandler(getHeroSlides));
+router.get("/store-info", asyncHandler(getStoreInfo));
 router.get("/:key", validate(getSettingSchema), asyncHandler(get));
 	router.post("/hero-slides/link", authMiddleware, adminOnly, asyncHandler(addHeroSlideByLink));
 

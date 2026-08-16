@@ -11,6 +11,24 @@ export const get = async (req: Request, res: Response) => {
   res.json({ success: true, data });
 };
 
+const STORE_INFO_KEY = "store_info";
+
+const DEFAULT_STORE_INFO = {
+  storeName: "Mama Bazar",
+  email: "support@mamabazar.com",
+  primaryPhone: "01711111111",
+  alternativePhone: "",
+  contactAddress: "House/Road/Area, Dhaka, Bangladesh",
+  city: "Dhaka",
+  country: "Bangladesh",
+};
+
+export const getStoreInfo = async (req: Request, res: Response) => {
+  const stored = await settingsService.getJSON<Record<string, unknown>>(STORE_INFO_KEY, {});
+  const info = { ...DEFAULT_STORE_INFO, ...stored };
+  res.json({ success: true, data: info });
+};
+
 export const set = async (req: Request, res: Response) => {
   const { key, value } = req.body;
   const data = await settingsService.set(key, value);

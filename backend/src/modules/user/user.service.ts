@@ -64,6 +64,41 @@ export const register = async (data: CreateUserInput) => {
   return { id: result[0].insertId, name: data.name, phone: data.phone };
 };
 
+export const createAdmin = async (data: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  role: string;
+}) => {
+  const existingByPhone = await db.select().from(users).where(eq(users.phone, data.phone)).limit(1);
+  if (existingByPhone[0]) throw new AppError(409, "An account with this phone number already exists");
+
+  const existingByEmail = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, data.email))
+    .limit(1);
+  if (existingByEmail[0]) throw new AppError(409, "An admin with this email already exists");
+
+  const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
+  const result = await db.insert(users).values({
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    password: hashedPassword,
+    role: data.role,
+  });
+
+  return {
+    id: result[0].insertId,
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    role: data.role,
+  };
+};
+
 export const login = async (data: LoginInput) => {
   const rows = await db.select().from(users).where(eq(users.phone, data.phone)).limit(1);
   const user = rows[0];

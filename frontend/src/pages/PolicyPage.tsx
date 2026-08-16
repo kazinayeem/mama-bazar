@@ -17,6 +17,7 @@ import {
 import { SEO, getPolicyPageSEO } from '@/components/common/SEO'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { useGetStoreInfoQuery } from '@/store/services/commerceApi'
 import type { PaymentMethodInfo, PolicyPage as PolicyPageType, ShippingMethod } from '@/types'
 
 const POLICY_LINKS: { title: string; to: string }[] = [
@@ -134,29 +135,24 @@ const PaymentMethodsBlock = () => {
   )
 }
 
-const CONTACT_ROWS: { key: string; label: string; icon: typeof Phone }[] = [
-  { key: 'hotline', label: 'হটলাইন', icon: Phone },
+const CONTACT_ROWS: { key: 'phone' | 'email' | 'address'; label: string; icon: typeof Phone }[] = [
   { key: 'phone', label: 'ফোন', icon: Phone },
-  { key: 'whatsapp', label: 'হোয়াটসঅ্যাপ', icon: MessageCircle },
   { key: 'email', label: 'ইমেইল', icon: Mail },
   { key: 'address', label: 'ঠিকানা', icon: MapPin },
-  { key: 'hours', label: 'সার্ভিস সময়', icon: Clock },
 ]
 
 const ContactInfoBlock = () => {
-  const [info, setInfo] = useState<Record<string, string> | null>(null)
-
-  useEffect(() => {
-    api
-      .getContactSetting()
-      .then(setInfo)
-      .catch(() => setInfo({}))
-  }, [])
+  const { data: storeInfo } = useGetStoreInfoQuery()
+  const info: Record<string, string> = {
+    phone: storeInfo?.primaryPhone || '',
+    email: storeInfo?.email || '',
+    address: storeInfo?.contactAddress || '',
+  }
 
   return (
     <div className="my-4 grid gap-2 sm:grid-cols-2">
       {CONTACT_ROWS.map(({ key, label, icon: Icon }) => {
-        const value = info?.[key]
+        const value = info[key]
         if (!value) return null
         return (
           <div key={key} className="flex items-start gap-3 rounded-md border border-slate-200 bg-white p-3.5 shadow-sm">

@@ -1,4 +1,5 @@
 import StaticInfoLayout from '@/components/layout/StaticInfoLayout'
+import { useGetStoreInfoQuery } from '@/store/services/commerceApi'
 
 const SectionHeading = ({ id, bangla, english }: { id: string; bangla: string; english: string }) => (
   <div id={id} className="scroll-mt-28">
@@ -8,6 +9,8 @@ const SectionHeading = ({ id, bangla, english }: { id: string; bangla: string; e
 )
 
 const TermsAndConditionsPage = () => {
+  const { data: storeInfo } = useGetStoreInfoQuery()
+  const storeEmail = storeInfo?.email || 'support@mamabazar.com'
   return (
     <StaticInfoLayout
       kicker="Terms & Conditions"
@@ -164,8 +167,8 @@ const TermsAndConditionsPage = () => {
         <SectionHeading id="contact" bangla="যোগাযোগ" english="Contact" />
         <p className="mt-3 text-[15px] leading-7 text-slate-700">
           Questions about these terms? Reach us at{' '}
-          <a className="font-medium text-brand-orange-500 underline underline-offset-4" href="mailto:support@mamabazar.com">
-            support@mamabazar.com
+          <a className="font-medium text-brand-orange-500 underline underline-offset-4" href={`mailto:${storeEmail}`}>
+            {storeEmail}
           </a>{' '}
           or visit our Contact page.
         </p>

@@ -3427,6 +3427,18 @@ export declare const users: import("drizzle-orm/mysql-core").MySqlTableWithColum
             enumValues: [string, ...string[]];
             baseColumn: never;
         }, object>;
+        email: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "email";
+            tableName: "users";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
         shippingArea: import("drizzle-orm/mysql-core").MySqlColumn<{
             name: "shipping_area";
             tableName: "users";

@@ -24,6 +24,7 @@ router.post("/addresses", auth_1.authMiddleware, (0, validate_1.validate)(user_s
 router.put("/addresses/:id", auth_1.authMiddleware, (0, validate_1.validate)(user_schema_1.updateAddressSchema), (0, asyncHandler_1.asyncHandler)(user_controller_1.updateAddress));
 router.delete("/addresses/:id", auth_1.authMiddleware, (0, validate_1.validate)(user_schema_1.addressIdSchema), (0, asyncHandler_1.asyncHandler)(user_controller_1.deleteAddress));
 // Admin only
+router.post("/admin", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(user_schema_1.createAdminSchema), (0, asyncHandler_1.asyncHandler)(user_controller_1.createAdmin));
 router.get("/", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(user_controller_1.getAll));
 router.delete("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(user_controller_1.remove));
 exports.default = router;

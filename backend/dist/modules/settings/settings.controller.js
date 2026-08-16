@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addHeroSlideByLink = exports.deleteHeroSlide = exports.addHeroSlide = exports.getHeroSlides = exports.set = exports.get = exports.getAll = void 0;
+exports.addHeroSlideByLink = exports.deleteHeroSlide = exports.addHeroSlide = exports.getHeroSlides = exports.set = exports.getStoreInfo = exports.get = exports.getAll = void 0;
 const settingsService = __importStar(require("./settings.service"));
 const getAll = async (req, res) => {
     const data = await settingsService.getAll();
@@ -45,6 +45,22 @@ const get = async (req, res) => {
     res.json({ success: true, data });
 };
 exports.get = get;
+const STORE_INFO_KEY = "store_info";
+const DEFAULT_STORE_INFO = {
+    storeName: "Mama Bazar",
+    email: "support@mamabazar.com",
+    primaryPhone: "01711111111",
+    alternativePhone: "",
+    contactAddress: "House/Road/Area, Dhaka, Bangladesh",
+    city: "Dhaka",
+    country: "Bangladesh",
+};
+const getStoreInfo = async (req, res) => {
+    const stored = await settingsService.getJSON(STORE_INFO_KEY, {});
+    const info = { ...DEFAULT_STORE_INFO, ...stored };
+    res.json({ success: true, data: info });
+};
+exports.getStoreInfo = getStoreInfo;
 const set = async (req, res) => {
     const { key, value } = req.body;
     const data = await settingsService.set(key, value);

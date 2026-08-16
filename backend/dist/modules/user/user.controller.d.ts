@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 export declare const register: (req: Request, res: Response) => Promise<void>;
 export declare const login: (req: Request, res: Response) => Promise<void>;
 export declare const devLogin: (req: Request, res: Response) => Promise<void>;
+export declare const createAdmin: (req: Request, res: Response) => Promise<void>;
 export declare const requestPasswordReset: (req: Request, res: Response) => Promise<void>;
 export declare const resetPassword: (req: Request, res: Response) => Promise<void>;
 export declare const changePassword: (req: Request, res: Response) => Promise<void>;

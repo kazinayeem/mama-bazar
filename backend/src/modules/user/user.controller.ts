@@ -23,6 +23,12 @@ export const devLogin = async (req: Request, res: Response) => {
   res.json({ success: true, data });
 };
 
+export const createAdmin = async (req: Request, res: Response) => {
+  const { name, email, phone, password, role } = req.body;
+  const data = await userService.createAdmin({ name, email, phone, password, role });
+  res.status(201).json({ success: true, data, message: "Admin created successfully" });
+};
+
 export const requestPasswordReset = async (req: Request, res: Response) => {
   const { phone } = req.body;
   await userService.requestPasswordReset({ phone });

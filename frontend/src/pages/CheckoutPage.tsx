@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { currency } from '../lib/format'
 import { trackInitiateCheckout } from '../lib/pixel'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
+import { useGetStoreInfoQuery } from '../store/services/commerceApi'
 import { clearCart, removeFromCart } from '../store/slices/cartSlice'
 import { setAuthSession } from '../store/slices/authSlice'
 import { placeOrder } from '../store/slices/ordersSlice'
@@ -124,6 +125,7 @@ const CheckoutPage = () => {
   const cart = useAppSelector((state) => state.cart.items)
   const authUser = useAppSelector((state) => state.auth.user)
   const { creating } = useAppSelector((state) => state.orders)
+  const { data: storeInfo } = useGetStoreInfoQuery()
 
   const [form, setForm] = useState<AddressFormState>(emptyAddress)
   const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([])
@@ -1006,7 +1008,8 @@ division: defaultAddress.division || '',
             </div>
 
             <p className="text-center text-xs text-slate-500">
-              Need help? Call us at <span className="font-semibold">01711111111</span>
+              Need help? Call us at{' '}
+              <span className="font-semibold">{storeInfo?.primaryPhone || '01711111111'}</span>
             </p>
           </div>
         </aside>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Clock, Mail, MapPin, Phone } from 'lucide-react'
+import { Mail, MapPin, Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useGetCategoriesQuery } from '../../store/services/commerceApi'
+import { useGetCategoriesQuery, useGetStoreInfoQuery } from '../../store/services/commerceApi'
 import { api } from '../../lib/api'
 import type { PaymentMethodInfo } from '../../types'
 
@@ -56,30 +56,29 @@ interface ContactInfo {
   phone?: string
   email?: string
   address?: string
-  supportHours?: string
-  hotline?: string
 }
 
 const SiteFooter = () => {
   const year = new Date().getFullYear()
   const categoriesQuery = useGetCategoriesQuery()
   const categories = (categoriesQuery.data || []).filter((c) => !c.parentId)
+  const { data: storeInfo } = useGetStoreInfoQuery()
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>([])
-  const [contact, setContact] = useState<ContactInfo | null>(null)
 
   useEffect(() => {
     api
       .getPaymentMethods()
       .then((methods) => setPaymentMethods(methods.filter((m) => m.code !== 'cod')))
       .catch(() => {})
-    api
-      .getContactSetting()
-      .then((info) => setContact(info as ContactInfo))
-      .catch(() => {})
   }, [])
 
-  const hasContact =
-    Boolean(contact?.phone || contact?.email || contact?.address || contact?.supportHours || contact?.hotline)
+  const contact: ContactInfo = {
+    phone: storeInfo?.primaryPhone,
+    email: storeInfo?.email,
+    address: storeInfo?.contactAddress,
+  }
+
+  const hasContact = Boolean(contact.phone || contact.email || contact.address)
 
   return (
     <footer className="border-t border-brand-green-100 bg-white text-slate-600" id="contact">
@@ -100,34 +99,22 @@ const SiteFooter = () => {
 
             {hasContact && (
               <ul className="mt-5 space-y-2.5 text-xs">
-                {contact?.hotline && (
-                  <li className="flex items-start gap-2.5">
-                    <Phone size={14} className="mt-0.5 shrink-0 text-brand-green-500" />
-                    <span>Hotline: {contact.hotline}</span>
-                  </li>
-                )}
-                {contact?.phone && (
+                {contact.phone && (
                   <li className="flex items-start gap-2.5">
                     <Phone size={14} className="mt-0.5 shrink-0 text-brand-green-500" />
                     <span>{contact.phone}</span>
                   </li>
                 )}
-                {contact?.email && (
+                {contact.email && (
                   <li className="flex items-start gap-2.5">
                     <Mail size={14} className="mt-0.5 shrink-0 text-brand-green-500" />
                     <span className="break-all">{contact.email}</span>
                   </li>
                 )}
-                {contact?.address && (
+                {contact.address && (
                   <li className="flex items-start gap-2.5">
                     <MapPin size={14} className="mt-0.5 shrink-0 text-brand-green-500" />
                     <span>{contact.address}</span>
-                  </li>
-                )}
-                {contact?.supportHours && (
-                  <li className="flex items-start gap-2.5">
-                    <Clock size={14} className="mt-0.5 shrink-0 text-brand-green-500" />
-                    <span>{contact.supportHours}</span>
                   </li>
                 )}
               </ul>
