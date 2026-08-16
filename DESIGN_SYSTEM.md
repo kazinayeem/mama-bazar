@@ -1,4 +1,4 @@
-# Ghorer Bazar — Design System Guidance
+# MAMA Bazar — Design System Guidance
 
 ## 1. Context and Goals
 
