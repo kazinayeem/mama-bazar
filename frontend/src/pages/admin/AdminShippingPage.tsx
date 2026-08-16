@@ -1,10 +1,11 @@
 import { Truck } from 'lucide-react'
 import CatalogCrudPage from '@/components/admin/CatalogCrudPage'
 import type { ShippingMethod } from '@/types'
-import { adminApi } from '@/lib/adminApi'
 import { Badge } from '@/components/ui/badge'
 import { currency } from '@/lib/format'
 import { SEO } from '../../components/common/SEO'
+import { store } from '@/store'
+import { adminProductsApi } from '@/store/services/adminProductsApi'
 
 const columns = [
   { key: 'name', label: 'Name', render: (m: ShippingMethod) => <span className="font-medium">{m.name}</span> },
@@ -69,16 +70,22 @@ const AdminShippingPage = () => {
       columns={columns}
       api={{
         list: async () => {
-          const rows = await adminApi.getShippingMethodsAdmin()
+          const rows = await store
+            .dispatch(adminProductsApi.endpoints.getAdminShippingMethods.initiate(undefined, { forceRefetch: true }))
+            .unwrap()
           return {
             data: rows,
             pagination: { page: 1, limit: rows.length, total: rows.length, totalPages: 1 },
           }
         },
-        create: (payload) => adminApi.createShippingMethod(payload as never),
-        update: (id, payload) => adminApi.updateShippingMethod(id, payload as never),
+        create: (payload) =>
+          store.dispatch(adminProductsApi.endpoints.createShippingMethod.initiate(payload as never)).unwrap(),
+        update: (id, payload) =>
+          store
+            .dispatch(adminProductsApi.endpoints.updateShippingMethod.initiate({ id, payload: payload as never }))
+            .unwrap(),
         remove: async (id) => {
-          await adminApi.deleteShippingMethod(id)
+          await store.dispatch(adminProductsApi.endpoints.deleteShippingMethod.initiate(id)).unwrap()
           return undefined
         },
       }}

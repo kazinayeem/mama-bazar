@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Loader2, Mail, MapPin, Phone, Send } from 'lucide-react'
 import StaticInfoLayout from '@/components/layout/StaticInfoLayout'
-import { useGetStoreInfoQuery } from '@/store/services/commerceApi'
-import { api } from '@/lib/api'
+import { useGetStoreInfoQuery, useSubmitContactMessageMutation } from '@/store/services/commerceApi'
 
 const CONTACT_ROWS: { key: 'phone' | 'email' | 'address'; label: string; bangla: string; icon: typeof Phone }[] = [
   { key: 'phone', label: 'Phone', bangla: 'ফোন', icon: Phone },
@@ -15,6 +14,7 @@ const ContactForm = () => {
   const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [submitContactMessage] = useSubmitContactMessageMutation()
 
   const update = (k: keyof typeof form, v: string) => {
     setForm((f) => ({ ...f, [k]: v }))
@@ -34,12 +34,12 @@ const ContactForm = () => {
     }
     setStatus('sending')
     try {
-      await api.submitContactMessage({
+      await submitContactMessage({
         name: form.name.trim(),
         phone: form.phone.trim(),
         email: form.email.trim() || undefined,
         message: form.message.trim(),
-      })
+      }).unwrap()
       setSubmitted(true)
       setForm({ name: '', phone: '', email: '', message: '' })
       setErrors({})

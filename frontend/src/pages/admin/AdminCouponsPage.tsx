@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Calendar, Loader2, Pencil, Plus, TicketPercent, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminLayout from '../../components/layout/AdminLayout'
@@ -41,14 +41,22 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { adminApi } from '@/lib/adminApi'
 import { currency } from '@/lib/format'
 import type { AdminCoupon } from '@/types'
 import { SEO } from '../../components/common/SEO'
+import {
+  useCreateCouponMutation,
+  useDeleteCouponMutation,
+  useGetAdminCouponsQuery,
+  useUpdateCouponMutation,
+} from '@/store/services/adminProductsApi'
 
 const AdminCouponsPage = () => {
-  const [coupons, setCoupons] = useState<AdminCoupon[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: couponsData, isLoading: loading, refetch } = useGetAdminCouponsQuery()
+  const coupons = couponsData || []
+  const [createCoupon] = useCreateCouponMutation()
+  const [updateCoupon] = useUpdateCouponMutation()
+  const [deleteCoupon] = useDeleteCouponMutation()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<AdminCoupon | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AdminCoupon | null>(null)
@@ -61,20 +69,9 @@ const AdminCouponsPage = () => {
   const [expiryDate, setExpiryDate] = useState('')
   const [active, setActive] = useState(true)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      setCoupons(await adminApi.getCoupons())
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load coupons')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
+  const load = useCallback(() => {
+    refetch()
+  }, [refetch])
 
   const openCreate = () => {
     setEditing(null)
@@ -114,10 +111,10 @@ const AdminCouponsPage = () => {
         status: active ? 'active' as const : 'inactive' as const,
       }
       if (editing) {
-        await adminApi.updateCoupon(editing.id, payload)
+        await updateCoupon({ id: editing.id, payload }).unwrap()
         toast.success('Coupon updated')
       } else {
-        await adminApi.createCoupon(payload)
+        await createCoupon(payload).unwrap()
         toast.success('Coupon created')
       }
       setDialogOpen(false)
@@ -132,7 +129,7 @@ const AdminCouponsPage = () => {
   const handleDelete = async () => {
     if (!deleteTarget) return
     try {
-      await adminApi.deleteCoupon(deleteTarget.id)
+      await deleteCoupon(deleteTarget.id).unwrap()
       toast.success('Coupon deleted')
       setDeleteTarget(null)
       load()

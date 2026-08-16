@@ -15,10 +15,14 @@ import {
 } from 'lucide-react'
 
 import { SEO, getPolicyPageSEO } from '@/components/common/SEO'
-import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import { useGetStoreInfoQuery } from '@/store/services/commerceApi'
-import type { PaymentMethodInfo, PolicyPage as PolicyPageType, ShippingMethod } from '@/types'
+import {
+  useGetPaymentMethodsQuery,
+  useGetPolicyPageQuery,
+  useGetShippingMethodsQuery,
+  useGetStoreInfoQuery,
+  useSubmitContactMessageMutation,
+} from '@/store/services/commerceApi'
 
 const POLICY_LINKS: { title: string; to: string }[] = [
   { title: 'রিটার্ন ও রিফান্ড নীতিমালা', to: '/refund-policy' },
@@ -50,16 +54,10 @@ const SLUG_TO_PATH: Record<string, string> = {
 }
 
 const ShippingMethodsBlock = () => {
-  const [methods, setMethods] = useState<ShippingMethod[] | null>(null)
+  const { data: methodsData, isLoading } = useGetShippingMethodsQuery()
+  const methods = methodsData || []
 
-  useEffect(() => {
-    api
-      .getShippingMethods()
-      .then(setMethods)
-      .catch(() => setMethods([]))
-  }, [])
-
-  if (methods === null) {
+  if (isLoading) {
     return (
       <div className="my-4 flex items-center gap-2 rounded-md bg-emerald-50 p-4 text-sm text-emerald-800">
         <Loader2 className="h-4 w-4 animate-spin" /> ডেলিভারি তথ্য লোড হচ্ছে…
@@ -104,16 +102,10 @@ const ShippingMethodsBlock = () => {
 }
 
 const PaymentMethodsBlock = () => {
-  const [payments, setPayments] = useState<PaymentMethodInfo[] | null>(null)
+  const { data: paymentsData, isLoading } = useGetPaymentMethodsQuery()
+  const payments = paymentsData || []
 
-  useEffect(() => {
-    api
-      .getPaymentMethods()
-      .then(setPayments)
-      .catch(() => setPayments([]))
-  }, [])
-
-  if (payments === null) {
+  if (isLoading) {
     return (
       <div className="my-4 flex items-center gap-2 rounded-md bg-emerald-50 p-4 text-sm text-emerald-800">
         <Loader2 className="h-4 w-4 animate-spin" /> পেমেন্ট তথ্য লোড হচ্ছে…
@@ -175,6 +167,7 @@ const ContactForm = () => {
   const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [submitContactMessage] = useSubmitContactMessageMutation()
 
   const update = (k: keyof typeof form, v: string) => {
     setForm((f) => ({ ...f, [k]: v }))
@@ -194,12 +187,12 @@ const ContactForm = () => {
     }
     setStatus('sending')
     try {
-      await api.submitContactMessage({
+      await submitContactMessage({
         name: form.name.trim(),
         phone: form.phone.trim(),
         email: form.email.trim() || undefined,
         message: form.message.trim(),
-      })
+      }).unwrap()
       setSubmitted(true)
       setForm({ name: '', phone: '', email: '', message: '' })
       setErrors({})
@@ -310,19 +303,9 @@ const PolicyPage = ({ slug: slugProp }: PolicyPageProps) => {
   const slug = slugProp || slugParam || ''
 
   const contentRef = useRef<HTMLDivElement>(null)
-  const [page, setPage] = useState<PolicyPageType | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
+  const { data: page, isLoading: loading, isError } = useGetPolicyPageQuery(slug, { skip: !slug })
+  const notFound = isError || (!loading && !page)
   const [toc, setToc] = useState<{ id: string; text: string }[]>([])
-
-  useEffect(() => {
-    if (!slug) return
-    api
-      .getPolicyPage(slug)
-      .then(setPage)
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false))
-  }, [slug])
 
   const renderTokens = useCallback(() => {
     const container = contentRef.current

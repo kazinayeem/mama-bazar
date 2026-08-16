@@ -1,39 +1,22 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminLayout from '../../components/layout/AdminLayout'
 import InvoiceTemplate from '../../components/invoice/InvoiceTemplate'
 import { downloadInvoicePdf, generateInvoiceFilename, printInvoice } from '../../lib/invoiceUtils'
-import { adminApi } from '../../lib/adminApi'
-import type { AdminOrder } from '../../types/admin'
 import { SEO } from '../../components/common/SEO'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useGetAdminOrderByIdQuery } from '@/store/services/adminProductsApi'
 
 const AdminOrderInvoicePage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [order, setOrder] = useState<AdminOrder | null>(null)
-  const [loading, setLoading] = useState(true)
+  const orderId = Number(id)
+  const { data: order, isLoading: loading } = useGetAdminOrderByIdQuery(orderId, { skip: !orderId })
   const [downloading, setDownloading] = useState(false)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await adminApi.getOrder(Number(id))
-      setOrder(data)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load order')
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
-
-  useEffect(() => {
-    void load()
-  }, [load])
 
   const handleDownload = async () => {
     if (!order) return

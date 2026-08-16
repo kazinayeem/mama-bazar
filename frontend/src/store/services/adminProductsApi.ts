@@ -98,6 +98,7 @@ const NOTICE_CONFIG_TAGS = [
 const SETTINGS_TAGS = [
   { type: 'Settings' as const, id: 'LIST' },
   { type: 'Settings' as const, id: 'CONTACT' },
+  { type: 'StoreInfo' as const, id: 'DETAIL' },
 ]
 
 export const adminProductsApi = baseApi.injectEndpoints({

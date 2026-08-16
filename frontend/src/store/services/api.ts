@@ -58,7 +58,6 @@ export const baseApi = createApi({
     'Profile',
     'Addresses',
     'Dashboard',
-    'StoreInfo',
   ],
   // Stable reference data (categories/brands/settings…) lives longer; short-lived
   // metrics override this per endpoint. Cached data is reused across navigation

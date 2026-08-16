@@ -2,13 +2,14 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { SEO } from '../components/common/SEO'
-import { api } from '../lib/api'
+import { useRequestPasswordResetMutation } from '../store/services/commerceApi'
 
 const ForgotPasswordPage = () => {
   const [phone, setPhone] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [requestPasswordReset] = useRequestPasswordResetMutation()
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -16,7 +17,7 @@ const ForgotPasswordPage = () => {
     setMessage(null)
     setLoading(true)
     try {
-      const res = await api.requestPasswordReset(phone)
+      const res = await requestPasswordReset(phone).unwrap()
       setMessage(res.message || 'If this phone is registered, a reset link has been sent.')
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : 'Unable to connect to server')

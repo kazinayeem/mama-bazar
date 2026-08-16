@@ -3,24 +3,24 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, CheckCircle, Copy, Check } from 'lucide-react'
 import { SEO } from '../components/common/SEO'
-import { api } from '../lib/api'
 import { currency } from '../lib/format'
 import { trackInitiateCheckout } from '../lib/pixel'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { useGetStoreInfoQuery } from '../store/services/commerceApi'
+import {
+  useEstimateShippingMutation,
+  useGetCheckoutNoticesQuery,
+  useGetMyAddressesQuery,
+  useGetPaymentMethodsQuery,
+  useGetSettingsQuery,
+  useGetStoreInfoQuery,
+  useValidateCouponMutation,
+} from '../store/services/commerceApi'
 import { clearCart, removeFromCart } from '../store/slices/cartSlice'
 import { setAuthSession } from '../store/slices/authSlice'
 import { placeOrder } from '../store/slices/ordersSlice'
 import LocationSelect from '../components/common/LocationSelect'
 import { getAreas, getDistricts, getDivisions, getUpazilas, loadLocations, type GeoNode } from '../data/locations'
-import type {
-  CheckoutNotice,
-  Order,
-  PaymentMethod,
-  PaymentMethodInfo,
-  ShippingMethod,
-  UserAddress,
-} from '../types'
+import type { Order, PaymentMethod, ShippingMethod } from '../types'
 
 const BD_PHONE_REGEX = /^(\+880|0)[1-9]\d{9}$/
 
@@ -126,11 +126,37 @@ const CheckoutPage = () => {
   const authUser = useAppSelector((state) => state.auth.user)
   const { creating } = useAppSelector((state) => state.orders)
   const { data: storeInfo } = useGetStoreInfoQuery()
+  const { data: paymentMethodsData } = useGetPaymentMethodsQuery()
+  const { data: noticesData } = useGetCheckoutNoticesQuery()
+  const { data: settingsData } = useGetSettingsQuery()
+  const { data: addressesData, isLoading: addressesLoading } = useGetMyAddressesQuery(undefined, {
+    skip: !authUser,
+  })
+  const [estimateShipping] = useEstimateShippingMutation()
+  const [validateCouponMutation] = useValidateCouponMutation()
+
+  const paymentMethods = paymentMethodsData || []
+  const notices = noticesData || []
+  const savedAddresses = addressesData || []
+
+  const taxSettings = useMemo(() => {
+    try {
+      const raw = settingsData?.find((s) => s.key === 'tax_settings')?.value
+      if (raw) {
+        const parsed = JSON.parse(raw) as { taxRate?: number; applyTaxToShipping?: boolean }
+        return {
+          taxRate: Math.max(0, Number(parsed.taxRate) || 0),
+          applyTaxToShipping: Boolean(parsed.applyTaxToShipping),
+        }
+      }
+    } catch {
+      // fall through
+    }
+    return { taxRate: 0, applyTaxToShipping: false }
+  }, [settingsData])
 
   const [form, setForm] = useState<AddressFormState>(emptyAddress)
-  const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<'new' | number>('new')
-  const [addressesLoading, setAddressesLoading] = useState(false)
   const [geo, setGeo] = useState<GeoNode[] | null>(null)
   const [locationsLoading, setLocationsLoading] = useState(true)
 
@@ -138,9 +164,7 @@ const CheckoutPage = () => {
   const [shippingMethodId, setShippingMethodId] = useState<number | null>(null)
   const [shippingLoading, setShippingLoading] = useState(true)
 
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>([])
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | null>(null)
-  const [notices, setNotices] = useState<CheckoutNotice[]>([])
 
   const [transactionId, setTransactionId] = useState('')
   const [paymentSenderNumber, setPaymentSenderNumber] = useState('')
@@ -154,12 +178,6 @@ const CheckoutPage = () => {
   const [orderNote, setOrderNote] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [agreeTerms, setAgreeTerms] = useState(false)
-
-  // Tax configuration comes from the admin "Tax Settings" (single source of truth).
-  const [taxSettings, setTaxSettings] = useState<{ taxRate: number; applyTaxToShipping: boolean }>({
-    taxRate: 0,
-    applyTaxToShipping: false,
-  })
 
   const subtotal = useMemo(
     () => cart.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0),
@@ -236,27 +254,18 @@ const CheckoutPage = () => {
     }))
   }, [authUser])
 
-  // ---------- Load checkout config ----------
+// ---------- Initial shipping estimate ----------
   useEffect(() => {
     let mounted = true
     const load = async () => {
       try {
-        const [methods, payments, noticeList, tax] = await Promise.all([
-          api.estimateShipping(0),
-          api.getPaymentMethods(),
-          api.getCheckoutNotices(),
-          api.getTaxSettings(),
-        ])
+        const methods = await estimateShipping(0).unwrap()
         if (!mounted) return
         setShippingMethods(methods)
         const first = methods[0]
         if (first) setShippingMethodId(first.id)
-        setPaymentMethods(payments)
-        if (payments[0]) setSelectedPaymentMethodId(payments[0].id)
-        setNotices(noticeList)
-        setTaxSettings(tax)
       } catch {
-        if (!mounted) return
+        // keep empty
       } finally {
         if (mounted) setShippingLoading(false)
       }
@@ -265,21 +274,24 @@ const CheckoutPage = () => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [estimateShipping])
+
+  // Default payment method once cached list arrives
+  useEffect(() => {
+    if (!paymentMethods.length) return
+    setSelectedPaymentMethodId((prev) => prev ?? paymentMethods[0].id)
+  }, [paymentMethods])
 
   // Re-estimate shipping when subtotal changes (free-shipping thresholds)
-  // Deduplicate by ID to prevent duplicate shipping methods
   useEffect(() => {
     if (shippingLoading) return
     let mounted = true
     const timer = setTimeout(async () => {
       try {
-        const methods = await api.estimateShipping(subtotal)
+        const methods = await estimateShipping(subtotal).unwrap()
         if (!mounted) return
-        // Deduplicate by ID, keeping the last occurrence
         const deduped = Array.from(new Map(methods.map((m) => [m.id, m])).values())
         setShippingMethods(deduped)
-        // If current selection is no longer valid, select first available
         setShippingMethodId((prev) => {
           if (prev && deduped.some((m) => m.id === prev)) return prev
           return deduped[0]?.id ?? null
@@ -292,7 +304,7 @@ const CheckoutPage = () => {
       mounted = false
       clearTimeout(timer)
     }
-  }, [subtotal, shippingLoading])
+  }, [subtotal, shippingLoading, estimateShipping])
 
   // ---------- Meta Pixel: InitiateCheckout (once per checkout visit) ----------
   useEffect(() => {
@@ -305,51 +317,35 @@ const CheckoutPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ---------- Load saved addresses ----------
+  // ---------- Apply default saved address once addresses load ----------
   useEffect(() => {
-    let mounted = true
-    const loadAddresses = async () => {
-      if (!authUser) {
-        setSavedAddresses([])
-        setSelectedAddressId('new')
-        return
-      }
-      setAddressesLoading(true)
-      try {
-        const list = await api.getMyAddresses()
-        if (!mounted) return
-        setSavedAddresses(list)
-        const defaultAddress = list.find((item) => item.isDefault) || list[0]
-        if (defaultAddress) {
-          setSelectedAddressId(defaultAddress.id)
-          setForm({
-            name: defaultAddress.recipientName,
-            phone: defaultAddress.phone,
-            alternativePhone: defaultAddress.alternativePhone || '',
-            email: defaultAddress.email || '',
-            country: defaultAddress.country || 'Bangladesh',
-division: defaultAddress.division || '',
-      district: defaultAddress.district || '',
-      upazila: defaultAddress.upazila || '',
-      area: defaultAddress.area || '',
-      village: '',
-      address: defaultAddress.address,
-            apartment: defaultAddress.apartment || '',
-            postalCode: defaultAddress.postalCode || '',
-          })
-        }
-      } catch {
-        if (!mounted) return
-        setSavedAddresses([])
-      } finally {
-        if (mounted) setAddressesLoading(false)
-      }
+    if (!authUser) {
+      setSelectedAddressId('new')
+      return
     }
-    loadAddresses()
-    return () => {
-      mounted = false
-    }
-  }, [authUser])
+    if (!savedAddresses.length) return
+    const defaultAddress = savedAddresses.find((item) => item.isDefault) || savedAddresses[0]
+    if (!defaultAddress) return
+    setSelectedAddressId((prev) => (prev === 'new' ? defaultAddress.id : prev))
+    setForm((prev) => {
+      if (prev.name || prev.phone || prev.address) return prev
+      return {
+        name: defaultAddress.recipientName,
+        phone: defaultAddress.phone,
+        alternativePhone: defaultAddress.alternativePhone || '',
+        email: defaultAddress.email || '',
+        country: defaultAddress.country || 'Bangladesh',
+        division: defaultAddress.division || '',
+        district: defaultAddress.district || '',
+        upazila: defaultAddress.upazila || '',
+        area: defaultAddress.area || '',
+        village: '',
+        address: defaultAddress.address,
+        apartment: defaultAddress.apartment || '',
+        postalCode: defaultAddress.postalCode || '',
+      }
+    })
+  }, [authUser, savedAddresses])
 
   // ---------- Load Bangladesh location dataset ----------
   useEffect(() => {
@@ -396,7 +392,7 @@ division: defaultAddress.division || '',
     setCouponError('')
     setCouponLoading(true)
     try {
-      const result = await api.validateCoupon(couponCode.trim(), subtotal)
+      const result = await validateCouponMutation({ code: couponCode.trim(), subtotal }).unwrap()
       setCouponApplied({ code: couponCode.trim().toUpperCase(), discount: Math.round(result.discount) })
       setCouponCode('')
     } catch (error) {

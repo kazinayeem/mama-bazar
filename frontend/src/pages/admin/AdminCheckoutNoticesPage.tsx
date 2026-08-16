@@ -1,9 +1,10 @@
 import { BellRing } from 'lucide-react'
 import CatalogCrudPage from '@/components/admin/CatalogCrudPage'
 import type { AdminCheckoutNotice } from '@/types/admin'
-import { adminApi } from '@/lib/adminApi'
 import { Badge } from '@/components/ui/badge'
 import { SEO } from '../../components/common/SEO'
+import { store } from '@/store'
+import { adminProductsApi } from '@/store/services/adminProductsApi'
 
 const ICON_OPTIONS = [
   { value: 'alert', label: '⚠️ Alert' },
@@ -63,16 +64,22 @@ const AdminCheckoutNoticesPage = () => {
       columns={columns}
       api={{
         list: async () => {
-          const rows = await adminApi.getCheckoutNoticesAdmin()
+          const rows = await store
+            .dispatch(adminProductsApi.endpoints.getAdminCheckoutNotices.initiate(undefined, { forceRefetch: true }))
+            .unwrap()
           return {
             data: rows,
             pagination: { page: 1, limit: rows.length, total: rows.length, totalPages: 1 },
           }
         },
-        create: (payload) => adminApi.createCheckoutNotice(payload as never),
-        update: (id, payload) => adminApi.updateCheckoutNotice(id, payload as never),
+        create: (payload) =>
+          store.dispatch(adminProductsApi.endpoints.createCheckoutNotice.initiate(payload as never)).unwrap(),
+        update: (id, payload) =>
+          store
+            .dispatch(adminProductsApi.endpoints.updateCheckoutNotice.initiate({ id, payload: payload as never }))
+            .unwrap(),
         remove: async (id) => {
-          await adminApi.deleteCheckoutNotice(id)
+          await store.dispatch(adminProductsApi.endpoints.deleteCheckoutNotice.initiate(id)).unwrap()
           return undefined
         },
       }}

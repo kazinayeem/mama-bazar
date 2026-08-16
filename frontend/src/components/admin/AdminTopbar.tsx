@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell,
@@ -14,7 +14,7 @@ import {
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { logout } from '@/store/slices/authSlice'
 
-import { adminApi } from '@/lib/adminApi'
+import { useGetAdminDashboardQuery } from '@/store/services/adminProductsApi'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -48,43 +48,33 @@ const AdminTopbar = ({ collapsed, onToggleCollapse, onOpenCommandPalette, onOpen
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<TopbarNotification[]>([])
-
-  useEffect(() => {
-    let active = true
-    adminApi
-      .getDashboard()
-      .then((data) => {
-        if (!active) return
-        const list: TopbarNotification[] = []
-        const recentPending = data.recentOrders
-          .filter((order) => order.status === 'pending' || order.status === 'payment_pending')
-          .slice(0, 5)
-        recentPending.forEach((order) =>
-          list.push({
-            id: `order-${order.id}`,
-            title: 'New order received',
-            desc: `Order ${order.orderId} by ${order.customerName}`,
-            href: `/admin/orders/${order.id}`,
-            unread: true,
-          }),
-        )
-        data.lowStockProducts.slice(0, 3).forEach((product) =>
-          list.push({
-            id: `stock-${product.id}`,
-            title: 'Low stock alert',
-            desc: `${product.title.slice(0, 40)} — only ${product.stock} left`,
-            href: `/admin/products/${product.id}/edit`,
-            unread: true,
-          }),
-        )
-        setNotifications(list)
-      })
-      .catch(() => setNotifications([]))
-    return () => {
-      active = false
-    }
-  }, [])
+  const { data: dashboardData } = useGetAdminDashboardQuery()
+  const notifications: TopbarNotification[] = (() => {
+    if (!dashboardData) return []
+    const list: TopbarNotification[] = []
+    const recentPending = dashboardData.recentOrders
+      .filter((order) => order.status === 'pending' || order.status === 'payment_pending')
+      .slice(0, 5)
+    recentPending.forEach((order) =>
+      list.push({
+        id: `order-${order.id}`,
+        title: 'New order received',
+        desc: `Order ${order.orderId} by ${order.customerName}`,
+        href: `/admin/orders/${order.id}`,
+        unread: true,
+      }),
+    )
+    dashboardData.lowStockProducts.slice(0, 3).forEach((product) =>
+      list.push({
+        id: `stock-${product.id}`,
+        title: 'Low stock alert',
+        desc: `${product.title.slice(0, 40)} — only ${product.stock} left`,
+        href: `/admin/products/${product.id}/edit`,
+        unread: true,
+      }),
+    )
+    return list
+  })()
 
   const crumbs = adminNavSections
     .flatMap((s) => s.items)

@@ -1,12 +1,15 @@
-import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit'
+import { configureStore, createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit'
 import authReducer, { logout, setAuthOrders, setAuthOrdersLoading, setAuthUser } from './slices/authSlice'
 import cartReducer, { addToCart } from './slices/cartSlice'
 import ordersReducer from './slices/ordersSlice'
 import uiReducer from './slices/uiSlice'
 import { baseApi } from './services/api'
+// Side-effect imports: register all endpoints on baseApi before the store boots.
+import './services/commerceApi'
+import './services/adminProductsApi'
 import { commerceApi } from './services/commerceApi'
-import { adminProductsApi } from './services/adminProductsApi'
 import { trackAddToCart } from '../lib/pixel'
+import type { AuthUser, UserOrderWithItems } from '../types'
 
 const listenerMiddleware = createListenerMiddleware()
 
@@ -29,37 +32,36 @@ listenerMiddleware.startListening({
 listenerMiddleware.startListening({
   matcher: commerceApi.endpoints.getCurrentUser.matchFulfilled,
   effect: (action, listenerApi) => {
-    listenerApi.dispatch(setAuthUser(action.payload))
+    listenerApi.dispatch(setAuthUser(action.payload as AuthUser | null))
   },
 })
 
 listenerMiddleware.startListening({
   matcher: commerceApi.endpoints.getCurrentUser.matchRejected,
   effect: (action, listenerApi) => {
-    if (action.error && 'status' in action.error && (action.error.status === 401 || action.error.status === 403)) {
+    const status = (action.payload as { status?: number } | undefined)?.status
+    if (status === 401 || status === 403) {
       listenerApi.dispatch(logout())
     }
   },
 })
 
 listenerMiddleware.startListening({
-  matcher: commerceApi.endpoints.getMyOrders.matchPending,
-  effect: (_action, listenerApi) => {
-    listenerApi.dispatch(setAuthOrdersLoading(true))
-  },
-})
-
-listenerMiddleware.startListening({
-  matcher: commerceApi.endpoints.getMyOrders.matchFulfilled,
+  matcher: isAnyOf(
+    commerceApi.endpoints.getMyOrders.matchPending,
+    commerceApi.endpoints.getMyOrders.matchFulfilled,
+    commerceApi.endpoints.getMyOrders.matchRejected,
+  ),
   effect: (action, listenerApi) => {
-    listenerApi.dispatch(setAuthOrders(action.payload))
-    listenerApi.dispatch(setAuthOrdersLoading(false))
-  },
-})
-
-listenerMiddleware.startListening({
-  matcher: commerceApi.endpoints.getMyOrders.matchRejected,
-  effect: (_action, listenerApi) => {
+    if (commerceApi.endpoints.getMyOrders.matchPending(action)) {
+      listenerApi.dispatch(setAuthOrdersLoading(true))
+      return
+    }
+    if (commerceApi.endpoints.getMyOrders.matchFulfilled(action)) {
+      listenerApi.dispatch(setAuthOrders(action.payload as UserOrderWithItems[]))
+      listenerApi.dispatch(setAuthOrdersLoading(false))
+      return
+    }
     listenerApi.dispatch(setAuthOrdersLoading(false))
   },
 })
@@ -84,10 +86,6 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().prepend(listenerMiddleware.middleware).concat(baseApi.middleware),
 })
-
-// Ensure both endpoint groups are registered on the base API.
-void commerceApi
-void adminProductsApi
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch

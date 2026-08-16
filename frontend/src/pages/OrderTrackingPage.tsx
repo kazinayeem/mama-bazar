@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { AlertCircle, ArrowLeft, Calendar, CheckCircle2, CreditCard, Package, Search, Truck } from 'lucide-react'
 import { SEO } from '../components/common/SEO'
-import { api } from '../lib/api'
 import { currency } from '../lib/format'
+import { useTrackOrderMutation } from '../store/services/commerceApi'
 import type { OrderStatus, PublicOrder, PublicOrderItem } from '../types'
 
 const ORDER_PROGRESS_FLOW: OrderStatus[] = [
@@ -66,6 +66,7 @@ const OrderTrackingPage = () => {
   const [orders, setOrders] = useState<PublicOrder[]>([])
   const [selected, setSelected] = useState<PublicOrder | null>(null)
   const [searched, setSearched] = useState(false)
+  const [trackOrder] = useTrackOrderMutation()
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,7 +91,7 @@ const OrderTrackingPage = () => {
     setSearched(true)
 
     try {
-      const result = await api.trackOrder(mode === 'orderId' ? { orderId: value } : { phone: value })
+      const result = await trackOrder(mode === 'orderId' ? { orderId: value } : { phone: value }).unwrap()
       const list = result.orders || []
       setOrders(list)
       if (list.length === 1) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Loader2, Search, Trash2, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminLayout from '../../components/layout/AdminLayout'
@@ -25,32 +25,21 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { adminApi } from '@/lib/adminApi'
 import type { AdminCustomer } from '@/types/admin'
 import { SEO } from '../../components/common/SEO'
+import { useDeleteCustomerMutation, useGetAdminCustomersQuery } from '@/store/services/adminProductsApi'
 
 const AdminCustomersPage = () => {
-  const [customers, setCustomers] = useState<AdminCustomer[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: customersResult, isLoading: loading, refetch } = useGetAdminCustomersQuery()
+  const customers = customersResult?.data || []
+  const [deleteCustomer] = useDeleteCustomerMutation()
   const [search, setSearch] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<AdminCustomer | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const result = await adminApi.getCustomers()
-      setCustomers(result.data)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load customers')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
+  const load = useCallback(() => {
+    refetch()
+  }, [refetch])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return customers
@@ -62,7 +51,7 @@ const AdminCustomersPage = () => {
     if (!deleteTarget) return
     setDeleting(true)
     try {
-      await adminApi.deleteCustomer(deleteTarget.id)
+      await deleteCustomer(deleteTarget.id).unwrap()
       toast.success('Customer removed')
       setDeleteTarget(null)
       load()

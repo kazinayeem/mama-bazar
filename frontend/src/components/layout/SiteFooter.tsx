@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useGetCategoriesQuery, useGetStoreInfoQuery } from '../../store/services/commerceApi'
-import { api } from '../../lib/api'
-import type { PaymentMethodInfo } from '../../types'
+import { useGetCategoriesQuery, useGetPaymentMethodsQuery, useGetStoreInfoQuery } from '../../store/services/commerceApi'
 
 const PAYMENT_STYLES: Record<string, string> = {
   cod: 'bg-brand-green-50 text-brand-green-600 border-brand-green-200',
@@ -63,14 +60,8 @@ const SiteFooter = () => {
   const categoriesQuery = useGetCategoriesQuery()
   const categories = (categoriesQuery.data || []).filter((c) => !c.parentId)
   const { data: storeInfo } = useGetStoreInfoQuery()
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>([])
-
-  useEffect(() => {
-    api
-      .getPaymentMethods()
-      .then((methods) => setPaymentMethods(methods.filter((m) => m.code !== 'cod')))
-      .catch(() => {})
-  }, [])
+  const { data: paymentMethodsData } = useGetPaymentMethodsQuery()
+  const paymentMethods = (paymentMethodsData || []).filter((m) => m.code !== 'cod')
 
   const contact: ContactInfo = {
     phone: storeInfo?.primaryPhone,

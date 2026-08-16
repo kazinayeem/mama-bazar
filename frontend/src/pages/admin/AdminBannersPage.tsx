@@ -33,10 +33,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { adminApi } from '@/lib/adminApi'
 import MediaPicker from '@/components/admin/MediaPicker'
 import type { Banner, BannerPosition } from '@/types/admin'
 import { SEO } from '../../components/common/SEO'
+import {
+  useCreateBannerMutation,
+  useDeleteBannerMutation,
+  useGetBannersQuery,
+  useUpdateBannerMutation,
+} from '@/store/services/adminProductsApi'
 
 const POSITION_LABELS: Record<BannerPosition, string> = {
   hero: 'Hero Slider',
@@ -46,8 +51,11 @@ const POSITION_LABELS: Record<BannerPosition, string> = {
 }
 
 const AdminBannersPage = () => {
+  const { data: bannersData, isLoading: loading, refetch } = useGetBannersQuery()
+  const [createBanner] = useCreateBannerMutation()
+  const [updateBanner] = useUpdateBannerMutation()
+  const [deleteBanner] = useDeleteBannerMutation()
   const [banners, setBanners] = useState<Banner[]>([])
-  const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Banner | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Banner | null>(null)
@@ -63,22 +71,14 @@ const AdminBannersPage = () => {
   const [status, setStatus] = useState<'active' | 'inactive'>('active')
   const [images, setImages] = useState<{ image?: string; imageTablet?: string; imageMobile?: string }>({})
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const list = await adminApi.getBanners()
-      const sorted = [...list].sort((a, b) => b.priority - a.priority)
-      setBanners(sorted)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to load banners')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    load()
-  }, [load])
+    if (!bannersData) return
+    setBanners([...bannersData].sort((a, b) => b.priority - a.priority))
+  }, [bannersData])
+
+  const load = useCallback(() => {
+    refetch()
+  }, [refetch])
 
   const openCreate = () => {
     setEditing(null)
@@ -128,10 +128,10 @@ const AdminBannersPage = () => {
         ...images,
       }
       if (editing) {
-        await adminApi.updateBanner(editing.id, payload)
+        await updateBanner({ id: editing.id, payload }).unwrap()
         toast.success('Banner updated')
       } else {
-        await adminApi.createBanner(payload)
+        await createBanner(payload).unwrap()
         toast.success('Banner created')
       }
       setDialogOpen(false)
@@ -146,7 +146,7 @@ const AdminBannersPage = () => {
   const handleDelete = async () => {
     if (!deleteTarget) return
     try {
-      await adminApi.deleteBanner(deleteTarget.id)
+      await deleteBanner(deleteTarget.id).unwrap()
       toast.success('Banner deleted')
       setDeleteTarget(null)
       load()
@@ -166,7 +166,7 @@ const AdminBannersPage = () => {
     const updates = next.map((b, i) => ({ ...b, priority: next.length - i }))
     try {
       for (const b of updates) {
-        await adminApi.updateBanner(b.id, { priority: b.priority })
+        await updateBanner({ id: b.id, payload: { priority: b.priority } }).unwrap()
       }
     } catch {
       toast.error('Reorder failed to save')
