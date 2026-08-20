@@ -23,7 +23,7 @@ interface ProductCardProps {
   index?: number
 }
 
-const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
+const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   const dispatch = useAppDispatch()
   const toast = useToast()
   const wishlisted = useAppSelector((state) => state.ui.wishlist.includes(product.id))
