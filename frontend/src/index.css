@@ -1,8 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+/* Google Fonts are loaded via <link> preconnect in index.html for non-blocking font loading.
+   The @import below is intentionally removed to avoid render-blocking. */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* ============================================================
+   CSS ANIMATIONS — replacing Framer Motion whileInView/animate
+   for static homepage content to reduce JS overhead.
+   ============================================================ */
+
+/* Product card fade-in — replaces motion.article whileInView */
+@keyframes card-fadein {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.product-card-fadein {
+  animation: card-fadein 0.35s ease-out both;
+}
+
+/* Flash Deals flame pulse — replaces motion.span animate={{ scale: [1, 1.12, 1] }} */
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.12); }
+}
+.animate-pulse-scale {
+  animation: pulse-scale 1.4s ease-in-out infinite;
+}
 
 /* Bangla typography utilities — Bengali font with natural spacing */
 .bangla {

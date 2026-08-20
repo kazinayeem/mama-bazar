@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import compression from "compression";
 import path from "path";
 import { env } from "./config/env";
 
@@ -36,6 +37,9 @@ const app = express();
 
 // Security headers
 app.use(helmet());
+
+// Gzip/Brotli compression for all responses (JSON APIs shrink ~70-80%)
+app.use(compression());
 
 // CORS — restrict to frontend origin
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));

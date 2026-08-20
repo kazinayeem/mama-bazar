@@ -2,7 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { resolveImageUrl } from '@/lib/cloudinary'
+import { resolveImageUrl, getCloudinaryBannerUrl } from '@/lib/cloudinary'
 import type { HomepageHeroSlide } from '../../types/homepage'
 
 interface HeroCarouselProps {
@@ -13,12 +13,12 @@ interface HeroCarouselProps {
 const AUTOPLAY_MS = 4500
 
 /**
- * Hero slide images are stored as Cloudinary `secure_url`s. Those URLs are
- * already valid and load without any transformation, so they are used as-is —
- * injecting transforms via string manipulation is what previously produced
- * malformed paths that Cloudinary rejected with HTTP 400.
+ * Hero slide images are stored as Cloudinary `secure_url`s.
+ * We apply f_auto,q_auto for automatic format (WebP) and quality optimization
+ * without resizing — hero images need to fill the full viewport width.
+ * For non-Cloudinary URLs the helper returns the original URL unchanged.
  */
-const resolveHeroUrl = (url?: string) => resolveImageUrl(url)
+const resolveHeroUrl = (url?: string) => getCloudinaryBannerUrl(resolveImageUrl(url))
 
 const pickImage = (slide: HomepageHeroSlide) => {
   const desktop = resolveHeroUrl(slide.desktopImage)

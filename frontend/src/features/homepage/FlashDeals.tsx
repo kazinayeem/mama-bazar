@@ -1,4 +1,3 @@
-import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Flame, Timer } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -68,7 +67,6 @@ const TimeUnit = ({ value, label }: { value: string; label: string }) => (
 )
 
 const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps) => {
-  const reduceMotion = useReducedMotion()
   const target = useMemo(() => computeTarget(window), [window])
   const time = useCountdown(target)
 
@@ -83,13 +81,10 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
           <div className="pointer-events-none absolute -bottom-16 left-1/3 hidden h-40 w-40 rounded-full bg-brand-orange-400/15 blur-3xl md:block" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <motion.span
-                animate={reduceMotion ? undefined : { scale: [1, 1.12, 1] }}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-brand-orange-300/40 bg-brand-orange-500/20 text-brand-orange-300 shadow-lg shadow-black/30"
-                transition={reduceMotion ? undefined : { duration: 1.4, repeat: Infinity }}
-              >
+              {/* CSS animation replaces framer-motion motion.span for this static pulse */}
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-brand-orange-300/40 bg-brand-orange-500/20 text-brand-orange-300 shadow-lg shadow-black/30 animate-pulse-scale">
                 <Flame size={22} className="fill-brand-orange-300" />
-              </motion.span>
+              </span>
               <div>
                 <p className="font-headline text-xl font-light text-white tracking-tight sm:text-2xl">
                   {section.title || 'Flash Deals'}

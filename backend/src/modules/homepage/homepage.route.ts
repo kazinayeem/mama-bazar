@@ -7,8 +7,21 @@ import { saveConfigSchema, subscribeNewsletterSchema } from "./homepage.schema";
 
 const router = Router();
 
+/**
+ * Cache-Control for the public homepage aggregate.
+ * - s-maxage=60: Vercel/CDN edge caches for 60 seconds (acts like ISR revalidate=60)
+ * - stale-while-revalidate=300: serve stale while revalidating for up to 5 minutes
+ * - public: safe to cache at the CDN layer (no auth required for this route)
+ * Browser clients with RTK Query already cache for keepUnusedDataFor=900 after
+ * the first fetch, so repeat SPA navigations never hit the network.
+ */
+const homepageCacheMiddleware = (_req: any, res: any, next: any) => {
+  res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+  next();
+};
+
 // Public
-router.get("/", asyncHandler(getHomepage));
+router.get("/", homepageCacheMiddleware, asyncHandler(getHomepage));
 router.post("/newsletter/subscribe", validate(subscribeNewsletterSchema), asyncHandler(subscribeNewsletter));
 
 // Admin only
@@ -18,3 +31,4 @@ router.post("/admin/reset-defaults", authMiddleware, adminOnly, asyncHandler(res
 router.get("/admin/subscribers", authMiddleware, adminOnly, asyncHandler(getSubscribers));
 
 export default router;
+

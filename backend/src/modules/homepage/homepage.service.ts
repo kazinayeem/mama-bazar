@@ -12,7 +12,7 @@ import {
 } from "../../config/schema";
 import { eq, and, desc, asc, inArray, notInArray, isNull, or, sql } from "drizzle-orm";
 import * as settingsService from "../settings/settings.service";
-import { fullQuery, formatProductRow, fetchRatingMap } from "../product/product.service";
+import { fullQuery, formatHomepageProduct, fetchRatingMap, fetchProductRowsOnly } from "../product/product.service";
 import { AppError } from "../../utils/AppError";
 import type { HomepageConfig, HomepageSectionConfig } from "./homepage.interface";
 
@@ -252,10 +252,13 @@ const sanitizeLimit = (value: number | undefined, fallback: number) => {
   return Math.min(Math.floor(n), 24);
 };
 
+/**
+ * Fetch product rows only (no rating lookup).
+ * The homepage service collects all rows first, then calls fetchRatingMap once
+ * for all product IDs combined — eliminating N+1 DB round-trips for ratings.
+ */
 const fetchProducts = async (where: any, limit: number, orderBy?: any) => {
-  const rows = await fullQuery().where(where).orderBy(orderBy ?? desc(products.createdAt)).limit(limit);
-  const ratingMap = await fetchRatingMap(rows.map((row) => row.id));
-  return rows.map((row) => formatProductRow(row, ratingMap.get(row.id)));
+  return fetchProductRowsOnly(where, limit, orderBy);
 };
 
 const resolveLabelProducts = async (
@@ -275,9 +278,6 @@ const resolveLabelProducts = async (
   const orderBy = label === "flash_sale" ? desc(sql`COALESCE(${products.discount}, 0)`) : desc(products.createdAt);
 
   if (label === "new_arrival") {
-    // Real "new arrivals": recent products (created within 30 days) or
-    // admin-boosted via is_new_arrival, always sorted by createdAt (newest first).
-    // If nothing is recent (e.g. all stock is older), fall back to newest products.
     const where = and(
       eq(products.status, "active"),
       or(eq(products.isNewArrival, true), sql`${products.createdAt} >= (NOW() - INTERVAL 30 DAY)`)
@@ -316,8 +316,8 @@ const resolveTrending = async (limit: number) => {
       .limit(limit);
     const orderMap = new Map(aggRows.map((r, i) => [r.productId, i]));
     rows.sort((a, b) => (orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER));
-    const ratingMap = await fetchRatingMap(rows.map((row) => row.id));
-    return rows.map((row) => formatProductRow(row, ratingMap.get(row.id)));
+    // rows returned without rating — caller batches rating lookup
+    return rows;
   }
 
   const flagged = await fetchProducts(
@@ -350,8 +350,8 @@ const resolveBestSellers = async (limit: number) => {
       .limit(limit);
     const orderMap = new Map(aggRows.map((r, i) => [r.productId, i]));
     rows.sort((a, b) => (orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER));
-    const ratingMap = await fetchRatingMap(rows.map((row) => row.id));
-    return rows.map((row) => formatProductRow(row, ratingMap.get(row.id)));
+    // rows returned without rating — caller batches rating lookup
+    return rows;
   }
 
   // No sales yet — fall back to the best-seller flag, then featured, then newest
@@ -613,7 +613,6 @@ export const getHomepage = async (userId: number | null) => {
       const limit = limits[type];
       switch (type) {
         case "flash_deals":
-          // Expired window → no flash deals; otherwise flag-based list.
           productResults[type] = flashExpired ? [] : await resolveLabelProducts("flash_sale", limit);
           break;
         case "featured":
@@ -650,6 +649,40 @@ export const getHomepage = async (userId: number | null) => {
       }
     })
   );
+
+  // --- BATCH RATING LOOKUP ---
+  // Collect ALL product rows from every section into a single ID set,
+  // then call fetchRatingMap ONCE instead of once per section (eliminates N+1).
+  const allProductRows: any[] = Object.values(productResults).flat();
+  // Also include category_products rows
+  Object.values(categoryProductResults).forEach((r) => allProductRows.push(...r.products));
+  const allIds = [...new Set(allProductRows.map((r) => r.id).filter(Boolean))];
+  const globalRatingMap = allIds.length > 0 ? await fetchRatingMap(allIds) : new Map();
+
+  // Apply slim formatter + ratings to each section's rows
+  for (const type of Object.keys(productResults)) {
+    const rows = productResults[type];
+    // Rows from resolveTrending / resolveBestSellers (order-based) are raw DB rows;
+    // rows from fetchProducts (label-based) are also raw DB rows now.
+    // Apply formatHomepageProduct + injected rating.
+    productResults[type] = rows.map((row: any) =>
+      // If the row already has a rating property it was formatted by an inner call;
+      // otherwise format it now.
+      typeof row.rating !== "undefined" && typeof row.title === "string" && !row.images
+        ? row // already formatted slim object (shouldn't happen but guard)
+        : formatHomepageProduct(row, globalRatingMap.get(row.id))
+    );
+  }
+  // Apply to category_products sections
+  for (const sectionId of Object.keys(categoryProductResults)) {
+    const r = categoryProductResults[sectionId];
+    categoryProductResults[sectionId] = {
+      category: r.category,
+      products: (r.products as any[]).map((row: any) =>
+        formatHomepageProduct(row, globalRatingMap.get(row.id))
+      ),
+    };
+  }
 
   const sections = enabled.map((section) => {
     const data: any = {};

@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { addToCart } from '../../store/slices/cartSlice'
 import { toggleWishlist } from '../../store/slices/uiSlice'
 import { resolveUrl } from '@/lib/apiConfig'
+import { getCloudinaryCardUrl } from '@/lib/cloudinary'
 import {
   findVariantByOptions,
   getVariantDiscountPercent,
@@ -54,10 +55,10 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
   const activeColorOption = product.colorOptions?.find((c) => c.name === activeColor)
   const activeSizeLabel = activeSize || ''
   const activeImage =
-    (activeVariant?.images?.[0] ? resolveUrl(activeVariant.images[0]) : null) ||
-    (activeVariant?.thumbnail ? resolveUrl(activeVariant.thumbnail) : null) ||
-    (activeColorOption?.image ? resolveUrl(activeColorOption.image) : null) ||
-    (product.images.length > 0 ? resolveUrl(product.images[0]) : '')
+    (activeVariant?.images?.[0] ? getCloudinaryCardUrl(resolveUrl(activeVariant.images[0])) : null) ||
+    (activeVariant?.thumbnail ? getCloudinaryCardUrl(resolveUrl(activeVariant.thumbnail)) : null) ||
+    (activeColorOption?.image ? getCloudinaryCardUrl(resolveUrl(activeColorOption.image)) : null) ||
+    (product.images.length > 0 ? getCloudinaryCardUrl(resolveUrl(product.images[0])) : '')
 
   const isOutOfStock = product.stock <= 0
   const isLowStock = product.stock > 0 && product.stock <= 10
@@ -107,12 +108,8 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
           : null
 
   return (
-    <motion.article
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green-100 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-brand-green-200 hover:shadow-card"
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-20px' }}
-      transition={{ duration: 0.35, delay: Math.min((index % 5) * 0.05, 0.2), ease: [0.22, 1, 0.36, 1] }}
+    <article
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green-100 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-brand-green-200 hover:shadow-card product-card-fadein"
     >
       {/* Image area — fixed height, white bg, object-contain */}
       <div className="relative h-[190px] shrink-0 overflow-hidden bg-white sm:h-[210px]">
@@ -297,7 +294,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
           </Link>
         </div>
       </div>
-    </motion.article>
+    </article>
   )
 }
 

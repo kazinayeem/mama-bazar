@@ -71,3 +71,31 @@ export const optimizeCloudinaryUrl = (
 
   return `${base}${transforms}/${rest}`
 }
+
+/**
+ * Optimized URL for homepage product cards (300×300 display).
+ * Applies format auto, quality auto, and width constraint.
+ * Falls back to the original URL for non-Cloudinary images.
+ */
+export const getCloudinaryCardUrl = (url?: string | null): string =>
+  optimizeCloudinaryUrl(url, 'w_300,h_300,c_pad,f_auto,q_auto')
+
+/**
+ * Optimized URL for category chip images (120×120 display).
+ */
+export const getCloudinaryCategoryUrl = (url?: string | null): string =>
+  optimizeCloudinaryUrl(url, 'w_120,h_120,c_pad,f_auto,q_auto')
+
+/**
+ * Optimized URL for brand logos (100×100 display).
+ */
+export const getCloudinaryBrandUrl = (url?: string | null): string =>
+  optimizeCloudinaryUrl(url, 'w_100,h_100,c_pad,f_auto,q_auto')
+
+/**
+ * Optimized URL for hero/banner images — format+quality only, no resize
+ * (hero fills the viewport and needs its natural dimensions).
+ */
+export const getCloudinaryBannerUrl = (url?: string | null): string =>
+  optimizeCloudinaryUrl(url, 'f_auto,q_auto')
+

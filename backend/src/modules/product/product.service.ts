@@ -295,6 +295,49 @@ export const fetchRatingMap = async (productIds?: number[]) => {
   return map;
 };
 
+/**
+ * Lightweight product shape for homepage product cards.
+ * Only includes the fields that the ProductCard component actually renders.
+ * ~60% smaller than the full formatProductRow payload.
+ */
+export const formatHomepageProduct = (row: any, ratingInfo?: { rating: number | null; reviewCount: number }) => {
+  const isTrue = (v: any) => v === true || v === 1 || v === "1";
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    price: row.price,
+    salePrice: row.salePrice,
+    discount: row.discount,
+    stock: row.stock,
+    images: row.images || [],
+    colorOptions: row.colorOptions,
+    sizeOptions: row.sizeOptions,
+    isBestSeller: isTrue(row.isBestSeller),
+    isNewArrival: isTrue(row.isNewArrival),
+    isFlashSale: isTrue(row.isFlashSale),
+    isHotDeal: isTrue(row.isHotDeal),
+    isFeatured: isTrue(row.isFeatured),
+    brand: row.brand,
+    brandInfo: row.brandName
+      ? { id: row.brandId, name: row.brandName, logo: row.brandLogo, slug: row.brandSlug }
+      : null,
+    rating: ratingInfo ? ratingInfo.rating : null,
+    reviewCount: ratingInfo ? ratingInfo.reviewCount : 0,
+    variants: undefined as undefined | any[],
+  };
+};
+
+/**
+ * Fetch product rows WITHOUT triggering a rating lookup.
+ * Used by the homepage service which batches all rating queries
+ * into a single fetchRatingMap call across all sections.
+ */
+export const fetchProductRowsOnly = async (where: any, limit: number, orderBy?: any) => {
+  return fullQuery().where(where).orderBy(orderBy ?? desc(products.createdAt)).limit(limit);
+};
+
+
 const buildWhere = async (query: ProductQuery) => {
   const conditions: any[] = [];
 
