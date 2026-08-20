@@ -116,7 +116,7 @@ const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps)
           </div>
         </div>
 
-        <ProductCarousel onQuickView={onQuickView} products={products.slice(0, 10)} />
+        <ProductCarousel maxItems={5} onQuickView={onQuickView} products={products} />
       </div>
     </section>
   )

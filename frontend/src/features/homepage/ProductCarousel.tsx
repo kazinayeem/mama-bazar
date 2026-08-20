@@ -6,6 +6,7 @@ import type { Product } from '../../types'
 interface ProductCarouselProps {
   products: Product[]
   onQuickView: (product: Product) => void
+  maxItems?: number
 }
 
 // How many full cards to show per breakpoint
@@ -17,7 +18,8 @@ const getVisibleCount = () => {
   return 2
 }
 
-const ProductCarousel = ({ products, onQuickView }: ProductCarouselProps) => {
+const ProductCarousel = ({ products, onQuickView, maxItems = 5 }: ProductCarouselProps) => {
+  const displayProducts = products.slice(0, maxItems)
   const trackRef = useRef<HTMLDivElement>(null)
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(false)
@@ -42,17 +44,16 @@ const ProductCarousel = ({ products, onQuickView }: ProductCarouselProps) => {
     if (!el) return
     el.addEventListener('scroll', checkScroll, { passive: true })
     return () => el.removeEventListener('scroll', checkScroll)
-  }, [checkScroll, products])
+  }, [checkScroll, displayProducts])
+
+  if (displayProducts.length === 0) return null
 
   const scrollBy = (direction: 'left' | 'right') => {
     const el = trackRef.current
     if (!el) return
-    // scroll by exactly one card width
-    const cardWidth = el.scrollWidth / products.length
+    const cardWidth = el.scrollWidth / displayProducts.length
     el.scrollBy({ left: direction === 'left' ? -cardWidth * visibleCount : cardWidth * visibleCount, behavior: 'smooth' })
   }
-
-  if (products.length === 0) return null
 
   // Card min-width based on visible count
   const cardStyle: React.CSSProperties = {
@@ -93,7 +94,7 @@ const ProductCarousel = ({ products, onQuickView }: ProductCarouselProps) => {
         className="no-scrollbar flex items-stretch gap-3 overflow-x-auto"
         style={{ scrollSnapType: 'x mandatory' }}
       >
-        {products.map((product, index) => (
+        {displayProducts.map((product, index) => (
           <div key={product.id} className="h-full" style={cardStyle}>
             <ProductCard index={index} onQuickView={onQuickView} product={product} />
           </div>

@@ -10,6 +10,7 @@ import PromoBanner from './PromoBanner'
 import ReviewsSection from './ReviewsSection'
 import NewsletterBlock from './NewsletterBlock'
 import WhyChooseUs from './WhyChooseUs'
+import LazySection from '../../components/common/LazySection'
 import { Link } from 'react-router-dom'
 import {
   asBanners,
@@ -162,9 +163,11 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const items = asCategories(section)
             if (items.length === 0) return null
             return (
-              <SectionShell key={section.id} section={section}>
-                <CategoryGrid columns={section.columns} items={items} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-48 animate-pulse bg-slate-50" />}>
+                <SectionShell section={section}>
+                  <CategoryGrid columns={section.columns} items={items} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
@@ -179,9 +182,11 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
               ctaUrl: section.ctaUrl?.trim() || `/shop?category=${category.slug}`,
             }
             return (
-              <SectionShell key={section.id} section={resolved}>
-                <ProductCarousel onQuickView={onQuickView} products={products} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-72 animate-pulse bg-slate-50" />}>
+                <SectionShell section={resolved}>
+                  <ProductCarousel maxItems={5} onQuickView={onQuickView} products={products} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
@@ -189,9 +194,11 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const items = asBanners(section)
             if (items.length === 0) return null
             return (
-              <SectionShell key={section.id} section={section}>
-                <PromoBanner items={items} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-56 animate-pulse bg-slate-50" />}>
+                <SectionShell section={section}>
+                  <PromoBanner items={items} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
@@ -199,13 +206,14 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const products = asProducts(section)
             if (products.length === 0) return null
             return (
-              <FlashDeals
-                key={section.id}
-                onQuickView={onQuickView}
-                products={products}
-                section={section}
-                window={data.flashSaleWindow}
-              />
+              <LazySection key={section.id} fallback={<div className="h-96 animate-pulse bg-brand-green-50" />}>
+                <FlashDeals
+                  onQuickView={onQuickView}
+                  products={products}
+                  section={section}
+                  window={data.flashSaleWindow}
+                />
+              </LazySection>
             )
           }
 
@@ -213,9 +221,11 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const items = asBrands(section)
             if (items.length === 0) return null
             return (
-              <SectionShell key={section.id} section={section}>
-                <BrandRow items={items} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-40 animate-pulse bg-slate-50" />}>
+                <SectionShell section={section}>
+                  <BrandRow items={items} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
@@ -223,9 +233,11 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const items = asCollections(section)
             if (items.length === 0) return null
             return (
-              <SectionShell key={section.id} section={section}>
-                <CollectionTiles items={items} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-64 animate-pulse bg-slate-50" />}>
+                <SectionShell section={section}>
+                  <CollectionTiles items={items} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
@@ -233,9 +245,11 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const items = asReviews(section)
             if (items.length === 0) return null
             return (
-              <SectionShell key={section.id} section={section}>
-                <ReviewsSection items={items} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-72 animate-pulse bg-slate-50" />}>
+                <SectionShell section={section}>
+                  <ReviewsSection items={items} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
@@ -243,14 +257,20 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const items = asContentItems(section)
             if (items.length === 0) return null
             return (
-              <SectionShell key={section.id} section={section}>
-                <WhyChooseUs items={items} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-64 animate-pulse bg-slate-50" />}>
+                <SectionShell section={section}>
+                  <WhyChooseUs items={items} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
           case 'newsletter':
-            return <NewsletterBlock key={section.id} settings={section.data?.settings} />
+            return (
+              <LazySection key={section.id} fallback={<div className="h-40 animate-pulse bg-slate-50" />}>
+                <NewsletterBlock settings={section.data?.settings} />
+              </LazySection>
+            )
 
           case 'featured':
           case 'best_sellers':
@@ -264,9 +284,11 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
             const products = asProducts(section)
             if (products.length === 0) return null
             return (
-              <SectionShell key={section.id} section={section}>
-                <ProductCarousel onQuickView={onQuickView} products={products} />
-              </SectionShell>
+              <LazySection key={section.id} fallback={<div className="h-72 animate-pulse bg-slate-50" />}>
+                <SectionShell section={section}>
+                  <ProductCarousel maxItems={5} onQuickView={onQuickView} products={products} />
+                </SectionShell>
+              </LazySection>
             )
           }
 
