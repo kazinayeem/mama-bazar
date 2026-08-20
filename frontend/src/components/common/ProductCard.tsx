@@ -109,7 +109,7 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
 
   return (
     <article
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green-100 bg-white shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-brand-green-200 hover:shadow-card product-card-fadein"
+      className="product-card group relative flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green-100 bg-white product-card-fadein"
     >
       {/* Image area — fixed height, white bg, object-contain */}
       <div className="relative h-[190px] shrink-0 overflow-hidden bg-white sm:h-[210px]">
@@ -118,6 +118,8 @@ const ProductCard = ({ product, onQuickView, index = 0 }: ProductCardProps) => {
             <img
               alt={product.title}
               className="h-full w-full object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+              width="300"
+              height="300"
               loading="lazy"
               onError={() => setImageFailed(true)}
               src={activeImage}

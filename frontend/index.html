@@ -2,22 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="brandlogo.png" />
+    <link rel="icon" type="image/png" href="/brandlogo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mama Bazar - Premium Products & Gadgets</title>
+    <title>Mama Bazar - Premium Products &amp; Gadgets</title>
     <meta name="description" content="Discover premium products at unbeatable prices. Official warranty, free delivery, and 24/7 support." />
-    <!-- Preconnect to Google Fonts origin — eliminates a separate DNS+TCP+TLS round-trip
-         that would otherwise block the font request. Must be before the stylesheet link. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Non-blocking font load: display=swap means text is shown in system font immediately,
-         then swapped to Inter/Noto once loaded. This removes the render-blocking @import
-         that was in index.css and was delaying First Contentful Paint. -->
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap"
-    />
-    <!-- Google tag (gtag.js) -->
+
+    <!-- Preload self-hosted Inter 400 so the browser fetches it as early as possible
+         (before CSS is parsed). Only preload the primary weight; others load on demand. -->
+    <link rel="preload" href="/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- Google Analytics (async — does not block rendering) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JF4ZV7421X"></script>
     <script>
       window.dataLayer = window.dataLayer || [];

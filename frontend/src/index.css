@@ -1,5 +1,72 @@
-/* Google Fonts are loaded via <link> preconnect in index.html for non-blocking font loading.
-   The @import below is intentionally removed to avoid render-blocking. */
+/* ============================================================
+   SELF-HOSTED FONTS
+   Previously loaded from Google Fonts (@import / <link>).
+   Self-hosting eliminates the ~960ms external DNS+TCP+TLS round-trip
+   and removes the render-blocking dependency on fonts.googleapis.com.
+   Only the weights actually used by the design are included.
+   font-display: swap ensures text renders immediately in system font.
+   ============================================================ */
+
+/* Inter — UI body font, latin subset, weights 400/500/600/700 */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-500-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-600-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-700-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Noto Sans Bengali — Bengali script, weights 400/600/700 */
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/noto-sans-bengali-400.woff2') format('woff2');
+  unicode-range: U+0981-09FB, U+200C-200D, U+20B9, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/noto-sans-bengali-600.woff2') format('woff2');
+  unicode-range: U+0981-09FB, U+200C-200D, U+20B9, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/noto-sans-bengali-700.woff2') format('woff2');
+  unicode-range: U+0981-09FB, U+200C-200D, U+20B9, U+25CC;
+}
+
 
 @tailwind base;
 @tailwind components;
@@ -28,6 +95,42 @@
 .animate-pulse-scale {
   animation: pulse-scale 1.4s ease-in-out infinite;
 }
+
+/* ============================================================
+   PRODUCT CARD — GPU-composited hover effect
+   Replaces 'transition-all hover:shadow-card' which caused
+   box-shadow repaints (non-composited, flagged by Lighthouse).
+
+   Technique: pre-paint the elevated shadow on a ::after pseudo-element,
+   then transition only its `opacity` (GPU-composited).
+   The lift uses `transform: translateY` (also GPU-composited).
+   Border color transitions are cheap and fine to keep.
+   ============================================================ */
+.product-card {
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* shadow-soft — always visible */
+  border-color: #C6E9D3; /* brand-green-100 */
+  transition: transform 200ms ease, border-color 200ms ease;
+  will-change: transform;
+}
+.product-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07); /* shadow-card */
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  border-color: #8FD4AE; /* brand-green-200 */
+}
+.product-card:hover::after {
+  opacity: 1;
+}
+
 
 /* Bangla typography utilities — Bengali font with natural spacing */
 .bangla {
