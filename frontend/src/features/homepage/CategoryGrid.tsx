@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { resolveUrl } from '@/lib/apiConfig'
+import { getCloudinaryCategoryUrl } from '@/lib/cloudinary'
 import type { Category } from '../../types'
 
 interface CategoryGridProps {
@@ -84,7 +85,7 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
 
 const CategoryChip = ({ category }: { category: Category }) => {
   const [imgFailed, setImgFailed] = useState(false)
-  const imgSrc = category.image ? resolveUrl(category.image) : null
+  const imgSrc = category.image ? getCloudinaryCategoryUrl(resolveUrl(category.image)) : null
 
   return (
     <Link

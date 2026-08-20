@@ -3,6 +3,7 @@ import type { Brand } from '../../types/admin'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { resolveUrl } from '@/lib/apiConfig'
+import { getCloudinaryBrandUrl } from '@/lib/cloudinary'
 
 interface BrandRowProps {
   items: Brand[]
@@ -81,7 +82,7 @@ const BrandRow = ({ items }: BrandRowProps) => {
                   alt={brand.name}
                   className="h-10 w-10 object-contain transition-transform duration-300 group-hover:scale-110"
                   loading="lazy"
-                  src={resolveUrl(brand.logo)}
+                  src={getCloudinaryBrandUrl(resolveUrl(brand.logo))}
                 />
               </span>
             ) : (

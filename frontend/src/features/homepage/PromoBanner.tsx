@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { resolveUrl } from '@/lib/apiConfig'
+import { getCloudinaryBannerUrl } from '@/lib/cloudinary'
 import type { Banner } from '../../types/admin'
 
 interface PromoBannerProps {
@@ -9,11 +10,11 @@ interface PromoBannerProps {
 
 const isExternal = (url: string) => /^https?:\/\//.test(url)
 
-const PromoCard = ({ banner }: { banner: Banner }) => {
+const PromoCard = ({ banner, priority }: { banner: Banner; priority?: boolean }) => {
   const target = banner.link || '/shop'
-  const image = resolveUrl(banner.image)
-  const imageTablet = resolveUrl(banner.imageTablet) || image
-  const imageMobile = resolveUrl(banner.imageMobile) || imageTablet
+  const image = getCloudinaryBannerUrl(resolveUrl(banner.image))
+  const imageTablet = getCloudinaryBannerUrl(resolveUrl(banner.imageTablet)) || image
+  const imageMobile = getCloudinaryBannerUrl(resolveUrl(banner.imageMobile)) || imageTablet
 
   const body = (
     <>
@@ -23,7 +24,8 @@ const PromoCard = ({ banner }: { banner: Banner }) => {
         <img
           alt={banner.title || 'Promotional banner'}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-          loading="lazy"
+          fetchPriority={priority ? 'high' : 'auto'}
+          loading={priority ? 'eager' : 'lazy'}
           src={imageMobile}
         />
       </picture>
@@ -67,11 +69,12 @@ const PromoBanner = ({ items }: PromoBannerProps) => {
   const visible = items.slice(0, 2)
   return (
     <div className={`grid gap-4 ${visible.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
-      {visible.map((banner) => (
-        <PromoCard banner={banner} key={banner.id} />
+      {visible.map((banner, index) => (
+        <PromoCard banner={banner} key={banner.id} priority={index === 0} />
       ))}
     </div>
   )
 }
 
 export default PromoBanner
+
