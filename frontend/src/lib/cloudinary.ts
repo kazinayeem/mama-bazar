@@ -99,3 +99,27 @@ export const getCloudinaryBrandUrl = (url?: string | null): string =>
 export const getCloudinaryBannerUrl = (url?: string | null): string =>
   optimizeCloudinaryUrl(url, 'f_auto,q_auto')
 
+/**
+ * Responsive hero URL for a specific render width.
+ *
+ * Uses `c_limit` so the image is only DOWNSCALED when wider than `width`
+ * (never upscaled, never cropped, never padded) — the natural aspect ratio is
+ * preserved and the hero's `object-contain` display is visually identical to
+ * the source, just a far smaller file. This is what the homepage LCP element
+ * loads; right-sizing it from a multi-megabyte original to the viewport width
+ * is the single biggest image-transfer saving on the page.
+ *
+ *   desktop (≥1024px): w_1280   tablet (≥640px): w_900   mobile: w_640
+ */
+export const getCloudinaryHeroUrl = (url?: string | null, width = 1280): string =>
+  optimizeCloudinaryUrl(url, `w_${width},c_limit,f_auto,q_auto`)
+
+/**
+ * Optimized URL for collection tile images (object-cover, ~4/3 tiles, up to
+ * 4 per row on desktop). `c_limit` downscales to at most 600px wide so CSS
+ * `object-cover` still crops to the tile exactly as before, but the transfer
+ * is a fraction of the original-resolution image.
+ */
+export const getCloudinaryCollectionUrl = (url?: string | null): string =>
+  optimizeCloudinaryUrl(url, 'w_600,c_limit,f_auto,q_auto')
+

@@ -1,7 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { resolveUrl } from '@/lib/apiConfig'
-import { getCloudinaryBannerUrl } from '@/lib/cloudinary'
+import { getCloudinaryHeroUrl } from '@/lib/cloudinary'
 import type { Banner } from '../../types/admin'
 
 interface PromoBannerProps {
@@ -12,9 +12,12 @@ const isExternal = (url: string) => /^https?:\/\//.test(url)
 
 const PromoCard = ({ banner, priority }: { banner: Banner; priority?: boolean }) => {
   const target = banner.link || '/shop'
-  const image = getCloudinaryBannerUrl(resolveUrl(banner.image))
-  const imageTablet = getCloudinaryBannerUrl(resolveUrl(banner.imageTablet)) || image
-  const imageMobile = getCloudinaryBannerUrl(resolveUrl(banner.imageMobile)) || imageTablet
+  // Right-sized per breakpoint with c_limit (downscale-only). Each card renders
+  // at most ~600px wide on desktop (2-col grid) / ~400px on mobile; serving
+  // 900/700/500px sources avoids the full-resolution banner transfer entirely.
+  const image = getCloudinaryHeroUrl(resolveUrl(banner.image), 900)
+  const imageTablet = getCloudinaryHeroUrl(resolveUrl(banner.imageTablet), 700) || image
+  const imageMobile = getCloudinaryHeroUrl(resolveUrl(banner.imageMobile), 500) || imageTablet
 
   const body = (
     <>
@@ -25,8 +28,10 @@ const PromoCard = ({ banner, priority }: { banner: Banner; priority?: boolean })
           alt={banner.title || 'Promotional banner'}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           fetchPriority={priority ? 'high' : 'auto'}
+          height="300"
           loading={priority ? 'eager' : 'lazy'}
           src={imageMobile}
+          width="800"
         />
       </picture>
       <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/45 to-transparent" />

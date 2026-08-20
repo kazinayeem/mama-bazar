@@ -11,6 +11,15 @@
          (before CSS is parsed). Only preload the primary weight; others load on demand. -->
     <link rel="preload" href="/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin />
 
+    <!-- Preconnect to Cloudinary's CDN. Every homepage image (hero, product cards,
+         categories, brands, collections) is served from res.cloudinary.com. In this SPA
+         the image URLs are only discovered AFTER the /api/homepage response returns and
+         React renders, so the browser cannot resolve them at HTML-parse time. Warming the
+         DNS+TCP+TLS connection now means the LCP hero image starts downloading the instant
+         its URL is discovered, with no connection round-trip (saves ~100-300ms on mobile). -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
     <!-- Google Analytics (async — does not block rendering) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JF4ZV7421X"></script>
     <script>

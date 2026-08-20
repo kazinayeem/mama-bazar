@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { resolveUrl } from '@/lib/apiConfig'
+import { getCloudinaryCollectionUrl } from '@/lib/cloudinary'
 import type { Collection } from '../../types/admin'
 
 interface CollectionTilesProps {
@@ -21,8 +22,10 @@ const CollectionTiles = ({ items }: CollectionTilesProps) => {
             <img
               alt={collection.name}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              height="450"
               loading="lazy"
-              src={resolveUrl(collection.image)}
+              src={getCloudinaryCollectionUrl(resolveUrl(collection.image))}
+              width="600"
             />
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-primary/30 to-accent/20" />

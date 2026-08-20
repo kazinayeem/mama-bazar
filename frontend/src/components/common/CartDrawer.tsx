@@ -7,6 +7,8 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { removeFromCart, updateQuantity } from '../../store/slices/cartSlice'
 import { useGetProductsQuery } from '../../store/services/commerceApi'
 import { closeCart } from '../../store/slices/uiSlice'
+import { resolveUrl } from '@/lib/apiConfig'
+import { getCloudinaryCardUrl } from '@/lib/cloudinary'
 
 const CartDrawer = () => {
   const dispatch = useAppDispatch()
@@ -14,7 +16,7 @@ const CartDrawer = () => {
   const items = useAppSelector((state) => state.cart.items)
   const open = useAppSelector((state) => state.ui.cartOpen)
 
-  const recommendationsQuery = useGetProductsQuery({ label: 'featured', limit: 3 })
+  const recommendationsQuery = useGetProductsQuery({ label: 'featured', limit: 3 }, { skip: !open })
   const recommendations = (recommendationsQuery.data?.data || []).filter(
     (product) => !items.some((item) => item.product.id === product.id),
   )
@@ -91,7 +93,7 @@ const CartDrawer = () => {
                       return (
                         <div className="flex gap-3 rounded-[18px] bg-slate-50 p-3" key={item.key}>
                           <Link className="shrink-0" to={`/products/${item.product.slug}`} onClick={() => dispatch(closeCart())}>
-                            <img alt={item.product.title} className="h-20 w-20 rounded-xl object-cover" src={item.image || item.product.images[0]} />
+                            <img alt={item.product.title} className="h-20 w-20 rounded-xl object-cover" src={item.image || getCloudinaryCardUrl(resolveUrl(item.product.images[0]))} />
                           </Link>
                           <div className="flex min-w-0 flex-1 flex-col">
                             <div className="flex items-start justify-between gap-2">
@@ -152,7 +154,7 @@ const CartDrawer = () => {
                             onClick={() => dispatch(closeCart())}
                             to={`/products/${product.slug}`}
                           >
-                            <img alt={product.title} className="aspect-square w-full object-cover" loading="lazy" src={product.images[0]} />
+                            <img alt={product.title} className="aspect-square w-full object-cover" loading="lazy" src={getCloudinaryCardUrl(resolveUrl(product.images[0]))} />
                             <p className="line-clamp-2 p-2 text-[11px] font-semibold leading-snug text-slate-700 group-hover:text-emerald-600">
                               {product.title}
                             </p>

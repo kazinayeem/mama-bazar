@@ -2,7 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { resolveImageUrl, getCloudinaryBannerUrl } from '@/lib/cloudinary'
+import { resolveImageUrl, getCloudinaryHeroUrl } from '@/lib/cloudinary'
 import type { HomepageHeroSlide } from '../../types/homepage'
 
 interface HeroCarouselProps {
@@ -14,16 +14,21 @@ const AUTOPLAY_MS = 4500
 
 /**
  * Hero slide images are stored as Cloudinary `secure_url`s.
- * We apply f_auto,q_auto for automatic format (WebP) and quality optimization
- * without resizing — hero images need to fill the full viewport width.
+ * We apply per-breakpoint width constraints with `c_limit` (downscale-only, no
+ * crop/pad) so the browser never downloads a multi-megabyte original for a
+ * small viewport. Desktop serves up to ~1280px, tablet ~900px, mobile ~640px —
+ * matching the `<picture>` sources below. The hero's `object-contain` display
+ * is visually identical to the source, just a fraction of the bytes. This is
+ * the LCP element, so the smaller + preconnected transfer directly lowers LCP.
  * For non-Cloudinary URLs the helper returns the original URL unchanged.
  */
-const resolveHeroUrl = (url?: string) => getCloudinaryBannerUrl(resolveImageUrl(url))
+const resolveHeroUrl = (url: string | undefined, width: number) =>
+  getCloudinaryHeroUrl(resolveImageUrl(url), width)
 
 const pickImage = (slide: HomepageHeroSlide) => {
-  const desktop = resolveHeroUrl(slide.desktopImage)
-  const tablet = resolveHeroUrl(slide.tabletImage) || desktop
-  const mobile = resolveHeroUrl(slide.mobileImage) || tablet
+  const desktop = resolveHeroUrl(slide.desktopImage, 1280)
+  const tablet = resolveHeroUrl(slide.tabletImage, 900) || desktop
+  const mobile = resolveHeroUrl(slide.mobileImage, 640) || tablet
   return { desktop, tablet, mobile }
 }
 
@@ -250,12 +255,13 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
 
   if (count === 0) return null
 
-  // Current slide's mobile image — used only as a height spacer on mobile
+  // Current slide's mobile image — used only as a height spacer on mobile.
+  // Right-sized to 640px (mobile render width) so the spacer fetch is tiny.
   const currentSlide = slides[safeIndex]
   const currentMobileImage =
-    resolveHeroUrl(currentSlide.mobileImage) ||
-    resolveHeroUrl(currentSlide.tabletImage) ||
-    resolveHeroUrl(currentSlide.desktopImage) ||
+    resolveHeroUrl(currentSlide.mobileImage, 640) ||
+    resolveHeroUrl(currentSlide.tabletImage, 900) ||
+    resolveHeroUrl(currentSlide.desktopImage, 1280) ||
     ''
 
   return (
