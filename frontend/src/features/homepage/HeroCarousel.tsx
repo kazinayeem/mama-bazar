@@ -101,13 +101,15 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
         <picture>
           {images.desktop && <source media="(min-width: 1024px)" srcSet={images.desktop} />}
           {images.tablet && <source media="(min-width: 640px)" srcSet={images.tablet} />}
-          <img
+        <img
             ref={setImgRef}
             alt={slide.title || slide.badge || 'Promotional banner'}
             className="absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-500"
             draggable={false}
             fetchPriority={priority ? 'high' : 'auto'}
             loading={priority ? 'eager' : 'lazy'}
+            width="1200"
+            height="480"
             onError={() => setImageFailed(true)}
             onLoad={() => setImageLoaded(true)}
             src={images.mobile}
@@ -266,10 +268,19 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* Mobile height spacer — image establishes natural height, no black bars */}
+        {/* Mobile height spacer — image establishes natural height, no black bars.
+             fetchPriority=high makes the first slide's LCP image discoverable immediately. */}
         {currentMobileImage && (
           <div className="sm:hidden" aria-hidden="true">
-            <img alt="" className="block w-full" src={currentMobileImage} />
+            <img
+              alt=""
+              className="block w-full"
+              src={currentMobileImage}
+              width="640"
+              height="360"
+              fetchPriority="high"
+              loading="eager"
+            />
           </div>
         )}
 
