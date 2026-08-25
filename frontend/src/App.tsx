@@ -5,7 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute'
 import { PageSkeleton } from './components/common/Skeletons'
 import MainLayout from './components/layout/MainLayout'
 import UserDashboardLayout from './components/layout/UserDashboardLayout'
-import HomePage from './pages/HomePage'
+//import HomePage from './pages/HomePage'
 import Demo from './components/Demo'
 const ShopPage = lazy(() => import('./pages/ShopPage'))
 const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'))
