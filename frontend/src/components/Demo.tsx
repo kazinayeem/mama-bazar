@@ -1,10 +1,8 @@
-import React from "react";
-
 export default function Demo() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6 relative overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute top-[-150px] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-[-180px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl" />
 
       <div className="relative z-10 w-full max-w-xl text-center">
 
@@ -19,24 +17,20 @@ export default function Demo() {
           Website Locked
         </div>
 
-        {/* Funny Bangla Title */}
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-5">
           টাকা দিলে ওয়েবসাইট খুলবে! 😭
         </h1>
 
-        {/* English Heading */}
         <p className="text-xl font-semibold text-slate-300 mb-4">
           Website Under Maintenance
         </p>
 
-        {/* Description */}
         <p className="text-slate-400 text-base sm:text-lg leading-relaxed mb-8">
           This website is currently under maintenance.
           <br />
           Please wait a little while — we’ll be back soon.
         </p>
 
-        {/* Funny Message */}
         <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
           <p className="text-slate-300 leading-relaxed">
             কাজ না করলে সমস্যা নাই...
@@ -49,7 +43,6 @@ export default function Demo() {
 
         {/* Payment Card */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-left">
-
           <div className="flex items-center justify-between mb-5">
             <div>
               <p className="text-sm text-slate-500">
@@ -72,14 +65,12 @@ export default function Demo() {
             </div>
           </div>
 
-          {/* Payment Instruction */}
           <div className="rounded-xl bg-black/20 p-4">
             <p className="text-sm text-slate-400 leading-relaxed">
               Please complete the pending payment to unlock the
               website and restore access.
             </p>
           </div>
-
         </div>
 
         {/* Contact */}
@@ -96,9 +87,8 @@ export default function Demo() {
           </a>
         </div>
 
-        {/* Footer */}
         <p className="mt-8 text-xs text-slate-600">
-          Thanks for staying with us. ❤️
+          Thanks for staying with us.
         </p>
 
       </div>
