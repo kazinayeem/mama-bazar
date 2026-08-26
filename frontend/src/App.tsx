@@ -5,8 +5,8 @@ import ProtectedRoute from './components/common/ProtectedRoute'
 import { PageSkeleton } from './components/common/Skeletons'
 import MainLayout from './components/layout/MainLayout'
 import UserDashboardLayout from './components/layout/UserDashboardLayout'
+import Demo from './components/Demo'
 import HomePage from './pages/HomePage'
-//import Demo from './components/Demo'
 const ShopPage = lazy(() => import('./pages/ShopPage'))
 const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'))
 const CartPage = lazy(() => import('./pages/CartPage'))
@@ -68,6 +68,12 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => (
 )
 
 function App() {
+  // MAINTENANCE MODE: Only Demo page is shown.
+  // All routes and application code below are preserved but inactive.
+  // To restore the full app, uncomment the Routes block and remove the <Demo /> line.
+  return <Demo />
+
+  /*
   return (
     <Suspense fallback={<PageSkeleton />}>
       <Analytics />
@@ -114,7 +120,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
-        {/* Admin Routes */}
+        {/* Admin Routes *}
         <Route path="admin">
           <Route index element={<Navigate replace to="dashboard" />} />
           <Route path="dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
@@ -158,6 +164,7 @@ function App() {
       </Routes>
     </Suspense>
   )
+  */
 }
 
 export default App
