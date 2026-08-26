@@ -5,8 +5,8 @@ import ProtectedRoute from './components/common/ProtectedRoute'
 import { PageSkeleton } from './components/common/Skeletons'
 import MainLayout from './components/layout/MainLayout'
 import UserDashboardLayout from './components/layout/UserDashboardLayout'
-//import HomePage from './pages/HomePage'
-import Demo from './components/Demo'
+import HomePage from './pages/HomePage'
+//import Demo from './components/Demo'
 const ShopPage = lazy(() => import('./pages/ShopPage'))
 const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'))
 const CartPage = lazy(() => import('./pages/CartPage'))
@@ -73,7 +73,7 @@ function App() {
       <Analytics />
       <Routes>
         <Route element={<MainLayout />}>
-          <Route index element={<Demo />} />
+          <Route index element={<HomePage />} />
           <Route path="shop" element={<ShopPage />} />
           <Route path="products/:slug" element={<ProductDetailsPage />} />
           <Route path="cart" element={<CartPage />} />
