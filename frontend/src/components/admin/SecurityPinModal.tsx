@@ -153,15 +153,6 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium text-[11px]">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Today&apos;s little secret 🤫</span>
-            </div>
-            <div className="font-mono font-bold text-xs px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-primary shadow-xs tracking-wider">
-              DDMMYYYY
-            </div>
-          </div>
 
           {dynamicHint.readable && (
             <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
