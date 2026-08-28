@@ -157,7 +157,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
                 }}
                 disabled={isVerifying}
                 autoComplete="off"
-                placeholder="Enter 8-digit PIN (DDMMYYYY)"
+                placeholder="Enter 8-digit PIN"
                 maxLength={16}
                 className={`w-full px-4 py-3 pr-11 text-center font-mono text-lg tracking-widest rounded-xl bg-slate-50 dark:bg-slate-800 border ${
                   error
