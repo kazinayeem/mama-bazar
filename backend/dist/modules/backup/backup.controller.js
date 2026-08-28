@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBackup = exports.restoreBackup = exports.downloadBackup = exports.createBackup = exports.listBackups = void 0;
+exports.verifyPin = exports.deleteBackup = exports.restoreBackup = exports.downloadBackup = exports.createBackup = exports.listBackups = void 0;
 const backupService = __importStar(require("./backup.service"));
 const backup_storage_1 = require("./backup.storage");
 const AppError_1 = require("../../utils/AppError");
@@ -134,4 +134,22 @@ const deleteBackup = async (req, res) => {
     res.json({ success: true, message: "Backup deleted successfully" });
 };
 exports.deleteBackup = deleteBackup;
+const verifyPin = async (req, res) => {
+    const { pin } = req.body || {};
+    if (!pin || typeof pin !== "string") {
+        throw new AppError_1.AppError(400, "PIN is required");
+    }
+    const isValid = backupService.validateBackupPin(pin);
+    if (!isValid) {
+        return res.status(401).json({
+            success: false,
+            message: "Wrong PIN. Nice try 😄 Please check your backup PIN and try again.",
+        });
+    }
+    return res.json({
+        success: true,
+        message: "Security PIN verified successfully",
+    });
+};
+exports.verifyPin = verifyPin;
 //# sourceMappingURL=backup.controller.js.map

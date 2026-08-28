@@ -9,6 +9,7 @@ const router = (0, express_1.Router)();
 // All backup endpoints require authentication
 router.use(auth_1.authMiddleware);
 router.get("/history", (0, auth_1.requirePermission)("backup.view"), (0, asyncHandler_1.asyncHandler)(backup_controller_1.listBackups));
+router.post("/verify-pin", (0, auth_1.requirePermission)("backup.view"), (0, asyncHandler_1.asyncHandler)(backup_controller_1.verifyPin));
 router.post("/create", (0, auth_1.requirePermission)("backup.create"), (0, asyncHandler_1.asyncHandler)(backup_controller_1.createBackup));
 router.get("/download/:id", (0, auth_1.requirePermission)("backup.create"), (0, asyncHandler_1.asyncHandler)(backup_controller_1.downloadBackup));
 router.post("/restore", (0, auth_1.requirePermission)("backup.restore"), uploadMemory_1.uploadMemory.single("file"), (0, asyncHandler_1.asyncHandler)(backup_controller_1.restoreBackup));

@@ -5,6 +5,7 @@ import {
   downloadBackup,
   restoreBackup,
   deleteBackup,
+  verifyPin,
 } from "./backup.controller";
 import { authMiddleware, requirePermission } from "../../middleware/auth";
 import { uploadMemory } from "../../middleware/uploadMemory";
@@ -16,9 +17,11 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get("/history", requirePermission("backup.view"), asyncHandler(listBackups));
+router.post("/verify-pin", requirePermission("backup.view"), asyncHandler(verifyPin));
 router.post("/create", requirePermission("backup.create"), asyncHandler(createBackup));
 router.get("/download/:id", requirePermission("backup.create"), asyncHandler(downloadBackup));
 router.post("/restore", requirePermission("backup.restore"), uploadMemory.single("file"), asyncHandler(restoreBackup));
 router.delete("/:id", requirePermission("backup.restore"), asyncHandler(deleteBackup));
 
 export default router;
+

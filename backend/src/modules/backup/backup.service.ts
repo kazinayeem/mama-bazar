@@ -445,3 +445,50 @@ export const deleteBackup = async (
 
   return { success: true };
 };
+
+// ─── PIN Validation ────────────────────────────────────────────────────────────
+
+/**
+ * Returns valid DDMMYYYY PINs based on the server's current date.
+ * Covers local time, Asia/Dhaka time, and UTC to prevent timezone shifts from blocking legitimate admin access.
+ */
+export const getExpectedBackupPins = (): string[] => {
+  const now = new Date();
+
+  const formatDateToDDMMYYYY = (date: Date, timeZone?: string): string => {
+    try {
+      const formatter = new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: timeZone || undefined,
+      });
+      const parts = formatter.formatToParts(date);
+      const day = parts.find((p) => p.type === "day")?.value.padStart(2, "0") || "";
+      const month = parts.find((p) => p.type === "month")?.value.padStart(2, "0") || "";
+      const year = parts.find((p) => p.type === "year")?.value || "";
+      return `${day}${month}${year}`;
+    } catch {
+      // Fallback
+      const d = String(date.getDate()).padStart(2, "0");
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const y = String(date.getFullYear());
+      return `${d}${m}${y}`;
+    }
+  };
+
+  const pins = new Set<string>();
+  pins.add(formatDateToDDMMYYYY(now));
+  pins.add(formatDateToDDMMYYYY(now, "Asia/Dhaka"));
+  pins.add(formatDateToDDMMYYYY(now, "UTC"));
+
+  return Array.from(pins).filter((pin) => pin.length === 8);
+};
+
+export const validateBackupPin = (inputPin?: string): boolean => {
+  if (!inputPin || typeof inputPin !== "string") return false;
+  const cleanPin = inputPin.trim();
+  const validPins = getExpectedBackupPins();
+  return validPins.includes(cleanPin);
+};
+

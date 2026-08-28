@@ -58,4 +58,10 @@ export declare const deleteBackup: (id: number, actor?: {
 }) => Promise<{
     success: boolean;
 }>;
+/**
+ * Returns valid DDMMYYYY PINs based on the server's current date.
+ * Covers local time, Asia/Dhaka time, and UTC to prevent timezone shifts from blocking legitimate admin access.
+ */
+export declare const getExpectedBackupPins: () => string[];
+export declare const validateBackupPin: (inputPin?: string) => boolean;
 //# sourceMappingURL=backup.service.d.ts.map

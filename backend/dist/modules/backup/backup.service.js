@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBackup = exports.restoreBackup = exports.createBackup = exports.getBackupById = exports.listBackups = exports.TABLE_RESTORE_ORDER = void 0;
+exports.validateBackupPin = exports.getExpectedBackupPins = exports.deleteBackup = exports.restoreBackup = exports.createBackup = exports.getBackupById = exports.listBackups = exports.TABLE_RESTORE_ORDER = void 0;
 const adm_zip_1 = __importDefault(require("adm-zip"));
 const db_1 = require("../../config/db");
 const schema_1 = require("../../config/schema");
@@ -366,4 +366,48 @@ const deleteBackup = async (id, actor) => {
     return { success: true };
 };
 exports.deleteBackup = deleteBackup;
+// ─── PIN Validation ────────────────────────────────────────────────────────────
+/**
+ * Returns valid DDMMYYYY PINs based on the server's current date.
+ * Covers local time, Asia/Dhaka time, and UTC to prevent timezone shifts from blocking legitimate admin access.
+ */
+const getExpectedBackupPins = () => {
+    const now = new Date();
+    const formatDateToDDMMYYYY = (date, timeZone) => {
+        try {
+            const formatter = new Intl.DateTimeFormat("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                timeZone: timeZone || undefined,
+            });
+            const parts = formatter.formatToParts(date);
+            const day = parts.find((p) => p.type === "day")?.value.padStart(2, "0") || "";
+            const month = parts.find((p) => p.type === "month")?.value.padStart(2, "0") || "";
+            const year = parts.find((p) => p.type === "year")?.value || "";
+            return `${day}${month}${year}`;
+        }
+        catch {
+            // Fallback
+            const d = String(date.getDate()).padStart(2, "0");
+            const m = String(date.getMonth() + 1).padStart(2, "0");
+            const y = String(date.getFullYear());
+            return `${d}${m}${y}`;
+        }
+    };
+    const pins = new Set();
+    pins.add(formatDateToDDMMYYYY(now));
+    pins.add(formatDateToDDMMYYYY(now, "Asia/Dhaka"));
+    pins.add(formatDateToDDMMYYYY(now, "UTC"));
+    return Array.from(pins).filter((pin) => pin.length === 8);
+};
+exports.getExpectedBackupPins = getExpectedBackupPins;
+const validateBackupPin = (inputPin) => {
+    if (!inputPin || typeof inputPin !== "string")
+        return false;
+    const cleanPin = inputPin.trim();
+    const validPins = (0, exports.getExpectedBackupPins)();
+    return validPins.includes(cleanPin);
+};
+exports.validateBackupPin = validateBackupPin;
 //# sourceMappingURL=backup.service.js.map

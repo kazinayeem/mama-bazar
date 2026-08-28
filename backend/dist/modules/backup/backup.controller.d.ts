@@ -18,4 +18,5 @@ export declare const createBackup: (req: Request, res: Response) => Promise<void
 export declare const downloadBackup: (req: Request, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const restoreBackup: (req: Request, res: Response) => Promise<void>;
 export declare const deleteBackup: (req: Request, res: Response) => Promise<void>;
+export declare const verifyPin: (req: Request, res: Response) => Promise<Response<any, Record<string, any>>>;
 //# sourceMappingURL=backup.controller.d.ts.map

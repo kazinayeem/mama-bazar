@@ -1081,6 +1081,14 @@ export const adminProductsApi = baseApi.injectEndpoints({
           : [{ type: 'Backups', id: 'LIST' }],
     }),
 
+    verifyBackupPin: builder.mutation<{ success: boolean; message?: string }, { pin: string }>({
+      query: (body) => ({
+        url: '/api/backup/verify-pin',
+        method: 'POST',
+        body,
+      }),
+    }),
+
     createBackup: builder.mutation<AdminBackupInfo, { type?: 'manual' | 'safety_auto' } | void>({
       query: (body) => ({
         url: '/api/backup/create',
@@ -1266,6 +1274,7 @@ export const {
   useGetRolesAndPermissionsQuery,
   useGetAuditLogsQuery,
   useGetBackupsQuery,
+  useVerifyBackupPinMutation,
   useCreateBackupMutation,
   useRestoreBackupMutation,
   useDeleteBackupMutation,

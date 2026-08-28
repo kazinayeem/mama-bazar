@@ -15,23 +15,28 @@ import {
 } from 'lucide-react'
 import {
   useGetBackupsQuery,
+  useVerifyBackupPinMutation,
   useCreateBackupMutation,
   useRestoreBackupMutation,
   useDeleteBackupMutation,
   parseError,
 } from '../../store/services/adminProductsApi'
 import { PermissionGate } from '../../components/admin/PermissionGate'
+import { SecurityPinModal } from '../../components/admin/SecurityPinModal'
 import { API_BASE_URL } from '../../lib/apiConfig'
 import { authStorage } from '../../lib/authStorage'
 
 export const AdminBackupPage: React.FC = () => {
   const { data: backups = [], isLoading: loadingBackups, refetch } = useGetBackupsQuery()
+  const [verifyPinMutation] = useVerifyBackupPinMutation()
   const [createBackup, { isLoading: isCreating }] = useCreateBackupMutation()
   const [restoreBackup, { isLoading: isRestoring }] = useRestoreBackupMutation()
   const [deleteBackup, { isLoading: isDeleting }] = useDeleteBackupMutation()
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false)
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false)
+  const [pinAction, setPinAction] = useState<'create' | 'restore' | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -44,7 +49,37 @@ export const AdminBackupPage: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const handleCreateBackup = async () => {
+  const handleRequestCreateBackup = () => {
+    setPinAction('create')
+    setIsPinModalOpen(true)
+  }
+
+  const handleRequestRestore = () => {
+    setPinAction('restore')
+    setIsPinModalOpen(true)
+  }
+
+  const handleVerifyPin = async (pin: string) => {
+    return await verifyPinMutation({ pin }).unwrap()
+  }
+
+  const handlePinSuccess = () => {
+    const action = pinAction
+    setIsPinModalOpen(false)
+    setPinAction(null)
+
+    if (action === 'create') {
+      executeCreateBackup()
+    } else if (action === 'restore') {
+      // Programmatically open system file picker
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+        fileInputRef.current.click()
+      }
+    }
+  }
+
+  const executeCreateBackup = async () => {
     setFeedback(null)
     try {
       const result = await createBackup({ type: 'manual' }).unwrap()
@@ -107,8 +142,6 @@ export const AdminBackupPage: React.FC = () => {
     }
   }
 
-
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
@@ -170,22 +203,28 @@ export const AdminBackupPage: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <PermissionGate permission="backup.restore">
-            <label className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition shadow-sm active:scale-95">
+            <button
+              type="button"
+              onClick={handleRequestRestore}
+              disabled={isRestoring}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition shadow-sm active:scale-95 disabled:opacity-50"
+            >
               <Upload className="w-4 h-4 text-primary" />
               Upload & Restore
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".zip"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-            </label>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".zip"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
           </PermissionGate>
 
           <PermissionGate permission="backup.create">
             <button
-              onClick={handleCreateBackup}
+              type="button"
+              onClick={handleRequestCreateBackup}
               disabled={isCreating}
               className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 rounded-xl transition shadow-sm active:scale-95"
             >
@@ -440,6 +479,20 @@ export const AdminBackupPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* SECURITY PIN CHECK MODAL */}
+      <SecurityPinModal
+        isOpen={isPinModalOpen}
+        onClose={() => {
+          setIsPinModalOpen(false)
+          setPinAction(null)
+        }}
+        onSuccess={handlePinSuccess}
+        onVerify={handleVerifyPin}
+        title={pinAction === 'restore' ? 'Authorize Database Restore' : 'Authorize Backup Creation'}
+        subtitle="For your safety, enter the backup security PIN before continuing."
+        actionLabel={pinAction === 'restore' ? 'Unlock & Choose File' : 'Start Backup'}
+      />
 
       {/* DELETE MODAL */}
       {deleteConfirmId !== null && (

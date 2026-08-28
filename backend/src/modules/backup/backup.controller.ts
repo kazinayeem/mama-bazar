@@ -100,3 +100,24 @@ export const deleteBackup = async (req: Request, res: Response) => {
   });
   res.json({ success: true, message: "Backup deleted successfully" });
 };
+
+export const verifyPin = async (req: Request, res: Response) => {
+  const { pin } = req.body || {};
+  if (!pin || typeof pin !== "string") {
+    throw new AppError(400, "PIN is required");
+  }
+
+  const isValid = backupService.validateBackupPin(pin);
+  if (!isValid) {
+    return res.status(401).json({
+      success: false,
+      message: "Wrong PIN. Nice try 😄 Please check your backup PIN and try again.",
+    });
+  }
+
+  return res.json({
+    success: true,
+    message: "Security PIN verified successfully",
+  });
+};
+
