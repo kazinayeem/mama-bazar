@@ -37,8 +37,17 @@ import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 
-// Security headers
-app.use(helmet());
+// Trust reverse proxy (Vercel edge network)
+app.set('trust proxy', 1);
+
+// Security headers — configured for cross-origin API access
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: false,
+    contentSecurityPolicy: false,
+  })
+);
 
 // Gzip/Brotli compression for all responses (JSON APIs shrink ~70-80%)
 app.use(compression());
@@ -54,26 +63,28 @@ const allowedOrigins = [
   "https://ghorerbazar-five.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app") ||
-        origin.includes("localhost") ||
-        origin.includes("127.0.0.1")
-      ) {
-        return callback(null, true);
-      }
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app") ||
+      origin.includes("localhost") ||
+      origin.includes("127.0.0.1")
+    ) {
       return callback(null, true);
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-  })
-);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Body parsing with size limits
 app.use(express.json({ limit: "1mb" }));

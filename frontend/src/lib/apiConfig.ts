@@ -16,14 +16,18 @@
  * all request paths are relative — no hardcoded host is ever used.
  */
 
-const rawApiUrl = (
+const envApiUrl = (
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   ''
 ).trim()
 
+// In production, default to deployed backend origin (https://mama-bazar.vercel.app)
+const defaultProdApiUrl = 'https://mama-bazar.vercel.app'
+const resolvedApiUrl = envApiUrl || (import.meta.env.PROD ? defaultProdApiUrl : '')
+
 // Strip trailing slashes so `${API_BASE_URL}${path}` never double-slashes.
-export const API_BASE_URL: string = rawApiUrl.replace(/\/+$/, '')
+export const API_BASE_URL: string = resolvedApiUrl.replace(/\/+$/, '')
 
 // True when the API is expected to live on the same origin as the frontend.
 export const isApiSameOrigin = API_BASE_URL === ''
