@@ -66,38 +66,47 @@ export const AdminBackupPage: React.FC = () => {
     const url = `${API_BASE_URL}/api/backup/download/${id}`
     try {
       const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      if (!response.ok) throw new Error('Download failed')
 
-      const contentType = response.headers.get('content-type') || ''
-
-      if (contentType.includes('application/json')) {
-        // Production (Cloudinary): API returns a signed download URL
-        const json: { success: boolean; data: { downloadUrl: string; filename: string } } = await response.json()
-        if (!json?.data?.downloadUrl) throw new Error('No download URL returned')
-        const a = document.createElement('a')
-        a.href = json.data.downloadUrl
-        a.download = json.data.filename || filename
-        a.target = '_blank'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-      } else {
-        // Development (local): API streams binary ZIP
-        const blob = await response.blob()
-        const downloadUrl = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = downloadUrl
-        a.download = filename
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        window.URL.revokeObjectURL(downloadUrl)
+      if (!response.ok) {
+        // Try to read a JSON error message if available
+        const contentType = response.headers.get('content-type') || ''
+        if (contentType.includes('application/json')) {
+          const errJson = await response.json().catch(() => null)
+          const msg = errJson?.message || `Server error ${response.status}`
+          throw new Error(msg)
+        }
+        throw new Error(`Server returned ${response.status}`)
       }
-    } catch (err) {
+
+      // The backend always streams the real binary ZIP — no cross-origin redirect tricks
+      const blob = await response.blob()
+
+      // Sanity-check: a real ZIP is at minimum ~22 bytes (empty archive)
+      if (blob.size < 22) {
+        throw new Error(`Archive too small (${blob.size} bytes). The backup may be corrupted on the server.`)
+      }
+
+      const objectUrl = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      a.download = filename
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.click()
+      // Small delay before revoking so the browser has time to start the download
+      setTimeout(() => {
+        a.remove()
+        window.URL.revokeObjectURL(objectUrl)
+      }, 200)
+    } catch (err: any) {
       console.error('Error downloading backup:', err)
-      setFeedback({ type: 'error', message: 'Unable to download backup archive. Please try again.' })
+      setFeedback({
+        type: 'error',
+        message: err?.message || 'Unable to download backup archive. Please try again.',
+      })
     }
   }
+
 
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

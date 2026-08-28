@@ -161,6 +161,32 @@ export const createBackup = async (
     // Build in-memory ZIP buffer — no local filesystem write on Vercel
     const zipBuffer = zip.toBuffer();
 
+    // ── Validate the generated ZIP before storing it ──────────────────────────
+    // ZIP files always start with the local-file header magic bytes: PK (0x50 0x4b)
+    // An empty or malformed buffer here means adm-zip failed silently.
+    if (!zipBuffer || zipBuffer.length < 22) {
+      throw new AppError(500, "Backup archive generation failed: resulting buffer is too small to be a valid ZIP.");
+    }
+    if (zipBuffer[0] !== 0x50 || zipBuffer[1] !== 0x4b) {
+      throw new AppError(500, "Backup archive generation failed: output is not a valid ZIP file (missing PK signature).");
+    }
+    // Self-verify: try reading back the ZIP we just created
+    try {
+      const AdmZipVerify = require("adm-zip");
+      const verify = new AdmZipVerify(zipBuffer);
+      const entries = verify.getEntries();
+      if (entries.length === 0) {
+        throw new Error("ZIP archive contains no entries");
+      }
+      // Ensure manifest.json is present
+      const hasManifest = entries.some((e: any) => e.entryName === "manifest.json");
+      if (!hasManifest) {
+        throw new Error("manifest.json is missing from the generated archive");
+      }
+    } catch (verifyErr: any) {
+      throw new AppError(500, `Backup archive verification failed: ${verifyErr.message}`);
+    }
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `mamabazar-backup-${type}-${timestamp}.zip`;
 
@@ -178,6 +204,12 @@ export const createBackup = async (
             : "Storage unavailable.")
       );
     }
+
+    // Sanity-check what storage actually received
+    if (storageResult.size === 0) {
+      throw new AppError(500, "Storage reported 0 bytes for the uploaded backup archive.");
+    }
+
 
     // Persist metadata in DB — filepath column now holds storageKey (public_id or /tmp path)
     const [insertResult] = await connection.query<any>(

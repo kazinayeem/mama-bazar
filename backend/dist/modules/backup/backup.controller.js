@@ -55,34 +55,56 @@ const createBackup = async (req, res) => {
     res.status(201).json({ success: true, message: "Backup created successfully", data });
 };
 exports.createBackup = createBackup;
+/**
+ * Download endpoint — always proxies through the backend.
+ *
+ * WHY: The `download` attribute on <a> tags only works for same-origin URLs.
+ * Cross-origin Cloudinary signed URLs are silently ignored by browsers, causing
+ * the browser to navigate to the URL instead of downloading, returning a ~225-byte
+ * Cloudinary error/redirect HTML page instead of the actual ZIP archive.
+ *
+ * Proxy approach ensures:
+ * - Correct Content-Disposition: attachment header (forces download in every browser)
+ * - Correct Content-Type: application/zip
+ * - Auth is enforced server-side (JWT checked before any bytes are served)
+ * - No cross-origin limitations
+ */
 const downloadBackup = async (req, res) => {
     const id = Number(req.params.id);
+    if (isNaN(id))
+        throw new AppError_1.AppError(400, "Invalid backup ID");
     const backup = await backupService.getBackupById(id);
     if (!backup)
         throw new AppError_1.AppError(404, "Backup not found");
-    if (backup_storage_1.backupStorage.isCloudinary()) {
-        // Return a time-limited signed URL so the browser can download directly from Cloudinary
-        const signedUrl = backup_storage_1.backupStorage.getDownloadUrl(backup.filepath);
-        return res.json({ success: true, data: { downloadUrl: signedUrl, filename: backup.filename } });
-    }
-    // Local fallback — stream file directly
+    let buffer;
     try {
-        const buffer = await backup_storage_1.backupStorage.download(backup.filepath);
-        res.setHeader("Content-Disposition", `attachment; filename="${backup.filename}"`);
-        res.setHeader("Content-Type", "application/zip");
-        res.setHeader("Content-Length", buffer.length);
-        return res.send(buffer);
+        buffer = await backup_storage_1.backupStorage.download(backup.filepath);
     }
-    catch {
-        throw new AppError_1.AppError(404, "Backup archive not found in storage");
+    catch (err) {
+        console.error("[Backup] Download failed:", err?.message);
+        throw new AppError_1.AppError(503, "Failed to retrieve backup archive from storage. The archive may have been deleted.");
     }
+    // Validate that what we got is actually a ZIP (magic bytes PK\x03\x04)
+    if (buffer.length < 4 || buffer[0] !== 0x50 || buffer[1] !== 0x4b) {
+        console.error("[Backup] Retrieved archive has invalid ZIP magic bytes. Size:", buffer.length);
+        throw new AppError_1.AppError(502, "Backup archive in storage is corrupted or not a valid ZIP file.");
+    }
+    const safeFilename = backup.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+    res.setHeader("Content-Disposition", `attachment; filename="${safeFilename}"`);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Length", String(buffer.length));
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    return res.send(buffer);
 };
 exports.downloadBackup = downloadBackup;
 const restoreBackup = async (req, res) => {
     const actor = req.user;
     const file = req.file;
     if (!file)
-        throw new AppError_1.AppError(400, "Please provide a backup archive file (.zip) to restore");
+        throw new AppError_1.AppError(400, "Please attach a backup archive (.zip) in the 'file' field");
+    if (!file.buffer || file.buffer.length === 0)
+        throw new AppError_1.AppError(400, "Uploaded file is empty");
     const result = await backupService.restoreBackup(file.buffer, {
         id: actor?.id,
         name: actor?.name,
@@ -92,13 +114,15 @@ const restoreBackup = async (req, res) => {
     });
     res.json({
         success: true,
-        message: "Database successfully restored. Current state safety backup preserved.",
+        message: "Database successfully restored. Pre-restore safety backup was preserved.",
         data: result,
     });
 };
 exports.restoreBackup = restoreBackup;
 const deleteBackup = async (req, res) => {
     const id = Number(req.params.id);
+    if (isNaN(id))
+        throw new AppError_1.AppError(400, "Invalid backup ID");
     const actor = req.user;
     await backupService.deleteBackup(id, {
         id: actor?.id,
