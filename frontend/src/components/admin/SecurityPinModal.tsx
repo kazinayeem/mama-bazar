@@ -34,19 +34,6 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
       setShowPin(false)
       setError(null)
       setIsVerifying(false)
-
-      const now = new Date()
-      const day = String(now.getDate()).padStart(2, '0')
-      const monthNum = String(now.getMonth() + 1).padStart(2, '0')
-      const monthName = now.toLocaleString('en-US', { month: 'long' })
-      const year = now.getFullYear()
-
-      setDynamicHint({
-        readable: `${day} ${monthName} ${year}`,
-        formatted: `${day}${monthNum}${year}`,
-      })
-
-      // Auto-focus input on open
       setTimeout(() => {
         inputRef.current?.focus()
       }, 100)
