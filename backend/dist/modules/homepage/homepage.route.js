@@ -21,6 +21,7 @@ const homepageCacheMiddleware = (_req, res, next) => {
 };
 // Public
 router.get("/", homepageCacheMiddleware, (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getHomepage));
+router.get("/config", homepageCacheMiddleware, (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getConfig));
 router.post("/newsletter/subscribe", (0, validate_1.validate)(homepage_schema_1.subscribeNewsletterSchema), (0, asyncHandler_1.asyncHandler)(homepage_controller_1.subscribeNewsletter));
 // Admin only
 router.get("/admin/config", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getConfig));

@@ -22,6 +22,7 @@ const homepageCacheMiddleware = (_req: any, res: any, next: any) => {
 
 // Public
 router.get("/", homepageCacheMiddleware, asyncHandler(getHomepage));
+router.get("/config", homepageCacheMiddleware, asyncHandler(getConfig));
 router.post("/newsletter/subscribe", validate(subscribeNewsletterSchema), asyncHandler(subscribeNewsletter));
 
 // Admin only

@@ -13,7 +13,7 @@ import type {
   UserOrderWithItems,
 } from '../../types'
 import type { Banner, Brand, Collection, TrackingConfig } from '../../types/admin'
-import type { HomepageData } from '../../types/homepage'
+import type { HomepageData, HomepageConfig } from '../../types/homepage'
 import { baseApi } from './api'
 
 type ApiEnvelope<T> = {
@@ -120,6 +120,13 @@ export const commerceApi = baseApi.injectEndpoints({
       query: () => '/api/homepage',
       transformResponse: (response: ApiEnvelope<HomepageData>) => response.data as HomepageData,
       providesTags: [{ type: 'Homepage', id: 'LIST' }],
+      keepUnusedDataFor: LONG_LIVED,
+    }),
+
+    getHomepageConfig: builder.query<HomepageConfig, void>({
+      query: () => '/api/homepage/config',
+      transformResponse: (response: ApiEnvelope<HomepageConfig>) => response.data as HomepageConfig,
+      providesTags: [{ type: 'HomepageConfig', id: 'PUBLIC' }],
       keepUnusedDataFor: LONG_LIVED,
     }),
 
@@ -411,6 +418,7 @@ export const {
   useGetCategoriesQuery,
   useGetHeroSlidesQuery,
   useGetHomepageQuery,
+  useGetHomepageConfigQuery,
   useSubscribeNewsletterMutation,
   useGetBrandsQuery,
   useGetCollectionsQuery,

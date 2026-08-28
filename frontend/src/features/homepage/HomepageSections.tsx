@@ -25,6 +25,7 @@ import {
   asSlides,
   type HomepageData,
   type HomepageSection,
+  type HomepageConfig,
 } from '../../types/homepage'
 import type { Product } from '../../types'
 import { useGetBannersQuery } from '../../store/services/commerceApi'
@@ -35,6 +36,8 @@ const NewsletterBlock = lazy(() => import('./NewsletterBlock'))
 
 interface HomepageSectionsProps {
   data?: HomepageData
+  config?: HomepageConfig
+  isLoading?: boolean
   hasError?: boolean
   onRetry?: () => void
   onQuickView: (product: Product) => void
@@ -171,15 +174,20 @@ const HomepageErrorState = ({ onRetry }: { onRetry?: () => void }) => (
   </div>
 )
 
-const HomepageSections = ({ data, hasError, onRetry, onQuickView }: HomepageSectionsProps) => {
-  // Query banners for hero and promotional slots
+const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: HomepageSectionsProps) => {
+  // Query banners for promotional slots
   const { data: banners = [] } = useGetBannersQuery()
 
   if (hasError) return <HomepageErrorState onRetry={onRetry} />
 
-  const sections: HomepageSection[] = (data?.sections && data.sections.length > 0) ? data.sections : DEFAULT_HOMEPAGE_SECTIONS
+  const sections: HomepageSection[] =
+    (data?.sections && data.sections.length > 0)
+      ? data.sections
+      : (config?.sections && config.sections.length > 0)
+        ? (config.sections as HomepageSection[])
+        : DEFAULT_HOMEPAGE_SECTIONS
 
-  // Convert banners to hero slides format if not provided by data
+  // Convert banners to hero slides format if not provided by config or data
   const fallbackHeroSlides = banners.map((b, idx) => ({
     id: String(b.id || idx),
     desktopImage: b.image || '',
@@ -196,10 +204,15 @@ const HomepageSections = ({ data, hasError, onRetry, onQuickView }: HomepageSect
   const heroSlides =
     (data && asSlides(data.sections.find((s) => s.type === 'hero'))) ||
     data?.heroSlides ||
-    fallbackHeroSlides
+    (config?.heroSlides && config.heroSlides.length > 0
+      ? (config.heroSlides as any)
+      : fallbackHeroSlides)
 
-  const popularSearches = data?.popularSearches?.slice(0, 8) || ['Smart Watch', 'Headphone', 'Speaker', 'Keyboard', 'Air Fryer']
-  const flashSaleWindow = data?.flashSaleWindow
+  const popularSearches =
+    data?.popularSearches?.slice(0, 8) ||
+    config?.popularSearches?.slice(0, 8) ||
+    ['Smart Watch', 'Headphone', 'Speaker', 'Keyboard', 'Air Fryer']
+  const flashSaleWindow = data?.flashSaleWindow || config?.flashSaleWindow
 
   let promoCounter = 0
 
@@ -238,7 +251,7 @@ const HomepageSections = ({ data, hasError, onRetry, onQuickView }: HomepageSect
             )
 
           case 'trust_strip':
-            return <TrustStrip key={section.id} items={asContentItems(section)} />
+            return <TrustStrip key={section.id} items={asContentItems(section).length > 0 ? asContentItems(section) : (config?.trustStrip as any)} />
 
           case 'categories':
             return (
@@ -441,7 +454,7 @@ const HomepageSections = ({ data, hasError, onRetry, onQuickView }: HomepageSect
                 {() => (
                   <Suspense fallback={<div className="h-44 w-full animate-pulse rounded-2xl bg-slate-100" />}>
                     <SectionShell section={section}>
-                      <WhyChooseUs items={asContentItems(section)} />
+                      <WhyChooseUs items={asContentItems(section).length > 0 ? asContentItems(section) : (config?.whyChooseUs as any)} />
                     </SectionShell>
                   </Suspense>
                 )}
@@ -458,7 +471,7 @@ const HomepageSections = ({ data, hasError, onRetry, onQuickView }: HomepageSect
               >
                 {() => (
                   <Suspense fallback={<div className="mx-auto my-6 h-40 max-w-7xl animate-pulse rounded-3xl bg-slate-100" />}>
-                    <NewsletterBlock settings={section.data?.settings} />
+                    <NewsletterBlock settings={section.data?.settings || config?.newsletter} />
                   </Suspense>
                 )}
               </LazySection>
