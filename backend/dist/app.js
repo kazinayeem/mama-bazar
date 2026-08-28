@@ -39,8 +39,20 @@ const member_route_1 = __importDefault(require("./modules/member/member.route"))
 const backup_route_1 = __importDefault(require("./modules/backup/backup.route"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const app = (0, express_1.default)();
-// Security headers
-app.use((0, helmet_1.default)());
+// Trust reverse proxy (Vercel edge network)
+app.set('trust proxy', 1);
+// Security headers — configured specifically for cross-origin API access
+app.use((0, helmet_1.default)({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: false,
+}));
+// Explicitly set Cross-Origin-Resource-Policy to cross-origin for all responses
+app.use((_req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+});
 // Gzip/Brotli compression for all responses (JSON APIs shrink ~70-80%)
 app.use((0, compression_1.default)());
 // CORS — dynamically allow configured frontend origin, localhost, and all vercel.app preview/production domains
@@ -53,7 +65,7 @@ const allowedOrigins = [
     "https://mama-bazar.vercel.app",
     "https://ghorerbazar-five.vercel.app",
 ];
-app.use((0, cors_1.default)({
+const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
         if (!origin)
@@ -69,7 +81,10 @@ app.use((0, cors_1.default)({
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-}));
+    optionsSuccessStatus: 204,
+};
+app.use((0, cors_1.default)(corsOptions));
+app.options("*", (0, cors_1.default)(corsOptions));
 // Body parsing with size limits
 app.use(express_1.default.json({ limit: "1mb" }));
 app.use(express_1.default.urlencoded({ extended: true, limit: "1mb" }));

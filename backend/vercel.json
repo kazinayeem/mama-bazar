@@ -10,25 +10,32 @@
     {
       "src": "/uploads/(.*)",
       "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cross-Origin-Resource-Policy": "cross-origin"
       },
       "dest": "/api/index.ts"
     },
     {
       "src": "/api/homepage$",
       "headers": {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300"
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        "Cross-Origin-Resource-Policy": "cross-origin"
       },
       "dest": "/api/index.ts"
     },
     {
       "src": "/api/(.*)",
+      "headers": {
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      },
       "dest": "/api/index.ts"
     },
     {
       "src": "/(.*)",
+      "headers": {
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      },
       "dest": "/api/index.ts"
     }
   ]
 }
-

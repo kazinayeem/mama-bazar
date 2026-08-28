@@ -40,14 +40,21 @@ const app = express();
 // Trust reverse proxy (Vercel edge network)
 app.set('trust proxy', 1);
 
-// Security headers — configured for cross-origin API access
+// Security headers — configured specifically for cross-origin API access
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: false,
   })
 );
+
+// Explicitly set Cross-Origin-Resource-Policy to cross-origin for all responses
+app.use((_req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+});
 
 // Gzip/Brotli compression for all responses (JSON APIs shrink ~70-80%)
 app.use(compression());
