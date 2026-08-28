@@ -1,6 +1,7 @@
 import { env } from "./config/env";
 import app from "./app";
 import { pool } from "./config/db";
+import { initializeRbac } from "./config/initRbac";
 import fs from "fs";
 import path from "path";
 import http from "http";
@@ -17,6 +18,9 @@ async function startServer() {
     const connection = await pool.getConnection();
     console.log("Database connected successfully");
     connection.release();
+
+    // Bootstrap and sync RBAC permissions, roles, and safety tables
+    await initializeRbac();
 
     const server = app.listen(env.PORT, () => {
       console.log(`Server running on http://localhost:${env.PORT}`);

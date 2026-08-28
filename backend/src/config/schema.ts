@@ -522,7 +522,10 @@ export const users = mysqlTable("users", {
   shippingArea: varchar("shipping_area", { length: 100 }),
   shippingAddress: text("shipping_address"),
   role: mysqlEnum("role", ["admin", "manager", "user"]).default("user").notNull(),
+  customRole: varchar("custom_role", { length: 50 }),
+  permissionsJson: text("permissions_json"),
   status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
+  lastLoginAt: timestamp("last_login_at"),
   resetTokenHash: varchar("reset_token_hash", { length: 255 }),
   resetTokenExpiresAt: timestamp("reset_token_expires_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -916,3 +919,96 @@ export const memosRelations = relations(memos, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// ==================== ADMIN ROLES & PERMISSIONS (RBAC) ====================
+export const adminRoles = mysqlTable("admin_roles", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  description: text("description"),
+  isSystem: boolean("is_system").default(false).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const adminPermissions = mysqlTable("admin_permissions", {
+  id: int("id").primaryKey().autoincrement(),
+  code: varchar("code", { length: 100 }).notNull().unique(),
+  module: varchar("module", { length: 50 }).notNull(),
+  label: varchar("label", { length: 150 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const rolePermissions = mysqlTable(
+  "role_permissions",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    roleName: varchar("role_name", { length: 50 }).notNull(),
+    permissionCode: varchar("permission_code", { length: 100 }).notNull(),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => ({
+    rolePermIdx: index("idx_role_permission").on(table.roleName, table.permissionCode),
+  }),
+);
+
+export const userPermissions = mysqlTable(
+  "user_permissions",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    userId: int("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    permissionCode: varchar("permission_code", { length: 100 }).notNull(),
+    granted: boolean("granted").default(true).notNull(),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => ({
+    userPermIdx: index("idx_user_permission").on(table.userId, table.permissionCode),
+  }),
+);
+
+// ==================== ADMIN AUDIT LOGS ====================
+export const adminAuditLogs = mysqlTable(
+  "admin_audit_logs",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    actorId: int("actor_id").references(() => users.id, { onDelete: "set null" }),
+    actorName: varchar("actor_name", { length: 255 }).notNull(),
+    actorEmail: varchar("actor_email", { length: 255 }),
+    action: varchar("action", { length: 100 }).notNull(),
+    targetType: varchar("target_type", { length: 50 }),
+    targetId: varchar("target_id", { length: 100 }),
+    details: text("details"),
+    ipAddress: varchar("ip_address", { length: 100 }),
+    userAgent: varchar("user_agent", { length: 500 }),
+    status: mysqlEnum("status", ["success", "failure"]).default("success").notNull(),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => ({
+    actorIdx: index("idx_audit_actor").on(table.actorId),
+    actionIdx: index("idx_audit_action").on(table.action),
+    createdIdx: index("idx_audit_created").on(table.createdAt),
+  }),
+);
+
+// ==================== ADMIN BACKUPS ====================
+export const adminBackups = mysqlTable(
+  "admin_backups",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    filename: varchar("filename", { length: 255 }).notNull().unique(),
+    filepath: varchar("filepath", { length: 500 }).notNull(),
+    size: int("size").default(0).notNull(),
+    type: mysqlEnum("type", ["manual", "safety_auto"]).default("manual").notNull(),
+    tableCount: int("table_count").default(0).notNull(),
+    recordCount: int("record_count").default(0).notNull(),
+    createdById: int("created_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => ({
+    createdIdx: index("idx_backup_created").on(table.createdAt),
+    typeIdx: index("idx_backup_type").on(table.type),
+  }),
+);
+
