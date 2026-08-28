@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { ShieldAlert, Eye, EyeOff, Lock, ArrowRight, Loader2, Sparkles, X } from 'lucide-react'
+import { ShieldAlert, Eye, EyeOff, Lock, ArrowRight, Loader2, X } from 'lucide-react'
 
 interface SecurityPinModalProps {
   isOpen: boolean
