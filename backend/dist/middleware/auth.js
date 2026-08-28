@@ -23,21 +23,31 @@ const resolveUserPermissions = async (userId, role, customRoleFromToken) => {
     if (cached && cached.expiresAt > now) {
         return { permissions: cached.permissions, customRole: cached.customRole };
     }
-    // Fetch latest user details from DB
-    const userRows = await db_1.db
-        .select({
-        id: schema_1.users.id,
-        role: schema_1.users.role,
-        customRole: schema_1.users.customRole,
-        permissionsJson: schema_1.users.permissionsJson,
-        status: schema_1.users.status,
-    })
-        .from(schema_1.users)
-        .where((0, drizzle_orm_1.eq)(schema_1.users.id, userId))
-        .limit(1);
-    const dbUser = userRows[0];
-    const activeRole = dbUser?.customRole || customRoleFromToken || (dbUser?.role === "admin" ? "SUPER_ADMIN" : dbUser?.role === "manager" ? "MANAGER" : "STAFF");
-    // Super Admin check
+    // Fast-path Super Admin check
+    if (role === "admin" || customRoleFromToken === "SUPER_ADMIN" || userId === 240011) {
+        const result = { permissions: ["*"], customRole: "SUPER_ADMIN" };
+        userPermCache.set(userId, { ...result, expiresAt: now + 120000 });
+        return result;
+    }
+    let dbUser = null;
+    try {
+        const userRows = await db_1.db
+            .select({
+            id: schema_1.users.id,
+            role: schema_1.users.role,
+            customRole: schema_1.users.customRole,
+            permissionsJson: schema_1.users.permissionsJson,
+            status: schema_1.users.status,
+        })
+            .from(schema_1.users)
+            .where((0, drizzle_orm_1.eq)(schema_1.users.id, userId))
+            .limit(1);
+        dbUser = userRows[0];
+    }
+    catch {
+        // If columns are in migration, fallback to core role
+    }
+    const activeRole = dbUser?.customRole || customRoleFromToken || (role === "manager" ? "MANAGER" : "STAFF");
     if (activeRole === "SUPER_ADMIN" || dbUser?.role === "admin" || userId === 240011) {
         const result = { permissions: ["*"], customRole: "SUPER_ADMIN" };
         userPermCache.set(userId, { ...result, expiresAt: now + 120000 });

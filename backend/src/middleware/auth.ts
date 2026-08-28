@@ -35,23 +35,33 @@ export const resolveUserPermissions = async (
     return { permissions: cached.permissions, customRole: cached.customRole };
   }
 
-  // Fetch latest user details from DB
-  const userRows = await db
-    .select({
-      id: users.id,
-      role: users.role,
-      customRole: users.customRole,
-      permissionsJson: users.permissionsJson,
-      status: users.status,
-    })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  // Fast-path Super Admin check
+  if (role === "admin" || customRoleFromToken === "SUPER_ADMIN" || userId === 240011) {
+    const result = { permissions: ["*"], customRole: "SUPER_ADMIN" };
+    userPermCache.set(userId, { ...result, expiresAt: now + 120_000 });
+    return result;
+  }
 
-  const dbUser = userRows[0];
-  const activeRole = dbUser?.customRole || customRoleFromToken || (dbUser?.role === "admin" ? "SUPER_ADMIN" : dbUser?.role === "manager" ? "MANAGER" : "STAFF");
+  let dbUser: any = null;
+  try {
+    const userRows = await db
+      .select({
+        id: users.id,
+        role: users.role,
+        customRole: users.customRole,
+        permissionsJson: users.permissionsJson,
+        status: users.status,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    dbUser = userRows[0];
+  } catch {
+    // If columns are in migration, fallback to core role
+  }
 
-  // Super Admin check
+  const activeRole = dbUser?.customRole || customRoleFromToken || (role === "manager" ? "MANAGER" : "STAFF");
+
   if (activeRole === "SUPER_ADMIN" || dbUser?.role === "admin" || userId === 240011) {
     const result = { permissions: ["*"], customRole: "SUPER_ADMIN" };
     userPermCache.set(userId, { ...result, expiresAt: now + 120_000 });

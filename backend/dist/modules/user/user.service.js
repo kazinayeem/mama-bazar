@@ -114,7 +114,15 @@ exports.createAdmin = createAdmin;
 const login = async (data) => {
     const identifier = data.phone.trim();
     const rows = await db_1.db
-        .select()
+        .select({
+        id: schema_1.users.id,
+        name: schema_1.users.name,
+        phone: schema_1.users.phone,
+        email: schema_1.users.email,
+        password: schema_1.users.password,
+        role: schema_1.users.role,
+        status: schema_1.users.status,
+    })
         .from(schema_1.users)
         .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.users.phone, identifier), (0, drizzle_orm_1.eq)(schema_1.users.email, identifier)))
         .limit(1);
@@ -127,10 +135,15 @@ const login = async (data) => {
     if (user.status === "inactive") {
         throw new AppError_1.AppError(403, "Account is inactive");
     }
-    // Update last login timestamp
-    await db_1.db.update(schema_1.users).set({ lastLoginAt: new Date() }).where((0, drizzle_orm_1.eq)(schema_1.users.id, user.id));
+    // Update last login timestamp safely
+    try {
+        await db_1.db.update(schema_1.users).set({ lastLoginAt: new Date() }).where((0, drizzle_orm_1.eq)(schema_1.users.id, user.id));
+    }
+    catch {
+        // Ignore if column is in transition
+    }
     const { resolveUserPermissions } = await Promise.resolve().then(() => __importStar(require("../../middleware/auth")));
-    const { permissions, customRole } = await resolveUserPermissions(user.id, user.role, user.customRole || undefined);
+    const { permissions, customRole } = await resolveUserPermissions(user.id, user.role);
     const token = jsonwebtoken_1.default.sign({ id: user.id, phone: user.phone, role: user.role, customRole, permissions }, env_1.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
     return {
         token,

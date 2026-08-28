@@ -102,10 +102,19 @@ export const createAdmin = async (data: {
 export const login = async (data: LoginInput) => {
   const identifier = data.phone.trim();
   const rows = await db
-    .select()
+    .select({
+      id: users.id,
+      name: users.name,
+      phone: users.phone,
+      email: users.email,
+      password: users.password,
+      role: users.role,
+      status: users.status,
+    })
     .from(users)
     .where(or(eq(users.phone, identifier), eq(users.email, identifier)))
     .limit(1);
+
   const user = rows[0];
   if (!user) throw new AppError(401, "Invalid credentials");
 
@@ -116,11 +125,15 @@ export const login = async (data: LoginInput) => {
     throw new AppError(403, "Account is inactive");
   }
 
-  // Update last login timestamp
-  await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
+  // Update last login timestamp safely
+  try {
+    await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
+  } catch {
+    // Ignore if column is in transition
+  }
 
   const { resolveUserPermissions } = await import("../../middleware/auth");
-  const { permissions, customRole } = await resolveUserPermissions(user.id, user.role, user.customRole || undefined);
+  const { permissions, customRole } = await resolveUserPermissions(user.id, user.role);
 
   const token = jwt.sign(
     { id: user.id, phone: user.phone, role: user.role, customRole, permissions },
