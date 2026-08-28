@@ -2,7 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Clock, Flame, Mic, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useGetCategoriesQuery, useGetHomepageQuery, useGetProductsQuery } from '../../store/services/commerceApi'
+import { useGetCategoriesQuery, useGetHomepageConfigQuery, useGetProductsQuery } from '../../store/services/commerceApi'
 import { formatPrice } from '../../lib/format'
 
 interface SearchBarProps {
@@ -29,8 +29,8 @@ const SearchBar = ({ onNavigate }: SearchBarProps) => {
 
   const categoriesQuery = useGetCategoriesQuery()
   const categories = categoriesQuery.data || []
-  const { data: homepageData } = useGetHomepageQuery()
-  const popularSearches = homepageData?.popularSearches || []
+  const { data: homepageConfig } = useGetHomepageConfigQuery()
+  const popularSearches = homepageConfig?.popularSearches || []
 
   const [debouncedQuery, setDebouncedQuery] = useState('')
   useEffect(() => {

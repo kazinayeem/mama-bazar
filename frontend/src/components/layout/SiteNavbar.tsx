@@ -5,7 +5,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { logout } from '../../store/slices/authSlice'
 import { openCart } from '../../store/slices/uiSlice'
-import { useGetCategoriesQuery, useGetCurrentUserQuery, useGetHomepageQuery } from '../../store/services/commerceApi'
+import { useGetCategoriesQuery, useGetCurrentUserQuery, useGetHomepageConfigQuery } from '../../store/services/commerceApi'
 import SearchBar from '../common/SearchBar'
 import { formatPrice } from '../../lib/format'
 
@@ -27,8 +27,8 @@ const SiteNavbar = () => {
 
   const categoriesQuery = useGetCategoriesQuery()
   const categories = categoriesQuery.data || []
-  const { data: homepageData } = useGetHomepageQuery()
-  const announcement = homepageData?.announcement
+  const { data: homepageConfig } = useGetHomepageConfigQuery()
+  const announcement = homepageConfig?.announcement
 
   useGetCurrentUserQuery(undefined, { skip: !token })
 

@@ -6,6 +6,8 @@ const MobileBottomNav = () => {
   const cartCount = useAppSelector((state) => state.cart.items.reduce((sum, item) => sum + item.quantity, 0))
   const wishlistCount = useAppSelector((state) => state.ui.wishlist.length)
 
+  const token = useAppSelector((state) => state.auth.token)
+
   const itemClass = ({ isActive }: { isActive: boolean }) =>
     `relative flex flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold transition ${
       isActive ? 'text-brand-green-600' : 'text-slate-400 hover:text-brand-green-500'
@@ -39,7 +41,7 @@ const MobileBottomNav = () => {
             </span>
           )}
         </NavLink>
-        <NavLink className={itemClass} to="/auth/login">
+        <NavLink className={itemClass} to={token ? "/dashboard" : "/auth/login"}>
           <User size={20} /> Account
         </NavLink>
       </div>

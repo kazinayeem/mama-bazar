@@ -126,6 +126,19 @@ const ProductDetailsPage = () => {
   const [activeImage, setActiveImage] = useState(0)
   const [activeColor, setActiveColor] = useState<string | undefined>(product?.colorOptions?.[0]?.name)
   const [activeSize, setActiveSize] = useState<string | undefined>(product?.sizeOptions?.[0])
+
+  useEffect(() => {
+    if (product) {
+      if (product.colorOptions?.[0]?.name) {
+        setActiveColor(product.colorOptions[0].name)
+      }
+      if (product.sizeOptions?.[0]) {
+        setActiveSize(product.sizeOptions[0])
+      }
+      setActiveImage(0)
+    }
+  }, [product?.id])
+
   const [quantity, setQuantity] = useState(1)
   const relatedQuery = useGetRelatedProductsQuery(product?.id || 0, { skip: !product })
   const reviewsQuery = useGetReviewsQuery({ productId: product?.id, limit: 20 }, { skip: !product })

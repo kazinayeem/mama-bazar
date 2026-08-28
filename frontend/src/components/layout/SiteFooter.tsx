@@ -72,8 +72,8 @@ const SiteFooter = () => {
   const hasContact = Boolean(contact.phone || contact.email || contact.address)
 
   return (
-    <footer className="border-t border-brand-green-100 bg-white text-slate-600" id="contact">
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <footer className="border-t border-brand-green-100 bg-white pb-20 pt-14 text-slate-600 md:pb-14" id="contact">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Main columns */}
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand column */}
