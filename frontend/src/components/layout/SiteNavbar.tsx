@@ -23,6 +23,7 @@ const SiteNavbar = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const headerRef   = useRef<HTMLElement>(null)
 
   const categoriesQuery = useGetCategoriesQuery()
   const categories = categoriesQuery.data || []
@@ -42,6 +43,43 @@ const SiteNavbar = () => {
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
   }, [])
 
+
+  // ── Zero-re-render scroll glass effect ──────────────────────────────────────
+  // Directly toggle a CSS class on the <header> DOM node via a passive scroll
+  // listener + rAF. React state is intentionally NOT used here — toggling state
+  // would cause the entire navbar subtree to re-render on every scroll tick.
+  useEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+
+    let rafId = 0
+    let lastScrolled = false
+
+    const onScroll = () => {
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => {
+        const scrolled = window.scrollY > 30
+        if (scrolled !== lastScrolled) {
+          lastScrolled = scrolled
+          if (scrolled) {
+            header.classList.add('navbar--scrolled')
+          } else {
+            header.classList.remove('navbar--scrolled')
+          }
+        }
+      })
+    }
+
+    // Set initial state synchronously (handles page load / back-nav at non-zero scroll)
+    lastScrolled = window.scrollY > 30
+    if (lastScrolled) header.classList.add('navbar--scrolled')
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(rafId)
+    }
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -85,7 +123,8 @@ const SiteNavbar = () => {
   return (
     <>
       <header
-        className="sticky top-0 z-50 border-b border-brand-green-100 bg-white/95 shadow-soft backdrop-blur-xl transition-shadow duration-300"
+        ref={headerRef}
+        className="navbar-root sticky top-0 z-50 border-b border-transparent bg-white transition-[background-color,backdrop-filter,box-shadow,border-color] duration-300 ease-out"
       >
         {announcement?.enabled && announcement.text && (
           <div
