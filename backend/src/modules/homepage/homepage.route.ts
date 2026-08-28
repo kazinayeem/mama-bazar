@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getHomepage, getConfig, saveConfig, resetConfig, subscribeNewsletter, getSubscribers } from "./homepage.controller";
-import { authMiddleware, adminOnly } from "../../middleware/auth";
+import { authMiddleware, requirePermission } from "../../middleware/auth";
 import { asyncHandler } from "../../middleware/asyncHandler";
 import { validate } from "../../middleware/validate";
 import { saveConfigSchema, subscribeNewsletterSchema } from "./homepage.schema";
@@ -26,10 +26,10 @@ router.get("/config", homepageCacheMiddleware, asyncHandler(getConfig));
 router.post("/newsletter/subscribe", validate(subscribeNewsletterSchema), asyncHandler(subscribeNewsletter));
 
 // Admin only
-router.get("/admin/config", authMiddleware, adminOnly, asyncHandler(getConfig));
-router.put("/admin/config", authMiddleware, adminOnly, validate(saveConfigSchema), asyncHandler(saveConfig));
-router.post("/admin/reset-defaults", authMiddleware, adminOnly, asyncHandler(resetConfig));
-router.get("/admin/subscribers", authMiddleware, adminOnly, asyncHandler(getSubscribers));
+router.get("/admin/config", authMiddleware, requirePermission("homepage.view"), asyncHandler(getConfig));
+router.put("/admin/config", authMiddleware, requirePermission("homepage.manage"), validate(saveConfigSchema), asyncHandler(saveConfig));
+router.post("/admin/reset-defaults", authMiddleware, requirePermission("homepage.manage"), asyncHandler(resetConfig));
+router.get("/admin/subscribers", authMiddleware, requirePermission("marketing.view"), asyncHandler(getSubscribers));
 
 export default router;
 

@@ -27,13 +27,13 @@ router.get("/my-orders", auth_1.authMiddleware, (0, asyncHandler_1.asyncHandler)
 // CUSTOMER - Get invoice for own order (authenticated, checks ownership)
 router.get("/:id/my-invoice", auth_1.authMiddleware, (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getCustomerInvoice));
 // Admin routes
-router.get("/", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.orderListSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getAll));
-router.get("/stats", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(order_controller_1.getStats));
-router.get("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getById));
-router.get("/:id/invoice", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getInvoice));
-router.patch("/:id/status", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.updateOrderStatusSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.updateStatus));
-router.patch("/:id/payment/verify", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.verifyPaymentSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.verifyPayment));
-router.patch("/:id/admin-note", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.adminNoteSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.addAdminNote));
-router.delete("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.remove));
+router.get("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.view"), (0, validate_1.validate)(order_schema_1.orderListSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getAll));
+router.get("/stats", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.view"), (0, asyncHandler_1.asyncHandler)(order_controller_1.getStats));
+router.get("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.view"), (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getById));
+router.get("/:id/invoice", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.view"), (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.getInvoice));
+router.patch("/:id/status", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.update"), (0, validate_1.validate)(order_schema_1.updateOrderStatusSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.updateStatus));
+router.patch("/:id/payment/verify", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.update"), (0, validate_1.validate)(order_schema_1.verifyPaymentSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.verifyPayment));
+router.patch("/:id/admin-note", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.update"), (0, validate_1.validate)(order_schema_1.adminNoteSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.addAdminNote));
+router.delete("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("orders.delete"), (0, validate_1.validate)(order_schema_1.orderIdSchema), (0, asyncHandler_1.asyncHandler)(order_controller_1.remove));
 exports.default = router;
 //# sourceMappingURL=order.route.js.map

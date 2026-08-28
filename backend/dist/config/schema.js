@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.costsRelations = exports.costs = exports.expensesRelations = exports.expenses = exports.expenseCategoriesRelations = exports.expenseCategories = exports.newsletters = exports.reviewsRelations = exports.reviews = exports.checkoutNotices = exports.paymentMethods = exports.shippingMethods = exports.trackingLogs = exports.marketingIntegrations = exports.contactMessages = exports.policyPages = exports.siteSettings = exports.usersRelations = exports.userAddressesRelations = exports.userAddresses = exports.users = exports.coupons = exports.orderItemsRelations = exports.orderItems = exports.orderStatusHistoryRelations = exports.orderStatusHistory = exports.ordersRelations = exports.orders = exports.mediaAssets = exports.banners = exports.brandsRelations = exports.brands = exports.productRelationsRelations = exports.productRelations = exports.productSpecsRelations = exports.productSpecs = exports.productVariantsRelations = exports.productVariants = exports.suppliersRelations = exports.suppliers = exports.vendorsRelations = exports.vendors = exports.collectionsRelations = exports.collections = exports.sizes = exports.colors = exports.productsRelations = exports.products = exports.categoriesRelations = exports.categories = void 0;
-exports.memosRelations = exports.memos = exports.rentalsRelations = exports.rentals = exports.bookingsRelations = exports.bookings = void 0;
+exports.adminBackups = exports.adminAuditLogs = exports.userPermissions = exports.rolePermissions = exports.adminPermissions = exports.adminRoles = exports.memosRelations = exports.memos = exports.rentalsRelations = exports.rentals = exports.bookingsRelations = exports.bookings = void 0;
 const mysql_core_1 = require("drizzle-orm/mysql-core");
 const drizzle_orm_1 = require("drizzle-orm");
 // ==================== CATEGORIES ====================
@@ -483,7 +483,10 @@ exports.users = (0, mysql_core_1.mysqlTable)("users", {
     shippingArea: (0, mysql_core_1.varchar)("shipping_area", { length: 100 }),
     shippingAddress: (0, mysql_core_1.text)("shipping_address"),
     role: (0, mysql_core_1.mysqlEnum)("role", ["admin", "manager", "user"]).default("user").notNull(),
+    customRole: (0, mysql_core_1.varchar)("custom_role", { length: 50 }),
+    permissionsJson: (0, mysql_core_1.text)("permissions_json"),
     status: (0, mysql_core_1.mysqlEnum)("status", ["active", "inactive"]).default("active").notNull(),
+    lastLoginAt: (0, mysql_core_1.timestamp)("last_login_at"),
     resetTokenHash: (0, mysql_core_1.varchar)("reset_token_hash", { length: 255 }),
     resetTokenExpiresAt: (0, mysql_core_1.timestamp)("reset_token_expires_at"),
     createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
@@ -846,5 +849,75 @@ exports.memosRelations = (0, drizzle_orm_1.relations)(exports.memos, ({ one }) =
         fields: [exports.memos.uploadedById],
         references: [exports.users.id],
     }),
+}));
+// ==================== ADMIN ROLES & PERMISSIONS (RBAC) ====================
+exports.adminRoles = (0, mysql_core_1.mysqlTable)("admin_roles", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    name: (0, mysql_core_1.varchar)("name", { length: 50 }).notNull().unique(),
+    displayName: (0, mysql_core_1.varchar)("display_name", { length: 100 }).notNull(),
+    description: (0, mysql_core_1.text)("description"),
+    isSystem: (0, mysql_core_1.boolean)("is_system").default(false).notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+exports.adminPermissions = (0, mysql_core_1.mysqlTable)("admin_permissions", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    code: (0, mysql_core_1.varchar)("code", { length: 100 }).notNull().unique(),
+    module: (0, mysql_core_1.varchar)("module", { length: 50 }).notNull(),
+    label: (0, mysql_core_1.varchar)("label", { length: 150 }).notNull(),
+    description: (0, mysql_core_1.text)("description"),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+});
+exports.rolePermissions = (0, mysql_core_1.mysqlTable)("role_permissions", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    roleName: (0, mysql_core_1.varchar)("role_name", { length: 50 }).notNull(),
+    permissionCode: (0, mysql_core_1.varchar)("permission_code", { length: 100 }).notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ({
+    rolePermIdx: (0, mysql_core_1.index)("idx_role_permission").on(table.roleName, table.permissionCode),
+}));
+exports.userPermissions = (0, mysql_core_1.mysqlTable)("user_permissions", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    userId: (0, mysql_core_1.int)("user_id")
+        .references(() => exports.users.id, { onDelete: "cascade" })
+        .notNull(),
+    permissionCode: (0, mysql_core_1.varchar)("permission_code", { length: 100 }).notNull(),
+    granted: (0, mysql_core_1.boolean)("granted").default(true).notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ({
+    userPermIdx: (0, mysql_core_1.index)("idx_user_permission").on(table.userId, table.permissionCode),
+}));
+// ==================== ADMIN AUDIT LOGS ====================
+exports.adminAuditLogs = (0, mysql_core_1.mysqlTable)("admin_audit_logs", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    actorId: (0, mysql_core_1.int)("actor_id").references(() => exports.users.id, { onDelete: "set null" }),
+    actorName: (0, mysql_core_1.varchar)("actor_name", { length: 255 }).notNull(),
+    actorEmail: (0, mysql_core_1.varchar)("actor_email", { length: 255 }),
+    action: (0, mysql_core_1.varchar)("action", { length: 100 }).notNull(),
+    targetType: (0, mysql_core_1.varchar)("target_type", { length: 50 }),
+    targetId: (0, mysql_core_1.varchar)("target_id", { length: 100 }),
+    details: (0, mysql_core_1.text)("details"),
+    ipAddress: (0, mysql_core_1.varchar)("ip_address", { length: 100 }),
+    userAgent: (0, mysql_core_1.varchar)("user_agent", { length: 500 }),
+    status: (0, mysql_core_1.mysqlEnum)("status", ["success", "failure"]).default("success").notNull(),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ({
+    actorIdx: (0, mysql_core_1.index)("idx_audit_actor").on(table.actorId),
+    actionIdx: (0, mysql_core_1.index)("idx_audit_action").on(table.action),
+    createdIdx: (0, mysql_core_1.index)("idx_audit_created").on(table.createdAt),
+}));
+// ==================== ADMIN BACKUPS ====================
+exports.adminBackups = (0, mysql_core_1.mysqlTable)("admin_backups", {
+    id: (0, mysql_core_1.int)("id").primaryKey().autoincrement(),
+    filename: (0, mysql_core_1.varchar)("filename", { length: 255 }).notNull().unique(),
+    filepath: (0, mysql_core_1.varchar)("filepath", { length: 500 }).notNull(),
+    size: (0, mysql_core_1.int)("size").default(0).notNull(),
+    type: (0, mysql_core_1.mysqlEnum)("type", ["manual", "safety_auto"]).default("manual").notNull(),
+    tableCount: (0, mysql_core_1.int)("table_count").default(0).notNull(),
+    recordCount: (0, mysql_core_1.int)("record_count").default(0).notNull(),
+    createdById: (0, mysql_core_1.int)("created_by_id").references(() => exports.users.id, { onDelete: "set null" }),
+    createdAt: (0, mysql_core_1.timestamp)("created_at").default((0, drizzle_orm_1.sql) `CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ({
+    createdIdx: (0, mysql_core_1.index)("idx_backup_created").on(table.createdAt),
+    typeIdx: (0, mysql_core_1.index)("idx_backup_type").on(table.type),
 }));
 //# sourceMappingURL=schema.js.map

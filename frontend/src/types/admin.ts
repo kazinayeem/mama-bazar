@@ -656,3 +656,58 @@ export interface TrackingConfig {
   customHeadScripts: string[]
   customBodyScripts: string[]
 }
+
+// ==================== RBAC & TEAM MEMBERS ====================
+export interface AdminPermissionInfo {
+  code: string
+  module: string
+  label: string
+  description: string
+}
+
+export interface AdminRoleInfo {
+  name: string
+  displayName: string
+  description: string
+  permissions: string[]
+}
+
+export interface AdminMember {
+  id: number
+  name: string
+  phone: string
+  email?: string | null
+  role: string
+  customRole?: string
+  status: 'active' | 'inactive'
+  permissions: string[]
+  lastLoginAt?: string | null
+  createdAt: string
+}
+
+export interface AuditLog {
+  id: number
+  actorId: number | null
+  actorName: string
+  actorEmail: string | null
+  action: string
+  targetType: string | null
+  targetId: string | null
+  details: string | null
+  ipAddress: string | null
+  userAgent: string | null
+  status: 'success' | 'failure'
+  createdAt: string
+}
+
+// ==================== ADMIN BACKUPS ====================
+export interface AdminBackupInfo {
+  id: number
+  filename: string
+  size: number
+  type: 'manual' | 'safety_auto'
+  tableCount: number
+  recordCount: number
+  createdAt: string
+}
+

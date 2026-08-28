@@ -6,6 +6,6 @@ const auth_1 = require("../../middleware/auth");
 const asyncHandler_1 = require("../../middleware/asyncHandler");
 const router = (0, express_1.Router)();
 // Admin only
-router.get("/dashboard", auth_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(admin_controller_1.getDashboard));
+router.get("/dashboard", auth_1.authMiddleware, (0, auth_1.requirePermission)("dashboard.view"), (0, asyncHandler_1.asyncHandler)(admin_controller_1.getDashboard));
 exports.default = router;
 //# sourceMappingURL=admin.route.js.map

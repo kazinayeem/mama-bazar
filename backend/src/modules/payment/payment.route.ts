@@ -8,7 +8,7 @@ import {
   updateStatuses,
   remove,
 } from "./payment.controller";
-import { authMiddleware } from "../../middleware/auth";
+import { authMiddleware, requirePermission } from "../../middleware/auth";
 import { asyncHandler } from "../../middleware/asyncHandler";
 import { validate } from "../../middleware/validate";
 import {
@@ -24,11 +24,11 @@ const router = Router();
 router.get("/public", asyncHandler(getActiveMethods));
 
 // Admin
-router.get("/", authMiddleware, asyncHandler(getAll));
-router.get("/:id", authMiddleware, validate(paymentMethodIdSchema), asyncHandler(getById));
-router.post("/", authMiddleware, validate(createPaymentMethodSchema), asyncHandler(create));
-router.put("/:id", authMiddleware, validate(updatePaymentMethodSchema), asyncHandler(update));
-router.put("/", authMiddleware, validate(paymentMethodsStatusSchema), asyncHandler(updateStatuses));
-router.delete("/:id", authMiddleware, validate(paymentMethodIdSchema), asyncHandler(remove));
+router.get("/", authMiddleware, requirePermission("payment_methods.view"), asyncHandler(getAll));
+router.get("/:id", authMiddleware, requirePermission("payment_methods.view"), validate(paymentMethodIdSchema), asyncHandler(getById));
+router.post("/", authMiddleware, requirePermission("payment_methods.manage"), validate(createPaymentMethodSchema), asyncHandler(create));
+router.put("/:id", authMiddleware, requirePermission("payment_methods.manage"), validate(updatePaymentMethodSchema), asyncHandler(update));
+router.put("/", authMiddleware, requirePermission("payment_methods.manage"), validate(paymentMethodsStatusSchema), asyncHandler(updateStatuses));
+router.delete("/:id", authMiddleware, requirePermission("payment_methods.manage"), validate(paymentMethodIdSchema), asyncHandler(remove));
 
 export default router;

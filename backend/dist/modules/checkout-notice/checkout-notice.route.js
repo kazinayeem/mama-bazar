@@ -10,10 +10,10 @@ const router = (0, express_1.Router)();
 // Public
 router.get("/public", (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.getActiveNotices));
 // Admin
-router.get("/", auth_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.getAll));
-router.get("/:id", auth_1.authMiddleware, (0, validate_1.validate)(checkout_notice_schema_1.checkoutNoticeIdSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.getById));
-router.post("/", auth_1.authMiddleware, (0, validate_1.validate)(checkout_notice_schema_1.createCheckoutNoticeSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.create));
-router.put("/:id", auth_1.authMiddleware, (0, validate_1.validate)(checkout_notice_schema_1.updateCheckoutNoticeSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.update));
-router.delete("/:id", auth_1.authMiddleware, (0, validate_1.validate)(checkout_notice_schema_1.checkoutNoticeIdSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.remove));
+router.get("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("checkout_notices.view"), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.getAll));
+router.get("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("checkout_notices.view"), (0, validate_1.validate)(checkout_notice_schema_1.checkoutNoticeIdSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.getById));
+router.post("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("checkout_notices.manage"), (0, validate_1.validate)(checkout_notice_schema_1.createCheckoutNoticeSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.create));
+router.put("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("checkout_notices.manage"), (0, validate_1.validate)(checkout_notice_schema_1.updateCheckoutNoticeSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.update));
+router.delete("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("checkout_notices.manage"), (0, validate_1.validate)(checkout_notice_schema_1.checkoutNoticeIdSchema), (0, asyncHandler_1.asyncHandler)(checkout_notice_controller_1.remove));
 exports.default = router;
 //# sourceMappingURL=checkout-notice.route.js.map

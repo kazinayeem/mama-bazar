@@ -14,7 +14,7 @@ import {
   getCustomerInvoice,
   remove,
 } from "./order.controller";
-import { authMiddleware, adminOnly } from "../../middleware/auth";
+import { authMiddleware, requirePermission } from "../../middleware/auth";
 import { asyncHandler } from "../../middleware/asyncHandler";
 import { validate } from "../../middleware/validate";
 import {
@@ -50,13 +50,13 @@ router.get("/my-orders", authMiddleware, asyncHandler(getMyOrders));
 router.get("/:id/my-invoice", authMiddleware, validate(orderIdSchema), asyncHandler(getCustomerInvoice));
 
 // Admin routes
-router.get("/", authMiddleware, adminOnly, validate(orderListSchema), asyncHandler(getAll));
-router.get("/stats", authMiddleware, adminOnly, asyncHandler(getStats));
-router.get("/:id", authMiddleware, adminOnly, validate(orderIdSchema), asyncHandler(getById));
-router.get("/:id/invoice", authMiddleware, adminOnly, validate(orderIdSchema), asyncHandler(getInvoice));
-router.patch("/:id/status", authMiddleware, adminOnly, validate(updateOrderStatusSchema), asyncHandler(updateStatus));
-router.patch("/:id/payment/verify", authMiddleware, adminOnly, validate(verifyPaymentSchema), asyncHandler(verifyPayment));
-router.patch("/:id/admin-note", authMiddleware, adminOnly, validate(adminNoteSchema), asyncHandler(addAdminNote));
-router.delete("/:id", authMiddleware, adminOnly, validate(orderIdSchema), asyncHandler(remove));
+router.get("/", authMiddleware, requirePermission("orders.view"), validate(orderListSchema), asyncHandler(getAll));
+router.get("/stats", authMiddleware, requirePermission("orders.view"), asyncHandler(getStats));
+router.get("/:id", authMiddleware, requirePermission("orders.view"), validate(orderIdSchema), asyncHandler(getById));
+router.get("/:id/invoice", authMiddleware, requirePermission("orders.view"), validate(orderIdSchema), asyncHandler(getInvoice));
+router.patch("/:id/status", authMiddleware, requirePermission("orders.update"), validate(updateOrderStatusSchema), asyncHandler(updateStatus));
+router.patch("/:id/payment/verify", authMiddleware, requirePermission("orders.update"), validate(verifyPaymentSchema), asyncHandler(verifyPayment));
+router.patch("/:id/admin-note", authMiddleware, requirePermission("orders.update"), validate(adminNoteSchema), asyncHandler(addAdminNote));
+router.delete("/:id", authMiddleware, requirePermission("orders.delete"), validate(orderIdSchema), asyncHandler(remove));
 
 export default router;

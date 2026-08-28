@@ -10,11 +10,11 @@ const router = (0, express_1.Router)();
 // Public - frontend config (no tokens exposed)
 router.get("/config", (0, asyncHandler_1.asyncHandler)(tracking_controller_1.getConfig));
 // Admin only
-router.get("/", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(tracking_controller_1.getAll));
-router.get("/logs", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(tracking_controller_1.getLogs));
-router.get("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(tracking_schema_1.trackingIdSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.getById));
-router.post("/", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(tracking_schema_1.createTrackingSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.create));
-router.put("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(tracking_schema_1.updateTrackingSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.update));
-router.delete("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(tracking_schema_1.trackingIdSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.remove));
+router.get("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("marketing.view"), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.getAll));
+router.get("/logs", auth_1.authMiddleware, (0, auth_1.requirePermission)("marketing.view"), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.getLogs));
+router.get("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("marketing.view"), (0, validate_1.validate)(tracking_schema_1.trackingIdSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.getById));
+router.post("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("marketing.manage"), (0, validate_1.validate)(tracking_schema_1.createTrackingSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.create));
+router.put("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("marketing.manage"), (0, validate_1.validate)(tracking_schema_1.updateTrackingSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.update));
+router.delete("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("marketing.manage"), (0, validate_1.validate)(tracking_schema_1.trackingIdSchema), (0, asyncHandler_1.asyncHandler)(tracking_controller_1.remove));
 exports.default = router;
 //# sourceMappingURL=tracking.route.js.map

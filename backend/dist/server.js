@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const env_1 = require("./config/env");
 const app_1 = __importDefault(require("./app"));
 const db_1 = require("./config/db");
+const initRbac_1 = require("./config/initRbac");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 // Ensure uploads directory exists
@@ -19,6 +20,8 @@ async function startServer() {
         const connection = await db_1.pool.getConnection();
         console.log("Database connected successfully");
         connection.release();
+        // Bootstrap and sync RBAC permissions, roles, and safety tables
+        await (0, initRbac_1.initializeRbac)();
         const server = app_1.default.listen(env_1.env.PORT, () => {
             console.log(`Server running on http://localhost:${env_1.env.PORT}`);
         });

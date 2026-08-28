@@ -20,6 +20,11 @@ import type {
   Size,
   Supplier,
   Vendor,
+  AdminMember,
+  AdminRoleInfo,
+  AdminPermissionInfo,
+  AdminBackupInfo,
+  AuditLog,
 } from '../../types/admin'
 import type {
   Expense,

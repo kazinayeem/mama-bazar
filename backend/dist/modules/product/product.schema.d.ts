@@ -1754,21 +1754,21 @@ export declare const bulkProductSchema: z.ZodObject<{
         ids: z.ZodArray<z.ZodNumber, "many">;
         action: z.ZodEnum<["delete", "publish", "archive", "hide", "draft", "feature", "unfeature"]>;
     }, "strip", z.ZodTypeAny, {
-        ids: number[];
         action: "draft" | "delete" | "publish" | "archive" | "hide" | "feature" | "unfeature";
+        ids: number[];
     }, {
-        ids: number[];
         action: "draft" | "delete" | "publish" | "archive" | "hide" | "feature" | "unfeature";
+        ids: number[];
     }>;
 }, "strip", z.ZodTypeAny, {
     body: {
-        ids: number[];
         action: "draft" | "delete" | "publish" | "archive" | "hide" | "feature" | "unfeature";
+        ids: number[];
     };
 }, {
     body: {
-        ids: number[];
         action: "draft" | "delete" | "publish" | "archive" | "hide" | "feature" | "unfeature";
+        ids: number[];
     };
 }>;
 export declare const saveDraftSchema: z.ZodObject<{

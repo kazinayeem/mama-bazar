@@ -23,7 +23,12 @@ export declare const login: (data: LoginInput) => Promise<{
         id: number;
         name: string;
         phone: string;
+        email: string | null;
         role: "admin" | "manager" | "user";
+        customRole: string;
+        permissions: string[];
+        status: "active";
+        lastLoginAt: Date;
     };
 }>;
 /**
@@ -37,7 +42,12 @@ export declare const devLogin: (role: string) => Promise<{
         id: number;
         name: string;
         phone: string;
+        email: string | null;
         role: "admin" | "manager" | "user";
+        customRole: string;
+        permissions: string[];
+        status: "active";
+        lastLoginAt: Date;
     };
 }>;
 export declare const getAll: () => Promise<{
@@ -50,6 +60,9 @@ export declare const getAll: () => Promise<{
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";
+    customRole: string | null;
+    permissionsJson: string | null;
+    lastLoginAt: Date | null;
     resetTokenHash: string | null;
     resetTokenExpiresAt: Date | null;
 }[]>;
@@ -63,6 +76,9 @@ export declare const getById: (id: number) => Promise<{
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";
+    customRole: string | null;
+    permissionsJson: string | null;
+    lastLoginAt: Date | null;
     resetTokenHash: string | null;
     resetTokenExpiresAt: Date | null;
 } | null>;
@@ -98,8 +114,13 @@ export declare const updateProfile: (userId: number, data: UpdateProfileInput) =
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";
+    customRole: string | null;
+    permissionsJson: string | null;
+    lastLoginAt: Date | null;
 }>;
 export declare const getProfile: (userId: number) => Promise<{
+    customRole: string;
+    permissions: string[];
     id: number;
     name: string;
     status: "active" | "inactive";
@@ -109,6 +130,8 @@ export declare const getProfile: (userId: number) => Promise<{
     shippingArea: string | null;
     shippingAddress: string | null;
     role: "admin" | "manager" | "user";
+    permissionsJson: string | null;
+    lastLoginAt: Date | null;
 }>;
 export declare const getOrderHistory: (userId: number) => Promise<{
     statusHistory: ({

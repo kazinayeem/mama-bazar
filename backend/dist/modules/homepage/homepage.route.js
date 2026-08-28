@@ -24,9 +24,9 @@ router.get("/", homepageCacheMiddleware, (0, asyncHandler_1.asyncHandler)(homepa
 router.get("/config", homepageCacheMiddleware, (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getConfig));
 router.post("/newsletter/subscribe", (0, validate_1.validate)(homepage_schema_1.subscribeNewsletterSchema), (0, asyncHandler_1.asyncHandler)(homepage_controller_1.subscribeNewsletter));
 // Admin only
-router.get("/admin/config", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getConfig));
-router.put("/admin/config", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(homepage_schema_1.saveConfigSchema), (0, asyncHandler_1.asyncHandler)(homepage_controller_1.saveConfig));
-router.post("/admin/reset-defaults", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(homepage_controller_1.resetConfig));
-router.get("/admin/subscribers", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getSubscribers));
+router.get("/admin/config", auth_1.authMiddleware, (0, auth_1.requirePermission)("homepage.view"), (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getConfig));
+router.put("/admin/config", auth_1.authMiddleware, (0, auth_1.requirePermission)("homepage.manage"), (0, validate_1.validate)(homepage_schema_1.saveConfigSchema), (0, asyncHandler_1.asyncHandler)(homepage_controller_1.saveConfig));
+router.post("/admin/reset-defaults", auth_1.authMiddleware, (0, auth_1.requirePermission)("homepage.manage"), (0, asyncHandler_1.asyncHandler)(homepage_controller_1.resetConfig));
+router.get("/admin/subscribers", auth_1.authMiddleware, (0, auth_1.requirePermission)("marketing.view"), (0, asyncHandler_1.asyncHandler)(homepage_controller_1.getSubscribers));
 exports.default = router;
 //# sourceMappingURL=homepage.route.js.map

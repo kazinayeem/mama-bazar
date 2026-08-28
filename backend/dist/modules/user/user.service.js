@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -89,10 +122,24 @@ const login = async (data) => {
     if (user.status === "inactive") {
         throw new AppError_1.AppError(403, "Account is inactive");
     }
-    const token = jsonwebtoken_1.default.sign({ id: user.id, phone: user.phone, role: user.role }, env_1.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+    // Update last login timestamp
+    await db_1.db.update(schema_1.users).set({ lastLoginAt: new Date() }).where((0, drizzle_orm_1.eq)(schema_1.users.id, user.id));
+    const { resolveUserPermissions } = await Promise.resolve().then(() => __importStar(require("../../middleware/auth")));
+    const { permissions, customRole } = await resolveUserPermissions(user.id, user.role, user.customRole || undefined);
+    const token = jsonwebtoken_1.default.sign({ id: user.id, phone: user.phone, role: user.role, customRole, permissions }, env_1.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
     return {
         token,
-        user: { id: user.id, name: user.name, phone: user.phone, role: user.role },
+        user: {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            role: user.role,
+            customRole,
+            permissions,
+            status: user.status,
+            lastLoginAt: new Date(),
+        },
     };
 };
 exports.login = login;
@@ -231,7 +278,13 @@ const getProfile = async (userId) => {
     if (!rows[0])
         throw new AppError_1.AppError(404, "User not found");
     const { password, resetTokenHash, resetTokenExpiresAt, ...userProfile } = rows[0];
-    return userProfile;
+    const { resolveUserPermissions } = await Promise.resolve().then(() => __importStar(require("../../middleware/auth")));
+    const { permissions, customRole } = await resolveUserPermissions(userProfile.id, userProfile.role, userProfile.customRole || undefined);
+    return {
+        ...userProfile,
+        customRole,
+        permissions,
+    };
 };
 exports.getProfile = getProfile;
 const getOrderHistory = async (userId) => {

@@ -17,8 +17,8 @@ const bannerUpload = uploadMemory_1.uploadMemory.fields([
 router.get("/", (0, asyncHandler_1.asyncHandler)(banner_controller_1.getAll));
 router.get("/:id", (0, asyncHandler_1.asyncHandler)(banner_controller_1.getById));
 // Admin
-router.post("/", auth_1.authMiddleware, bannerUpload, (0, validate_1.validate)(banner_schema_1.createBannerSchema), (0, asyncHandler_1.asyncHandler)(banner_controller_1.create));
-router.put("/:id", auth_1.authMiddleware, bannerUpload, (0, validate_1.validate)(banner_schema_1.updateBannerSchema), (0, asyncHandler_1.asyncHandler)(banner_controller_1.update));
-router.delete("/:id", auth_1.authMiddleware, (0, validate_1.validate)(banner_schema_1.bannerIdSchema), (0, asyncHandler_1.asyncHandler)(banner_controller_1.remove));
+router.post("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("banners.create"), bannerUpload, (0, validate_1.validate)(banner_schema_1.createBannerSchema), (0, asyncHandler_1.asyncHandler)(banner_controller_1.create));
+router.put("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("banners.update"), bannerUpload, (0, validate_1.validate)(banner_schema_1.updateBannerSchema), (0, asyncHandler_1.asyncHandler)(banner_controller_1.update));
+router.delete("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("banners.delete"), (0, validate_1.validate)(banner_schema_1.bannerIdSchema), (0, asyncHandler_1.asyncHandler)(banner_controller_1.remove));
 exports.default = router;
 //# sourceMappingURL=banner.route.js.map

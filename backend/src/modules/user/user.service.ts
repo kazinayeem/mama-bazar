@@ -111,15 +111,31 @@ export const login = async (data: LoginInput) => {
     throw new AppError(403, "Account is inactive");
   }
 
+  // Update last login timestamp
+  await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
+
+  const { resolveUserPermissions } = await import("../../middleware/auth");
+  const { permissions, customRole } = await resolveUserPermissions(user.id, user.role, user.customRole || undefined);
+
   const token = jwt.sign(
-    { id: user.id, phone: user.phone, role: user.role },
+    { id: user.id, phone: user.phone, role: user.role, customRole, permissions },
     env.JWT_SECRET,
     { expiresIn: TOKEN_EXPIRY }
   );
 
   return {
     token,
-    user: { id: user.id, name: user.name, phone: user.phone, role: user.role },
+    user: {
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      email: user.email,
+      role: user.role,
+      customRole,
+      permissions,
+      status: user.status,
+      lastLoginAt: new Date(),
+    },
   };
 };
 
@@ -270,7 +286,14 @@ export const getProfile = async (userId: number) => {
   if (!rows[0]) throw new AppError(404, "User not found");
 
   const { password, resetTokenHash, resetTokenExpiresAt, ...userProfile } = rows[0];
-  return userProfile;
+  const { resolveUserPermissions } = await import("../../middleware/auth");
+  const { permissions, customRole } = await resolveUserPermissions(userProfile.id, userProfile.role, userProfile.customRole || undefined);
+
+  return {
+    ...userProfile,
+    customRole,
+    permissions,
+  };
 };
 
 export const getOrderHistory = async (userId: number) => {

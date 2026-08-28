@@ -8,24 +8,24 @@ const auth_1 = require("../../middleware/auth");
 const asyncHandler_1 = require("../../middleware/asyncHandler");
 const validate_1 = require("../../middleware/validate");
 const catalog_schema_1 = require("./catalog.schema");
-const makeCrudRoutes = (controller, schemas, withImage) => {
+const makeCrudRoutes = (moduleName, controller, schemas, withImage) => {
     const router = (0, express_1.Router)();
     const upload = withImage ? uploadMemory_1.uploadMemory.single("image") : undefined;
     const uploadMw = upload ? [upload] : [];
     router.get("/", (0, asyncHandler_1.asyncHandler)(controller.list));
     // Admin (before /:id to avoid param capture)
-    router.get("/admin", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(schemas.list), (0, asyncHandler_1.asyncHandler)(controller.listAdmin));
-    router.get("/:id/usage", auth_1.authMiddleware, (0, validate_1.validate)(catalog_schema_1.idParamSchema), (0, asyncHandler_1.asyncHandler)(controller.getUsage));
-    router.post("/:id/move", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(schemas.move), (0, asyncHandler_1.asyncHandler)(controller.moveProducts));
+    router.get("/admin", auth_1.authMiddleware, (0, auth_1.requirePermission)(`${moduleName}.view`), (0, validate_1.validate)(schemas.list), (0, asyncHandler_1.asyncHandler)(controller.listAdmin));
+    router.get("/:id/usage", auth_1.authMiddleware, (0, auth_1.requirePermission)(`${moduleName}.view`), (0, validate_1.validate)(catalog_schema_1.idParamSchema), (0, asyncHandler_1.asyncHandler)(controller.getUsage));
+    router.post("/:id/move", auth_1.authMiddleware, (0, auth_1.requirePermission)(`${moduleName}.update`), (0, validate_1.validate)(schemas.move), (0, asyncHandler_1.asyncHandler)(controller.moveProducts));
     router.get("/:id", (0, validate_1.validate)(catalog_schema_1.idParamSchema), (0, asyncHandler_1.asyncHandler)(controller.getById));
-    router.post("/", auth_1.authMiddleware, auth_1.adminOnly, ...uploadMw, (0, validate_1.validate)(schemas.create), (0, asyncHandler_1.asyncHandler)(controller.create));
-    router.put("/:id", auth_1.authMiddleware, auth_1.adminOnly, ...uploadMw, (0, validate_1.validate)(schemas.update), (0, asyncHandler_1.asyncHandler)(controller.update));
-    router.delete("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(catalog_schema_1.idParamSchema), (0, asyncHandler_1.asyncHandler)(controller.remove));
+    router.post("/", auth_1.authMiddleware, (0, auth_1.requirePermission)(`${moduleName}.create`), ...uploadMw, (0, validate_1.validate)(schemas.create), (0, asyncHandler_1.asyncHandler)(controller.create));
+    router.put("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)(`${moduleName}.update`), ...uploadMw, (0, validate_1.validate)(schemas.update), (0, asyncHandler_1.asyncHandler)(controller.update));
+    router.delete("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)(`${moduleName}.delete`), (0, validate_1.validate)(catalog_schema_1.idParamSchema), (0, asyncHandler_1.asyncHandler)(controller.remove));
     return router;
 };
-exports.colorsRouter = makeCrudRoutes(catalog_controller_1.colorController, { create: catalog_schema_1.colorCreateSchema, update: catalog_schema_1.colorUpdateSchema, list: catalog_schema_1.colorListSchema, move: catalog_schema_1.colorMoveSchema }, false);
-exports.sizesRouter = makeCrudRoutes(catalog_controller_1.sizeController, { create: catalog_schema_1.sizeCreateSchema, update: catalog_schema_1.sizeUpdateSchema, list: catalog_schema_1.sizeListSchema, move: catalog_schema_1.sizeMoveSchema }, false);
-exports.collectionsRouter = makeCrudRoutes(catalog_controller_1.collectionController, { create: catalog_schema_1.collectionCreateSchema, update: catalog_schema_1.collectionUpdateSchema, list: catalog_schema_1.collectionListSchema, move: catalog_schema_1.collectionMoveSchema }, true);
-exports.vendorsRouter = makeCrudRoutes(catalog_controller_1.vendorController, { create: catalog_schema_1.vendorCreateSchema, update: catalog_schema_1.vendorUpdateSchema, list: catalog_schema_1.vendorListSchema, move: catalog_schema_1.vendorMoveSchema }, true);
-exports.suppliersRouter = makeCrudRoutes(catalog_controller_1.supplierController, { create: catalog_schema_1.supplierCreateSchema, update: catalog_schema_1.supplierUpdateSchema, list: catalog_schema_1.supplierListSchema, move: catalog_schema_1.supplierMoveSchema }, true);
+exports.colorsRouter = makeCrudRoutes("colors", catalog_controller_1.colorController, { create: catalog_schema_1.colorCreateSchema, update: catalog_schema_1.colorUpdateSchema, list: catalog_schema_1.colorListSchema, move: catalog_schema_1.colorMoveSchema }, false);
+exports.sizesRouter = makeCrudRoutes("sizes", catalog_controller_1.sizeController, { create: catalog_schema_1.sizeCreateSchema, update: catalog_schema_1.sizeUpdateSchema, list: catalog_schema_1.sizeListSchema, move: catalog_schema_1.sizeMoveSchema }, false);
+exports.collectionsRouter = makeCrudRoutes("collections", catalog_controller_1.collectionController, { create: catalog_schema_1.collectionCreateSchema, update: catalog_schema_1.collectionUpdateSchema, list: catalog_schema_1.collectionListSchema, move: catalog_schema_1.collectionMoveSchema }, true);
+exports.vendorsRouter = makeCrudRoutes("vendors", catalog_controller_1.vendorController, { create: catalog_schema_1.vendorCreateSchema, update: catalog_schema_1.vendorUpdateSchema, list: catalog_schema_1.vendorListSchema, move: catalog_schema_1.vendorMoveSchema }, true);
+exports.suppliersRouter = makeCrudRoutes("suppliers", catalog_controller_1.supplierController, { create: catalog_schema_1.supplierCreateSchema, update: catalog_schema_1.supplierUpdateSchema, list: catalog_schema_1.supplierListSchema, move: catalog_schema_1.supplierMoveSchema }, true);
 //# sourceMappingURL=catalog.route.js.map

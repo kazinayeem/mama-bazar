@@ -17,7 +17,7 @@ import {
 	updateAddress,
 	deleteAddress,
 } from "./user.controller";
-import { authMiddleware, adminOnly } from "../../middleware/auth";
+import { authMiddleware, requirePermission } from "../../middleware/auth";
 import { asyncHandler } from "../../middleware/asyncHandler";
 import { validate } from "../../middleware/validate";
 import {
@@ -55,8 +55,8 @@ router.put("/addresses/:id", authMiddleware, validate(updateAddressSchema), asyn
 router.delete("/addresses/:id", authMiddleware, validate(addressIdSchema), asyncHandler(deleteAddress));
 
 // Admin only
-router.post("/admin", authMiddleware, adminOnly, validate(createAdminSchema), asyncHandler(createAdmin));
-router.get("/", authMiddleware, adminOnly, asyncHandler(getAll));
-router.delete("/:id", authMiddleware, adminOnly, asyncHandler(remove));
+router.post("/admin", authMiddleware, requirePermission("members.create"), validate(createAdminSchema), asyncHandler(createAdmin));
+router.get("/", authMiddleware, requirePermission("customers.view"), asyncHandler(getAll));
+router.delete("/:id", authMiddleware, requirePermission("customers.delete"), asyncHandler(remove));
 
 export default router;

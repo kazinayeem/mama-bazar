@@ -11,11 +11,11 @@ const router = (0, express_1.Router)();
 router.get("/p/:slug", (0, validate_1.validate)(pages_schema_1.pageSlugSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.getBySlug));
 router.post("/contact", (0, validate_1.validate)(pages_schema_1.contactMessageSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.submitContact));
 // Admin
-router.get("/", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(pages_controller_1.getAll));
-router.post("/", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(pages_schema_1.createPageSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.create));
-router.put("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(pages_schema_1.updatePageSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.update));
-router.delete("/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, validate_1.validate)(pages_schema_1.pageIdSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.remove));
-router.get("/contact", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(pages_controller_1.getContactMessages));
-router.patch("/contact/:id", auth_1.authMiddleware, auth_1.adminOnly, (0, asyncHandler_1.asyncHandler)(pages_controller_1.updateContactStatus));
+router.get("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("policies.view"), (0, asyncHandler_1.asyncHandler)(pages_controller_1.getAll));
+router.post("/", auth_1.authMiddleware, (0, auth_1.requirePermission)("policies.manage"), (0, validate_1.validate)(pages_schema_1.createPageSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.create));
+router.put("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("policies.manage"), (0, validate_1.validate)(pages_schema_1.updatePageSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.update));
+router.delete("/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("policies.manage"), (0, validate_1.validate)(pages_schema_1.pageIdSchema), (0, asyncHandler_1.asyncHandler)(pages_controller_1.remove));
+router.get("/contact", auth_1.authMiddleware, (0, auth_1.requirePermission)("policies.view"), (0, asyncHandler_1.asyncHandler)(pages_controller_1.getContactMessages));
+router.patch("/contact/:id", auth_1.authMiddleware, (0, auth_1.requirePermission)("policies.manage"), (0, asyncHandler_1.asyncHandler)(pages_controller_1.updateContactStatus));
 exports.default = router;
 //# sourceMappingURL=pages.route.js.map

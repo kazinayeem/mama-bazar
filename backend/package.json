@@ -1,7 +1,7 @@
 {
-  "name": "ghorerbazar-backend",
+  "name": "bornobazar-backend",
   "version": "1.0.0",
-  "description": "GhorerBazar eCommerce Backend",
+  "description": "bornobazar eCommerce Backend",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

@@ -3475,6 +3475,30 @@ export declare const users: import("drizzle-orm/mysql-core").MySqlTableWithColum
             enumValues: ["admin", "manager", "user"];
             baseColumn: never;
         }, object>;
+        customRole: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "custom_role";
+            tableName: "users";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        permissionsJson: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "permissions_json";
+            tableName: "users";
+            dataType: "string";
+            columnType: "MySqlText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
         status: import("drizzle-orm/mysql-core").MySqlColumn<{
             name: "status";
             tableName: "users";
@@ -3485,6 +3509,18 @@ export declare const users: import("drizzle-orm/mysql-core").MySqlTableWithColum
             notNull: true;
             hasDefault: true;
             enumValues: ["active", "inactive"];
+            baseColumn: never;
+        }, object>;
+        lastLoginAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "last_login_at";
+            tableName: "users";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: undefined;
             baseColumn: never;
         }, object>;
         resetTokenHash: import("drizzle-orm/mysql-core").MySqlColumn<{
@@ -6047,5 +6083,551 @@ export declare const memos: import("drizzle-orm/mysql-core").MySqlTableWithColum
 }>;
 export declare const memosRelations: import("drizzle-orm").Relations<"memos", {
     uploadedBy: import("drizzle-orm").One<"users", false>;
+}>;
+export declare const adminRoles: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "admin_roles";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "admin_roles";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        name: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "name";
+            tableName: "admin_roles";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        displayName: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "display_name";
+            tableName: "admin_roles";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        description: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "description";
+            tableName: "admin_roles";
+            dataType: "string";
+            columnType: "MySqlText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        isSystem: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "is_system";
+            tableName: "admin_roles";
+            dataType: "boolean";
+            columnType: "MySqlBoolean";
+            data: boolean;
+            driverParam: number | boolean;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "admin_roles";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+    };
+    dialect: "mysql";
+}>;
+export declare const adminPermissions: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "admin_permissions";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "admin_permissions";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        code: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "code";
+            tableName: "admin_permissions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        module: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "module";
+            tableName: "admin_permissions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        label: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "label";
+            tableName: "admin_permissions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        description: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "description";
+            tableName: "admin_permissions";
+            dataType: "string";
+            columnType: "MySqlText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "admin_permissions";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+    };
+    dialect: "mysql";
+}>;
+export declare const rolePermissions: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "role_permissions";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "role_permissions";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        roleName: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "role_name";
+            tableName: "role_permissions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        permissionCode: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "permission_code";
+            tableName: "role_permissions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "role_permissions";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+    };
+    dialect: "mysql";
+}>;
+export declare const userPermissions: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "user_permissions";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "user_permissions";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        userId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "user_id";
+            tableName: "user_permissions";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        permissionCode: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "permission_code";
+            tableName: "user_permissions";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        granted: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "granted";
+            tableName: "user_permissions";
+            dataType: "boolean";
+            columnType: "MySqlBoolean";
+            data: boolean;
+            driverParam: number | boolean;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "user_permissions";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+    };
+    dialect: "mysql";
+}>;
+export declare const adminAuditLogs: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "admin_audit_logs";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "admin_audit_logs";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        actorId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "actor_id";
+            tableName: "admin_audit_logs";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        actorName: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "actor_name";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        actorEmail: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "actor_email";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        action: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "action";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        targetType: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "target_type";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        targetId: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "target_id";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        details: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "details";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        ipAddress: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "ip_address";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        userAgent: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "user_agent";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        status: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "status";
+            tableName: "admin_audit_logs";
+            dataType: "string";
+            columnType: "MySqlEnumColumn";
+            data: "success" | "failure";
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            enumValues: ["success", "failure"];
+            baseColumn: never;
+        }, object>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "admin_audit_logs";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+    };
+    dialect: "mysql";
+}>;
+export declare const adminBackups: import("drizzle-orm/mysql-core").MySqlTableWithColumns<{
+    name: "admin_backups";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "id";
+            tableName: "admin_backups";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        filename: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "filename";
+            tableName: "admin_backups";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        filepath: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "filepath";
+            tableName: "admin_backups";
+            dataType: "string";
+            columnType: "MySqlVarChar";
+            data: string;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+        }, object>;
+        size: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "size";
+            tableName: "admin_backups";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        type: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "type";
+            tableName: "admin_backups";
+            dataType: "string";
+            columnType: "MySqlEnumColumn";
+            data: "manual" | "safety_auto";
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            enumValues: ["manual", "safety_auto"];
+            baseColumn: never;
+        }, object>;
+        tableCount: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "table_count";
+            tableName: "admin_backups";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        recordCount: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "record_count";
+            tableName: "admin_backups";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        createdById: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_by_id";
+            tableName: "admin_backups";
+            dataType: "number";
+            columnType: "MySqlInt";
+            data: number;
+            driverParam: string | number;
+            notNull: false;
+            hasDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+        createdAt: import("drizzle-orm/mysql-core").MySqlColumn<{
+            name: "created_at";
+            tableName: "admin_backups";
+            dataType: "date";
+            columnType: "MySqlTimestamp";
+            data: Date;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            enumValues: undefined;
+            baseColumn: never;
+        }, object>;
+    };
+    dialect: "mysql";
 }>;
 //# sourceMappingURL=schema.d.ts.map

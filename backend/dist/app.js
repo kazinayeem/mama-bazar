@@ -35,6 +35,8 @@ const cost_route_1 = __importDefault(require("./modules/cost/cost.route"));
 const booking_route_1 = __importDefault(require("./modules/booking/booking.route"));
 const rental_route_1 = __importDefault(require("./modules/rental/rental.route"));
 const memo_route_1 = __importDefault(require("./modules/memo/memo.route"));
+const member_route_1 = __importDefault(require("./modules/member/member.route"));
+const backup_route_1 = __importDefault(require("./modules/backup/backup.route"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const app = (0, express_1.default)();
 // Security headers
@@ -89,6 +91,8 @@ app.use("/api/costs", cost_route_1.default);
 app.use("/api/bookings", booking_route_1.default);
 app.use("/api/rentals", rental_route_1.default);
 app.use("/api/memos", memo_route_1.default);
+app.use("/api/members", member_route_1.default);
+app.use("/api/backup", backup_route_1.default);
 // home
 app.get("/", (_req, res) => {
     res.json({ success: true, message: "Welcome to Mamabazar API" });

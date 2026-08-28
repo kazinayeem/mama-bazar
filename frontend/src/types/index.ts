@@ -443,10 +443,14 @@ export interface AuthUser {
   id: number
   name: string
   phone: string
+  email?: string | null
   role: UserRole
+  customRole?: string
+  permissions?: string[]
   shippingArea?: string | null
   shippingAddress?: string | null
   createdAt?: string
+  lastLoginAt?: string
 }
 
 export interface AuthResponse {
