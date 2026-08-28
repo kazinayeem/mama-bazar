@@ -46,9 +46,9 @@ const parseEnvelope = <T>(raw: string): ApiEnvelope<T> | null => {
   }
 }
 
-const requestEnvelope = async <T>(path: string, init?: RequestInit, withAuth = false): Promise<ApiEnvelope<T>> => {
+const requestEnvelope = async <T>(path: string, init?: RequestInit, withAuth = false, timeoutMs = 25000): Promise<ApiEnvelope<T>> => {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 6000)
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   const token = authStorage.getToken()
 
   try {
