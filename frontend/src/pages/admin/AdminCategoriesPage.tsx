@@ -112,8 +112,8 @@ const AdminCategoriesPage = () => {
     setPage(1)
   }, [debouncedSearch, status])
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true)
     setLoadError('')
     try {
       const res = await trigger({
@@ -135,7 +135,7 @@ const AdminCategoriesPage = () => {
   }, [trigger, page, debouncedSearch, status])
 
   useEffect(() => {
-    load()
+    load(true)
   }, [load])
 
   const excludedParentIds = useMemo(() => {
@@ -213,7 +213,7 @@ const AdminCategoriesPage = () => {
       if (res.error) throw new Error('Save failed')
       toast.success(editing ? 'Category updated' : 'Category created')
       setDialogOpen(false)
-      load()
+      load(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Save failed')
     } finally {
@@ -234,23 +234,35 @@ const AdminCategoriesPage = () => {
       return
     }
     toast.success('Category deleted')
-    load()
+    setRows((prev) => prev.filter((c) => c.id !== category.id))
+    if (rows.length === 1 && page > 1) {
+      setPage((p) => Math.max(1, p - 1))
+    } else {
+      load(false)
+    }
   }
 
   const handleDelete = async (targetId: number | null) => {
     if (!deleteTarget) return
     setDeleting(true)
+    const categoryId = deleteTarget.id
     try {
-      const moved = await moveCategoryProducts({ id: deleteTarget.id, targetId })
+      const moved = await moveCategoryProducts({ id: categoryId, targetId })
       if (moved.error) throw new Error('Move failed')
-      const deleted = await deleteCategory(deleteTarget.id)
+      const deleted = await deleteCategory(categoryId)
       if (deleted.error) throw new Error('Delete failed')
       toast.success('Category deleted')
       setDeleteTarget(null)
       setUsage(null)
-      load()
+      setRows((prev) => prev.filter((c) => c.id !== categoryId))
+      if (rows.length === 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1))
+      } else {
+        load(false)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Delete failed')
+      load(false)
     } finally {
       setDeleting(false)
     }
@@ -327,7 +339,7 @@ const AdminCategoriesPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {loading && rows.length === 0 ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell colSpan={7}>

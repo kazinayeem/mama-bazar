@@ -62,6 +62,8 @@ const DashboardProfilePage = lazy(() => import('./pages/dashboard/DashboardProfi
 const DashboardAddressesPage = lazy(() => import('./pages/dashboard/DashboardAddressesPage'))
 const DashboardSecurityPage = lazy(() => import('./pages/dashboard/DashboardSecurityPage'))
 
+import AdminLayout from './components/layout/AdminLayout'
+
 const AdminRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute allowedRoles={['admin', 'manager']}>{children}</ProtectedRoute>
 )
@@ -113,38 +115,45 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
-        {/* Admin Routes */}
-        <Route path="admin">
+        {/* Admin Routes with Persistent AdminLayout */}
+        <Route
+          path="admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
           <Route index element={<Navigate replace to="dashboard" />} />
-          <Route path="dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-          <Route path="products" element={<AdminRoute><AdminProductsPage /></AdminRoute>} />
-          <Route path="products/create" element={<AdminRoute><AdminProductCreatePage /></AdminRoute>} />
-          <Route path="products/:id/edit" element={<AdminRoute><AdminProductEditPage /></AdminRoute>} />
-          <Route path="products/:id" element={<AdminRoute><AdminProductViewPage /></AdminRoute>} />
-          <Route path="orders" element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
-          <Route path="orders/:id/invoice" element={<AdminRoute><AdminOrderInvoicePage /></AdminRoute>} />
-          <Route path="shipping" element={<AdminRoute><AdminShippingPage /></AdminRoute>} />
-          <Route path="payment-methods" element={<AdminRoute><AdminPaymentMethodsPage /></AdminRoute>} />
-          <Route path="checkout-notices" element={<AdminRoute><AdminCheckoutNoticesPage /></AdminRoute>} />
-          <Route path="categories" element={<AdminRoute><AdminCategoriesPage /></AdminRoute>} />
-          <Route path="brands" element={<AdminRoute><AdminBrandsPage /></AdminRoute>} />
-          <Route path="collections" element={<AdminRoute><AdminCollectionsPage /></AdminRoute>} />
-          <Route path="colors" element={<AdminRoute><AdminColorsPage /></AdminRoute>} />
-          <Route path="sizes" element={<AdminRoute><AdminSizesPage /></AdminRoute>} />
-          <Route path="vendors" element={<AdminRoute><AdminVendorsPage /></AdminRoute>} />
-          <Route path="suppliers" element={<AdminRoute><AdminSuppliersPage /></AdminRoute>} />
-          <Route path="banners" element={<AdminRoute><AdminBannersPage /></AdminRoute>} />
-          <Route path="policies" element={<AdminRoute><AdminPoliciesPage /></AdminRoute>} />
-          <Route path="homepage" element={<AdminRoute><AdminHomepagePage /></AdminRoute>} />
-          <Route path="media" element={<AdminRoute><AdminMediaPage /></AdminRoute>} />
-          <Route path="expenses" element={<AdminRoute><AdminExpensesPage /></AdminRoute>} />
-          <Route path="expenses/categories" element={<AdminRoute><AdminExpenseCategoriesPage /></AdminRoute>} />
-          <Route path="expenses/reports" element={<AdminRoute><AdminExpenseReportsPage /></AdminRoute>} />
-          <Route path="inventory" element={<AdminRoute><AdminInventoryPage /></AdminRoute>} />
-          <Route path="customers" element={<AdminRoute><AdminCustomersPage /></AdminRoute>} />
-          <Route path="coupons" element={<AdminRoute><AdminCouponsPage /></AdminRoute>} />
-          <Route path="analytics" element={<AdminRoute><AdminAnalyticsPage /></AdminRoute>} />
-          <Route path="marketing" element={<AdminRoute><AdminMarketingPage /></AdminRoute>} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="products/create" element={<AdminProductCreatePage />} />
+          <Route path="products/:id/edit" element={<AdminProductEditPage />} />
+          <Route path="products/:id" element={<AdminProductViewPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="orders/:id/invoice" element={<AdminOrderInvoicePage />} />
+          <Route path="shipping" element={<AdminShippingPage />} />
+          <Route path="payment-methods" element={<AdminPaymentMethodsPage />} />
+          <Route path="checkout-notices" element={<AdminCheckoutNoticesPage />} />
+          <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="brands" element={<AdminBrandsPage />} />
+          <Route path="collections" element={<AdminCollectionsPage />} />
+          <Route path="colors" element={<AdminColorsPage />} />
+          <Route path="sizes" element={<AdminSizesPage />} />
+          <Route path="vendors" element={<AdminVendorsPage />} />
+          <Route path="suppliers" element={<AdminSuppliersPage />} />
+          <Route path="banners" element={<AdminBannersPage />} />
+          <Route path="policies" element={<AdminPoliciesPage />} />
+          <Route path="homepage" element={<AdminHomepagePage />} />
+          <Route path="media" element={<AdminMediaPage />} />
+          <Route path="expenses" element={<AdminExpensesPage />} />
+          <Route path="expenses/categories" element={<AdminExpenseCategoriesPage />} />
+          <Route path="expenses/reports" element={<AdminExpenseReportsPage />} />
+          <Route path="inventory" element={<AdminInventoryPage />} />
+          <Route path="customers" element={<AdminCustomersPage />} />
+          <Route path="coupons" element={<AdminCouponsPage />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />} />
+          <Route path="marketing" element={<AdminMarketingPage />} />
           <Route
             path="settings"
             element={
@@ -153,6 +162,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </Suspense>

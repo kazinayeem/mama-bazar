@@ -39,7 +39,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/|fonts/|robots\\.txt|sitemap\\.xml|brandlogo\\.png|favicon\\.svg|.*\\.(?:png|jpg|jpeg|svg|webp|woff2|ico|json)$).*)$",
+      "source": "/((?!assets/|fonts/|uploads/|robots\\.txt|sitemap\\.xml|brandlogo\\.png|favicon\\.svg|icons\\.svg|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|css|js|map|json|txt|xml)$).*)$",
       "destination": "/index.html"
     }
   ]

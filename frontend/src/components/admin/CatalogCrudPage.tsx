@@ -141,8 +141,8 @@ const CatalogCrudPage = <T extends { id: number }>({
     setPage(1)
   }, [debouncedSearch, status])
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true)
     setLoadError('')
     try {
       const result = await apiRef.current.list({
@@ -166,7 +166,7 @@ const CatalogCrudPage = <T extends { id: number }>({
   }, [page, debouncedSearch, status, pagination?.limit])
 
   useEffect(() => {
-    load()
+    load(true)
   }, [load])
 
   const openCreate = () => {
@@ -234,17 +234,24 @@ const CatalogCrudPage = <T extends { id: number }>({
   const handleDelete = async (targetId: number | null) => {
     if (!deleteTarget) return
     setDeleting(true)
+    const targetIdNum = deleteTarget.id
     try {
       if (targetId !== null && api.move) {
-        await api.move(deleteTarget.id, targetId)
+        await api.move(targetIdNum, targetId)
       }
-      await api.remove(deleteTarget.id)
+      await api.remove(targetIdNum)
       toast.success(`${title.slice(0, -1)} deleted`)
       setDeleteTarget(null)
       setUsage(null)
-      load()
+      setItems((prev) => prev.filter((i) => i.id !== targetIdNum))
+      if (items.length === 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1))
+      } else {
+        load(false)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Delete failed')
+      load(false)
     } finally {
       setDeleting(false)
     }
@@ -259,9 +266,15 @@ const CatalogCrudPage = <T extends { id: number }>({
         return
       }
       toast.success(`${title.slice(0, -1)} deleted`)
-      load()
+      setItems((prev) => prev.filter((i) => i.id !== item.id))
+      if (items.length === 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1))
+      } else {
+        load(false)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Delete failed')
+      load(false)
     }
   }
 
@@ -455,7 +468,7 @@ const CatalogCrudPage = <T extends { id: number }>({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {loading && items.length === 0 ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell colSpan={columns.length + 1}>
@@ -467,7 +480,7 @@ const CatalogCrudPage = <T extends { id: number }>({
                   <TableRow>
                     <TableCell colSpan={columns.length + 1} className="py-12 text-center">
                       <p className="text-sm text-destructive">{loadError}</p>
-                      <Button variant="outline" size="sm" className="mt-3" onClick={load}>
+                      <Button variant="outline" size="sm" className="mt-3" onClick={() => load(true)}>
                         Retry
                       </Button>
                     </TableCell>

@@ -45,8 +45,8 @@ const AdminMediaPage = () => {
   const [copied, setCopied] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const load = useCallback(async (folder: string, term: string, pg: number) => {
-    setLoading(true)
+  const load = useCallback(async (folder: string, term: string, pg: number, isInitial = false) => {
+    if (isInitial) setLoading(true)
     try {
       const result = await adminApi.getMedia({
         page: pg,
@@ -66,7 +66,7 @@ const AdminMediaPage = () => {
   }, [])
 
   useEffect(() => {
-    load('all', '', 1)
+    load('all', '', 1, true)
   }, [load])
 
   const handleUpload = async (files: FileList | null) => {
@@ -98,14 +98,22 @@ const AdminMediaPage = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return
+    const mediaId = deleteTarget.id
     try {
-      await adminApi.deleteMedia(deleteTarget.id)
+      await adminApi.deleteMedia(mediaId)
       toast.success('File deleted')
       setDeleteTarget(null)
-      setSelected((prev) => prev.filter((a) => a.id !== deleteTarget.id))
-      load(activeFolder, search, page)
+      setSelected((prev) => prev.filter((a) => a.id !== mediaId))
+      setAssets((prev) => prev.filter((a) => a.id !== mediaId))
+      if (assets.length === 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1))
+        load(activeFolder, search, Math.max(1, page - 1), false)
+      } else {
+        load(activeFolder, search, page, false)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Delete failed')
+      load(activeFolder, search, page, false)
     }
   }
 
@@ -175,7 +183,7 @@ const AdminMediaPage = () => {
           </CardContent>
         </Card>
 
-        {loading ? (
+        {loading && assets.length === 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="aspect-square w-full" />

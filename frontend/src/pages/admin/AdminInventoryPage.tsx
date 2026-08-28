@@ -40,8 +40,8 @@ const AdminInventoryPage = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [updating, setUpdating] = useState<number | null>(null)
 
-  const load = useCallback(async (params: { page?: number; search?: string; filter?: string } = {}) => {
-    setLoading(true)
+  const load = useCallback(async (params: { page?: number; search?: string; filter?: string; isInitial?: boolean } = {}) => {
+    if (params.isInitial) setLoading(true)
     try {
       const result = await adminApi.getProducts({
         page: params.page ?? page,
@@ -60,7 +60,7 @@ const AdminInventoryPage = () => {
   }, [page, search])
 
   useEffect(() => {
-    load()
+    load({ isInitial: true })
   }, [load])
 
   const visible = useMemo(() => {
@@ -206,7 +206,7 @@ const AdminInventoryPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {loading && products.length === 0 ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell colSpan={5}>

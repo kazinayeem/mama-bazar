@@ -77,16 +77,11 @@ const AdminBrandsPage = () => {
     setPage(1)
   }, [debouncedSearch, status])
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true)
     setLoadError('')
     try {
-      const res = await trigger({
-        page,
-        limit: PAGE_SIZE,
-        search: debouncedSearch || undefined,
-        status: status || undefined,
-      })
+      const res = await trigger({ page, search: debouncedSearch, status })
       if (res.error) throw new Error('Failed to load brands')
       const result = toListResult(res.data!)
       setBrands(result.data)
@@ -100,7 +95,7 @@ const AdminBrandsPage = () => {
   }, [trigger, page, debouncedSearch, status])
 
   useEffect(() => {
-    load()
+    load(true)
   }, [load])
 
   const openCreate = () => {
@@ -143,7 +138,7 @@ const AdminBrandsPage = () => {
       if (res.error) throw new Error('Save failed')
       toast.success(editing ? 'Brand updated' : 'Brand created')
       setDialogOpen(false)
-      load()
+      load(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Save failed')
     } finally {
@@ -164,23 +159,35 @@ const AdminBrandsPage = () => {
       return
     }
     toast.success('Brand deleted')
-    load()
+    setBrands((prev) => prev.filter((b) => b.id !== brand.id))
+    if (brands.length === 1 && page > 1) {
+      setPage((p) => Math.max(1, p - 1))
+    } else {
+      load(false)
+    }
   }
 
   const handleDelete = async (targetId: number | null) => {
     if (!deleteTarget) return
     setDeleting(true)
+    const brandId = deleteTarget.id
     try {
-      const moved = await moveBrandProducts({ id: deleteTarget.id, targetId })
+      const moved = await moveBrandProducts({ id: brandId, targetId })
       if (moved.error) throw new Error('Move failed')
-      const deleted = await deleteBrand(deleteTarget.id)
+      const deleted = await deleteBrand(brandId)
       if (deleted.error) throw new Error('Delete failed')
       toast.success('Brand deleted')
       setDeleteTarget(null)
       setUsage(null)
-      load()
+      setBrands((prev) => prev.filter((b) => b.id !== brandId))
+      if (brands.length === 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1))
+      } else {
+        load(false)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Delete failed')
+      load(false)
     } finally {
       setDeleting(false)
     }
@@ -218,7 +225,7 @@ const AdminBrandsPage = () => {
           </Select>
         </div>
 
-        {loading ? (
+        {loading && brands.length === 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-40 w-full" />

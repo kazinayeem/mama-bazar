@@ -15,8 +15,28 @@ const Sidebar = ({ collapsed, onNavigate }: SidebarProps) => {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
 
   const isActive = (href: string) => {
-    if (href === '/admin/dashboard') return location.pathname === href
-    return location.pathname.startsWith(href)
+    const [path, query] = href.split('?')
+    if (query) {
+      const searchParams = new URLSearchParams(query)
+      const currentParams = new URLSearchParams(location.search)
+      let matches = location.pathname === path
+      searchParams.forEach((val, key) => {
+        if (currentParams.get(key) !== val) matches = false
+      })
+      return matches
+    }
+    // If exact match
+    if (location.pathname === path) return !location.search || href.includes('?')
+
+    // For sub-routes (e.g. /admin/products/create), verify no sibling nav item is a better match
+    const hasMoreSpecific = adminNavSections.some((sec) =>
+      sec.items.some((item) => {
+        const [otherPath] = item.href.split('?')
+        return otherPath !== path && otherPath.startsWith(path) && location.pathname.startsWith(otherPath)
+      }),
+    )
+    if (hasMoreSpecific) return false
+    return location.pathname.startsWith(path + '/')
   }
 
   const toggleSection = (label: string) => {

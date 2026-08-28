@@ -69,8 +69,8 @@ const AdminPaymentMethodsPage = () => {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [bulkUpdating, setBulkUpdating] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true)
     try {
       setMethods(await adminApi.getPaymentMethodsAdmin())
     } catch (err) {
@@ -81,7 +81,7 @@ const AdminPaymentMethodsPage = () => {
   }, [])
 
   useEffect(() => {
-    load()
+    load(true)
   }, [load])
 
   const toggleRow = (id: number) => {
@@ -179,13 +179,16 @@ const AdminPaymentMethodsPage = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return
+    const methodId = deleteTarget.id
     try {
-      await adminApi.deletePaymentMethod(deleteTarget.id)
+      await adminApi.deletePaymentMethod(methodId)
       toast.success('Payment method deleted')
       setDeleteTarget(null)
-      load()
+      setMethods((prev) => prev.filter((m) => m.id !== methodId))
+      load(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Delete failed')
+      load(false)
     }
   }
 
@@ -304,7 +307,7 @@ const AdminPaymentMethodsPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {loading && methods.length === 0 ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell colSpan={7}><Skeleton className="h-10 w-full" /></TableCell>

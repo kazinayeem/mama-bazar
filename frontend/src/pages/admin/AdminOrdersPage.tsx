@@ -72,8 +72,8 @@ const AdminOrdersPage = () => {
   const [noteSaving, setNoteSaving] = useState(false)
 
   const load = useCallback(
-    async (params: { page?: number; status?: string; search?: string } = {}) => {
-      setLoading(true)
+    async (params: { page?: number; status?: string; search?: string; isInitial?: boolean } = {}) => {
+      if (params.isInitial) setLoading(true)
       try {
         const result = await adminApi.getOrders({
           page: params.page ?? page,
@@ -94,7 +94,7 @@ const AdminOrdersPage = () => {
   )
 
   useEffect(() => {
-    load()
+    load({ isInitial: true })
   }, [load])
 
   useEffect(() => {
@@ -173,14 +173,21 @@ const AdminOrdersPage = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return
+    const orderId = deleteTarget.id
     try {
-      await adminApi.deleteOrder(deleteTarget.id)
+      await adminApi.deleteOrder(orderId)
       toast.success('Order deleted')
       setDeleteTarget(null)
       setSelectedOrder(null)
-      load()
+      setOrders((prev) => prev.filter((o) => o.id !== orderId))
+      if (orders.length === 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1))
+      } else {
+        load({ page, status, search, isInitial: false })
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Delete failed')
+      load({ page, status, search, isInitial: false })
     }
   }
 
@@ -246,7 +253,7 @@ const AdminOrdersPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {loading && orders.length === 0 ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell colSpan={7}>
