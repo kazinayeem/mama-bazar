@@ -351,7 +351,7 @@ const AdminCategoriesPage = () => {
                   <TableRow>
                     <TableCell colSpan={7} className="py-12 text-center">
                       <p className="text-sm text-destructive">{loadError}</p>
-                      <Button variant="outline" size="sm" className="mt-3" onClick={load}>
+                      <Button variant="outline" size="sm" className="mt-3" onClick={() => load(true)}>
                         Retry
                       </Button>
                     </TableCell>

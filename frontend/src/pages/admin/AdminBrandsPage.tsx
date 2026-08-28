@@ -39,8 +39,6 @@ import type { Brand } from '@/types/admin'
 import { toListResult } from '@/components/admin/masterDataAdapters'
 import { SEO } from '../../components/common/SEO'
 
-const PAGE_SIZE = 20
-
 const AdminBrandsPage = () => {
   const { data: allBrands = [] } = useGetBrandsQuery()
   const [trigger] = useLazyGetAdminBrandsAdminQuery()
@@ -235,7 +233,7 @@ const AdminBrandsPage = () => {
           <Card>
             <CardContent className="py-16 text-center">
               <p className="text-sm text-destructive">{loadError}</p>
-              <Button variant="outline" size="sm" className="mt-3" onClick={load}>Retry</Button>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => load(true)}>Retry</Button>
             </CardContent>
           </Card>
         ) : brands.length === 0 ? (

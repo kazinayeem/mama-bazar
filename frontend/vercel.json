@@ -1,6 +1,11 @@
 {
   "headers": [
+
+     "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
     {
+
       "source": "/assets/(.*)",
       "headers": [
         {
@@ -39,7 +44,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/|fonts/|uploads/|robots\\.txt|sitemap\\.xml|brandlogo\\.png|favicon\\.svg|icons\\.svg|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|css|js|map|json|txt|xml)$).*)$",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
