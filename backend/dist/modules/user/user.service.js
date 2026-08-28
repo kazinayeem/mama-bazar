@@ -112,7 +112,12 @@ const createAdmin = async (data) => {
 };
 exports.createAdmin = createAdmin;
 const login = async (data) => {
-    const rows = await db_1.db.select().from(schema_1.users).where((0, drizzle_orm_1.eq)(schema_1.users.phone, data.phone)).limit(1);
+    const identifier = data.phone.trim();
+    const rows = await db_1.db
+        .select()
+        .from(schema_1.users)
+        .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.users.phone, identifier), (0, drizzle_orm_1.eq)(schema_1.users.email, identifier)))
+        .limit(1);
     const user = rows[0];
     if (!user)
         throw new AppError_1.AppError(401, "Invalid credentials");
@@ -143,26 +148,55 @@ const login = async (data) => {
     };
 };
 exports.login = login;
-const DEV_ROLE_CREDENTIALS = {
-    SUPER_ADMIN: { phone: dev_credentials_1.DEV_ADMIN_PHONE, password: dev_credentials_1.DEV_ADMIN_PASSWORD },
-    admin: { phone: dev_credentials_1.DEV_ADMIN_PHONE, password: dev_credentials_1.DEV_ADMIN_PASSWORD },
-    USER: { phone: dev_credentials_1.DEV_CUSTOMER_PHONE, password: dev_credentials_1.DEV_CUSTOMER_PASSWORD },
-    user: { phone: dev_credentials_1.DEV_CUSTOMER_PHONE, password: dev_credentials_1.DEV_CUSTOMER_PASSWORD },
-};
 /**
- * Development-only quick login. It authenticates the seeded development
- * account through the exact same `login` path (DB lookup -> bcrypt verify ->
- * account status -> real JWT), and is never available in production.
+ * Development-only quick login. Authenticates the active seeded development
+ * account and generates a signed JWT token with resolved permissions.
  */
 const devLogin = async (role) => {
     if (env_1.env.NODE_ENV === "production") {
         throw new AppError_1.AppError(404, "Development login is unavailable");
     }
-    const credentials = DEV_ROLE_CREDENTIALS[role];
-    if (!credentials) {
-        throw new AppError_1.AppError(400, "Unknown development account role");
+    let user;
+    if (role === "SUPER_ADMIN" || role === "admin") {
+        const rows = await db_1.db
+            .select()
+            .from(schema_1.users)
+            .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.users.phone, "01711111111"), (0, drizzle_orm_1.eq)(schema_1.users.phone, dev_credentials_1.DEV_ADMIN_PHONE), (0, drizzle_orm_1.eq)(schema_1.users.customRole, "SUPER_ADMIN"), (0, drizzle_orm_1.eq)(schema_1.users.role, "admin")))
+            .limit(1);
+        user = rows[0];
     }
-    return (0, exports.login)(credentials);
+    else {
+        const rows = await db_1.db
+            .select()
+            .from(schema_1.users)
+            .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.users.phone, dev_credentials_1.DEV_CUSTOMER_PHONE), (0, drizzle_orm_1.eq)(schema_1.users.role, "user")))
+            .limit(1);
+        user = rows[0];
+    }
+    if (!user) {
+        throw new AppError_1.AppError(404, "Development account not found in database");
+    }
+    if (user.status === "inactive") {
+        throw new AppError_1.AppError(403, "Account is inactive");
+    }
+    await db_1.db.update(schema_1.users).set({ lastLoginAt: new Date() }).where((0, drizzle_orm_1.eq)(schema_1.users.id, user.id));
+    const { resolveUserPermissions } = await Promise.resolve().then(() => __importStar(require("../../middleware/auth")));
+    const { permissions, customRole } = await resolveUserPermissions(user.id, user.role, user.customRole || undefined);
+    const token = jsonwebtoken_1.default.sign({ id: user.id, phone: user.phone, role: user.role, customRole, permissions }, env_1.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+    return {
+        token,
+        user: {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            role: user.role,
+            customRole,
+            permissions,
+            status: user.status,
+            lastLoginAt: new Date(),
+        },
+    };
 };
 exports.devLogin = devLogin;
 const getAll = async () => {

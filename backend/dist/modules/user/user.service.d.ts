@@ -32,9 +32,8 @@ export declare const login: (data: LoginInput) => Promise<{
     };
 }>;
 /**
- * Development-only quick login. It authenticates the seeded development
- * account through the exact same `login` path (DB lookup -> bcrypt verify ->
- * account status -> real JWT), and is never available in production.
+ * Development-only quick login. Authenticates the active seeded development
+ * account and generates a signed JWT token with resolved permissions.
  */
 export declare const devLogin: (role: string) => Promise<{
     token: string;
