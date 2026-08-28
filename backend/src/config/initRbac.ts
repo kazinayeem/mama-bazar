@@ -1,5 +1,6 @@
 import { pool } from "./db";
 import { RowDataPacket } from "mysql2";
+import bcrypt from "bcryptjs";
 
 export interface PermissionDefinition {
   code: string;
@@ -355,6 +356,19 @@ export async function initializeRbac() {
     );
     await connection.query(
       "UPDATE `users` SET `custom_role` = 'MANAGER' WHERE `role` = 'manager' AND (`custom_role` IS NULL OR `custom_role` = '')"
+    );
+
+    // 11. Ensure both default admin accounts (01711111111 and 01943124215) exist and have valid passwords
+    const defaultPasswordHash = await bcrypt.hash("DevAdmin@12345", 10);
+
+    await connection.query(
+      "INSERT INTO `users` (`name`, `phone`, `password`, `role`, `custom_role`, `status`) VALUES ('Super Admin', '01711111111', ?, 'admin', 'SUPER_ADMIN', 'active') ON DUPLICATE KEY UPDATE `role` = 'admin', `custom_role` = 'SUPER_ADMIN', `status` = 'active'",
+      [defaultPasswordHash]
+    );
+
+    await connection.query(
+      "INSERT INTO `users` (`name`, `phone`, `password`, `role`, `custom_role`, `status`) VALUES ('Dev Admin', '01943124215', ?, 'admin', 'SUPER_ADMIN', 'active') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `role` = 'admin', `custom_role` = 'SUPER_ADMIN', `status` = 'active'",
+      [defaultPasswordHash]
     );
 
     console.log("RBAC, Audit Logs, and Backup tables initialized successfully.");

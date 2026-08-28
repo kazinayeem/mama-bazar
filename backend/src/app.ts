@@ -43,8 +43,37 @@ app.use(helmet());
 // Gzip/Brotli compression for all responses (JSON APIs shrink ~70-80%)
 app.use(compression());
 
-// CORS — restrict to frontend origin
-app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+// CORS — dynamically allow configured frontend origin, localhost, and all vercel.app preview/production domains
+const allowedOrigins = [
+  env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:4173",
+  "https://mamabazar.vercel.app",
+  "https://mama-bazar.vercel.app",
+  "https://ghorerbazar-five.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("localhost") ||
+        origin.includes("127.0.0.1")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  })
+);
 
 // Body parsing with size limits
 app.use(express.json({ limit: "1mb" }));
