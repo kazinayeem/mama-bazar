@@ -1,9 +1,9 @@
 import { Bot, MessageCircle, MessageSquareMore, Phone, RotateCcw, Send, Sparkles, X } from 'lucide-react'
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { resolveUrl } from '../../lib/apiConfig'
 import { buildWhatsAppUrl } from '../../lib/whatsapp'
 
 const MESSENGER_URL = 'https://www.facebook.com/profile.php?id=61593199792337'
-const CHAT_API_URL = import.meta.env.VITE_AI_CHAT_URL || 'http://13.204.75.195:3000/chat'
 
 const AI_GREETING = 'আসসালামু আলাইকুম! Mama Bazar-এ আপনাকে স্বাগতম। কীভাবে সাহায্য করতে পারি?'
 
@@ -55,7 +55,8 @@ const WhatsAppButton = () => {
     setIsLoading(true)
 
     try {
-      const response = await fetch(CHAT_API_URL, {
+      const endpoint = resolveUrl('/api/chat') || '/api/chat'
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

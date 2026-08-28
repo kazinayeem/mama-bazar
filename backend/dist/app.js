@@ -37,6 +37,7 @@ const rental_route_1 = __importDefault(require("./modules/rental/rental.route"))
 const memo_route_1 = __importDefault(require("./modules/memo/memo.route"));
 const member_route_1 = __importDefault(require("./modules/member/member.route"));
 const backup_route_1 = __importDefault(require("./modules/backup/backup.route"));
+const chat_route_1 = __importDefault(require("./modules/chat/chat.route"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const app = (0, express_1.default)();
 // Trust reverse proxy (Vercel edge network)
@@ -133,6 +134,7 @@ app.use("/api/rentals", rental_route_1.default);
 app.use("/api/memos", memo_route_1.default);
 app.use("/api/members", member_route_1.default);
 app.use("/api/backup", backup_route_1.default);
+app.use("/api/chat", chat_route_1.default);
 // Root API info
 app.get("/", (_req, res) => {
     res.status(200).json({

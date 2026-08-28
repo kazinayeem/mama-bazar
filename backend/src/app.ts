@@ -33,6 +33,7 @@ import rentalRoutes from "./modules/rental/rental.route";
 import memoRoutes from "./modules/memo/memo.route";
 import memberRoutes from "./modules/member/member.route";
 import backupRoutes from "./modules/backup/backup.route";
+import chatRoutes from "./modules/chat/chat.route";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -145,6 +146,7 @@ app.use("/api/rentals", rentalRoutes);
 app.use("/api/memos", memoRoutes);
 app.use("/api/members", memberRoutes);
 app.use("/api/backup", backupRoutes);
+app.use("/api/chat", chatRoutes);
 // Root API info
 app.get("/", (_req, res) => {
   res.status(200).json({
