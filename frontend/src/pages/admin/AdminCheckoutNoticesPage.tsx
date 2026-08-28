@@ -65,7 +65,7 @@ const AdminCheckoutNoticesPage = () => {
       api={{
         list: async () => {
           const rows = await store
-            .dispatch(adminProductsApi.endpoints.getAdminCheckoutNotices.initiate(undefined, { forceRefetch: true }))
+            .dispatch(adminProductsApi.endpoints.getAdminCheckoutNotices.initiate(undefined))
             .unwrap()
           return {
             data: rows,

@@ -5,11 +5,34 @@ import AdminTopbar from '../admin/AdminTopbar'
 import CommandPalette from '../admin/CommandPalette'
 import { useThemeSync } from '../../lib/useThemeSync'
 import { cn } from '@/lib/utils'
+import {
+  useGetCategoriesQuery,
+  useGetBrandsQuery,
+  useGetCollectionsQuery,
+} from '@/store/services/commerceApi'
+import {
+  useGetAdminColorsQuery,
+  useGetAdminSizesQuery,
+  useGetAdminSuppliersQuery,
+  useGetAdminVendorsQuery,
+} from '@/store/services/adminProductsApi'
 
 const AdminLayoutContext = createContext<boolean>(false)
 
 const AdminLayout = ({ children }: { children?: React.ReactNode }) => {
   useThemeSync()
+
+  // Retain active cache subscriptions for shared master reference data throughout the admin session.
+  // This guarantees Categories, Brands, Collections, Colors, Sizes, Vendors, and Suppliers
+  // are loaded ONCE and reused everywhere without duplicate requests or waterfall latency.
+  useGetCategoriesQuery(undefined, { refetchOnMountOrArgChange: false, refetchOnFocus: false, refetchOnReconnect: false })
+  useGetBrandsQuery(undefined, { refetchOnMountOrArgChange: false, refetchOnFocus: false, refetchOnReconnect: false })
+  useGetCollectionsQuery(undefined, { refetchOnMountOrArgChange: false, refetchOnFocus: false, refetchOnReconnect: false })
+  useGetAdminVendorsQuery(undefined, { refetchOnMountOrArgChange: false, refetchOnFocus: false, refetchOnReconnect: false })
+  useGetAdminSuppliersQuery(undefined, { refetchOnMountOrArgChange: false, refetchOnFocus: false, refetchOnReconnect: false })
+  useGetAdminColorsQuery(undefined, { refetchOnMountOrArgChange: false, refetchOnFocus: false, refetchOnReconnect: false })
+  useGetAdminSizesQuery(undefined, { refetchOnMountOrArgChange: false, refetchOnFocus: false, refetchOnReconnect: false })
+
   const isInsideAdminLayout = useContext(AdminLayoutContext)
 
   // Persistent sidebar collapsed preference

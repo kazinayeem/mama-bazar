@@ -40,7 +40,10 @@ const AdminVendorsPage = () => {
 
   const list = useCallback(
     async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
-      const res = await trigger({ page: params?.page || 1, limit: params?.limit || 20, search: params?.search, status: params?.status })
+      const res = await trigger(
+        { page: params?.page || 1, limit: params?.limit || 20, search: params?.search, status: params?.status },
+        true,
+      )
       if (res.error) throw new Error('Failed to load vendors')
       return toListResult(res.data!)
     },

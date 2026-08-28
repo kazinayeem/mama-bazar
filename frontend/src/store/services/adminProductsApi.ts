@@ -221,6 +221,7 @@ export const adminProductsApi = baseApi.injectEndpoints({
       query: (params) => `/api/categories/admin${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
       transformResponse: (response: Envelope<Category[]>) => asList<Category>(response),
       providesTags: [{ type: 'Categories', id: 'LIST' }],
+      keepUnusedDataFor: 900,
     }),
 
     createCategory: builder.mutation<Category, Record<string, unknown>>({
@@ -249,6 +250,7 @@ export const adminProductsApi = baseApi.injectEndpoints({
       query: (params) => `/api/brands/admin${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
       transformResponse: (response: Envelope<Brand[]>) => asList<Brand>(response),
       providesTags: [{ type: 'Brands', id: 'LIST' }],
+      keepUnusedDataFor: 900,
     }),
 
     createBrand: builder.mutation<Brand, Record<string, unknown>>({
@@ -277,6 +279,7 @@ export const adminProductsApi = baseApi.injectEndpoints({
       query: (params) => `/api/collections/admin${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
       transformResponse: (response: Envelope<Collection[]>) => asList<Collection>(response),
       providesTags: [{ type: 'Collections', id: 'LIST' }],
+      keepUnusedDataFor: 900,
     }),
 
     createCollection: builder.mutation<Collection, Record<string, unknown>>({
@@ -305,6 +308,7 @@ export const adminProductsApi = baseApi.injectEndpoints({
       query: (params) => `/api/colors/admin${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
       transformResponse: (response: Envelope<Color[]>) => asList<Color>(response),
       providesTags: [{ type: 'Colors', id: 'LIST' }],
+      keepUnusedDataFor: 900,
     }),
 
     createColor: builder.mutation<Color, Record<string, unknown>>({
@@ -333,6 +337,7 @@ export const adminProductsApi = baseApi.injectEndpoints({
       query: (params) => `/api/sizes/admin${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
       transformResponse: (response: Envelope<Size[]>) => asList<Size>(response),
       providesTags: [{ type: 'Sizes', id: 'LIST' }],
+      keepUnusedDataFor: 900,
     }),
 
     createSize: builder.mutation<Size, Record<string, unknown>>({
@@ -361,6 +366,7 @@ export const adminProductsApi = baseApi.injectEndpoints({
       query: (params) => `/api/vendors/admin${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
       transformResponse: (response: Envelope<Vendor[]>) => asList<Vendor>(response),
       providesTags: [{ type: 'Vendors', id: 'LIST' }],
+      keepUnusedDataFor: 900,
     }),
 
     createVendor: builder.mutation<Vendor, Record<string, unknown>>({
@@ -389,6 +395,7 @@ export const adminProductsApi = baseApi.injectEndpoints({
       query: (params) => `/api/suppliers/admin${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
       transformResponse: (response: Envelope<Supplier[]>) => asList<Supplier>(response),
       providesTags: [{ type: 'Suppliers', id: 'LIST' }],
+      keepUnusedDataFor: 900,
     }),
 
     createSupplier: builder.mutation<Supplier, Record<string, unknown>>({

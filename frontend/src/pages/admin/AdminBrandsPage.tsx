@@ -79,7 +79,7 @@ const AdminBrandsPage = () => {
     if (isInitial) setLoading(true)
     setLoadError('')
     try {
-      const res = await trigger({ page, search: debouncedSearch, status })
+      const res = await trigger({ page, search: debouncedSearch, status }, true)
       if (res.error) throw new Error('Failed to load brands')
       const result = toListResult(res.data!)
       setBrands(result.data)

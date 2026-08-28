@@ -116,12 +116,15 @@ const AdminCategoriesPage = () => {
     if (isInitial) setLoading(true)
     setLoadError('')
     try {
-      const res = await trigger({
-        page,
-        limit: ADMIN_PAGE_SIZE,
-        search: debouncedSearch || undefined,
-        status: status || undefined,
-      })
+      const res = await trigger(
+        {
+          page,
+          limit: ADMIN_PAGE_SIZE,
+          search: debouncedSearch || undefined,
+          status: status || undefined,
+        },
+        true,
+      )
       if (res.error) throw new Error('Failed to load categories')
       const result = toListResult(res.data!)
       setRows(buildTreeRows(result.data))
