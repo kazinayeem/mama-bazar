@@ -1,8 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ROLE_PRESETS = exports.ALL_PERMISSIONS = void 0;
 exports.initializeRbac = initializeRbac;
 const db_1 = require("./db");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 exports.ALL_PERMISSIONS = [
     // Dashboard
     { code: "dashboard.view", module: "dashboard", label: "View Dashboard", description: "View dashboard statistics and summary cards" },
@@ -294,6 +298,10 @@ async function initializeRbac() {
         // 10. Update existing admin users with customRole = 'SUPER_ADMIN' if not set
         await connection.query("UPDATE `users` SET `custom_role` = 'SUPER_ADMIN' WHERE (`role` = 'admin' OR `id` = 240011) AND (`custom_role` IS NULL OR `custom_role` = '')");
         await connection.query("UPDATE `users` SET `custom_role` = 'MANAGER' WHERE `role` = 'manager' AND (`custom_role` IS NULL OR `custom_role` = '')");
+        // 11. Ensure both default admin accounts (01711111111 and 01943124215) exist and have valid passwords
+        const defaultPasswordHash = await bcryptjs_1.default.hash("DevAdmin@12345", 10);
+        await connection.query("INSERT INTO `users` (`name`, `phone`, `password`, `role`, `custom_role`, `status`) VALUES ('Super Admin', '01711111111', ?, 'admin', 'SUPER_ADMIN', 'active') ON DUPLICATE KEY UPDATE `role` = 'admin', `custom_role` = 'SUPER_ADMIN', `status` = 'active'", [defaultPasswordHash]);
+        await connection.query("INSERT INTO `users` (`name`, `phone`, `password`, `role`, `custom_role`, `status`) VALUES ('Dev Admin', '01943124215', ?, 'admin', 'SUPER_ADMIN', 'active') ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `role` = 'admin', `custom_role` = 'SUPER_ADMIN', `status` = 'active'", [defaultPasswordHash]);
         console.log("RBAC, Audit Logs, and Backup tables initialized successfully.");
     }
     finally {
