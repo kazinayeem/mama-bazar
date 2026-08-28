@@ -100,7 +100,10 @@ const CategoryChip = ({ category }: { category: Category }) => {
           <img
             alt={category.name}
             className="h-full w-full object-cover"
+            width="68"
+            height="68"
             loading="lazy"
+            decoding="async"
             onError={() => setImgFailed(true)}
             src={imgSrc}
           />

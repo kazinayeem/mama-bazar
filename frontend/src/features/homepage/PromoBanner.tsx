@@ -10,7 +10,7 @@ interface PromoBannerProps {
 
 const isExternal = (url: string) => /^https?:\/\//.test(url)
 
-const PromoCard = ({ banner, priority }: { banner: Banner; priority?: boolean }) => {
+const PromoCard = ({ banner }: { banner: Banner }) => {
   const target = banner.link || '/shop'
   // Right-sized per breakpoint with c_limit (downscale-only). Each card renders
   // at most ~600px wide on desktop (2-col grid) / ~400px on mobile; serving
@@ -27,9 +27,9 @@ const PromoCard = ({ banner, priority }: { banner: Banner; priority?: boolean })
         <img
           alt={banner.title || 'Promotional banner'}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-          fetchPriority={priority ? 'high' : 'auto'}
+          decoding="async"
           height="300"
-          loading={priority ? 'eager' : 'lazy'}
+          loading="lazy"
           src={imageMobile}
           width="800"
         />
@@ -74,8 +74,8 @@ const PromoBanner = ({ items }: PromoBannerProps) => {
   const visible = items.slice(0, 2)
   return (
     <div className={`grid gap-4 ${visible.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
-      {visible.map((banner, index) => (
-        <PromoCard banner={banner} key={banner.id} priority={index === 0} />
+      {visible.map((banner) => (
+        <PromoCard banner={banner} key={banner.id} />
       ))}
     </div>
   )

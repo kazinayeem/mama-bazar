@@ -106,19 +106,22 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
         <picture>
           {images.desktop && <source media="(min-width: 1024px)" srcSet={images.desktop} />}
           {images.tablet && <source media="(min-width: 640px)" srcSet={images.tablet} />}
-        <img
+          <img
             ref={setImgRef}
             alt={slide.title || slide.badge || 'Promotional banner'}
-            className="absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-500"
+            className={`absolute inset-0 h-full w-full object-contain object-center ${
+              priority ? '' : 'transition-opacity duration-300'
+            }`}
             draggable={false}
             fetchPriority={priority ? 'high' : 'auto'}
             loading={priority ? 'eager' : 'lazy'}
+            decoding={priority ? 'sync' : 'async'}
             width="1200"
             height="480"
             onError={() => setImageFailed(true)}
             onLoad={() => setImageLoaded(true)}
             src={images.mobile}
-            style={{ opacity: imageLoaded ? 1 : 0 }}
+            style={priority ? undefined : { opacity: imageLoaded ? 1 : 0 }}
           />
         </picture>
       )}

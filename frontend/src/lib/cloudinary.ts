@@ -73,24 +73,24 @@ export const optimizeCloudinaryUrl = (
 }
 
 /**
- * Optimized URL for homepage product cards (300×300 display).
+ * Optimized URL for homepage product cards (240×240 display).
  * Applies format auto, quality auto, and width constraint.
  * Falls back to the original URL for non-Cloudinary images.
  */
 export const getCloudinaryCardUrl = (url?: string | null): string =>
-  optimizeCloudinaryUrl(url, 'w_300,h_300,c_pad,f_auto,q_auto')
+  optimizeCloudinaryUrl(url, 'w_240,h_240,c_pad,f_auto,q_auto')
 
 /**
  * Optimized URL for category chip images (120×120 display).
  */
 export const getCloudinaryCategoryUrl = (url?: string | null): string =>
-  optimizeCloudinaryUrl(url, 'w_120,h_120,c_pad,f_auto,q_auto')
+  optimizeCloudinaryUrl(url, 'w_120,h_120,c_fill,f_auto,q_auto')
 
 /**
- * Optimized URL for brand logos (100×100 display).
+ * Optimized URL for brand logos (96×96 display).
  */
 export const getCloudinaryBrandUrl = (url?: string | null): string =>
-  optimizeCloudinaryUrl(url, 'w_100,h_100,c_pad,f_auto,q_auto')
+  optimizeCloudinaryUrl(url, 'w_96,h_96,c_pad,f_auto,q_auto')
 
 /**
  * Optimized URL for hero/banner images — format+quality only, no resize
@@ -116,10 +116,9 @@ export const getCloudinaryHeroUrl = (url?: string | null, width = 1280): string 
 
 /**
  * Optimized URL for collection tile images (object-cover, ~4/3 tiles, up to
- * 4 per row on desktop). `c_limit` downscales to at most 600px wide so CSS
+ * 4 per row on desktop). `c_limit` downscales to at most 500px wide so CSS
  * `object-cover` still crops to the tile exactly as before, but the transfer
  * is a fraction of the original-resolution image.
  */
 export const getCloudinaryCollectionUrl = (url?: string | null): string =>
-  optimizeCloudinaryUrl(url, 'w_600,c_limit,f_auto,q_auto')
-
+  optimizeCloudinaryUrl(url, 'w_500,c_limit,f_auto,q_auto')

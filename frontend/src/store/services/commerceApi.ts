@@ -12,7 +12,7 @@ import type {
   UserAddress,
   UserOrderWithItems,
 } from '../../types'
-import type { Brand, Collection, TrackingConfig } from '../../types/admin'
+import type { Banner, Brand, Collection, TrackingConfig } from '../../types/admin'
 import type { HomepageData } from '../../types/homepage'
 import { baseApi } from './api'
 
@@ -156,6 +156,13 @@ export const commerceApi = baseApi.injectEndpoints({
       query: () => '/api/collections',
       transformResponse: (response: ApiEnvelope<Collection[]>) => response.data || [],
       providesTags: [{ type: 'Collections', id: 'LIST' }],
+      keepUnusedDataFor: LONG_LIVED,
+    }),
+
+    getBanners: builder.query<Banner[], void>({
+      query: () => '/api/banners',
+      transformResponse: (response: ApiEnvelope<Banner[]>) => response.data || [],
+      providesTags: [{ type: 'Banners' as const, id: 'LIST' }],
       keepUnusedDataFor: LONG_LIVED,
     }),
 
@@ -407,6 +414,7 @@ export const {
   useSubscribeNewsletterMutation,
   useGetBrandsQuery,
   useGetCollectionsQuery,
+  useGetBannersQuery,
   useGetReviewsQuery,
   useAddReviewMutation,
   useGetTrackingConfigQuery,

@@ -1,48 +1,148 @@
+import { lazy, Suspense } from 'react'
 import SectionShell from './SectionShell'
 import HeroCarousel from './HeroCarousel'
 import TrustStrip from './TrustStrip'
-import CategoryGrid from './CategoryGrid'
-import ProductCarousel from './ProductCarousel'
-import FlashDeals from './FlashDeals'
-import BrandRow from './BrandRow'
-import CollectionTiles from './CollectionTiles'
-import PromoBanner from './PromoBanner'
-import ReviewsSection from './ReviewsSection'
-import NewsletterBlock from './NewsletterBlock'
-import WhyChooseUs from './WhyChooseUs'
 import LazySection from '../../components/common/LazySection'
+import {
+  ProgressiveCategories,
+  ProgressiveProductRail,
+  ProgressiveFlashDeals,
+  ProgressivePromoBanner,
+  ProgressiveBrands,
+  ProgressiveCollections,
+  ProgressiveReviews,
+  ProductRailSkeleton,
+  CategoryGridSkeleton,
+  BrandRowSkeleton,
+  CollectionTilesSkeleton,
+  PromoBannerSkeleton,
+  ReviewsSkeleton,
+} from './ProgressiveSections'
 import { Link } from 'react-router-dom'
 import {
-  asBanners,
-  asBrands,
-  asCategories,
   asCategory,
-  asCollections,
   asContentItems,
-  asProducts,
-  asReviews,
   asSlides,
   type HomepageData,
-  type HomepageSectionConfig,
+  type HomepageSection,
 } from '../../types/homepage'
 import type { Product } from '../../types'
+import { useGetBannersQuery } from '../../store/services/commerceApi'
+
+// Code-split heavy below-the-fold informational components
+const WhyChooseUs = lazy(() => import('./WhyChooseUs'))
+const NewsletterBlock = lazy(() => import('./NewsletterBlock'))
 
 interface HomepageSectionsProps {
   data?: HomepageData
-  loading?: boolean
   hasError?: boolean
   onRetry?: () => void
   onQuickView: (product: Product) => void
 }
 
-// Skeleton row for loading state — mimics a product rail
-const ProductRowSkeleton = () => (
-  <div className="flex gap-3 overflow-hidden py-1">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <div key={i} className="h-72 w-48 shrink-0 animate-pulse rounded-2xl border border-slate-100 bg-slate-100/80" />
-    ))}
-  </div>
-)
+const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
+  { id: 'hero', type: 'hero', enabled: true },
+  {
+    id: 'trust_strip',
+    type: 'trust_strip',
+    enabled: true,
+    title: 'Why shop with us',
+  },
+  {
+    id: 'categories',
+    type: 'categories',
+    enabled: true,
+    title: 'Explore Categories',
+    subtitle: 'Discover our wide range of products across all categories.',
+    limit: 12,
+  },
+  {
+    id: 'new_arrivals',
+    type: 'new_arrivals',
+    enabled: true,
+    title: 'New arrivals',
+    subtitle: 'Fresh products just added to the store.',
+    limit: 12,
+  },
+  {
+    id: 'promo_banner',
+    type: 'promo_banner',
+    enabled: true,
+  },
+  {
+    id: 'featured',
+    type: 'featured',
+    enabled: true,
+    title: 'Featured products',
+    subtitle: 'Handpicked favourites from our catalogue.',
+    limit: 12,
+  },
+  {
+    id: 'brands',
+    type: 'brands',
+    enabled: true,
+    title: 'Trusted brands',
+    subtitle: '100% authentic products from official distributors.',
+    limit: 10,
+  },
+  {
+    id: 'promo_banner_2',
+    type: 'promo_banner',
+    enabled: true,
+  },
+  {
+    id: 'collections',
+    type: 'collections',
+    enabled: true,
+    title: 'Featured collections',
+    subtitle: 'Complete setups built for every lifestyle.',
+    limit: 6,
+  },
+  {
+    id: 'flash_deals',
+    type: 'flash_deals',
+    enabled: true,
+    title: 'Flash Deals',
+    subtitle: "Limited-time prices. When they're gone, they're gone.",
+    limit: 12,
+    background: 'muted',
+  },
+  {
+    id: 'best_sellers',
+    type: 'best_sellers',
+    enabled: true,
+    title: 'Best sellers',
+    subtitle: 'The most-ordered products right now.',
+    limit: 12,
+  },
+  {
+    id: 'trending',
+    type: 'trending',
+    enabled: true,
+    title: 'Trending right now',
+    subtitle: 'The products everyone is talking about.',
+    limit: 10,
+    background: 'muted',
+  },
+  {
+    id: 'reviews',
+    type: 'reviews',
+    enabled: true,
+    title: 'Customer Reviews',
+    subtitle: 'Real feedback from verified shoppers.',
+    limit: 8,
+  },
+  {
+    id: 'why_choose_us',
+    type: 'why_choose_us',
+    enabled: true,
+  },
+  {
+    id: 'newsletter',
+    type: 'newsletter',
+    enabled: true,
+  },
+]
 
 const HomepageErrorState = ({ onRetry }: { onRetry?: () => void }) => (
   <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
@@ -71,62 +171,43 @@ const HomepageErrorState = ({ onRetry }: { onRetry?: () => void }) => (
   </div>
 )
 
-const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: HomepageSectionsProps) => {
-  if (!data) {
-    if (hasError) return <HomepageErrorState onRetry={onRetry} />
-    if (!loading) return null
-    return (
-      <div className="space-y-4 bg-white py-3">
-        {/* Hero skeleton */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="h-[300px] w-full animate-pulse rounded-3xl bg-slate-100 sm:h-[400px] lg:h-[480px]" />
-        </div>
+const HomepageSections = ({ data, hasError, onRetry, onQuickView }: HomepageSectionsProps) => {
+  // Query banners for hero and promotional slots
+  const { data: banners = [] } = useGetBannersQuery()
 
-        {/* Trust strip skeleton */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-                <div className="h-10 w-10 animate-pulse rounded-xl bg-slate-100" />
-                <div className="space-y-1.5">
-                  <div className="h-2.5 w-24 animate-pulse rounded bg-slate-100" />
-                  <div className="h-2 w-28 animate-pulse rounded bg-slate-100" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+  if (hasError) return <HomepageErrorState onRetry={onRetry} />
 
-        {/* Category carousel skeleton */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-4 h-6 w-48 animate-pulse rounded bg-slate-100" />
-          <div className="flex gap-3 overflow-hidden">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex w-[138px] shrink-0 flex-col items-center gap-2 rounded-2xl bg-slate-50 p-4">
-                <div className="h-16 w-16 animate-pulse rounded-2xl bg-slate-100" />
-                <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100" />
-              </div>
-            ))}
-          </div>
-        </div>
+  const sections: HomepageSection[] = (data?.sections && data.sections.length > 0) ? data.sections : DEFAULT_HOMEPAGE_SECTIONS
 
-        {/* Product rail skeleton x2 */}
-        {[1, 2].map((k) => (
-          <div key={k} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-4 h-6 w-48 animate-pulse rounded bg-slate-100" />
-            <ProductRowSkeleton />
-          </div>
-        ))}
-      </div>
-    )
-  }
+  // Convert banners to hero slides format if not provided by data
+  const fallbackHeroSlides = banners.map((b, idx) => ({
+    id: String(b.id || idx),
+    desktopImage: b.image || '',
+    tabletImage: b.imageTablet || b.image,
+    mobileImage: b.imageMobile || b.image,
+    title: b.title || '',
+    subtitle: b.subtitle || '',
+    primaryButtonText: b.buttonText || 'Shop Now',
+    primaryButtonUrl: b.link || '/shop',
+    status: 'active' as const,
+    priority: idx,
+  }))
 
-  const heroSlides = asSlides(data.sections.find((s) => s.type === 'hero')) || data.heroSlides
-  const popularSearches = data.popularSearches?.slice(0, 8) || []
+  const heroSlides =
+    (data && asSlides(data.sections.find((s) => s.type === 'hero'))) ||
+    data?.heroSlides ||
+    fallbackHeroSlides
+
+  const popularSearches = data?.popularSearches?.slice(0, 8) || ['Smart Watch', 'Headphone', 'Speaker', 'Keyboard', 'Air Fryer']
+  const flashSaleWindow = data?.flashSaleWindow
+
+  let promoCounter = 0
 
   return (
     <>
-      {data.sections.map((section) => {
+      {sections.map((section) => {
+        if (section.enabled === false) return null
+
         switch (section.type) {
           case 'hero':
             return (
@@ -159,138 +240,229 @@ const HomepageSections = ({ data, loading, hasError, onRetry, onQuickView }: Hom
           case 'trust_strip':
             return <TrustStrip key={section.id} items={asContentItems(section)} />
 
-          case 'categories': {
-            const items = asCategories(section)
-            if (items.length === 0) return null
+          case 'categories':
             return (
-              <LazySection key={section.id} fallback={<div className="h-48 animate-pulse bg-slate-50" />}>
-                <SectionShell section={section}>
-                  <CategoryGrid columns={section.columns} items={items} />
-                </SectionShell>
-              </LazySection>
-            )
-          }
-
-          case 'category_products': {
-            const products = asProducts(section)
-            const category = asCategory(section)
-            if (products.length === 0 || !category) return null
-            const resolved: HomepageSectionConfig = {
-              ...section,
-              title: section.title?.trim() || category.name,
-              ctaText: section.ctaText?.trim() || 'View More',
-              ctaUrl: section.ctaUrl?.trim() || `/shop?category=${category.slug}`,
-            }
-            return (
-              <LazySection key={section.id} fallback={<div className="h-72 animate-pulse bg-slate-50" />}>
-                <SectionShell section={resolved}>
-                  <ProductCarousel maxItems={5} onQuickView={onQuickView} products={products} />
-                </SectionShell>
-              </LazySection>
-            )
-          }
-
-          case 'promo_banner': {
-            const items = asBanners(section)
-            if (items.length === 0) return null
-            return (
-              <LazySection key={section.id} fallback={<div className="h-56 animate-pulse bg-slate-50" />}>
-                <SectionShell section={section}>
-                  <PromoBanner items={items} />
-                </SectionShell>
-              </LazySection>
-            )
-          }
-
-          case 'flash_deals': {
-            const products = asProducts(section)
-            if (products.length === 0) return null
-            return (
-              <LazySection key={section.id} fallback={<div className="h-96 animate-pulse bg-brand-green-50" />}>
-                <FlashDeals
-                  onQuickView={onQuickView}
-                  products={products}
-                  section={section}
-                  window={data.flashSaleWindow}
-                />
-              </LazySection>
-            )
-          }
-
-          case 'brands': {
-            const items = asBrands(section)
-            if (items.length === 0) return null
-            return (
-              <LazySection key={section.id} fallback={<div className="h-40 animate-pulse bg-slate-50" />}>
-                <SectionShell section={section}>
-                  <BrandRow items={items} />
-                </SectionShell>
-              </LazySection>
-            )
-          }
-
-          case 'collections': {
-            const items = asCollections(section)
-            if (items.length === 0) return null
-            return (
-              <LazySection key={section.id} fallback={<div className="h-64 animate-pulse bg-slate-50" />}>
-                <SectionShell section={section}>
-                  <CollectionTiles items={items} />
-                </SectionShell>
-              </LazySection>
-            )
-          }
-
-          case 'reviews': {
-            const items = asReviews(section)
-            if (items.length === 0) return null
-            return (
-              <LazySection key={section.id} fallback={<div className="h-72 animate-pulse bg-slate-50" />}>
-                <SectionShell section={section}>
-                  <ReviewsSection items={items} />
-                </SectionShell>
-              </LazySection>
-            )
-          }
-
-          case 'why_choose_us': {
-            const items = asContentItems(section)
-            if (items.length === 0) return null
-            return (
-              <LazySection key={section.id} fallback={<div className="h-64 animate-pulse bg-slate-50" />}>
-                <SectionShell section={section}>
-                  <WhyChooseUs items={items} />
-                </SectionShell>
-              </LazySection>
-            )
-          }
-
-          case 'newsletter':
-            return (
-              <LazySection key={section.id} fallback={<div className="h-40 animate-pulse bg-slate-50" />}>
-                <NewsletterBlock settings={section.data?.settings} />
+              <LazySection
+                key={section.id}
+                minHeight="240px"
+                rootMargin="400px"
+                fallback={
+                  <SectionShell section={section}>
+                    <CategoryGridSkeleton />
+                  </SectionShell>
+                }
+              >
+                {({ inView }) => <ProgressiveCategories inView={inView} section={section} />}
               </LazySection>
             )
 
+          case 'new_arrivals':
           case 'featured':
           case 'best_sellers':
           case 'trending':
-          case 'new_arrivals':
           case 'limited_edition':
           case 'official':
           case 'hot_deals':
           case 'emi_available':
           case 'recommendations': {
-            const products = asProducts(section)
-            if (products.length === 0) return null
+            const labelMap: Record<string, string> = {
+              new_arrivals: 'new_arrival',
+              featured: 'featured',
+              best_sellers: 'best_seller',
+              trending: 'trending',
+              limited_edition: 'limited_edition',
+              official: 'official',
+              hot_deals: 'hot_deal',
+              emi_available: 'featured',
+              recommendations: 'trending',
+            }
+            const label = labelMap[section.type] || 'featured'
+
             return (
-              <LazySection key={section.id} fallback={<div className="h-72 animate-pulse bg-slate-50" />}>
-                <SectionShell section={section}>
-                  <ProductCarousel maxItems={5} onQuickView={onQuickView} products={products} />
-                </SectionShell>
+              <LazySection
+                key={section.id}
+                minHeight="380px"
+                rootMargin="450px"
+                fallback={
+                  <SectionShell section={section}>
+                    <ProductRailSkeleton />
+                  </SectionShell>
+                }
+              >
+                {({ inView }) => (
+                  <ProgressiveProductRail
+                    inView={inView}
+                    label={label}
+                    onQuickView={onQuickView}
+                    section={section}
+                  />
+                )}
               </LazySection>
             )
           }
+
+          case 'category_products': {
+            const category = asCategory(section)
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="380px"
+                rootMargin="450px"
+                fallback={
+                  <SectionShell section={section}>
+                    <ProductRailSkeleton />
+                  </SectionShell>
+                }
+              >
+                {({ inView }) => (
+                  <ProgressiveProductRail
+                    categorySlug={category?.slug || section.categorySlug || undefined}
+                    inView={inView}
+                    onQuickView={onQuickView}
+                    section={section}
+                  />
+                )}
+              </LazySection>
+            )
+          }
+
+          case 'promo_banner': {
+            const currentOffset = promoCounter * 2
+            promoCounter += 1
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="240px"
+                rootMargin="450px"
+                fallback={
+                  <div className="py-4 lg:py-6">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                      <PromoBannerSkeleton />
+                    </div>
+                  </div>
+                }
+              >
+                {({ inView }) => (
+                  <ProgressivePromoBanner
+                    bannerOffset={currentOffset}
+                    inView={inView}
+                  />
+                )}
+              </LazySection>
+            )
+          }
+
+          case 'flash_deals':
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="420px"
+                rootMargin="450px"
+                fallback={
+                  <div className="bg-brand-green-50 py-6 lg:py-8">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                      <div className="mb-4 h-24 w-full animate-pulse rounded-2xl bg-brand-green-100/60" />
+                      <ProductRailSkeleton />
+                    </div>
+                  </div>
+                }
+              >
+                {({ inView }) => (
+                  <ProgressiveFlashDeals
+                    inView={inView}
+                    onQuickView={onQuickView}
+                    section={section}
+                    window={flashSaleWindow}
+                  />
+                )}
+              </LazySection>
+            )
+
+          case 'brands':
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="180px"
+                rootMargin="450px"
+                fallback={
+                  <SectionShell section={section}>
+                    <BrandRowSkeleton />
+                  </SectionShell>
+                }
+              >
+                {({ inView }) => <ProgressiveBrands inView={inView} section={section} />}
+              </LazySection>
+            )
+
+          case 'collections':
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="280px"
+                rootMargin="450px"
+                fallback={
+                  <SectionShell section={section}>
+                    <CollectionTilesSkeleton />
+                  </SectionShell>
+                }
+              >
+                {({ inView }) => <ProgressiveCollections inView={inView} section={section} />}
+              </LazySection>
+            )
+
+          case 'reviews':
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="320px"
+                rootMargin="450px"
+                fallback={
+                  <SectionShell section={section}>
+                    <ReviewsSkeleton />
+                  </SectionShell>
+                }
+              >
+                {({ inView }) => <ProgressiveReviews inView={inView} section={section} />}
+              </LazySection>
+            )
+
+          case 'why_choose_us':
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="260px"
+                rootMargin="450px"
+                fallback={
+                  <SectionShell section={section}>
+                    <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-100" />
+                  </SectionShell>
+                }
+              >
+                {() => (
+                  <Suspense fallback={<div className="h-44 w-full animate-pulse rounded-2xl bg-slate-100" />}>
+                    <SectionShell section={section}>
+                      <WhyChooseUs items={asContentItems(section)} />
+                    </SectionShell>
+                  </Suspense>
+                )}
+              </LazySection>
+            )
+
+          case 'newsletter':
+            return (
+              <LazySection
+                key={section.id}
+                minHeight="180px"
+                rootMargin="450px"
+                fallback={<div className="mx-auto my-6 h-40 max-w-7xl animate-pulse rounded-3xl bg-slate-100" />}
+              >
+                {() => (
+                  <Suspense fallback={<div className="mx-auto my-6 h-40 max-w-7xl animate-pulse rounded-3xl bg-slate-100" />}>
+                    <NewsletterBlock settings={section.data?.settings} />
+                  </Suspense>
+                )}
+              </LazySection>
+            )
 
           default:
             return null

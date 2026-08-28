@@ -79,7 +79,14 @@ const SiteFooter = () => {
           {/* Brand column */}
           <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2.5">
-              <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
+              <img
+                alt="Mama Bazar logo"
+                className="h-10 w-10 object-contain"
+                width="40"
+                height="40"
+                decoding="async"
+                src="/brandlogo.png"
+              />
               <span className="font-headline text-xl font-extrabold tracking-tight text-slate-900">
                 <span className="text-brand-green-500">Mama</span><span className="text-brand-orange-500">Bazar</span>
               </span>

@@ -121,7 +121,14 @@ const SiteNavbar = () => {
             </button>
 
             <NavLink aria-label="Mama Bazar home" className="flex items-center gap-2" to="/">
-              <img alt="Mama Bazar logo" className="h-10 w-auto object-contain" src="/brandlogo.png" />
+              <img
+                alt="Mama Bazar logo"
+                className="h-10 w-10 object-contain"
+                width="40"
+                height="40"
+                decoding="async"
+                src="/brandlogo.png"
+              />
               <span className="hidden font-headline text-lg font-light tracking-tight text-slate-900 sm:block">
                <span className="text-brand-green-500 font-bold gap-2">Mama</span>
                <span className="text-brand-orange-500 font-bold">{" "}Bazar</span>
@@ -359,7 +366,14 @@ const SiteNavbar = () => {
               {/* Drawer header */}
               <div className="flex items-center justify-between border-b border-brand-green-100 bg-brand-green-600 p-5">
                 <NavLink className="flex items-center gap-2" onClick={() => setMobileOpen(false)} to="/">
-                  <img alt="Mama Bazar logo" className="h-8 w-auto object-contain" src="/brandlogo.png" />
+                  <img
+                    alt="Mama Bazar logo"
+                    className="h-8 w-8 object-contain"
+                    width="32"
+                    height="32"
+                    decoding="async"
+                    src="/brandlogo.png"
+                  />
                   <span className="font-headline text-lg font-light text-white">
                     Mama<span className="text-brand-orange-300">Bazar</span>
                   </span>

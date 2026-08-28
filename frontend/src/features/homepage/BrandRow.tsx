@@ -81,7 +81,10 @@ const BrandRow = ({ items }: BrandRowProps) => {
                 <img
                   alt={brand.name}
                   className="h-10 w-10 object-contain transition-transform duration-300 group-hover:scale-110"
+                  width="40"
+                  height="40"
                   loading="lazy"
+                  decoding="async"
                   src={getCloudinaryBrandUrl(resolveUrl(brand.logo))}
                 />
               </span>

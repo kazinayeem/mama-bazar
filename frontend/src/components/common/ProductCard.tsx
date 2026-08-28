@@ -118,9 +118,10 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
             <img
               alt={product.title}
               className="h-full w-full object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-              width="300"
-              height="300"
+              width="240"
+              height="240"
               loading="lazy"
+              decoding="async"
               onError={() => setImageFailed(true)}
               src={activeImage}
             />

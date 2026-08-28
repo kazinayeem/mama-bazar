@@ -55,7 +55,10 @@ const TeamCard = ({ member }: { member: TeamMember }) => {
           <img
             alt={member.name}
             className="h-full w-full object-cover"
+            width="112"
+            height="112"
             loading="lazy"
+            decoding="async"
             src={member.image}
           />
         ) : (

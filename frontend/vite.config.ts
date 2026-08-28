@@ -4,8 +4,6 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // The dev proxy target reads the same env var the app uses at runtime so that
-  // development, staging and production backends can all be selected from env.
   const env = loadEnv(mode, process.cwd())
   const apiTarget = (env.VITE_API_URL || env.VITE_API_BASE_URL || 'http://localhost:5000').trim()
 
@@ -31,20 +29,23 @@ export default defineConfig(({ mode }) => {
         : undefined,
     },
     build: {
+      cssCodeSplit: true,
       rollupOptions: {
         output: {
           /**
            * Manual chunk splitting — keeps large vendor libraries in separate
            * cacheable files so that a code deployment only invalidates app
            * chunks (not vendor chunks the browser has already cached).
-           *
-           * framer-motion → separate chunk so only pages/components that
-           *   import it incur the parse cost (HeroCarousel, CartDrawer, etc.)
-           * state → RTK + Redux in one chunk (stable, rarely changes)
-           * router → React Router in its own chunk
-           * icons → lucide-react (large icon set, stable)
            */
           manualChunks(id: string) {
+            // Heavy admin-only libraries
+            if (id.includes('node_modules/@tiptap')) return 'vendor-admin-tiptap'
+            if (id.includes('node_modules/recharts')) return 'vendor-admin-charts'
+            if (id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas')) return 'vendor-pdf'
+            if (id.includes('node_modules/@tanstack/react-table')) return 'vendor-table'
+            if (id.includes('node_modules/react-easy-crop') || id.includes('node_modules/react-dropzone')) return 'vendor-media'
+
+            // Shared frontend libraries
             if (id.includes('node_modules/framer-motion')) return 'vendor-motion'
             if (
               id.includes('node_modules/@reduxjs/toolkit') ||
@@ -58,10 +59,10 @@ export default defineConfig(({ mode }) => {
             )
               return 'vendor-router'
             if (id.includes('node_modules/lucide-react')) return 'vendor-icons'
+            if (id.includes('node_modules/@radix-ui')) return 'vendor-radix'
           },
         },
       },
     },
   }
 })
-
