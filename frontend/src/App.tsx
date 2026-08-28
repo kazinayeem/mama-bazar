@@ -56,6 +56,8 @@ const AdminPoliciesPage = lazy(() => import('./pages/admin/AdminPoliciesPage'))
 const AdminExpensesPage = lazy(() => import('./pages/admin/AdminExpensesPage'))
 const AdminExpenseCategoriesPage = lazy(() => import('./pages/admin/AdminExpenseCategoriesPage'))
 const AdminExpenseReportsPage = lazy(() => import('./pages/admin/AdminExpenseReportsPage'))
+const AdminMembersPage = lazy(() => import('./pages/admin/AdminMembersPage'))
+const AdminBackupPage = lazy(() => import('./pages/admin/AdminBackupPage'))
 
 const DashboardOverviewPage = lazy(() => import('./pages/dashboard/DashboardOverviewPage'))
 const DashboardOrdersPage = lazy(() => import('./pages/dashboard/DashboardOrdersPage'))
@@ -64,6 +66,7 @@ const DashboardAddressesPage = lazy(() => import('./pages/dashboard/DashboardAdd
 const DashboardSecurityPage = lazy(() => import('./pages/dashboard/DashboardSecurityPage'))
 
 import AdminLayout from './components/layout/AdminLayout'
+import { PermissionRoute } from './components/admin/PermissionRoute'
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute allowedRoles={['admin', 'manager']}>{children}</ProtectedRoute>
@@ -116,7 +119,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
-        {/* Admin Routes with Persistent AdminLayout */}
+        {/* Admin Routes with Persistent AdminLayout & Permission Guards */}
         <Route
           path="admin"
           element={
@@ -126,41 +129,260 @@ function App() {
           }
         >
           <Route index element={<Navigate replace to="dashboard" />} />
-          <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="products" element={<AdminProductsPage />} />
-          <Route path="products/create" element={<AdminProductCreatePage />} />
-          <Route path="products/:id/edit" element={<AdminProductEditPage />} />
-          <Route path="products/:id" element={<AdminProductViewPage />} />
-          <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="orders/:id/invoice" element={<AdminOrderInvoicePage />} />
-          <Route path="shipping" element={<AdminShippingPage />} />
-          <Route path="payment-methods" element={<AdminPaymentMethodsPage />} />
-          <Route path="checkout-notices" element={<AdminCheckoutNoticesPage />} />
-          <Route path="categories" element={<AdminCategoriesPage />} />
-          <Route path="brands" element={<AdminBrandsPage />} />
-          <Route path="collections" element={<AdminCollectionsPage />} />
-          <Route path="colors" element={<AdminColorsPage />} />
-          <Route path="sizes" element={<AdminSizesPage />} />
-          <Route path="vendors" element={<AdminVendorsPage />} />
-          <Route path="suppliers" element={<AdminSuppliersPage />} />
-          <Route path="banners" element={<AdminBannersPage />} />
-          <Route path="policies" element={<AdminPoliciesPage />} />
-          <Route path="homepage" element={<AdminHomepagePage />} />
-          <Route path="media" element={<AdminMediaPage />} />
-          <Route path="expenses" element={<AdminExpensesPage />} />
-          <Route path="expenses/categories" element={<AdminExpenseCategoriesPage />} />
-          <Route path="expenses/reports" element={<AdminExpenseReportsPage />} />
-          <Route path="inventory" element={<AdminInventoryPage />} />
-          <Route path="customers" element={<AdminCustomersPage />} />
-          <Route path="coupons" element={<AdminCouponsPage />} />
-          <Route path="analytics" element={<AdminAnalyticsPage />} />
-          <Route path="marketing" element={<AdminMarketingPage />} />
+          <Route
+            path="dashboard"
+            element={
+              <PermissionRoute requiredPermission="dashboard.view">
+                <AdminDashboardPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="products"
+            element={
+              <PermissionRoute requiredPermission="products.view">
+                <AdminProductsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="products/create"
+            element={
+              <PermissionRoute requiredPermission="products.create">
+                <AdminProductCreatePage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="products/:id/edit"
+            element={
+              <PermissionRoute requiredPermission="products.update">
+                <AdminProductEditPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="products/:id"
+            element={
+              <PermissionRoute requiredPermission="products.view">
+                <AdminProductViewPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <PermissionRoute requiredPermission="orders.view">
+                <AdminOrdersPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="orders/:id/invoice"
+            element={
+              <PermissionRoute requiredPermission="orders.view">
+                <AdminOrderInvoicePage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="shipping"
+            element={
+              <PermissionRoute requiredPermission="shipping.view">
+                <AdminShippingPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="payment-methods"
+            element={
+              <PermissionRoute requiredPermission="payment_methods.view">
+                <AdminPaymentMethodsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="checkout-notices"
+            element={
+              <PermissionRoute requiredPermission="checkout_notices.view">
+                <AdminCheckoutNoticesPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="categories"
+            element={
+              <PermissionRoute requiredPermission="categories.view">
+                <AdminCategoriesPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="brands"
+            element={
+              <PermissionRoute requiredPermission="brands.view">
+                <AdminBrandsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="collections"
+            element={
+              <PermissionRoute requiredPermission="collections.view">
+                <AdminCollectionsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="colors"
+            element={
+              <PermissionRoute requiredPermission="colors.view">
+                <AdminColorsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="sizes"
+            element={
+              <PermissionRoute requiredPermission="sizes.view">
+                <AdminSizesPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="vendors"
+            element={
+              <PermissionRoute requiredPermission="vendors.view">
+                <AdminVendorsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="suppliers"
+            element={
+              <PermissionRoute requiredPermission="suppliers.view">
+                <AdminSuppliersPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="banners"
+            element={
+              <PermissionRoute requiredPermission="banners.view">
+                <AdminBannersPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="policies"
+            element={
+              <PermissionRoute requiredPermission="policies.view">
+                <AdminPoliciesPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="homepage"
+            element={
+              <PermissionRoute requiredPermission="homepage.view">
+                <AdminHomepagePage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="media"
+            element={
+              <PermissionRoute requiredPermission="media.view">
+                <AdminMediaPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="expenses"
+            element={
+              <PermissionRoute requiredPermission="expenses.view">
+                <AdminExpensesPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="expenses/categories"
+            element={
+              <PermissionRoute requiredPermission="expenses.view">
+                <AdminExpenseCategoriesPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="expenses/reports"
+            element={
+              <PermissionRoute requiredPermission="reports.view">
+                <AdminExpenseReportsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="inventory"
+            element={
+              <PermissionRoute requiredPermission="inventory.view">
+                <AdminInventoryPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="customers"
+            element={
+              <PermissionRoute requiredPermission="customers.view">
+                <AdminCustomersPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="coupons"
+            element={
+              <PermissionRoute requiredPermission="coupons.view">
+                <AdminCouponsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="analytics"
+            element={
+              <PermissionRoute requiredPermission="analytics.view">
+                <AdminAnalyticsPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="marketing"
+            element={
+              <PermissionRoute requiredPermission="marketing.view">
+                <AdminMarketingPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="members"
+            element={
+              <PermissionRoute requiredPermission="members.view">
+                <AdminMembersPage />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="backup"
+            element={
+              <PermissionRoute requiredPermission="backup.view">
+                <AdminBackupPage />
+              </PermissionRoute>
+            }
+          />
           <Route
             path="settings"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <PermissionRoute requiredPermission="settings.manage">
                 <AdminSettingsPage />
-              </ProtectedRoute>
+              </PermissionRoute>
             }
           />
         </Route>

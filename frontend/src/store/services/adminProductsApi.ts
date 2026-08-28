@@ -1021,6 +1021,113 @@ export const adminProductsApi = baseApi.injectEndpoints({
         count: response.data?.count ?? 0,
       }),
     }),
+
+    // ==================== RBAC & MEMBERS ====================
+    getAdminMembers: builder.query<AdminMember[], void>({
+      query: () => '/api/members',
+      transformResponse: (response: Envelope<AdminMember[]>) => response.data || [],
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: 'Members' as const, id })), { type: 'Members', id: 'LIST' }]
+          : [{ type: 'Members', id: 'LIST' }],
+    }),
+
+    getRolesAndPermissions: builder.query<{ permissions: AdminPermissionInfo[]; roles: AdminRoleInfo[] }, void>({
+      query: () => '/api/members/roles-permissions',
+      transformResponse: (response: Envelope<{ permissions: AdminPermissionInfo[]; roles: AdminRoleInfo[] }>) => response.data!,
+    }),
+
+    getAuditLogs: builder.query<AuditLog[], { limit?: number } | void>({
+      query: (params) => `/api/members/audit-logs${toQueryString(params as Record<string, string | number | boolean | undefined>)}`,
+      transformResponse: (response: Envelope<AuditLog[]>) => response.data || [],
+      providesTags: [{ type: 'AuditLogs', id: 'LIST' }],
+    }),
+
+    createAdminMember: builder.mutation<AdminMember, Partial<AdminMember> & { password?: string }>({
+      query: (body) => ({
+        url: '/api/members',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Envelope<AdminMember>) => response.data!,
+      invalidatesTags: [{ type: 'Members', id: 'LIST' }, { type: 'AuditLogs', id: 'LIST' }],
+    }),
+
+    updateAdminMember: builder.mutation<AdminMember, { id: number; payload: Partial<AdminMember> & { password?: string } }>({
+      query: ({ id, payload }) => ({
+        url: `/api/members/${id}`,
+        method: 'PUT',
+        body: payload,
+      }),
+      transformResponse: (response: Envelope<AdminMember>) => response.data!,
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Members', id }, { type: 'Members', id: 'LIST' }, { type: 'AuditLogs', id: 'LIST' }],
+    }),
+
+    deleteAdminMember: builder.mutation<{ success: boolean }, number>({
+      query: (id) => ({
+        url: `/api/members/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, id) => [{ type: 'Members', id }, { type: 'Members', id: 'LIST' }, { type: 'AuditLogs', id: 'LIST' }],
+    }),
+
+    // ==================== BACKUPS ====================
+    getBackups: builder.query<AdminBackupInfo[], void>({
+      query: () => '/api/backup/history',
+      transformResponse: (response: Envelope<AdminBackupInfo[]>) => response.data || [],
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: 'Backups' as const, id })), { type: 'Backups', id: 'LIST' }]
+          : [{ type: 'Backups', id: 'LIST' }],
+    }),
+
+    createBackup: builder.mutation<AdminBackupInfo, { type?: 'manual' | 'safety_auto' } | void>({
+      query: (body) => ({
+        url: '/api/backup/create',
+        method: 'POST',
+        body: body || { type: 'manual' },
+      }),
+      transformResponse: (response: Envelope<AdminBackupInfo>) => response.data!,
+      invalidatesTags: [{ type: 'Backups', id: 'LIST' }, { type: 'AuditLogs', id: 'LIST' }],
+    }),
+
+    restoreBackup: builder.mutation<
+      { success: boolean; restoredTablesCount: number; restoredRecordsCount: number; safetyBackupFilename: string },
+      FormData
+    >({
+      query: (formData) => ({
+        url: '/api/backup/restore',
+        method: 'POST',
+        body: formData,
+      }),
+      transformResponse: (
+        response: Envelope<{ success: boolean; restoredTablesCount: number; restoredRecordsCount: number; safetyBackupFilename: string }>
+      ) => response.data!,
+      invalidatesTags: [
+        { type: 'Backups', id: 'LIST' },
+        { type: 'AuditLogs', id: 'LIST' },
+        { type: 'Products', id: 'LIST' },
+        { type: 'Categories', id: 'LIST' },
+        { type: 'Brands', id: 'LIST' },
+        { type: 'Collections', id: 'LIST' },
+        { type: 'Colors', id: 'LIST' },
+        { type: 'Sizes', id: 'LIST' },
+        { type: 'Vendors', id: 'LIST' },
+        { type: 'Suppliers', id: 'LIST' },
+        { type: 'Orders', id: 'LIST' },
+        { type: 'Members', id: 'LIST' },
+        { type: 'Settings', id: 'STORE' },
+        { type: 'HomepageConfig', id: 'CONFIG' },
+      ],
+    }),
+
+    deleteBackup: builder.mutation<{ success: boolean }, number>({
+      query: (id) => ({
+        url: `/api/backup/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, id) => [{ type: 'Backups', id }, { type: 'Backups', id: 'LIST' }, { type: 'AuditLogs', id: 'LIST' }],
+    }),
   }),
 })
 
@@ -1152,6 +1259,16 @@ export const {
   useGetExpenseRangeReportQuery,
   useGetProfitOverviewQuery,
   useExportExpensesCsvMutation,
+  useGetAdminMembersQuery,
+  useCreateAdminMemberMutation,
+  useUpdateAdminMemberMutation,
+  useDeleteAdminMemberMutation,
+  useGetRolesAndPermissionsQuery,
+  useGetAuditLogsQuery,
+  useGetBackupsQuery,
+  useCreateBackupMutation,
+  useRestoreBackupMutation,
+  useDeleteBackupMutation,
 } = adminProductsApi
 
 export { parseError, toQueryString }

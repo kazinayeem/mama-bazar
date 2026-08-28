@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { adminNavSections } from './adminNav'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface SidebarProps {
   collapsed: boolean
@@ -13,6 +14,7 @@ interface SidebarProps {
 const Sidebar = ({ collapsed, onNavigate }: SidebarProps) => {
   const location = useLocation()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
+  const { hasPermission, customRole, isSuperAdmin } = usePermissions()
 
   const isActive = (href: string) => {
     const [path, query] = href.split('?')
@@ -51,21 +53,37 @@ const Sidebar = ({ collapsed, onNavigate }: SidebarProps) => {
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       <div className={cn('flex h-16 items-center gap-3 border-b px-4', collapsed && 'justify-center px-0')}>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-white shadow-sm">
           <Store className="h-5 w-5" />
         </div>
         {!collapsed && (
           <div className="min-w-0">
             <p className="truncate text-sm font-bold leading-tight">MamaBazar</p>
-            <p className="truncate text-[11px] text-muted-foreground">Admin Panel</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className={cn(
+                "inline-block w-1.5 h-1.5 rounded-full",
+                isSuperAdmin ? "bg-amber-500" : "bg-emerald-500"
+              )} />
+              <p className="truncate text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {customRole || 'Admin'}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
       <nav className="flex-1 space-y-4 px-3 py-4">
         {adminNavSections.map((section) => {
-          const activeInSection = section.items.some((item) => isActive(item.href))
+          // Filter items based on user's granted permissions
+          const visibleItems = section.items.filter(
+            (item) => !item.permission || hasPermission(item.permission)
+          )
+
+          if (visibleItems.length === 0) return null
+
+          const activeInSection = visibleItems.some((item) => isActive(item.href))
           const isOpen = sectionOpen(section.label)
+
           return (
             <div key={section.label}>
               <button
@@ -85,7 +103,7 @@ const Sidebar = ({ collapsed, onNavigate }: SidebarProps) => {
 
               {isOpen && (
                 <div className="mt-1 space-y-1">
-                  {section.items.map((item) => {
+                  {visibleItems.map((item) => {
                     const active = isActive(item.href)
                     return (
                       <Link
