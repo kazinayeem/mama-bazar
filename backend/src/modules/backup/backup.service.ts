@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import AdmZip from "adm-zip";
 import { pool, db } from "../../config/db";
 import { adminBackups } from "../../config/schema";
@@ -7,14 +5,7 @@ import { desc, eq } from "drizzle-orm";
 import { AppError } from "../../utils/AppError";
 import { logAuditEvent } from "../admin/audit.service";
 import { RowDataPacket } from "mysql2";
-
-const BACKUP_DIR = path.join(process.cwd(), "storage/backups");
-
-const ensureBackupDir = () => {
-  if (!fs.existsSync(BACKUP_DIR)) {
-    fs.mkdirSync(BACKUP_DIR, { recursive: true });
-  }
-};
+import { backupStorage } from "./backup.storage";
 
 // Application tables in dependency order for safe export & restoration
 export const TABLE_RESTORE_ORDER = [
@@ -66,17 +57,18 @@ export const TABLE_RESTORE_ORDER = [
   "admin_audit_logs",
 ];
 
+// ─── Listing ───────────────────────────────────────────────────────────────────
+
 export const listBackups = async () => {
-  return db
-    .select()
-    .from(adminBackups)
-    .orderBy(desc(adminBackups.createdAt));
+  return db.select().from(adminBackups).orderBy(desc(adminBackups.createdAt));
 };
 
 export const getBackupById = async (id: number) => {
   const rows = await db.select().from(adminBackups).where(eq(adminBackups.id, id)).limit(1);
   return rows[0] || null;
 };
+
+// ─── Create Backup ─────────────────────────────────────────────────────────────
 
 export const createBackup = async (
   options: {
@@ -88,11 +80,11 @@ export const createBackup = async (
     userAgent?: string;
   } = {}
 ) => {
-  ensureBackupDir();
   const connection = await pool.getConnection();
   try {
     const type = options.type || "manual";
     const zip = new AdmZip();
+
     const manifest: {
       formatVersion: string;
       application: string;
@@ -124,7 +116,7 @@ export const createBackup = async (
       const [rows] = await connection.query<RowDataPacket[]>(`SELECT * FROM \`${table}\``);
       const rowList = rows as any[];
 
-      // Sanitize sensitive values if table is `users`
+      // Sanitize sensitive values from `users` table
       const sanitizedRows = rowList.map((row) => {
         if (table === "users") {
           const { resetTokenHash, resetTokenExpiresAt, ...safeUser } = row;
@@ -157,6 +149,7 @@ export const createBackup = async (
             engine: "MySQL + Drizzle ORM",
             environment: process.env.NODE_ENV || "production",
             createdByName: options.actorName || "System",
+            storage: backupStorage.provider,
           },
           null,
           2
@@ -165,16 +158,39 @@ export const createBackup = async (
       )
     );
 
+    // Build in-memory ZIP buffer — no local filesystem write on Vercel
+    const zipBuffer = zip.toBuffer();
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `mamabazar-backup-${type}-${timestamp}.zip`;
-    const filepath = path.join(BACKUP_DIR, filename);
 
-    zip.writeZip(filepath);
-    const stat = fs.statSync(filepath);
+    // Upload to persistent storage (Cloudinary in production, /tmp in dev)
+    let storageResult: { storageKey: string; size: number };
+    try {
+      storageResult = await backupStorage.upload(zipBuffer, filename);
+    } catch (uploadErr: any) {
+      console.error("[Backup] Storage upload failed:", uploadErr?.message);
+      throw new AppError(
+        503,
+        "Backup archive could not be stored. " +
+          (backupStorage.isCloudinary()
+            ? "Check CLOUDINARY_* environment variables."
+            : "Storage unavailable.")
+      );
+    }
 
+    // Persist metadata in DB — filepath column now holds storageKey (public_id or /tmp path)
     const [insertResult] = await connection.query<any>(
       "INSERT INTO `admin_backups` (`filename`, `filepath`, `size`, `type`, `table_count`, `record_count`, `created_by_id`) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [filename, filepath, stat.size, type, tableCount, totalRecords, options.createdById || null]
+      [
+        filename,
+        storageResult.storageKey,
+        storageResult.size,
+        type,
+        tableCount,
+        totalRecords,
+        options.createdById || null,
+      ]
     );
 
     const backupId = insertResult.insertId;
@@ -186,7 +202,14 @@ export const createBackup = async (
       action: "BACKUP_CREATED",
       targetType: "Backup",
       targetId: String(backupId),
-      details: { filename, size: stat.size, type, tableCount, totalRecords },
+      details: {
+        filename,
+        size: storageResult.size,
+        type,
+        tableCount,
+        totalRecords,
+        storage: backupStorage.provider,
+      },
       ipAddress: options.ip,
       userAgent: options.userAgent,
     });
@@ -194,7 +217,7 @@ export const createBackup = async (
     return {
       id: backupId,
       filename,
-      size: stat.size,
+      size: storageResult.size,
       type,
       tableCount,
       recordCount: totalRecords,
@@ -204,6 +227,8 @@ export const createBackup = async (
     connection.release();
   }
 };
+
+// ─── Restore Backup ────────────────────────────────────────────────────────────
 
 export const restoreBackup = async (
   fileBuffer: Buffer,
@@ -234,7 +259,7 @@ export const restoreBackup = async (
   }
 
   // Step 2: CREATE MANDATORY SAFETY BACKUP OF CURRENT STATE FIRST
-  console.log("Creating automatic pre-restore safety backup...");
+  console.log("[Backup] Creating automatic pre-restore safety backup...");
   const safetyBackup = await createBackup({
     type: "safety_auto",
     createdById: actor?.id,
@@ -243,6 +268,7 @@ export const restoreBackup = async (
     ip: actor?.ip,
     userAgent: actor?.userAgent,
   });
+  console.log("[Backup] Safety backup created:", safetyBackup.filename);
 
   // Step 3: Execute Restoration in Safe Order inside Transaction
   const connection = await pool.getConnection();
@@ -272,7 +298,6 @@ export const restoreBackup = async (
       await connection.query(`TRUNCATE TABLE \`${table}\``);
 
       if (tableData.length > 0) {
-        // Insert rows in batches of 100
         const batchSize = 100;
         for (let i = 0; i < tableData.length; i += batchSize) {
           const chunk = tableData.slice(i, i + batchSize);
@@ -334,17 +359,25 @@ export const restoreBackup = async (
       actorEmail: actor?.email || null,
       action: "RESTORE_FAILED",
       targetType: "Database",
-      details: { error: err instanceof Error ? err.message : String(err), safetyBackupId: safetyBackup.id },
+      details: {
+        error: err instanceof Error ? err.message : String(err),
+        safetyBackupId: safetyBackup.id,
+      },
       ipAddress: actor?.ip,
       userAgent: actor?.userAgent,
       status: "failure",
     });
 
-    throw new AppError(500, `Database restore failed: ${err instanceof Error ? err.message : "Unknown error"}. Current state preserved via safety backup.`);
+    throw new AppError(
+      500,
+      `Database restore failed: ${err instanceof Error ? err.message : "Unknown error"}. Current state preserved via safety backup '${safetyBackup.filename}'.`
+    );
   } finally {
     connection.release();
   }
 };
+
+// ─── Delete Backup ─────────────────────────────────────────────────────────────
 
 export const deleteBackup = async (
   id: number,
@@ -356,13 +389,12 @@ export const deleteBackup = async (
     throw new AppError(404, "Backup not found");
   }
 
-  // Remove file from disk if present
+  // Remove from persistent storage (Cloudinary public_id or /tmp path)
   try {
-    if (fs.existsSync(backup.filepath)) {
-      fs.unlinkSync(backup.filepath);
-    }
+    await backupStorage.delete(backup.filepath);
   } catch (err) {
-    console.error("Failed to delete backup file from disk:", err);
+    // Log but don't block metadata deletion — the record should still be cleaned up
+    console.error("[Backup] Failed to delete backup from storage:", err);
   }
 
   await db.delete(adminBackups).where(eq(adminBackups.id, id));
@@ -374,7 +406,7 @@ export const deleteBackup = async (
     action: "BACKUP_DELETED",
     targetType: "Backup",
     targetId: String(id),
-    details: { filename: backup.filename },
+    details: { filename: backup.filename, storage: backupStorage.provider },
     ipAddress: actor?.ip,
     userAgent: actor?.userAgent,
   });

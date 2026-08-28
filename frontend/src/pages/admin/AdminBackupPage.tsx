@@ -65,26 +65,40 @@ export const AdminBackupPage: React.FC = () => {
     const token = authStorage.getToken()
     const url = `${API_BASE_URL}/api/backup/download/${id}`
     try {
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       if (!response.ok) throw new Error('Download failed')
-      const blob = await response.blob()
-      const downloadUrl = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = downloadUrl
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      window.URL.revokeObjectURL(downloadUrl)
+
+      const contentType = response.headers.get('content-type') || ''
+
+      if (contentType.includes('application/json')) {
+        // Production (Cloudinary): API returns a signed download URL
+        const json: { success: boolean; data: { downloadUrl: string; filename: string } } = await response.json()
+        if (!json?.data?.downloadUrl) throw new Error('No download URL returned')
+        const a = document.createElement('a')
+        a.href = json.data.downloadUrl
+        a.download = json.data.filename || filename
+        a.target = '_blank'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+      } else {
+        // Development (local): API streams binary ZIP
+        const blob = await response.blob()
+        const downloadUrl = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = downloadUrl
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(downloadUrl)
+      }
     } catch (err) {
       console.error('Error downloading backup:', err)
-      alert('Unable to download backup archive from server.')
+      setFeedback({ type: 'error', message: 'Unable to download backup archive. Please try again.' })
     }
   }
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

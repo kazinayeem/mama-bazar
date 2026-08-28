@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import fs from "fs";
 import * as backupService from "./backup.service";
+import { backupStorage } from "./backup.storage";
 import { AppError } from "../../utils/AppError";
 
 export const listBackups = async (_req: Request, res: Response) => {
@@ -24,26 +24,30 @@ export const createBackup = async (req: Request, res: Response) => {
 export const downloadBackup = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const backup = await backupService.getBackupById(id);
-  if (!backup) {
-    throw new AppError(404, "Backup not found");
+  if (!backup) throw new AppError(404, "Backup not found");
+
+  if (backupStorage.isCloudinary()) {
+    // Return a time-limited signed URL so the browser can download directly from Cloudinary
+    const signedUrl = backupStorage.getDownloadUrl(backup.filepath);
+    return res.json({ success: true, data: { downloadUrl: signedUrl, filename: backup.filename } });
   }
 
-  if (!fs.existsSync(backup.filepath)) {
-    throw new AppError(404, "Backup archive file not found on server");
+  // Local fallback — stream file directly
+  try {
+    const buffer = await backupStorage.download(backup.filepath);
+    res.setHeader("Content-Disposition", `attachment; filename="${backup.filename}"`);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Length", buffer.length);
+    return res.send(buffer);
+  } catch {
+    throw new AppError(404, "Backup archive not found in storage");
   }
-
-  res.setHeader("Content-Disposition", `attachment; filename="${backup.filename}"`);
-  res.setHeader("Content-Type", "application/zip");
-  const fileStream = fs.createReadStream(backup.filepath);
-  fileStream.pipe(res);
 };
 
 export const restoreBackup = async (req: Request, res: Response) => {
   const actor = (req as any).user;
   const file = req.file;
-  if (!file) {
-    throw new AppError(400, "Please provide a backup archive file (.zip) to restore");
-  }
+  if (!file) throw new AppError(400, "Please provide a backup archive file (.zip) to restore");
 
   const result = await backupService.restoreBackup(file.buffer, {
     id: actor?.id,

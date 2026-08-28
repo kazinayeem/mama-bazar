@@ -32,13 +32,10 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteBackup = exports.restoreBackup = exports.downloadBackup = exports.createBackup = exports.listBackups = void 0;
-const fs_1 = __importDefault(require("fs"));
 const backupService = __importStar(require("./backup.service"));
+const backup_storage_1 = require("./backup.storage");
 const AppError_1 = require("../../utils/AppError");
 const listBackups = async (_req, res) => {
     const data = await backupService.listBackups();
@@ -61,24 +58,31 @@ exports.createBackup = createBackup;
 const downloadBackup = async (req, res) => {
     const id = Number(req.params.id);
     const backup = await backupService.getBackupById(id);
-    if (!backup) {
+    if (!backup)
         throw new AppError_1.AppError(404, "Backup not found");
+    if (backup_storage_1.backupStorage.isCloudinary()) {
+        // Return a time-limited signed URL so the browser can download directly from Cloudinary
+        const signedUrl = backup_storage_1.backupStorage.getDownloadUrl(backup.filepath);
+        return res.json({ success: true, data: { downloadUrl: signedUrl, filename: backup.filename } });
     }
-    if (!fs_1.default.existsSync(backup.filepath)) {
-        throw new AppError_1.AppError(404, "Backup archive file not found on server");
+    // Local fallback — stream file directly
+    try {
+        const buffer = await backup_storage_1.backupStorage.download(backup.filepath);
+        res.setHeader("Content-Disposition", `attachment; filename="${backup.filename}"`);
+        res.setHeader("Content-Type", "application/zip");
+        res.setHeader("Content-Length", buffer.length);
+        return res.send(buffer);
     }
-    res.setHeader("Content-Disposition", `attachment; filename="${backup.filename}"`);
-    res.setHeader("Content-Type", "application/zip");
-    const fileStream = fs_1.default.createReadStream(backup.filepath);
-    fileStream.pipe(res);
+    catch {
+        throw new AppError_1.AppError(404, "Backup archive not found in storage");
+    }
 };
 exports.downloadBackup = downloadBackup;
 const restoreBackup = async (req, res) => {
     const actor = req.user;
     const file = req.file;
-    if (!file) {
+    if (!file)
         throw new AppError_1.AppError(400, "Please provide a backup archive file (.zip) to restore");
-    }
     const result = await backupService.restoreBackup(file.buffer, {
         id: actor?.id,
         name: actor?.name,

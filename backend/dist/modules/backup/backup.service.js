@@ -4,20 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteBackup = exports.restoreBackup = exports.createBackup = exports.getBackupById = exports.listBackups = exports.TABLE_RESTORE_ORDER = void 0;
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
 const adm_zip_1 = __importDefault(require("adm-zip"));
 const db_1 = require("../../config/db");
 const schema_1 = require("../../config/schema");
 const drizzle_orm_1 = require("drizzle-orm");
 const AppError_1 = require("../../utils/AppError");
 const audit_service_1 = require("../admin/audit.service");
-const BACKUP_DIR = path_1.default.join(process.cwd(), "storage/backups");
-const ensureBackupDir = () => {
-    if (!fs_1.default.existsSync(BACKUP_DIR)) {
-        fs_1.default.mkdirSync(BACKUP_DIR, { recursive: true });
-    }
-};
+const backup_storage_1 = require("./backup.storage");
 // Application tables in dependency order for safe export & restoration
 exports.TABLE_RESTORE_ORDER = [
     "site_settings",
@@ -67,11 +60,9 @@ exports.TABLE_RESTORE_ORDER = [
     "memos",
     "admin_audit_logs",
 ];
+// ─── Listing ───────────────────────────────────────────────────────────────────
 const listBackups = async () => {
-    return db_1.db
-        .select()
-        .from(schema_1.adminBackups)
-        .orderBy((0, drizzle_orm_1.desc)(schema_1.adminBackups.createdAt));
+    return db_1.db.select().from(schema_1.adminBackups).orderBy((0, drizzle_orm_1.desc)(schema_1.adminBackups.createdAt));
 };
 exports.listBackups = listBackups;
 const getBackupById = async (id) => {
@@ -79,8 +70,8 @@ const getBackupById = async (id) => {
     return rows[0] || null;
 };
 exports.getBackupById = getBackupById;
+// ─── Create Backup ─────────────────────────────────────────────────────────────
 const createBackup = async (options = {}) => {
-    ensureBackupDir();
     const connection = await db_1.pool.getConnection();
     try {
         const type = options.type || "manual";
@@ -104,7 +95,7 @@ const createBackup = async (options = {}) => {
                 continue;
             const [rows] = await connection.query(`SELECT * FROM \`${table}\``);
             const rowList = rows;
-            // Sanitize sensitive values if table is `users`
+            // Sanitize sensitive values from `users` table
             const sanitizedRows = rowList.map((row) => {
                 if (table === "users") {
                     const { resetTokenHash, resetTokenExpiresAt, ...safeUser } = row;
@@ -126,13 +117,34 @@ const createBackup = async (options = {}) => {
             engine: "MySQL + Drizzle ORM",
             environment: process.env.NODE_ENV || "production",
             createdByName: options.actorName || "System",
+            storage: backup_storage_1.backupStorage.provider,
         }, null, 2), "utf8"));
+        // Build in-memory ZIP buffer — no local filesystem write on Vercel
+        const zipBuffer = zip.toBuffer();
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const filename = `mamabazar-backup-${type}-${timestamp}.zip`;
-        const filepath = path_1.default.join(BACKUP_DIR, filename);
-        zip.writeZip(filepath);
-        const stat = fs_1.default.statSync(filepath);
-        const [insertResult] = await connection.query("INSERT INTO `admin_backups` (`filename`, `filepath`, `size`, `type`, `table_count`, `record_count`, `created_by_id`) VALUES (?, ?, ?, ?, ?, ?, ?)", [filename, filepath, stat.size, type, tableCount, totalRecords, options.createdById || null]);
+        // Upload to persistent storage (Cloudinary in production, /tmp in dev)
+        let storageResult;
+        try {
+            storageResult = await backup_storage_1.backupStorage.upload(zipBuffer, filename);
+        }
+        catch (uploadErr) {
+            console.error("[Backup] Storage upload failed:", uploadErr?.message);
+            throw new AppError_1.AppError(503, "Backup archive could not be stored. " +
+                (backup_storage_1.backupStorage.isCloudinary()
+                    ? "Check CLOUDINARY_* environment variables."
+                    : "Storage unavailable."));
+        }
+        // Persist metadata in DB — filepath column now holds storageKey (public_id or /tmp path)
+        const [insertResult] = await connection.query("INSERT INTO `admin_backups` (`filename`, `filepath`, `size`, `type`, `table_count`, `record_count`, `created_by_id`) VALUES (?, ?, ?, ?, ?, ?, ?)", [
+            filename,
+            storageResult.storageKey,
+            storageResult.size,
+            type,
+            tableCount,
+            totalRecords,
+            options.createdById || null,
+        ]);
         const backupId = insertResult.insertId;
         await (0, audit_service_1.logAuditEvent)({
             actorId: options.createdById || null,
@@ -141,14 +153,21 @@ const createBackup = async (options = {}) => {
             action: "BACKUP_CREATED",
             targetType: "Backup",
             targetId: String(backupId),
-            details: { filename, size: stat.size, type, tableCount, totalRecords },
+            details: {
+                filename,
+                size: storageResult.size,
+                type,
+                tableCount,
+                totalRecords,
+                storage: backup_storage_1.backupStorage.provider,
+            },
             ipAddress: options.ip,
             userAgent: options.userAgent,
         });
         return {
             id: backupId,
             filename,
-            size: stat.size,
+            size: storageResult.size,
             type,
             tableCount,
             recordCount: totalRecords,
@@ -160,6 +179,7 @@ const createBackup = async (options = {}) => {
     }
 };
 exports.createBackup = createBackup;
+// ─── Restore Backup ────────────────────────────────────────────────────────────
 const restoreBackup = async (fileBuffer, actor) => {
     // Step 1: Validate ZIP Archive & Manifest
     let zip;
@@ -184,7 +204,7 @@ const restoreBackup = async (fileBuffer, actor) => {
         throw new AppError_1.AppError(400, "Incompatible backup archive: Unrecognized application manifest");
     }
     // Step 2: CREATE MANDATORY SAFETY BACKUP OF CURRENT STATE FIRST
-    console.log("Creating automatic pre-restore safety backup...");
+    console.log("[Backup] Creating automatic pre-restore safety backup...");
     const safetyBackup = await (0, exports.createBackup)({
         type: "safety_auto",
         createdById: actor?.id,
@@ -193,6 +213,7 @@ const restoreBackup = async (fileBuffer, actor) => {
         ip: actor?.ip,
         userAgent: actor?.userAgent,
     });
+    console.log("[Backup] Safety backup created:", safetyBackup.filename);
     // Step 3: Execute Restoration in Safe Order inside Transaction
     const connection = await db_1.pool.getConnection();
     try {
@@ -217,7 +238,6 @@ const restoreBackup = async (fileBuffer, actor) => {
             // Truncate current table
             await connection.query(`TRUNCATE TABLE \`${table}\``);
             if (tableData.length > 0) {
-                // Insert rows in batches of 100
                 const batchSize = 100;
                 for (let i = 0; i < tableData.length; i += batchSize) {
                     const chunk = tableData.slice(i, i + batchSize);
@@ -271,32 +291,35 @@ const restoreBackup = async (fileBuffer, actor) => {
             actorEmail: actor?.email || null,
             action: "RESTORE_FAILED",
             targetType: "Database",
-            details: { error: err instanceof Error ? err.message : String(err), safetyBackupId: safetyBackup.id },
+            details: {
+                error: err instanceof Error ? err.message : String(err),
+                safetyBackupId: safetyBackup.id,
+            },
             ipAddress: actor?.ip,
             userAgent: actor?.userAgent,
             status: "failure",
         });
-        throw new AppError_1.AppError(500, `Database restore failed: ${err instanceof Error ? err.message : "Unknown error"}. Current state preserved via safety backup.`);
+        throw new AppError_1.AppError(500, `Database restore failed: ${err instanceof Error ? err.message : "Unknown error"}. Current state preserved via safety backup '${safetyBackup.filename}'.`);
     }
     finally {
         connection.release();
     }
 };
 exports.restoreBackup = restoreBackup;
+// ─── Delete Backup ─────────────────────────────────────────────────────────────
 const deleteBackup = async (id, actor) => {
     const rows = await db_1.db.select().from(schema_1.adminBackups).where((0, drizzle_orm_1.eq)(schema_1.adminBackups.id, id)).limit(1);
     const backup = rows[0];
     if (!backup) {
         throw new AppError_1.AppError(404, "Backup not found");
     }
-    // Remove file from disk if present
+    // Remove from persistent storage (Cloudinary public_id or /tmp path)
     try {
-        if (fs_1.default.existsSync(backup.filepath)) {
-            fs_1.default.unlinkSync(backup.filepath);
-        }
+        await backup_storage_1.backupStorage.delete(backup.filepath);
     }
     catch (err) {
-        console.error("Failed to delete backup file from disk:", err);
+        // Log but don't block metadata deletion — the record should still be cleaned up
+        console.error("[Backup] Failed to delete backup from storage:", err);
     }
     await db_1.db.delete(schema_1.adminBackups).where((0, drizzle_orm_1.eq)(schema_1.adminBackups.id, id));
     await (0, audit_service_1.logAuditEvent)({
@@ -306,7 +329,7 @@ const deleteBackup = async (id, actor) => {
         action: "BACKUP_DELETED",
         targetType: "Backup",
         targetId: String(id),
-        details: { filename: backup.filename },
+        details: { filename: backup.filename, storage: backup_storage_1.backupStorage.provider },
         ipAddress: actor?.ip,
         userAgent: actor?.userAgent,
     });
