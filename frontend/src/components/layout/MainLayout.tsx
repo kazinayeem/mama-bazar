@@ -14,12 +14,12 @@ const MainLayout = () => {
   const location = useLocation()
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background font-body text-foreground transition-colors">
+    <div className="flex min-h-screen flex-col bg-background font-body text-foreground transition-colors">
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
       <SiteNavbar />
-      <main className="flex-1" id="main-content" tabIndex={-1}>
+      <main className="flex-1 overflow-x-hidden" id="main-content" tabIndex={-1}>
         <AnimatePresence initial={false} mode="wait">
           <PageTransition key={location.pathname}>
             <Outlet />

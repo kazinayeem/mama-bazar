@@ -20,7 +20,6 @@ const SiteNavbar = () => {
   const authUser = useAppSelector((state) => state.auth.user)
 
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -43,12 +42,6 @@ const SiteNavbar = () => {
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
   }, [])
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -92,11 +85,7 @@ const SiteNavbar = () => {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 border-b transition-all duration-300 ${
-          scrolled
-            ? 'border-brand-green-100 bg-white/95 shadow-soft backdrop-blur-xl'
-            : 'border-brand-green-100 bg-white'
-        }`}
+        className="sticky top-0 z-50 border-b border-brand-green-100 bg-white/95 shadow-soft backdrop-blur-xl transition-shadow duration-300"
       >
         {announcement?.enabled && announcement.text && (
           <div

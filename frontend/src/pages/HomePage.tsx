@@ -10,7 +10,7 @@ const HomePage = () => {
   const { data: config, isLoading, isError, refetch } = useGetHomepageConfigQuery()
 
   return (
-    <main className="relative overflow-x-hidden bg-white">
+    <main className="relative bg-white">
       <SEO
         title="Home"
         description="Discover premium products at unbeatable prices. Official warranty, free delivery, and 24/7 support."
