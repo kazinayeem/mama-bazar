@@ -3,6 +3,10 @@ import * as categoryService from "./category.service";
 import slugify from "slugify";
 import { AppError } from "../../utils/AppError";
 import { uploadBuffer } from "../../utils/cloud";
+import { memoryCache } from "../../utils/cache";
+
+const CACHE_KEY_TREE = "categories:tree";
+const CACHE_KEY_FLAT = "categories:flat";
 
 const toBool = (value: unknown): boolean | undefined => {
   if (value === undefined || value === null || value === "") return undefined;
@@ -41,7 +45,12 @@ const persistImage = async (file: Express.Multer.File | undefined, fallback: str
 };
 
 export const getAll = async (_req: Request, res: Response) => {
+  const cached = memoryCache.get(CACHE_KEY_FLAT);
+  if (cached) {
+    return res.json({ success: true, data: cached });
+  }
   const data = await categoryService.getAllFlat();
+  memoryCache.set(CACHE_KEY_FLAT, data, 600); // 10 minutes
   res.json({ success: true, data });
 };
 
@@ -60,7 +69,12 @@ export const listAdmin = async (req: Request, res: Response) => {
 };
 
 export const getTree = async (_req: Request, res: Response) => {
+  const cached = memoryCache.get(CACHE_KEY_TREE);
+  if (cached) {
+    return res.json({ success: true, data: cached });
+  }
   const data = await categoryService.getTree();
+  memoryCache.set(CACHE_KEY_TREE, data, 600); // 10 minutes
   res.json({ success: true, data });
 };
 
@@ -104,6 +118,7 @@ export const create = async (req: Request, res: Response) => {
     seoKeywords: body.seoKeywords ? String(body.seoKeywords) : undefined,
     status: (body.status as never) || "active",
   });
+  memoryCache.invalidate("categories");
   res.status(201).json({ success: true, data });
 };
 
@@ -132,6 +147,7 @@ export const update = async (req: Request, res: Response) => {
   else if (body.image !== undefined) updateData.image = body.image ? String(body.image) : null;
 
   const data = await categoryService.update(id, updateData);
+  memoryCache.invalidate("categories");
   res.json({ success: true, data });
 };
 
@@ -157,6 +173,7 @@ export const remove = async (req: Request, res: Response) => {
   }
 
   await categoryService.remove(id);
+  memoryCache.invalidate("categories");
   res.json({ success: true, message: "Category deleted" });
 };
 
@@ -164,5 +181,6 @@ export const moveProducts = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const targetId = toIdOrNull((req.body as Record<string, unknown>).targetId) ?? null;
   const result = await categoryService.moveProducts(id, targetId);
+  memoryCache.invalidate("categories");
   res.json({ success: true, data: result });
 };

@@ -3,6 +3,9 @@ import * as brandService from "./brand.service";
 import slugify from "slugify";
 import { AppError } from "../../utils/AppError";
 import { uploadBuffer } from "../../utils/cloud";
+import { memoryCache } from "../../utils/cache";
+
+const CACHE_KEY_BRANDS = "brands:active";
 
 const toBool = (value: unknown): boolean | undefined => {
   if (value === undefined || value === null || value === "") return undefined;
@@ -33,7 +36,12 @@ const persistLogo = async (req: Request): Promise<string | undefined> => {
 };
 
 export const getAll = async (_req: Request, res: Response) => {
+  const cached = memoryCache.get(CACHE_KEY_BRANDS);
+  if (cached) {
+    return res.json({ success: true, data: cached });
+  }
   const data = await brandService.getAllActive();
+  memoryCache.set(CACHE_KEY_BRANDS, data, 600); // 10 minutes
   res.json({ success: true, data });
 };
 
@@ -89,6 +97,7 @@ export const create = async (req: Request, res: Response) => {
     seoKeywords: body.seoKeywords ? String(body.seoKeywords) : undefined,
     status: (body.status as never) || "active",
   });
+  memoryCache.invalidate("brands");
   res.status(201).json({ success: true, data });
 };
 
@@ -122,6 +131,7 @@ export const update = async (req: Request, res: Response) => {
   else if (body.logo !== undefined) updateData.logo = body.logo ? String(body.logo) : null;
 
   const data = await brandService.update(id, updateData);
+  memoryCache.invalidate("brands");
   res.json({ success: true, data });
 };
 
@@ -140,6 +150,7 @@ export const remove = async (req: Request, res: Response) => {
   }
 
   await brandService.remove(id);
+  memoryCache.invalidate("brands");
   res.json({ success: true, message: "Brand deleted" });
 };
 
@@ -147,5 +158,6 @@ export const moveProducts = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const targetId = toIdOrNull((req.body as Record<string, unknown>).targetId) ?? null;
   const result = await brandService.moveProducts(id, targetId);
+  memoryCache.invalidate("brands");
   res.json({ success: true, data: result });
 };
