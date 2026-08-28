@@ -26,11 +26,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
   const [isVerifying, setIsVerifying] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Dynamic date hint calculation based on current client date
-  const [dynamicHint, setDynamicHint] = useState<{ readable: string; formatted: string }>({
-    readable: '',
-    formatted: 'DDMMYYYY',
-  })
+
 
   useEffect(() => {
     if (isOpen) {
@@ -154,11 +150,6 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
           </div>
 
 
-          {dynamicHint.readable && (
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-              Example for today ({dynamicHint.readable}): represents <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{dynamicHint.formatted}</span>
-            </p>
-          )}
         </div>
 
         {/* PIN Form */}
