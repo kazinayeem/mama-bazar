@@ -141,7 +141,8 @@ const ProductDetailsPage = () => {
 
   const [quantity, setQuantity] = useState(1)
   const relatedQuery = useGetRelatedProductsQuery(product?.id || 0, { skip: !product })
-  const reviewsQuery = useGetReviewsQuery({ productId: product?.id, limit: 20 }, { skip: !product })
+  const reviewsArgs = useMemo(() => ({ productId: product?.id, limit: 20 }), [product?.id])
+  const reviewsQuery = useGetReviewsQuery(reviewsArgs, { skip: !product })
   const [addReview, { isLoading: submittingReview }] = useAddReviewMutation()
 
   const [reviewRating, setReviewRating] = useState(0)

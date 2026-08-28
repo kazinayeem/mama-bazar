@@ -370,30 +370,60 @@ const buildWhere = async (query) => {
     if (query.tags)
         conditions.push((0, drizzle_orm_1.sql) `${schema_1.products.tags} LIKE ${`%${query.tags}%`}`);
     if (query.category) {
-        const catRows = await db_1.db.select().from(schema_1.categories).where((0, drizzle_orm_1.eq)(schema_1.categories.slug, query.category)).limit(1);
-        if (catRows[0]) {
-            conditions.push((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.products.categoryId, catRows[0].id), (0, drizzle_orm_1.eq)(schema_1.products.subCategoryId, catRows[0].id), (0, drizzle_orm_1.eq)(schema_1.products.childCategoryId, catRows[0].id)));
+        const cacheKey = `cat_slug:${query.category}`;
+        let catId = cache_1.memoryCache.get(cacheKey);
+        if (catId === undefined) {
+            const catRows = await db_1.db.select({ id: schema_1.categories.id }).from(schema_1.categories).where((0, drizzle_orm_1.eq)(schema_1.categories.slug, query.category)).limit(1);
+            catId = catRows[0]?.id || 0;
+            cache_1.memoryCache.set(cacheKey, catId, 600);
+        }
+        if (catId) {
+            conditions.push((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.products.categoryId, catId), (0, drizzle_orm_1.eq)(schema_1.products.subCategoryId, catId), (0, drizzle_orm_1.eq)(schema_1.products.childCategoryId, catId)));
         }
     }
     if (query.brand) {
-        const brandRows = await db_1.db.select().from(schema_1.brands).where((0, drizzle_orm_1.eq)(schema_1.brands.slug, query.brand)).limit(1);
-        if (brandRows[0])
-            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.brandId, brandRows[0].id));
+        const cacheKey = `brand_slug:${query.brand}`;
+        let brandId = cache_1.memoryCache.get(cacheKey);
+        if (brandId === undefined) {
+            const brandRows = await db_1.db.select({ id: schema_1.brands.id }).from(schema_1.brands).where((0, drizzle_orm_1.eq)(schema_1.brands.slug, query.brand)).limit(1);
+            brandId = brandRows[0]?.id || 0;
+            cache_1.memoryCache.set(cacheKey, brandId, 600);
+        }
+        if (brandId)
+            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.brandId, brandId));
     }
     if (query.supplier) {
-        const supplierRows = await db_1.db.select().from(schema_1.suppliers).where((0, drizzle_orm_1.eq)(schema_1.suppliers.slug, query.supplier)).limit(1);
-        if (supplierRows[0])
-            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.supplierId, supplierRows[0].id));
+        const cacheKey = `supplier_slug:${query.supplier}`;
+        let supplierId = cache_1.memoryCache.get(cacheKey);
+        if (supplierId === undefined) {
+            const supplierRows = await db_1.db.select({ id: schema_1.suppliers.id }).from(schema_1.suppliers).where((0, drizzle_orm_1.eq)(schema_1.suppliers.slug, query.supplier)).limit(1);
+            supplierId = supplierRows[0]?.id || 0;
+            cache_1.memoryCache.set(cacheKey, supplierId, 600);
+        }
+        if (supplierId)
+            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.supplierId, supplierId));
     }
     if (query.vendor) {
-        const vendorRows = await db_1.db.select().from(schema_1.vendors).where((0, drizzle_orm_1.eq)(schema_1.vendors.slug, query.vendor)).limit(1);
-        if (vendorRows[0])
-            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.vendorId, vendorRows[0].id));
+        const cacheKey = `vendor_slug:${query.vendor}`;
+        let vendorId = cache_1.memoryCache.get(cacheKey);
+        if (vendorId === undefined) {
+            const vendorRows = await db_1.db.select({ id: schema_1.vendors.id }).from(schema_1.vendors).where((0, drizzle_orm_1.eq)(schema_1.vendors.slug, query.vendor)).limit(1);
+            vendorId = vendorRows[0]?.id || 0;
+            cache_1.memoryCache.set(cacheKey, vendorId, 600);
+        }
+        if (vendorId)
+            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.vendorId, vendorId));
     }
     if (query.collection) {
-        const collectionRows = await db_1.db.select().from(schema_1.collections).where((0, drizzle_orm_1.eq)(schema_1.collections.slug, query.collection)).limit(1);
-        if (collectionRows[0])
-            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.collectionId, collectionRows[0].id));
+        const cacheKey = `col_slug:${query.collection}`;
+        let colId = cache_1.memoryCache.get(cacheKey);
+        if (colId === undefined) {
+            const collectionRows = await db_1.db.select({ id: schema_1.collections.id }).from(schema_1.collections).where((0, drizzle_orm_1.eq)(schema_1.collections.slug, query.collection)).limit(1);
+            colId = collectionRows[0]?.id || 0;
+            cache_1.memoryCache.set(cacheKey, colId, 600);
+        }
+        if (colId)
+            conditions.push((0, drizzle_orm_1.eq)(schema_1.products.collectionId, colId));
     }
     if (query.stock) {
         if (query.stock === "in_stock") {
@@ -537,9 +567,11 @@ const getAll = async (query) => {
                                 : query.sort === "rating_desc"
                                     ? (0, drizzle_orm_1.desc)((0, drizzle_orm_1.sql) `(SELECT AVG(r.rating) FROM reviews r WHERE r.product_id = ${schema_1.products.id} AND r.status = 'approved')`)
                                     : (0, drizzle_orm_1.desc)(schema_1.products.createdAt);
-    const data = await (0, exports.fullQuery)().where(where).orderBy(orderByClause).limit(limit).offset(offset);
-    const countResult = await db_1.db.select({ count: (0, drizzle_orm_1.sql) `count(*)` }).from(schema_1.products).where(where);
-    const total = Number(countResult[0].count);
+    const [data, countResult] = await Promise.all([
+        (0, exports.fullQuery)().where(where).orderBy(orderByClause).limit(limit).offset(offset),
+        db_1.db.select({ count: (0, drizzle_orm_1.sql) `count(*)` }).from(schema_1.products).where(where),
+    ]);
+    const total = Number(countResult[0]?.count || 0);
     const ratingMap = await (0, exports.fetchRatingMap)(data.map((row) => row.id));
     return {
         data: data.map((row) => (0, exports.formatProductRow)(row, ratingMap.get(row.id))),

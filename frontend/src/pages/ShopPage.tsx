@@ -67,19 +67,24 @@ const ShopPage = () => {
   const categoriesQuery = useGetCategoriesQuery()
   const brandsQuery = useGetBrandsQuery()
 
-  const productsQuery = useGetProductsQuery({
-    page,
-    limit: PAGE_SIZE,
-    category: selectedCategory || undefined,
-    search: search || undefined,
-    brand: selectedBrand || undefined,
-    sort: sort || undefined,
-    minPrice: minPrice || undefined,
-    maxPrice: maxPrice || undefined,
-    minRating: minRating || undefined,
-    inStock: inStockOnly || undefined,
-    sale: onSaleOnly || undefined,
-  })
+  const queryArgs = useMemo(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      category: selectedCategory || undefined,
+      search: search || undefined,
+      brand: selectedBrand || undefined,
+      sort: sort || undefined,
+      minPrice: minPrice || undefined,
+      maxPrice: maxPrice || undefined,
+      minRating: minRating || undefined,
+      inStock: inStockOnly || undefined,
+      sale: onSaleOnly || undefined,
+    }),
+    [page, selectedCategory, search, selectedBrand, sort, minPrice, maxPrice, minRating, inStockOnly, onSaleOnly],
+  )
+
+  const productsQuery = useGetProductsQuery(queryArgs)
 
   const products = productsQuery.data?.data || []
   const total = productsQuery.data?.total || 0

@@ -52,23 +52,31 @@ const getUsage = async (id) => {
     return rows[0]?.count ?? 0;
 };
 exports.getUsage = getUsage;
+const cache_1 = require("../../utils/cache");
 const create = async (data) => {
     const result = await db_1.db.insert(schema_1.brands).values(data);
+    cache_1.memoryCache.invalidate("brand_slug");
+    cache_1.memoryCache.invalidate("homepage_config");
     return (0, exports.getById)(result[0].insertId);
 };
 exports.create = create;
 const update = async (id, data) => {
     await db_1.db.update(schema_1.brands).set(data).where((0, drizzle_orm_1.eq)(schema_1.brands.id, id));
+    cache_1.memoryCache.invalidate("brand_slug");
+    cache_1.memoryCache.invalidate("homepage_config");
     return (0, exports.getById)(id);
 };
 exports.update = update;
 const moveProducts = async (fromId, targetId) => {
     const moved = await db_1.db.update(schema_1.products).set({ brandId: targetId }).where((0, drizzle_orm_1.eq)(schema_1.products.brandId, fromId));
+    cache_1.memoryCache.invalidate("brand_slug");
     return { moved: moved[0].affectedRows };
 };
 exports.moveProducts = moveProducts;
 const remove = async (id) => {
     await db_1.db.delete(schema_1.brands).where((0, drizzle_orm_1.eq)(schema_1.brands.id, id));
+    cache_1.memoryCache.invalidate("brand_slug");
+    cache_1.memoryCache.invalidate("homepage_config");
     return { success: true };
 };
 exports.remove = remove;

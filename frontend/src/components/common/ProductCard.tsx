@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Eye, Heart, ImageOff, Plus, ShoppingBag } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from './ToastProvider'
 import { formatPrice } from '../../lib/format'
@@ -301,4 +301,4 @@ const ProductCard = ({ product, onQuickView }: ProductCardProps) => {
   )
 }
 
-export default ProductCard
+export default memo(ProductCard)

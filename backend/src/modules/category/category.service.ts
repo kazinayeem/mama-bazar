@@ -111,14 +111,20 @@ export const getUsage = async (id: number): Promise<CategoryUsage> => {
   return { products: productRows[0]?.count ?? 0, subCategories: childRows[0]?.count ?? 0 };
 };
 
+import { memoryCache } from "../../utils/cache";
+
 export const create = async (data: CreateCategoryInput) => {
   const result = await db.insert(categories).values(data);
+  memoryCache.invalidate("cat_slug");
+  memoryCache.invalidate("homepage_config");
   return getById(result[0].insertId);
 };
 
 export const update = async (id: number, data: UpdateCategoryInput) => {
   if (data.parentId === id) throw new AppError(400, "A category cannot be its own parent");
   await db.update(categories).set(data).where(eq(categories.id, id));
+  memoryCache.invalidate("cat_slug");
+  memoryCache.invalidate("homepage_config");
   return getById(id);
 };
 
@@ -135,10 +141,13 @@ export const moveProducts = async (fromId: number, targetId: number | null) => {
     .where(
       or(eq(products.categoryId, fromId), eq(products.subCategoryId, fromId), eq(products.childCategoryId, fromId))
     );
+  memoryCache.invalidate("cat_slug");
   return { moved: moved[0].affectedRows, usage };
 };
 
 export const remove = async (id: number) => {
   await db.delete(categories).where(eq(categories.id, id));
+  memoryCache.invalidate("cat_slug");
+  memoryCache.invalidate("homepage_config");
   return { success: true };
 };

@@ -92,8 +92,11 @@ const getUsage = async (id) => {
     return { products: productRows[0]?.count ?? 0, subCategories: childRows[0]?.count ?? 0 };
 };
 exports.getUsage = getUsage;
+const cache_1 = require("../../utils/cache");
 const create = async (data) => {
     const result = await db_1.db.insert(schema_1.categories).values(data);
+    cache_1.memoryCache.invalidate("cat_slug");
+    cache_1.memoryCache.invalidate("homepage_config");
     return (0, exports.getById)(result[0].insertId);
 };
 exports.create = create;
@@ -101,6 +104,8 @@ const update = async (id, data) => {
     if (data.parentId === id)
         throw new AppError_1.AppError(400, "A category cannot be its own parent");
     await db_1.db.update(schema_1.categories).set(data).where((0, drizzle_orm_1.eq)(schema_1.categories.id, id));
+    cache_1.memoryCache.invalidate("cat_slug");
+    cache_1.memoryCache.invalidate("homepage_config");
     return (0, exports.getById)(id);
 };
 exports.update = update;
@@ -115,11 +120,14 @@ const moveProducts = async (fromId, targetId) => {
             : { subCategoryId: null, childCategoryId: null }),
     })
         .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.products.categoryId, fromId), (0, drizzle_orm_1.eq)(schema_1.products.subCategoryId, fromId), (0, drizzle_orm_1.eq)(schema_1.products.childCategoryId, fromId)));
+    cache_1.memoryCache.invalidate("cat_slug");
     return { moved: moved[0].affectedRows, usage };
 };
 exports.moveProducts = moveProducts;
 const remove = async (id) => {
     await db_1.db.delete(schema_1.categories).where((0, drizzle_orm_1.eq)(schema_1.categories.id, id));
+    cache_1.memoryCache.invalidate("cat_slug");
+    cache_1.memoryCache.invalidate("homepage_config");
     return { success: true };
 };
 exports.remove = remove;

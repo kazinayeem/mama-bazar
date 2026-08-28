@@ -409,32 +409,62 @@ const buildWhere = async (query: ProductQuery) => {
   if (query.tags) conditions.push(sql`${products.tags} LIKE ${`%${query.tags}%`}`);
 
   if (query.category) {
-    const catRows = await db.select().from(categories).where(eq(categories.slug, query.category)).limit(1);
-    if (catRows[0]) {
+    const cacheKey = `cat_slug:${query.category}`;
+    let catId = memoryCache.get<number>(cacheKey);
+    if (catId === undefined) {
+      const catRows = await db.select({ id: categories.id }).from(categories).where(eq(categories.slug, query.category)).limit(1);
+      catId = catRows[0]?.id || 0;
+      memoryCache.set(cacheKey, catId, 600);
+    }
+    if (catId) {
       conditions.push(
-        or(eq(products.categoryId, catRows[0].id), eq(products.subCategoryId, catRows[0].id), eq(products.childCategoryId, catRows[0].id))
+        or(eq(products.categoryId, catId), eq(products.subCategoryId, catId), eq(products.childCategoryId, catId))
       );
     }
   }
 
   if (query.brand) {
-    const brandRows = await db.select().from(brands).where(eq(brands.slug, query.brand)).limit(1);
-    if (brandRows[0]) conditions.push(eq(products.brandId, brandRows[0].id));
+    const cacheKey = `brand_slug:${query.brand}`;
+    let brandId = memoryCache.get<number>(cacheKey);
+    if (brandId === undefined) {
+      const brandRows = await db.select({ id: brands.id }).from(brands).where(eq(brands.slug, query.brand)).limit(1);
+      brandId = brandRows[0]?.id || 0;
+      memoryCache.set(cacheKey, brandId, 600);
+    }
+    if (brandId) conditions.push(eq(products.brandId, brandId));
   }
 
   if (query.supplier) {
-    const supplierRows = await db.select().from(suppliers).where(eq(suppliers.slug, query.supplier)).limit(1);
-    if (supplierRows[0]) conditions.push(eq(products.supplierId, supplierRows[0].id));
+    const cacheKey = `supplier_slug:${query.supplier}`;
+    let supplierId = memoryCache.get<number>(cacheKey);
+    if (supplierId === undefined) {
+      const supplierRows = await db.select({ id: suppliers.id }).from(suppliers).where(eq(suppliers.slug, query.supplier)).limit(1);
+      supplierId = supplierRows[0]?.id || 0;
+      memoryCache.set(cacheKey, supplierId, 600);
+    }
+    if (supplierId) conditions.push(eq(products.supplierId, supplierId));
   }
 
   if (query.vendor) {
-    const vendorRows = await db.select().from(vendors).where(eq(vendors.slug, query.vendor)).limit(1);
-    if (vendorRows[0]) conditions.push(eq(products.vendorId, vendorRows[0].id));
+    const cacheKey = `vendor_slug:${query.vendor}`;
+    let vendorId = memoryCache.get<number>(cacheKey);
+    if (vendorId === undefined) {
+      const vendorRows = await db.select({ id: vendors.id }).from(vendors).where(eq(vendors.slug, query.vendor)).limit(1);
+      vendorId = vendorRows[0]?.id || 0;
+      memoryCache.set(cacheKey, vendorId, 600);
+    }
+    if (vendorId) conditions.push(eq(products.vendorId, vendorId));
   }
 
   if (query.collection) {
-    const collectionRows = await db.select().from(collections).where(eq(collections.slug, query.collection)).limit(1);
-    if (collectionRows[0]) conditions.push(eq(products.collectionId, collectionRows[0].id));
+    const cacheKey = `col_slug:${query.collection}`;
+    let colId = memoryCache.get<number>(cacheKey);
+    if (colId === undefined) {
+      const collectionRows = await db.select({ id: collections.id }).from(collections).where(eq(collections.slug, query.collection)).limit(1);
+      colId = collectionRows[0]?.id || 0;
+      memoryCache.set(cacheKey, colId, 600);
+    }
+    if (colId) conditions.push(eq(products.collectionId, colId));
   }
 
   if (query.stock) {
@@ -591,11 +621,12 @@ export const getAll = async (query: ProductQuery) => {
       ? desc(sql`(SELECT AVG(r.rating) FROM reviews r WHERE r.product_id = ${products.id} AND r.status = 'approved')`)
       : desc(products.createdAt);
 
-  const data = await fullQuery().where(where).orderBy(orderByClause).limit(limit).offset(offset);
+  const [data, countResult] = await Promise.all([
+    fullQuery().where(where).orderBy(orderByClause).limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)` }).from(products).where(where),
+  ]);
 
-  const countResult = await db.select({ count: sql<number>`count(*)` }).from(products).where(where);
-  const total = Number(countResult[0].count);
-
+  const total = Number(countResult[0]?.count || 0);
   const ratingMap = await fetchRatingMap(data.map((row) => row.id));
 
   return {

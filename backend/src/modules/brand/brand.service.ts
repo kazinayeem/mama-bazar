@@ -62,22 +62,31 @@ export const getUsage = async (id: number) => {
   return rows[0]?.count ?? 0;
 };
 
+import { memoryCache } from "../../utils/cache";
+
 export const create = async (data: CreateBrandInput) => {
   const result = await db.insert(brands).values(data);
+  memoryCache.invalidate("brand_slug");
+  memoryCache.invalidate("homepage_config");
   return getById(result[0].insertId);
 };
 
 export const update = async (id: number, data: UpdateBrandInput) => {
   await db.update(brands).set(data).where(eq(brands.id, id));
+  memoryCache.invalidate("brand_slug");
+  memoryCache.invalidate("homepage_config");
   return getById(id);
 };
 
 export const moveProducts = async (fromId: number, targetId: number | null) => {
   const moved = await db.update(products).set({ brandId: targetId }).where(eq(products.brandId, fromId));
+  memoryCache.invalidate("brand_slug");
   return { moved: moved[0].affectedRows };
 };
 
 export const remove = async (id: number) => {
   await db.delete(brands).where(eq(brands.id, id));
+  memoryCache.invalidate("brand_slug");
+  memoryCache.invalidate("homepage_config");
   return { success: true };
 };
