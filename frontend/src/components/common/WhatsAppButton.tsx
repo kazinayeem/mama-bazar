@@ -1,6 +1,5 @@
 import { Bot, MessageCircle, MessageSquareMore, Phone, RotateCcw, Send, Sparkles, X } from 'lucide-react'
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react'
-import { resolveUrl } from '../../lib/apiConfig'
 import { buildWhatsAppUrl } from '../../lib/whatsapp'
 
 const MESSENGER_URL = 'https://www.facebook.com/profile.php?id=61593199792337'
@@ -55,8 +54,7 @@ const WhatsAppButton = () => {
     setIsLoading(true)
 
     try {
-      const endpoint = resolveUrl('/api/chat') || '/api/chat'
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

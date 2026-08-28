@@ -38,6 +38,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/|uploads/).*)", "destination": "/index.html" }
   ]
 }
