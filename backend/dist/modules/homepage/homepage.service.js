@@ -270,10 +270,13 @@ const sanitizeLimit = (value, fallback) => {
         return fallback;
     return Math.min(Math.floor(n), 24);
 };
+/**
+ * Fetch product rows only (no rating lookup).
+ * The homepage service collects all rows first, then calls fetchRatingMap once
+ * for all product IDs combined — eliminating N+1 DB round-trips for ratings.
+ */
 const fetchProducts = async (where, limit, orderBy) => {
-    const rows = await (0, product_service_1.fullQuery)().where(where).orderBy(orderBy ?? (0, drizzle_orm_1.desc)(schema_1.products.createdAt)).limit(limit);
-    const ratingMap = await (0, product_service_1.fetchRatingMap)(rows.map((row) => row.id));
-    return rows.map((row) => (0, product_service_1.formatProductRow)(row, ratingMap.get(row.id)));
+    return (0, product_service_1.fetchProductRowsOnly)(where, limit, orderBy);
 };
 const resolveLabelProducts = async (label, limit) => {
     const colMap = {
@@ -288,9 +291,6 @@ const resolveLabelProducts = async (label, limit) => {
     };
     const orderBy = label === "flash_sale" ? (0, drizzle_orm_1.desc)((0, drizzle_orm_1.sql) `COALESCE(${schema_1.products.discount}, 0)`) : (0, drizzle_orm_1.desc)(schema_1.products.createdAt);
     if (label === "new_arrival") {
-        // Real "new arrivals": recent products (created within 30 days) or
-        // admin-boosted via is_new_arrival, always sorted by createdAt (newest first).
-        // If nothing is recent (e.g. all stock is older), fall back to newest products.
         const where = (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.products.status, "active"), (0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(schema_1.products.isNewArrival, true), (0, drizzle_orm_1.sql) `${schema_1.products.createdAt} >= (NOW() - INTERVAL 30 DAY)`));
         const recent = await fetchProducts(where, limit, (0, drizzle_orm_1.desc)(schema_1.products.createdAt));
         if (recent.length > 0)
@@ -324,8 +324,8 @@ const resolveTrending = async (limit) => {
             .limit(limit);
         const orderMap = new Map(aggRows.map((r, i) => [r.productId, i]));
         rows.sort((a, b) => (orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER));
-        const ratingMap = await (0, product_service_1.fetchRatingMap)(rows.map((row) => row.id));
-        return rows.map((row) => (0, product_service_1.formatProductRow)(row, ratingMap.get(row.id)));
+        // rows returned without rating — caller batches rating lookup
+        return rows;
     }
     const flagged = await fetchProducts((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.products.status, "active"), (0, drizzle_orm_1.eq)(schema_1.products.isTrending, true)), limit, (0, drizzle_orm_1.desc)(schema_1.products.createdAt));
     if (flagged.length > 0)
@@ -352,8 +352,8 @@ const resolveBestSellers = async (limit) => {
             .limit(limit);
         const orderMap = new Map(aggRows.map((r, i) => [r.productId, i]));
         rows.sort((a, b) => (orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER));
-        const ratingMap = await (0, product_service_1.fetchRatingMap)(rows.map((row) => row.id));
-        return rows.map((row) => (0, product_service_1.formatProductRow)(row, ratingMap.get(row.id)));
+        // rows returned without rating — caller batches rating lookup
+        return rows;
     }
     // No sales yet — fall back to the best-seller flag, then featured, then newest
     const fallback = await fetchProducts((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.products.status, "active"), (0, drizzle_orm_1.eq)(schema_1.products.isBestSeller, true)), limit, (0, drizzle_orm_1.desc)(schema_1.products.createdAt));
@@ -565,7 +565,6 @@ const getHomepage = async (userId) => {
         const limit = limits[type];
         switch (type) {
             case "flash_deals":
-                // Expired window → no flash deals; otherwise flag-based list.
                 productResults[type] = flashExpired ? [] : await resolveLabelProducts("flash_sale", limit);
                 break;
             case "featured":
@@ -597,6 +596,35 @@ const getHomepage = async (userId) => {
                 break;
         }
     }));
+    // --- BATCH RATING LOOKUP ---
+    // Collect ALL product rows from every section into a single ID set,
+    // then call fetchRatingMap ONCE instead of once per section (eliminates N+1).
+    const allProductRows = Object.values(productResults).flat();
+    // Also include category_products rows
+    Object.values(categoryProductResults).forEach((r) => allProductRows.push(...r.products));
+    const allIds = [...new Set(allProductRows.map((r) => r.id).filter(Boolean))];
+    const globalRatingMap = allIds.length > 0 ? await (0, product_service_1.fetchRatingMap)(allIds) : new Map();
+    // Apply slim formatter + ratings to each section's rows
+    for (const type of Object.keys(productResults)) {
+        const rows = productResults[type];
+        // Rows from resolveTrending / resolveBestSellers (order-based) are raw DB rows;
+        // rows from fetchProducts (label-based) are also raw DB rows now.
+        // Apply formatHomepageProduct + injected rating.
+        productResults[type] = rows.map((row) => 
+        // If the row already has a rating property it was formatted by an inner call;
+        // otherwise format it now.
+        typeof row.rating !== "undefined" && typeof row.title === "string" && !row.images
+            ? row // already formatted slim object (shouldn't happen but guard)
+            : (0, product_service_1.formatHomepageProduct)(row, globalRatingMap.get(row.id)));
+    }
+    // Apply to category_products sections
+    for (const sectionId of Object.keys(categoryProductResults)) {
+        const r = categoryProductResults[sectionId];
+        categoryProductResults[sectionId] = {
+            category: r.category,
+            products: r.products.map((row) => (0, product_service_1.formatHomepageProduct)(row, globalRatingMap.get(row.id))),
+        };
+    }
     const sections = enabled.map((section) => {
         const data = {};
         switch (section.type) {

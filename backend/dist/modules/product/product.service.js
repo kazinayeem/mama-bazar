@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.importCsv = exports.exportCsv = exports.autoSaveDraft = exports.duplicate = exports.bulkAction = exports.remove = exports.update = exports.create = exports.getRelated = exports.getBySlug = exports.getById = exports.getAll = exports.fullQuery = exports.fetchRatingMap = exports.formatProductRow = exports.deriveStockStatus = exports.deriveProfitMargin = exports.ensureUniqueSlug = void 0;
+exports.importCsv = exports.exportCsv = exports.autoSaveDraft = exports.duplicate = exports.bulkAction = exports.remove = exports.update = exports.create = exports.getRelated = exports.getBySlug = exports.getById = exports.getAll = exports.fullQuery = exports.fetchProductRowsOnly = exports.formatHomepageProduct = exports.fetchRatingMap = exports.formatProductRow = exports.deriveStockStatus = exports.deriveProfitMargin = exports.ensureUniqueSlug = void 0;
 const db_1 = require("../../config/db");
 const AppError_1 = require("../../utils/AppError");
 const schema_1 = require("../../config/schema");
@@ -272,6 +272,48 @@ const fetchRatingMap = async (productIds) => {
     return map;
 };
 exports.fetchRatingMap = fetchRatingMap;
+/**
+ * Lightweight product shape for homepage product cards.
+ * Only includes the fields that the ProductCard component actually renders.
+ * ~60% smaller than the full formatProductRow payload.
+ */
+const formatHomepageProduct = (row, ratingInfo) => {
+    const isTrue = (v) => v === true || v === 1 || v === "1";
+    return {
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        price: row.price,
+        salePrice: row.salePrice,
+        discount: row.discount,
+        stock: row.stock,
+        images: row.images || [],
+        colorOptions: row.colorOptions,
+        sizeOptions: row.sizeOptions,
+        isBestSeller: isTrue(row.isBestSeller),
+        isNewArrival: isTrue(row.isNewArrival),
+        isFlashSale: isTrue(row.isFlashSale),
+        isHotDeal: isTrue(row.isHotDeal),
+        isFeatured: isTrue(row.isFeatured),
+        brand: row.brand,
+        brandInfo: row.brandName
+            ? { id: row.brandId, name: row.brandName, logo: row.brandLogo, slug: row.brandSlug }
+            : null,
+        rating: ratingInfo ? ratingInfo.rating : null,
+        reviewCount: ratingInfo ? ratingInfo.reviewCount : 0,
+        variants: undefined,
+    };
+};
+exports.formatHomepageProduct = formatHomepageProduct;
+/**
+ * Fetch product rows WITHOUT triggering a rating lookup.
+ * Used by the homepage service which batches all rating queries
+ * into a single fetchRatingMap call across all sections.
+ */
+const fetchProductRowsOnly = async (where, limit, orderBy) => {
+    return (0, exports.fullQuery)().where(where).orderBy(orderBy ?? (0, drizzle_orm_1.desc)(schema_1.products.createdAt)).limit(limit);
+};
+exports.fetchProductRowsOnly = fetchProductRowsOnly;
 const buildWhere = async (query) => {
     const conditions = [];
     if (query.status && query.status !== "all") {

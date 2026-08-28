@@ -79,7 +79,9 @@ export const getTree = async (_req: Request, res: Response) => {
 };
 
 export const getById = async (req: Request, res: Response) => {
-  const data = await categoryService.getById(Number(req.params.id));
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) throw new AppError(400, "Invalid ID");
+  const data = await categoryService.getById(id);
   if (!data) throw new AppError(404, "Category not found");
   res.json({ success: true, data });
 };
@@ -91,7 +93,9 @@ export const getBySlug = async (req: Request, res: Response) => {
 };
 
 export const getUsage = async (req: Request, res: Response) => {
-  const data = await categoryService.getUsage(Number(req.params.id));
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) throw new AppError(400, "Invalid ID");
+  const data = await categoryService.getUsage(id);
   res.json({ success: true, data });
 };
 

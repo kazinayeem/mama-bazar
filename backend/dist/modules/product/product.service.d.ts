@@ -131,6 +131,141 @@ export declare const fetchRatingMap: (productIds?: number[]) => Promise<Map<numb
     rating: number | null;
     reviewCount: number;
 }>>;
+/**
+ * Lightweight product shape for homepage product cards.
+ * Only includes the fields that the ProductCard component actually renders.
+ * ~60% smaller than the full formatProductRow payload.
+ */
+export declare const formatHomepageProduct: (row: any, ratingInfo?: {
+    rating: number | null;
+    reviewCount: number;
+}) => {
+    id: any;
+    title: any;
+    slug: any;
+    price: any;
+    salePrice: any;
+    discount: any;
+    stock: any;
+    images: any;
+    colorOptions: any;
+    sizeOptions: any;
+    isBestSeller: boolean;
+    isNewArrival: boolean;
+    isFlashSale: boolean;
+    isHotDeal: boolean;
+    isFeatured: boolean;
+    brand: any;
+    brandInfo: {
+        id: any;
+        name: any;
+        logo: any;
+        slug: any;
+    } | null;
+    rating: number | null;
+    reviewCount: number;
+    variants: undefined | any[];
+};
+/**
+ * Fetch product rows WITHOUT triggering a rating lookup.
+ * Used by the homepage service which batches all rating queries
+ * into a single fetchRatingMap call across all sections.
+ */
+export declare const fetchProductRowsOnly: (where: any, limit: number, orderBy?: any) => Promise<{
+    id: number;
+    title: string;
+    slug: string;
+    description: string | null;
+    shortDescription: string | null;
+    price: string;
+    salePrice: string | null;
+    discount: string | null;
+    costPrice: string | null;
+    profitMargin: string | null;
+    tax: string | null;
+    vat: string | null;
+    shippingCharge: string | null;
+    codFee: string | null;
+    flashSalePrice: string | null;
+    wholesalePrice: string | null;
+    dealerPrice: string | null;
+    categoryId: number | null;
+    subCategoryId: number | null;
+    childCategoryId: number | null;
+    collectionId: number | null;
+    brandId: number | null;
+    brand: string | null;
+    vendorId: number | null;
+    supplierId: number | null;
+    supplier: string | null;
+    countryOfOrigin: string | null;
+    sku: string | null;
+    barcode: string | null;
+    tags: string[] | null;
+    warranty: string | null;
+    weight: string | null;
+    dimensions: string | null;
+    features: string[] | null;
+    returnPolicy: string | null;
+    warehouse: string | null;
+    videoUrl: string | null;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    seoKeywords: string | null;
+    canonicalUrl: string | null;
+    ogImage: string | null;
+    twitterImage: string | null;
+    structuredData: Record<string, unknown> | null;
+    emiAvailable: boolean;
+    isFeatured: boolean;
+    isTrending: boolean;
+    isFlashSale: boolean;
+    isNewArrival: boolean;
+    isBestSeller: boolean;
+    isLimitedEdition: boolean;
+    isOfficial: boolean;
+    isHotDeal: boolean;
+    isArchived: boolean;
+    meta: Record<string, unknown> | null;
+    stock: number;
+    lowStockAlert: number;
+    minOrder: number;
+    maxOrder: number | null;
+    unlimitedStock: boolean;
+    backorder: boolean;
+    trackInventory: boolean;
+    stockStatus: string | null;
+    productStatus: string | null;
+    images: string[] | null;
+    sizeOptions: string[] | null;
+    colorOptions: {
+        name: string;
+        value?: string;
+        image?: string;
+    }[] | null;
+    paymentMethods: ["cod", "online"] | null;
+    paymentPhoneNumber: string | null;
+    status: "active" | "inactive";
+    createdAt: Date;
+    categoryName: string | null;
+    categorySlug: string | null;
+    categoryParentId: number | null;
+    subCategoryName: unknown;
+    subCategorySlug: unknown;
+    childCategoryName: unknown;
+    childCategorySlug: unknown;
+    collectionName: string | null;
+    collectionSlug: string | null;
+    collectionImage: string | null;
+    vendorName: string | null;
+    vendorSlug: string | null;
+    vendorLogo: string | null;
+    supplierName: string | null;
+    supplierSlug: string | null;
+    brandName: string | null;
+    brandLogo: string | null;
+    brandSlug: string | null;
+}[]>;
 export declare const fullQuery: () => Omit<import("drizzle-orm/mysql-core").MySqlSelectBase<"products", {
     id: import("drizzle-orm/mysql-core").MySqlColumn<{
         name: "id";

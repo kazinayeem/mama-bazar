@@ -41,6 +41,8 @@ const brandService = __importStar(require("./brand.service"));
 const slugify_1 = __importDefault(require("slugify"));
 const AppError_1 = require("../../utils/AppError");
 const cloud_1 = require("../../utils/cloud");
+const cache_1 = require("../../utils/cache");
+const CACHE_KEY_BRANDS = "brands:active";
 const toBool = (value) => {
     if (value === undefined || value === null || value === "")
         return undefined;
@@ -71,7 +73,12 @@ const persistLogo = async (req) => {
     return uploaded.url;
 };
 const getAll = async (_req, res) => {
+    const cached = cache_1.memoryCache.get(CACHE_KEY_BRANDS);
+    if (cached) {
+        return res.json({ success: true, data: cached });
+    }
     const data = await brandService.getAllActive();
+    cache_1.memoryCache.set(CACHE_KEY_BRANDS, data, 600); // 10 minutes
     res.json({ success: true, data });
 };
 exports.getAll = getAll;
@@ -129,6 +136,7 @@ const create = async (req, res) => {
         seoKeywords: body.seoKeywords ? String(body.seoKeywords) : undefined,
         status: body.status || "active",
     });
+    cache_1.memoryCache.invalidate("brands");
     res.status(201).json({ success: true, data });
 };
 exports.create = create;
@@ -171,6 +179,7 @@ const update = async (req, res) => {
     else if (body.logo !== undefined)
         updateData.logo = body.logo ? String(body.logo) : null;
     const data = await brandService.update(id, updateData);
+    cache_1.memoryCache.invalidate("brands");
     res.json({ success: true, data });
 };
 exports.update = update;
@@ -184,6 +193,7 @@ const remove = async (req, res) => {
         throw new AppError_1.AppError(409, `This brand is currently used by ${usage} product${usage > 1 ? "s" : ""}.`, { usageCount: usage, code: "in_use" });
     }
     await brandService.remove(id);
+    cache_1.memoryCache.invalidate("brands");
     res.json({ success: true, message: "Brand deleted" });
 };
 exports.remove = remove;
@@ -191,6 +201,7 @@ const moveProducts = async (req, res) => {
     const id = Number(req.params.id);
     const targetId = toIdOrNull(req.body.targetId) ?? null;
     const result = await brandService.moveProducts(id, targetId);
+    cache_1.memoryCache.invalidate("brands");
     res.json({ success: true, data: result });
 };
 exports.moveProducts = moveProducts;

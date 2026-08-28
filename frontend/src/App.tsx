@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
@@ -8,17 +6,6 @@ import { PageSkeleton } from './components/common/Skeletons'
 import MainLayout from './components/layout/MainLayout'
 import UserDashboardLayout from './components/layout/UserDashboardLayout'
 import HomePage from './pages/HomePage'
-=======
-import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { Analytics } from '@vercel/analytics/react'
-import ProtectedRoute from './components/common/ProtectedRoute'
-import { PageSkeleton } from './components/common/Skeletons'
-import MainLayout from './components/layout/MainLayout'
-import UserDashboardLayout from './components/layout/UserDashboardLayout'
-import HomePage from './pages/HomePage'
-
->>>>>>> 1dd24b5 (perf: optimize frontend image performance and implement progressive loading with SEO metadata configuration)
 const ShopPage = lazy(() => import('./pages/ShopPage'))
 const ProductDetailsPage = lazy(() => import('./pages/ProductDetailsPage'))
 const CartPage = lazy(() => import('./pages/CartPage'))

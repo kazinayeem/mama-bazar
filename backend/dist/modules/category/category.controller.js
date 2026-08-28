@@ -41,6 +41,9 @@ const categoryService = __importStar(require("./category.service"));
 const slugify_1 = __importDefault(require("slugify"));
 const AppError_1 = require("../../utils/AppError");
 const cloud_1 = require("../../utils/cloud");
+const cache_1 = require("../../utils/cache");
+const CACHE_KEY_TREE = "categories:tree";
+const CACHE_KEY_FLAT = "categories:flat";
 const toBool = (value) => {
     if (value === undefined || value === null || value === "")
         return undefined;
@@ -78,7 +81,12 @@ const persistImage = async (file, fallback) => {
     return uploaded.url;
 };
 const getAll = async (_req, res) => {
+    const cached = cache_1.memoryCache.get(CACHE_KEY_FLAT);
+    if (cached) {
+        return res.json({ success: true, data: cached });
+    }
     const data = await categoryService.getAllFlat();
+    cache_1.memoryCache.set(CACHE_KEY_FLAT, data, 600); // 10 minutes
     res.json({ success: true, data });
 };
 exports.getAll = getAll;
@@ -97,12 +105,20 @@ const listAdmin = async (req, res) => {
 };
 exports.listAdmin = listAdmin;
 const getTree = async (_req, res) => {
+    const cached = cache_1.memoryCache.get(CACHE_KEY_TREE);
+    if (cached) {
+        return res.json({ success: true, data: cached });
+    }
     const data = await categoryService.getTree();
+    cache_1.memoryCache.set(CACHE_KEY_TREE, data, 600); // 10 minutes
     res.json({ success: true, data });
 };
 exports.getTree = getTree;
 const getById = async (req, res) => {
-    const data = await categoryService.getById(Number(req.params.id));
+    const id = Number(req.params.id);
+    if (Number.isNaN(id))
+        throw new AppError_1.AppError(400, "Invalid ID");
+    const data = await categoryService.getById(id);
     if (!data)
         throw new AppError_1.AppError(404, "Category not found");
     res.json({ success: true, data });
@@ -116,7 +132,10 @@ const getBySlug = async (req, res) => {
 };
 exports.getBySlug = getBySlug;
 const getUsage = async (req, res) => {
-    const data = await categoryService.getUsage(Number(req.params.id));
+    const id = Number(req.params.id);
+    if (Number.isNaN(id))
+        throw new AppError_1.AppError(400, "Invalid ID");
+    const data = await categoryService.getUsage(id);
     res.json({ success: true, data });
 };
 exports.getUsage = getUsage;
@@ -143,6 +162,7 @@ const create = async (req, res) => {
         seoKeywords: body.seoKeywords ? String(body.seoKeywords) : undefined,
         status: body.status || "active",
     });
+    cache_1.memoryCache.invalidate("categories");
     res.status(201).json({ success: true, data });
 };
 exports.create = create;
@@ -180,6 +200,7 @@ const update = async (req, res) => {
     else if (body.image !== undefined)
         updateData.image = body.image ? String(body.image) : null;
     const data = await categoryService.update(id, updateData);
+    cache_1.memoryCache.invalidate("categories");
     res.json({ success: true, data });
 };
 exports.update = update;
@@ -196,6 +217,7 @@ const remove = async (req, res) => {
         throw new AppError_1.AppError(409, `This category is currently used by ${usage.products} product${usage.products > 1 ? "s" : ""}.`, { usageCount: usage.products, subCategories: 0, code: "in_use" });
     }
     await categoryService.remove(id);
+    cache_1.memoryCache.invalidate("categories");
     res.json({ success: true, message: "Category deleted" });
 };
 exports.remove = remove;
@@ -203,6 +225,7 @@ const moveProducts = async (req, res) => {
     const id = Number(req.params.id);
     const targetId = toIdOrNull(req.body.targetId) ?? null;
     const result = await categoryService.moveProducts(id, targetId);
+    cache_1.memoryCache.invalidate("categories");
     res.json({ success: true, data: result });
 };
 exports.moveProducts = moveProducts;

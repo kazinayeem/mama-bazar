@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const compression_1 = __importDefault(require("compression"));
 const path_1 = __importDefault(require("path"));
 const env_1 = require("./config/env");
 const category_route_1 = __importDefault(require("./modules/category/category.route"));
@@ -38,6 +39,8 @@ const errorHandler_1 = require("./middleware/errorHandler");
 const app = (0, express_1.default)();
 // Security headers
 app.use((0, helmet_1.default)());
+// Gzip/Brotli compression for all responses (JSON APIs shrink ~70-80%)
+app.use((0, compression_1.default)());
 // CORS — restrict to frontend origin
 app.use((0, cors_1.default)({ origin: env_1.env.FRONTEND_URL, credentials: true }));
 // Body parsing with size limits
