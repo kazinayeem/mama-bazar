@@ -21,17 +21,29 @@ const initialState: AuthState = {
   error: null,
 }
 
-export const loginUser = createAsyncThunk('auth/loginUser', async (payload: AuthCredentials) => {
-  return api.login(payload)
+export const loginUser = createAsyncThunk('auth/loginUser', async (payload: AuthCredentials, { rejectWithValue }) => {
+  try {
+    return await api.login(payload)
+  } catch (err: any) {
+    return rejectWithValue(err?.message || 'Invalid phone/email or password.')
+  }
 })
 
-export const loginAsDev = createAsyncThunk('auth/loginAsDev', async (role: DevLoginRole) => {
-  return api.devLogin(role)
+export const loginAsDev = createAsyncThunk('auth/loginAsDev', async (role: DevLoginRole, { rejectWithValue }) => {
+  try {
+    return await api.devLogin(role)
+  } catch (err: any) {
+    return rejectWithValue(err?.message || 'Development login is unavailable')
+  }
 })
 
-export const registerUser = createAsyncThunk('auth/registerUser', async (payload: AuthRegisterInput) => {
-  await api.register(payload)
-  return api.login({ phone: payload.phone, password: payload.password })
+export const registerUser = createAsyncThunk('auth/registerUser', async (payload: AuthRegisterInput, { rejectWithValue }) => {
+  try {
+    await api.register(payload)
+    return await api.login({ phone: payload.phone, password: payload.password })
+  } catch (err: any) {
+    return rejectWithValue(err?.message || 'Registration failed. Please check your details.')
+  }
 })
 
 const authSlice = createSlice({
@@ -83,7 +95,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message || 'Login failed'
+        state.error = (action.payload as string) || action.error.message || 'Login failed'
       })
       .addCase(loginAsDev.pending, (state) => {
         state.loading = true
@@ -98,7 +110,7 @@ const authSlice = createSlice({
       })
       .addCase(loginAsDev.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message || 'Development login is unavailable'
+        state.error = (action.payload as string) || action.error.message || 'Development login is unavailable'
       })
       .addCase(registerUser.pending, (state) => {
         state.loading = true
@@ -113,7 +125,7 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message || 'Registration failed'
+        state.error = (action.payload as string) || action.error.message || 'Registration failed'
       })
   },
 })

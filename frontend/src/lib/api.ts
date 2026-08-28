@@ -66,16 +66,40 @@ const requestEnvelope = async <T>(path: string, init?: RequestInit, withAuth = f
     const data = parseEnvelope<T>(rawText)
 
     if (!data) {
+      if (response.status === 401) {
+        throw new Error('Invalid phone/email or password.')
+      }
+      if (response.status === 403) {
+        throw new Error('Access forbidden. Your account may be inactive.')
+      }
+      if (response.status === 404) {
+        throw new Error('Requested resource not found.')
+      }
+      if (response.status >= 500) {
+        throw new Error('Something went wrong on the server. Please try again.')
+      }
       throw new Error(NETWORK_ERROR_MESSAGE)
     }
 
     if (!response.ok || !data.success) {
+      if (response.status === 401) {
+        throw new Error(data.message || 'Invalid phone/email or password.')
+      }
+      if (response.status === 403) {
+        throw new Error(data.message || 'Your account is inactive. Please contact support.')
+      }
+      if (response.status >= 500) {
+        throw new Error(data.message || 'Something went wrong on the server. Please try again.')
+      }
       throw new Error(data.message || `Request failed (${response.status})`)
     }
 
     return data
-  } catch (err) {
-    if (err instanceof TypeError || (err as DOMException)?.name === 'AbortError') {
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      throw new Error('Request timed out. Please verify your internet connection and try again.')
+    }
+    if (err instanceof TypeError && err.message?.toLowerCase().includes('fetch')) {
       throw new Error(NETWORK_ERROR_MESSAGE)
     }
     throw err
