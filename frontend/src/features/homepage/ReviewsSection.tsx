@@ -7,11 +7,12 @@ interface ReviewsSectionProps {
   items: ProductReview[]
 }
 
-const ReviewsSection = ({ items }: ReviewsSectionProps) => {
-  if (items.length === 0) return null
+const ReviewsSection = ({ items = [] }: ReviewsSectionProps) => {
+  const safeItems = Array.isArray(items) ? items : []
+  if (safeItems.length === 0) return null
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {items.map((review) => (
+      {safeItems.map((review) => (
         <article
           key={review.id}
           className="relative flex flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card"

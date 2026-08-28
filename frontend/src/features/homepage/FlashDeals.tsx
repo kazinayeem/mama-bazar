@@ -66,11 +66,12 @@ const TimeUnit = ({ value, label }: { value: string; label: string }) => (
   </div>
 )
 
-const FlashDeals = ({ section, products, window, onQuickView }: FlashDealsProps) => {
+const FlashDeals = ({ section, products = [], window, onQuickView }: FlashDealsProps) => {
+  const safeProducts = Array.isArray(products) ? products : []
   const target = useMemo(() => computeTarget(window), [window])
   const time = useCountdown(target)
 
-  if (products.length === 0) return null
+  if (safeProducts.length === 0) return null
 
   return (
     <section className="bg-brand-green-50 py-6 lg:py-8">

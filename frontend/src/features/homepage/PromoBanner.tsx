@@ -69,9 +69,10 @@ const PromoCard = ({ banner }: { banner: Banner }) => {
   )
 }
 
-const PromoBanner = ({ items }: PromoBannerProps) => {
-  if (items.length === 0) return null
-  const visible = items.slice(0, 2)
+const PromoBanner = ({ items = [] }: PromoBannerProps) => {
+  const safeItems = Array.isArray(items) ? items : []
+  if (safeItems.length === 0) return null
+  const visible = safeItems.slice(0, 2)
   return (
     <div className={`grid gap-4 ${visible.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
       {visible.map((banner) => (

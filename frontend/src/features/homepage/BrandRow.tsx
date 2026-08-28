@@ -9,7 +9,8 @@ interface BrandRowProps {
   items: Brand[]
 }
 
-const BrandRow = ({ items }: BrandRowProps) => {
+const BrandRow = ({ items = [] }: BrandRowProps) => {
+  const safeItems = Array.isArray(items) ? items : []
   const trackRef = useRef<HTMLDivElement>(null)
   const [canLeft, setCanLeft] = useState(false)
   const [canRight, setCanRight] = useState(false)
@@ -31,7 +32,7 @@ const BrandRow = ({ items }: BrandRowProps) => {
       el.removeEventListener('scroll', checkScroll)
       window.removeEventListener('resize', checkScroll)
     }
-  }, [checkScroll, items])
+  }, [checkScroll, safeItems])
 
   const scroll = (dir: 'left' | 'right') => {
     const el = trackRef.current
@@ -39,7 +40,7 @@ const BrandRow = ({ items }: BrandRowProps) => {
     el.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' })
   }
 
-  if (items.length === 0) return null
+  if (safeItems.length === 0) return null
 
   return (
     <div className="relative">

@@ -174,9 +174,11 @@ export const commerceApi = baseApi.injectEndpoints({
       keepUnusedDataFor: LONG_LIVED,
     }),
 
-    getReviews: builder.query<ProductReview[], { productId?: number; limit?: number }>({
-      query: ({ productId, limit }) =>
-        `/api/reviews${toQueryString({ productId, limit } as ProductsQueryParams)}`,
+    getReviews: builder.query<ProductReview[], { productId?: number; limit?: number } | void>({
+      query: (args) => {
+        const { productId, limit } = args || {}
+        return `/api/reviews${toQueryString({ productId, limit } as ProductsQueryParams)}`
+      },
       transformResponse: (response: ApiEnvelope<ProductReview[]>) => response.data || [],
       providesTags: (_result, _error, args) => [
         { type: 'Reviews' as const, id: args?.productId ?? 'LIST' },

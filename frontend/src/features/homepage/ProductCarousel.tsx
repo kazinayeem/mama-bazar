@@ -18,8 +18,9 @@ const getVisibleCount = () => {
   return 2
 }
 
-const ProductCarousel = ({ products, onQuickView, maxItems = 5 }: ProductCarouselProps) => {
-  const displayProducts = products.slice(0, maxItems)
+const ProductCarousel = ({ products = [], onQuickView, maxItems = 5 }: ProductCarouselProps) => {
+  const safeProducts = Array.isArray(products) ? products : []
+  const displayProducts = safeProducts.slice(0, maxItems)
   const trackRef = useRef<HTMLDivElement>(null)
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(false)

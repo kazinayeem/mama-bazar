@@ -5,13 +5,14 @@ interface TrustStripProps {
   items: HomepageContentItem[]
 }
 
-const TrustStrip = ({ items }: TrustStripProps) => {
-  if (items.length === 0) return null
+const TrustStrip = ({ items = [] }: TrustStripProps) => {
+  const safeItems = Array.isArray(items) ? items : []
+  if (safeItems.length === 0) return null
   return (
     <section className="border-y border-brand-green-100 bg-brand-green-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-2 py-3 sm:gap-3 lg:grid-cols-4">
-          {items.map((item, index) => {
+          {safeItems.map((item, index) => {
             const Icon = iconByName(item.icon)
             return (
               <div

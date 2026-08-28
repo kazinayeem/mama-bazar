@@ -10,7 +10,8 @@ interface CategoryGridProps {
   columns?: number
 }
 
-const CategoryGrid = ({ items }: CategoryGridProps) => {
+const CategoryGrid = ({ items = [] }: CategoryGridProps) => {
+  const safeItems = Array.isArray(items) ? items : []
   const trackRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
@@ -32,7 +33,7 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
       el.removeEventListener('scroll', checkScroll)
       window.removeEventListener('resize', checkScroll)
     }
-  }, [checkScroll, items])
+  }, [checkScroll, safeItems])
 
   const scroll = (direction: 'left' | 'right') => {
     const el = trackRef.current
@@ -41,7 +42,7 @@ const CategoryGrid = ({ items }: CategoryGridProps) => {
     el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' })
   }
 
-  if (items.length === 0) return null
+  if (safeItems.length === 0) return null
 
   return (
     <div className="relative">

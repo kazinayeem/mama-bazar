@@ -7,11 +7,12 @@ interface WhyChooseUsProps {
   dark?: boolean
 }
 
-const WhyChooseUs = ({ items, dark }: WhyChooseUsProps) => {
-  if (items.length === 0) return null
+const WhyChooseUs = ({ items = [], dark }: WhyChooseUsProps) => {
+  const safeItems = Array.isArray(items) ? items : []
+  if (safeItems.length === 0) return null
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      {items.map((item, index) => {
+      {safeItems.map((item, index) => {
         const Icon = iconByName(item.icon)
         return (
           <MotionReveal delay={index * 0.06} key={`${item.title}-${index}`}>

@@ -205,13 +205,14 @@ const HeroSlide = ({ slide, priority }: { slide: HomepageHeroSlide; priority?: b
   )
 }
 
-const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
+const HeroCarousel = ({ slides = [], loading }: HeroCarouselProps) => {
+  const safeSlides = Array.isArray(slides) ? slides : []
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [direction, setDirection] = useState(1)
   const reduceMotion = useReducedMotion()
 
-  const count = slides.length
+  const count = safeSlides.length
   const safeIndex = count > 0 ? index % count : 0
 
   const go = useCallback(
@@ -260,7 +261,9 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
 
   // Current slide's mobile image — used only as a height spacer on mobile.
   // Right-sized to 640px (mobile render width) so the spacer fetch is tiny.
-  const currentSlide = slides[safeIndex]
+  const currentSlide = safeSlides[safeIndex]
+  if (!currentSlide) return null
+
   const currentMobileImage =
     resolveHeroUrl(currentSlide.mobileImage, 640) ||
     resolveHeroUrl(currentSlide.tabletImage, 900) ||
@@ -297,7 +300,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
         <div className="absolute inset-0 sm:relative sm:h-[400px] lg:h-[480px] sm:overflow-hidden">
           <AnimatePresence custom={direction} initial={false}>
             <motion.div
-              key={slides[safeIndex].id}
+              key={safeSlides[safeIndex].id}
               className="absolute inset-0 h-full w-full"
               custom={direction}
               variants={variants}
@@ -313,7 +316,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
                 else if (info.offset.x > 50) prev()
               }}
             >
-              <HeroSlide priority={safeIndex === 0} slide={slides[safeIndex]} />
+              <HeroSlide priority={safeIndex === 0} slide={safeSlides[safeIndex]} />
             </motion.div>
           </AnimatePresence>
         </div>
@@ -349,7 +352,7 @@ const HeroCarousel = ({ slides, loading }: HeroCarouselProps) => {
         {/* Dots */}
         {count > 1 && (
           <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2">
-            {slides.map((slide, dotIndex) => (
+            {safeSlides.map((slide, dotIndex) => (
               <button
                 aria-current={dotIndex === safeIndex ? 'true' : undefined}
                 aria-label={`Go to slide ${dotIndex + 1}`}

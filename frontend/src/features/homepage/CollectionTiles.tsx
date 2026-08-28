@@ -8,11 +8,12 @@ interface CollectionTilesProps {
   items: Collection[]
 }
 
-const CollectionTiles = ({ items }: CollectionTilesProps) => {
-  if (items.length === 0) return null
+const CollectionTiles = ({ items = [] }: CollectionTilesProps) => {
+  const safeItems = Array.isArray(items) ? items : []
+  if (safeItems.length === 0) return null
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
-      {items.slice(0, 8).map((collection) => (
+      {safeItems.slice(0, 8).map((collection) => (
         <Link
           key={collection.slug}
           className="group relative block aspect-[4/3] overflow-hidden rounded-2xl shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-card"
