@@ -133,13 +133,25 @@ app.use("/api/rentals", rental_route_1.default);
 app.use("/api/memos", memo_route_1.default);
 app.use("/api/members", member_route_1.default);
 app.use("/api/backup", backup_route_1.default);
-// home
+// Root API info
 app.get("/", (_req, res) => {
-    res.json({ success: true, message: "Welcome to Mamabazar API" });
+    res.status(200).json({
+        success: true,
+        service: "Mama Bazar API",
+        status: "running",
+        version: "1.0.0",
+        timestamp: new Date().toISOString(),
+    });
 });
-// Health check
+// Health check — lightweight and instant without blocking database operations
 app.get("/api/health", (_req, res) => {
-    res.json({ success: true, message: "Mamabazar API is running" });
+    res.status(200).json({
+        success: true,
+        service: "Mama Bazar API",
+        status: "healthy",
+        uptime: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString(),
+    });
 });
 // JSON 404 for unknown routes (prevents HTML error pages in API clients)
 app.use((req, res, next) => {
