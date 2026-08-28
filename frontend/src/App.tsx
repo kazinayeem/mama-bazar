@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
+import NetworkStatus from './components/common/NetworkStatus'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import { PageSkeleton } from './components/common/Skeletons'
 import MainLayout from './components/layout/MainLayout'
@@ -162,9 +163,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
+      <NetworkStatus />
     </Suspense>
   )
 }
