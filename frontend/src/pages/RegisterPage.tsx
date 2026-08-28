@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, UserPlus, User, Phone, AlertCircle, Loader2 } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { SEO } from '../components/common/SEO'
 import { clearAuthError, registerUser } from '../store/slices/authSlice'
@@ -44,92 +44,175 @@ const RegisterPage = () => {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    dispatch(registerUser({ name, phone, password }))
+    if (loading) return
+    dispatch(registerUser({ name: name.trim(), phone: phone.trim(), password }))
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f4f6f4] px-4 py-12">
+    <>
       <SEO
-        title="Create Account"
-        description="Create a Mama Bazar account to start shopping. Sign up with your phone number."
+        title="Create Account | Mama Bazar"
+        description="Create a Mama Bazar account to start shopping, track deliveries, and manage your wishlist."
         url="/auth/register"
       />
-      <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-[0_10px_40px_-12px_rgba(20,83,45,0.25)] sm:p-10">
-          <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-900 to-emerald-600 shadow-lg shadow-emerald-900/20">
-              <span className="font-headline text-2xl font-extrabold text-white">M</span>
-            </div>
-            <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.25em] text-orange-600">Mama Bazar</p>
-            <h1 className="mt-3 font-headline text-3xl font-extrabold tracking-tight text-neutral-950">Create Account</h1>
-            <p className="mt-2 text-sm text-neutral-500">Register with your phone to start shopping.</p>
-          </div>
 
-          <form className="mt-8 space-y-5" onSubmit={onSubmit}>
-            <div>
-              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Name</label>
+      <div className="rounded-2xl border border-neutral-200/80 bg-white p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        {/* Header Branding */}
+        <div className="text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-green-50 border border-brand-green-100 p-2.5 shadow-sm">
+            <img
+              src="/brandlogo.png"
+              alt="Mama Bazar"
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.25em] text-brand-orange-500">
+            Mama Bazar
+          </p>
+          <h1 className="mt-1 font-headline text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
+            Create Account
+          </h1>
+          <p className="mt-1.5 text-xs sm:text-sm text-neutral-500">
+            Join Mama Bazar to enjoy fast delivery and exclusive deals.
+          </p>
+        </div>
+
+        {/* Form */}
+        <form className="mt-7 space-y-4" onSubmit={onSubmit}>
+          {/* Full Name Field */}
+          <div>
+            <label
+              htmlFor="reg-name"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-600"
+            >
+              Full Name
+            </label>
+            <div className="relative">
               <input
-                className="w-full rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
+                id="reg-name"
+                type="text"
+                autoComplete="name"
+                className="w-full rounded-xl border border-neutral-300 bg-neutral-50/60 px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-all focus:border-brand-green-500 focus:bg-white focus:ring-2 focus:ring-brand-green-500/15"
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                placeholder="e.g. Mohammad Ali"
                 required
                 value={name}
               />
+              <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
+                <User className="h-4 w-4" />
+              </div>
             </div>
-            <div>
-              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Email / Phone</label>
+          </div>
+
+          {/* Email / Phone Field */}
+          <div>
+            <label
+              htmlFor="reg-phone"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-600"
+            >
+              Email or Phone Number
+            </label>
+            <div className="relative">
               <input
-                className="w-full rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
+                id="reg-phone"
+                type="text"
+                autoComplete="tel"
+                className="w-full rounded-xl border border-neutral-300 bg-neutral-50/60 px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-all focus:border-brand-green-500 focus:bg-white focus:ring-2 focus:ring-brand-green-500/15"
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="01711111111"
+                placeholder="01711111111 or name@example.com"
                 required
                 value={phone}
               />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Password</label>
-              <div className="relative">
-                <input
-                  className="w-full rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 pr-11 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  required
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                />
-                <button
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 transition hover:text-emerald-700"
-                  onClick={() => setShowPassword((v) => !v)}
-                  type="button"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+              <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
+                <Phone className="h-4 w-4" />
               </div>
             </div>
+          </div>
 
-            {error && (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-            )}
-
-            <button
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-900 to-emerald-700 py-3.5 text-xs font-bold uppercase tracking-[0.25em] text-white transition hover:from-emerald-950 hover:to-emerald-800 disabled:opacity-60"
-              disabled={loading}
-              type="submit"
+          {/* Password Field */}
+          <div>
+            <label
+              htmlFor="reg-password"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-600"
             >
-              {loading ? 'Creating...' : 'Create Account'}
-            </button>
-          </form>
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="reg-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                className="w-full rounded-xl border border-neutral-300 bg-neutral-50/60 px-3.5 py-2.5 pr-10 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition-all focus:border-brand-green-500 focus:bg-white focus:ring-2 focus:ring-brand-green-500/15"
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                required
+                minLength={6}
+                value={password}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-neutral-400 hover:text-neutral-600 transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
-          <p className="mt-5 text-center text-sm text-neutral-500">
-            Already have an account?{' '}
-            <Link className="font-semibold text-emerald-700 hover:text-emerald-900" to="/auth/login">
-              Sign in
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50/90 p-3 text-xs font-medium text-red-700 animate-in fade-in">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-red-600" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Terms info */}
+          <p className="text-[11px] leading-relaxed text-neutral-500">
+            By signing up, you agree to Mama Bazar's{' '}
+            <Link to="/terms-and-conditions" className="font-medium text-brand-green-600 hover:underline">
+              Terms
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy-policy" className="font-medium text-brand-green-600 hover:underline">
+              Privacy Policy
             </Link>
+            .
           </p>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-brand-green-500 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-sm transition-all hover:bg-brand-green-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+                <span>Create Account</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Switch Link */}
+        <div className="mt-6 text-center text-xs sm:text-sm text-neutral-500">
+          <span>Already have an account? </span>
+          <Link
+            to="/auth/login"
+            className="font-bold text-brand-green-600 hover:text-brand-green-700 transition-colors"
+          >
+            Sign In
+          </Link>
         </div>
       </div>
-    </main>
+    </>
   )
 }
 

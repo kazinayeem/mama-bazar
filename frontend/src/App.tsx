@@ -66,6 +66,7 @@ const DashboardAddressesPage = lazy(() => import('./pages/dashboard/DashboardAdd
 const DashboardSecurityPage = lazy(() => import('./pages/dashboard/DashboardSecurityPage'))
 
 import AdminLayout from './components/layout/AdminLayout'
+import AuthLayout from './components/layout/AuthLayout'
 import { PermissionRoute } from './components/admin/PermissionRoute'
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => (
@@ -77,6 +78,13 @@ function App() {
     <Suspense fallback={<PageSkeleton />}>
       <Analytics />
       <Routes>
+        {/* Dedicated Unified Auth Layout with Smooth Page Transitions */}
+        <Route path="auth" element={<AuthLayout />}>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        </Route>
+
         <Route element={<MainLayout />}>
           <Route index element={<HomePage />} />
           <Route path="shop" element={<ShopPage />} />
@@ -85,9 +93,6 @@ function App() {
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="track" element={<OrderTrackingPage />} />
           <Route path="order/success" element={<OrderSuccessPage />} />
-          <Route path="auth/login" element={<LoginPage />} />
-          <Route path="auth/register" element={<RegisterPage />} />
-          <Route path="auth/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="refund-policy" element={<PolicyPage slug="return-refund" />} />
           <Route path="return-refund-policy" element={<PolicyPage slug="return-refund" />} />
           <Route path="shipping-policy" element={<PolicyPage slug="shipping" />} />
