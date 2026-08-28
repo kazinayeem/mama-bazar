@@ -3,6 +3,7 @@ import * as productService from "./product.service";
 import { toAsciiSlug } from "./slug.util";
 import { AppError } from "../../utils/AppError";
 import { uploadBuffer, cloudinaryConfigured } from "../../utils/cloud";
+import { memoryCache } from "../../utils/cache";
 import { ProductRelationType, ProductVariantInput, ProductSpecInput } from "./product.interface";
 
 const DEFAULT_PAGE = 1;
@@ -218,6 +219,7 @@ export const create = async (req: Request, res: Response) => {
     images,
     paymentMethods: (base.paymentMethods || DEFAULT_PAYMENT_METHODS) as ["cod", "online"],
   });
+  memoryCache.invalidate("product_");
   res.status(201).json({ success: true, data });
 };
 
@@ -258,11 +260,13 @@ export const update = async (req: Request, res: Response) => {
   }
 
   const data = await productService.update(id, updateData);
+  memoryCache.invalidate("product_");
   res.json({ success: true, data });
 };
 
 export const remove = async (req: Request, res: Response) => {
   await productService.remove(Number(req.params.id));
+  memoryCache.invalidate("product_");
   res.json({ success: true, message: "Product deleted" });
 };
 

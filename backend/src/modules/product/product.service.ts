@@ -22,6 +22,7 @@ import {
   ProductRelationInput,
   ProductRelationType,
 } from "./product.interface";
+import { memoryCache } from "../../utils/cache";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 12;
@@ -280,7 +281,31 @@ export const formatProductRow = (row: any, ratingInfo?: { rating: number | null;
 };
 
 export const fetchRatingMap = async (productIds?: number[]) => {
-  const where = productIds && productIds.length > 0 ? and(eq(reviews.status, "approved"), inArray(reviews.productId, productIds)) : eq(reviews.status, "approved");
+  if (productIds && productIds.length === 0) {
+    return new Map<number, { rating: number | null; reviewCount: number }>();
+  }
+
+  const map = new Map<number, { rating: number | null; reviewCount: number }>();
+  const missingIds: number[] = [];
+
+  if (productIds) {
+    for (const id of productIds) {
+      const cached = memoryCache.get<{ rating: number | null; reviewCount: number }>(`rating:${id}`);
+      if (cached !== undefined) {
+        map.set(id, cached);
+      } else {
+        missingIds.push(id);
+      }
+    }
+    if (missingIds.length === 0) {
+      return map;
+    }
+  }
+
+  const where = missingIds.length > 0
+    ? and(eq(reviews.status, "approved"), inArray(reviews.productId, missingIds))
+    : eq(reviews.status, "approved");
+
   const rows = await db
     .select({
       productId: reviews.productId,
@@ -290,8 +315,23 @@ export const fetchRatingMap = async (productIds?: number[]) => {
     .from(reviews)
     .where(where)
     .groupBy(reviews.productId);
-  const map = new Map<number, { rating: number | null; reviewCount: number }>();
-  rows.forEach((r) => map.set(r.productId, { rating: Number(r.rating), reviewCount: Number(r.reviewCount) }));
+
+  rows.forEach((r) => {
+    const val = { rating: Number(r.rating), reviewCount: Number(r.reviewCount) };
+    map.set(r.productId, val);
+    memoryCache.set(`rating:${r.productId}`, val, 300);
+  });
+
+  if (missingIds.length > 0) {
+    for (const id of missingIds) {
+      if (!map.has(id)) {
+        const val = { rating: null, reviewCount: 0 };
+        map.set(id, val);
+        memoryCache.set(`rating:${id}`, val, 300);
+      }
+    }
+  }
+
   return map;
 };
 
@@ -577,10 +617,20 @@ export const getById = async (id: number) => {
 };
 
 export const getBySlug = async (slug: string) => {
+  const cacheKey = `product_slug:${slug}`;
+  const cached = memoryCache.get<any>(cacheKey);
+  if (cached) return cached;
+
   const rows = await fullQuery().where(eq(products.slug, slug)).limit(1);
   if (!rows[0]) return null;
-  const ratingMap = await fetchRatingMap([rows[0].id]);
-  return toFullProduct(rows[0], ratingMap.get(rows[0].id));
+  const [ratingMap, children] = await Promise.all([
+    fetchRatingMap([rows[0].id]),
+    fetchChildren(rows[0].id),
+  ]);
+  const base = formatProductRow(rows[0], ratingMap.get(rows[0].id));
+  const result = { ...base, ...children };
+  memoryCache.set(cacheKey, result, 180);
+  return result;
 };
 
 export const getRelated = async (categoryId: number, excludeId: number) => {

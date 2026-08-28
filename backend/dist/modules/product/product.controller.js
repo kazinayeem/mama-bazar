@@ -38,6 +38,7 @@ const productService = __importStar(require("./product.service"));
 const slug_util_1 = require("./slug.util");
 const AppError_1 = require("../../utils/AppError");
 const cloud_1 = require("../../utils/cloud");
+const cache_1 = require("../../utils/cache");
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 12;
 const DEFAULT_DISCOUNT = "0";
@@ -241,6 +242,7 @@ const create = async (req, res) => {
         images,
         paymentMethods: (base.paymentMethods || DEFAULT_PAYMENT_METHODS),
     });
+    cache_1.memoryCache.invalidate("product_");
     res.status(201).json({ success: true, data });
 };
 exports.create = create;
@@ -276,11 +278,13 @@ const update = async (req, res) => {
         updateData.images = [...combined, ...uploadedImages];
     }
     const data = await productService.update(id, updateData);
+    cache_1.memoryCache.invalidate("product_");
     res.json({ success: true, data });
 };
 exports.update = update;
 const remove = async (req, res) => {
     await productService.remove(Number(req.params.id));
+    cache_1.memoryCache.invalidate("product_");
     res.json({ success: true, message: "Product deleted" });
 };
 exports.remove = remove;

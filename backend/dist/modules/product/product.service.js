@@ -5,6 +5,7 @@ const db_1 = require("../../config/db");
 const AppError_1 = require("../../utils/AppError");
 const schema_1 = require("../../config/schema");
 const drizzle_orm_1 = require("drizzle-orm");
+const cache_1 = require("../../utils/cache");
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 12;
 const DEFAULT_STATUS = "active";
@@ -257,7 +258,28 @@ const formatProductRow = (row, ratingInfo) => {
 };
 exports.formatProductRow = formatProductRow;
 const fetchRatingMap = async (productIds) => {
-    const where = productIds && productIds.length > 0 ? (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.reviews.status, "approved"), (0, drizzle_orm_1.inArray)(schema_1.reviews.productId, productIds)) : (0, drizzle_orm_1.eq)(schema_1.reviews.status, "approved");
+    if (productIds && productIds.length === 0) {
+        return new Map();
+    }
+    const map = new Map();
+    const missingIds = [];
+    if (productIds) {
+        for (const id of productIds) {
+            const cached = cache_1.memoryCache.get(`rating:${id}`);
+            if (cached !== undefined) {
+                map.set(id, cached);
+            }
+            else {
+                missingIds.push(id);
+            }
+        }
+        if (missingIds.length === 0) {
+            return map;
+        }
+    }
+    const where = missingIds.length > 0
+        ? (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.reviews.status, "approved"), (0, drizzle_orm_1.inArray)(schema_1.reviews.productId, missingIds))
+        : (0, drizzle_orm_1.eq)(schema_1.reviews.status, "approved");
     const rows = await db_1.db
         .select({
         productId: schema_1.reviews.productId,
@@ -267,8 +289,20 @@ const fetchRatingMap = async (productIds) => {
         .from(schema_1.reviews)
         .where(where)
         .groupBy(schema_1.reviews.productId);
-    const map = new Map();
-    rows.forEach((r) => map.set(r.productId, { rating: Number(r.rating), reviewCount: Number(r.reviewCount) }));
+    rows.forEach((r) => {
+        const val = { rating: Number(r.rating), reviewCount: Number(r.reviewCount) };
+        map.set(r.productId, val);
+        cache_1.memoryCache.set(`rating:${r.productId}`, val, 300);
+    });
+    if (missingIds.length > 0) {
+        for (const id of missingIds) {
+            if (!map.has(id)) {
+                const val = { rating: null, reviewCount: 0 };
+                map.set(id, val);
+                cache_1.memoryCache.set(`rating:${id}`, val, 300);
+            }
+        }
+    }
     return map;
 };
 exports.fetchRatingMap = fetchRatingMap;
@@ -527,11 +561,21 @@ const getById = async (id) => {
 };
 exports.getById = getById;
 const getBySlug = async (slug) => {
+    const cacheKey = `product_slug:${slug}`;
+    const cached = cache_1.memoryCache.get(cacheKey);
+    if (cached)
+        return cached;
     const rows = await (0, exports.fullQuery)().where((0, drizzle_orm_1.eq)(schema_1.products.slug, slug)).limit(1);
     if (!rows[0])
         return null;
-    const ratingMap = await (0, exports.fetchRatingMap)([rows[0].id]);
-    return toFullProduct(rows[0], ratingMap.get(rows[0].id));
+    const [ratingMap, children] = await Promise.all([
+        (0, exports.fetchRatingMap)([rows[0].id]),
+        fetchChildren(rows[0].id),
+    ]);
+    const base = (0, exports.formatProductRow)(rows[0], ratingMap.get(rows[0].id));
+    const result = { ...base, ...children };
+    cache_1.memoryCache.set(cacheKey, result, 180);
+    return result;
 };
 exports.getBySlug = getBySlug;
 const getRelated = async (categoryId, excludeId) => {
