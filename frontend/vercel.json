@@ -1,11 +1,6 @@
 {
   "headers": [
-
-     "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
     {
-
       "source": "/assets/(.*)",
       "headers": [
         {
@@ -43,9 +38,6 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
