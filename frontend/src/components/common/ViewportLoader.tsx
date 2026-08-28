@@ -59,11 +59,13 @@ export const ViewportLoader = ({
     }
   }, [rootMargin])
 
-  const style = minHeight ? { minHeight } : undefined
-
   return (
-    <div ref={containerRef} className={className} style={style}>
-      {inView ? (typeof children === 'function' ? children({ inView: true }) : children) : fallback}
+    <div ref={containerRef} className={className}>
+      {inView
+        ? typeof children === 'function'
+          ? children({ inView: true })
+          : children
+        : fallback || (minHeight ? <div style={{ minHeight }} /> : null)}
     </div>
   )
 }

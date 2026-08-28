@@ -15,7 +15,6 @@ import {
   CategoryGridSkeleton,
   BrandRowSkeleton,
   CollectionTilesSkeleton,
-  PromoBannerSkeleton,
   ReviewsSkeleton,
 } from './ProgressiveSections'
 import { Link } from 'react-router-dom'
@@ -257,7 +256,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="240px"
                 rootMargin="400px"
                 fallback={
                   <SectionShell section={section}>
@@ -294,7 +292,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="380px"
                 rootMargin="450px"
                 fallback={
                   <SectionShell section={section}>
@@ -319,7 +316,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="380px"
                 rootMargin="450px"
                 fallback={
                   <SectionShell section={section}>
@@ -345,15 +341,7 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="240px"
                 rootMargin="450px"
-                fallback={
-                  <div className="py-4 lg:py-6">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                      <PromoBannerSkeleton />
-                    </div>
-                  </div>
-                }
               >
                 {({ inView }) => (
                   <ProgressivePromoBanner
@@ -369,7 +357,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="420px"
                 rootMargin="450px"
                 fallback={
                   <div className="bg-brand-green-50 py-6 lg:py-8">
@@ -395,7 +382,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="180px"
                 rootMargin="450px"
                 fallback={
                   <SectionShell section={section}>
@@ -411,7 +397,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="280px"
                 rootMargin="450px"
                 fallback={
                   <SectionShell section={section}>
@@ -427,7 +412,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="320px"
                 rootMargin="450px"
                 fallback={
                   <SectionShell section={section}>
@@ -443,7 +427,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="260px"
                 rootMargin="450px"
                 fallback={
                   <SectionShell section={section}>
@@ -465,7 +448,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
             return (
               <LazySection
                 key={section.id}
-                minHeight="180px"
                 rootMargin="450px"
                 fallback={<div className="mx-auto my-6 h-40 max-w-7xl animate-pulse rounded-3xl bg-slate-100" />}
               >

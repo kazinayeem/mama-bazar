@@ -206,6 +206,9 @@ export const ProgressivePromoBanner = ({
 }) => {
   const { data: banners = [], isLoading } = useGetBannersQuery(undefined, { skip: !inView })
 
+  // If banners are already loaded and there are none for this offset, collapse immediately
+  if (banners.length > 0 && bannerOffset >= banners.length) return null
+
   if (!inView || isLoading) {
     return (
       <div className="py-4 lg:py-6">
