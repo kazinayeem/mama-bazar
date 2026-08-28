@@ -1,37 +1,6 @@
-import { lazy, Suspense } from 'react'
-import SectionShell from './SectionShell'
-import HeroCarousel from './HeroCarousel'
-import TrustStrip from './TrustStrip'
-import LazySection from '../../components/common/LazySection'
-import {
-  ProgressiveCategories,
-  ProgressiveProductRail,
-  ProgressiveFlashDeals,
-  ProgressivePromoBanner,
-  ProgressiveBrands,
-  ProgressiveCollections,
-  ProgressiveReviews,
-  ProductRailSkeleton,
-  CategoryGridSkeleton,
-  BrandRowSkeleton,
-  CollectionTilesSkeleton,
-  ReviewsSkeleton,
-} from './ProgressiveSections'
-import { Link } from 'react-router-dom'
-import {
-  asCategory,
-  asContentItems,
-  asSlides,
-  type HomepageData,
-  type HomepageSection,
-  type HomepageConfig,
-} from '../../types/homepage'
+import SectionRenderer from './SectionRenderer'
+import type { HomepageData, HomepageConfig, HomepageSection } from '../../types/homepage'
 import type { Product } from '../../types'
-import { useGetBannersQuery } from '../../store/services/commerceApi'
-
-// Code-split heavy below-the-fold informational components
-const WhyChooseUs = lazy(() => import('./WhyChooseUs'))
-const NewsletterBlock = lazy(() => import('./NewsletterBlock'))
 
 interface HomepageSectionsProps {
   data?: HomepageData
@@ -44,12 +13,7 @@ interface HomepageSectionsProps {
 
 const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
   { id: 'hero', type: 'hero', enabled: true },
-  {
-    id: 'trust_strip',
-    type: 'trust_strip',
-    enabled: true,
-    title: 'Why shop with us',
-  },
+  { id: 'trust_strip', type: 'trust_strip', enabled: true, title: 'Why shop with us' },
   {
     id: 'categories',
     type: 'categories',
@@ -66,11 +30,7 @@ const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
     subtitle: 'Fresh products just added to the store.',
     limit: 12,
   },
-  {
-    id: 'promo_banner',
-    type: 'promo_banner',
-    enabled: true,
-  },
+  { id: 'promo_banner', type: 'promo_banner', enabled: true },
   {
     id: 'featured',
     type: 'featured',
@@ -87,11 +47,7 @@ const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
     subtitle: '100% authentic products from official distributors.',
     limit: 10,
   },
-  {
-    id: 'promo_banner_2',
-    type: 'promo_banner',
-    enabled: true,
-  },
+  { id: 'promo_banner_2', type: 'promo_banner', enabled: true },
   {
     id: 'collections',
     type: 'collections',
@@ -134,16 +90,8 @@ const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
     subtitle: 'Real feedback from verified shoppers.',
     limit: 8,
   },
-  {
-    id: 'why_choose_us',
-    type: 'why_choose_us',
-    enabled: true,
-  },
-  {
-    id: 'newsletter',
-    type: 'newsletter',
-    enabled: true,
-  },
+  { id: 'why_choose_us', type: 'why_choose_us', enabled: true },
+  { id: 'newsletter', type: 'newsletter', enabled: true },
 ]
 
 const HomepageErrorState = ({ onRetry }: { onRetry?: () => void }) => (
@@ -174,9 +122,6 @@ const HomepageErrorState = ({ onRetry }: { onRetry?: () => void }) => (
 )
 
 const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: HomepageSectionsProps) => {
-  // Query banners for promotional slots
-  const { data: banners = [] } = useGetBannersQuery()
-
   if (hasError) return <HomepageErrorState onRetry={onRetry} />
 
   const sections: HomepageSection[] =
@@ -186,33 +131,6 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
         ? (config.sections as HomepageSection[])
         : DEFAULT_HOMEPAGE_SECTIONS
 
-  // Convert banners to hero slides format if not provided by config or data
-  const fallbackHeroSlides = banners.map((b, idx) => ({
-    id: String(b.id || idx),
-    desktopImage: b.image || '',
-    tabletImage: b.imageTablet || b.image,
-    mobileImage: b.imageMobile || b.image,
-    title: b.title || '',
-    subtitle: b.subtitle || '',
-    primaryButtonText: b.buttonText || 'Shop Now',
-    primaryButtonUrl: b.link || '/shop',
-    status: 'active' as const,
-    priority: idx,
-  }))
-
-  const heroSlides =
-    (data && asSlides(data.sections.find((s) => s.type === 'hero'))) ||
-    data?.heroSlides ||
-    (config?.heroSlides && config.heroSlides.length > 0
-      ? (config.heroSlides as any)
-      : fallbackHeroSlides)
-
-  const popularSearches =
-    data?.popularSearches?.slice(0, 8) ||
-    config?.popularSearches?.slice(0, 8) ||
-    ['Smart Watch', 'Headphone', 'Speaker', 'Keyboard', 'Air Fryer']
-  const flashSaleWindow = data?.flashSaleWindow || config?.flashSaleWindow
-
   let promoCounter = 0
 
   return (
@@ -220,248 +138,17 @@ const HomepageSections = ({ data, config, hasError, onRetry, onQuickView }: Home
       {sections.map((section) => {
         if (section.enabled === false) return null
 
-        switch (section.type) {
-          case 'hero':
-            return (
-              <div key={section.id} className="space-y-3">
-                <HeroCarousel slides={heroSlides} />
-                {popularSearches.length > 0 && (
-                  <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col items-start gap-3 rounded-3xl border border-slate-100 bg-white/90 px-4 py-4 shadow-soft backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-5">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-900">Popular searches</p>
-                        <p className="mt-1 text-sm text-slate-500">Jump into the products shoppers are looking for right now.</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {popularSearches.map((term) => (
-                          <Link
-                            className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-primary hover:bg-primary hover:text-primary-foreground"
-                            to={`/shop?search=${encodeURIComponent(term)}`}
-                            key={term}
-                          >
-                            {term}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-                )}
-              </div>
-            )
+        const currentPromoIndex = section.type === 'promo_banner' ? promoCounter++ : 0
 
-          case 'trust_strip':
-            return <TrustStrip key={section.id} items={asContentItems(section).length > 0 ? asContentItems(section) : (config?.trustStrip as any)} />
-
-          case 'categories':
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="400px"
-                fallback={
-                  <SectionShell section={section}>
-                    <CategoryGridSkeleton />
-                  </SectionShell>
-                }
-              >
-                {({ inView }) => <ProgressiveCategories inView={inView} section={section} />}
-              </LazySection>
-            )
-
-          case 'new_arrivals':
-          case 'featured':
-          case 'best_sellers':
-          case 'trending':
-          case 'limited_edition':
-          case 'official':
-          case 'hot_deals':
-          case 'emi_available':
-          case 'recommendations': {
-            const labelMap: Record<string, string> = {
-              new_arrivals: 'new_arrival',
-              featured: 'featured',
-              best_sellers: 'best_seller',
-              trending: 'trending',
-              limited_edition: 'limited_edition',
-              official: 'official',
-              hot_deals: 'hot_deal',
-              emi_available: 'featured',
-              recommendations: 'trending',
-            }
-            const label = labelMap[section.type] || 'featured'
-
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={
-                  <SectionShell section={section}>
-                    <ProductRailSkeleton />
-                  </SectionShell>
-                }
-              >
-                {({ inView }) => (
-                  <ProgressiveProductRail
-                    inView={inView}
-                    label={label}
-                    onQuickView={onQuickView}
-                    section={section}
-                  />
-                )}
-              </LazySection>
-            )
-          }
-
-          case 'category_products': {
-            const category = asCategory(section)
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={
-                  <SectionShell section={section}>
-                    <ProductRailSkeleton />
-                  </SectionShell>
-                }
-              >
-                {({ inView }) => (
-                  <ProgressiveProductRail
-                    categorySlug={category?.slug || section.categorySlug || undefined}
-                    inView={inView}
-                    onQuickView={onQuickView}
-                    section={section}
-                  />
-                )}
-              </LazySection>
-            )
-          }
-
-          case 'promo_banner': {
-            const currentOffset = promoCounter * 2
-            promoCounter += 1
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-              >
-                {({ inView }) => (
-                  <ProgressivePromoBanner
-                    bannerOffset={currentOffset}
-                    inView={inView}
-                  />
-                )}
-              </LazySection>
-            )
-          }
-
-          case 'flash_deals':
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={
-                  <div className="bg-brand-green-50 py-6 lg:py-8">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                      <div className="mb-4 h-24 w-full animate-pulse rounded-2xl bg-brand-green-100/60" />
-                      <ProductRailSkeleton />
-                    </div>
-                  </div>
-                }
-              >
-                {({ inView }) => (
-                  <ProgressiveFlashDeals
-                    inView={inView}
-                    onQuickView={onQuickView}
-                    section={section}
-                    window={flashSaleWindow}
-                  />
-                )}
-              </LazySection>
-            )
-
-          case 'brands':
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={
-                  <SectionShell section={section}>
-                    <BrandRowSkeleton />
-                  </SectionShell>
-                }
-              >
-                {({ inView }) => <ProgressiveBrands inView={inView} section={section} />}
-              </LazySection>
-            )
-
-          case 'collections':
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={
-                  <SectionShell section={section}>
-                    <CollectionTilesSkeleton />
-                  </SectionShell>
-                }
-              >
-                {({ inView }) => <ProgressiveCollections inView={inView} section={section} />}
-              </LazySection>
-            )
-
-          case 'reviews':
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={
-                  <SectionShell section={section}>
-                    <ReviewsSkeleton />
-                  </SectionShell>
-                }
-              >
-                {({ inView }) => <ProgressiveReviews inView={inView} section={section} />}
-              </LazySection>
-            )
-
-          case 'why_choose_us':
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={
-                  <SectionShell section={section}>
-                    <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-100" />
-                  </SectionShell>
-                }
-              >
-                {() => (
-                  <Suspense fallback={<div className="h-44 w-full animate-pulse rounded-2xl bg-slate-100" />}>
-                    <SectionShell section={section}>
-                      <WhyChooseUs items={asContentItems(section).length > 0 ? asContentItems(section) : (config?.whyChooseUs as any)} />
-                    </SectionShell>
-                  </Suspense>
-                )}
-              </LazySection>
-            )
-
-          case 'newsletter':
-            return (
-              <LazySection
-                key={section.id}
-                rootMargin="450px"
-                fallback={<div className="mx-auto my-6 h-40 max-w-7xl animate-pulse rounded-3xl bg-slate-100" />}
-              >
-                {() => (
-                  <Suspense fallback={<div className="mx-auto my-6 h-40 max-w-7xl animate-pulse rounded-3xl bg-slate-100" />}>
-                    <NewsletterBlock settings={section.data?.settings || config?.newsletter} />
-                  </Suspense>
-                )}
-              </LazySection>
-            )
-
-          default:
-            return null
-        }
+        return (
+          <SectionRenderer
+            config={config}
+            key={section.id}
+            onQuickView={onQuickView}
+            promoIndex={currentPromoIndex}
+            section={section}
+          />
+        )
       })}
     </>
   )

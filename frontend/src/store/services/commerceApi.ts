@@ -41,6 +41,7 @@ export type ProductsQueryParams = {
   inStock?: boolean
   minRating?: number
   sale?: boolean
+  emiAvailable?: boolean
 }
 
 export type ProductsQueryResult = {
