@@ -1,4 +1,4 @@
-import { Mail, Globe, Code2, Terminal, Brackets, GitBranch, Box } from 'lucide-react'
+import { Mail, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { SEO } from '../components/common/SEO'
