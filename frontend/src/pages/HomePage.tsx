@@ -1,33 +1,15 @@
-import { useState } from 'react'
-import HomepageSections from '../features/homepage/HomepageSections'
-import QuickViewModal from '../components/common/QuickViewModal'
+import UnderConstruction from '../components/common/UnderConstruction'
 import { SEO } from '../components/common/SEO'
-import type { Product } from '../types'
-import { useGetHomepageConfigQuery } from '../store/services/commerceApi'
 
 const HomePage = () => {
-  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null)
-  const { data: config, isLoading, isError, refetch } = useGetHomepageConfigQuery()
-
   return (
-    <main className="relative bg-white">
+    <main className="relative">
       <SEO
         title="Home"
-        description="Discover premium products at unbeatable prices. Official warranty, free delivery, and 24/7 support."
+        description="Our website is currently under construction. Please come back later."
         url="/"
       />
-      <HomepageSections
-        config={config}
-        hasError={isError}
-        isLoading={isLoading}
-        onQuickView={setQuickViewProduct}
-        onRetry={refetch}
-      />
-      <QuickViewModal
-        key={quickViewProduct?.id ?? 'closed'}
-        onClose={() => setQuickViewProduct(null)}
-        product={quickViewProduct}
-      />
+      <UnderConstruction />
     </main>
   )
 }
