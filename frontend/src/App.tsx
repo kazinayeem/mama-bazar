@@ -78,6 +78,9 @@ function App() {
     <Suspense fallback={<PageSkeleton />}>
       <Analytics />
       <Routes>
+        {/* Home page with standalone layout (bypasses MainLayout) */}
+        <Route index element={<HomePage />} />
+
         {/* Dedicated Unified Auth Layout with Smooth Page Transitions */}
         <Route path="auth" element={<AuthLayout />}>
           <Route path="login" element={<LoginPage />} />
@@ -86,7 +89,6 @@ function App() {
         </Route>
 
         <Route element={<MainLayout />}>
-          <Route index element={<HomePage />} />
           <Route path="shop" element={<ShopPage />} />
           <Route path="products/:slug" element={<ProductDetailsPage />} />
           <Route path="cart" element={<CartPage />} />
