@@ -226,10 +226,8 @@ export async function initializeRbac() {
   const connection = await pool.getConnection();
   try {
     // 1. Ensure columns exist on `users` table
-    const [cols] = await connection.query<RowDataPacket[]>(
-      "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'"
-    );
-    const existingCols = new Set(cols.map((c) => c.COLUMN_NAME));
+    const [cols] = await connection.query<RowDataPacket[]>("SHOW COLUMNS FROM `users`");
+    const existingCols = new Set(cols.map((c) => c.Field));
 
     if (!existingCols.has("custom_role")) {
       await connection.query("ALTER TABLE `users` ADD COLUMN `custom_role` VARCHAR(50) NULL AFTER `role`");
@@ -327,26 +325,34 @@ export async function initializeRbac() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
 
-    // 8. Seed/Update permission catalog
-    for (const perm of ALL_PERMISSIONS) {
-      await connection.query(
-        "INSERT INTO `admin_permissions` (`code`, `module`, `label`, `description`) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE `module` = VALUES(`module`), `label` = VALUES(`label`), `description` = VALUES(`description`)",
-        [perm.code, perm.module, perm.label, perm.description]
-      );
+    // 8. Seed/Update permission catalog if not already populated
+    const [permCountResult] = await connection.query<RowDataPacket[]>("SELECT COUNT(*) as cnt FROM `admin_permissions`");
+    const existingPermCount = (permCountResult[0] as any)?.cnt || 0;
+    if (existingPermCount < ALL_PERMISSIONS.length) {
+      for (const perm of ALL_PERMISSIONS) {
+        await connection.query(
+          "INSERT INTO `admin_permissions` (`code`, `module`, `label`, `description`) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE `module` = VALUES(`module`), `label` = VALUES(`label`), `description` = VALUES(`description`)",
+          [perm.code, perm.module, perm.label, perm.description]
+        );
+      }
     }
 
-    // 9. Seed/Update roles & role permissions
-    for (const [roleName, preset] of Object.entries(ROLE_PRESETS)) {
-      await connection.query(
-        "INSERT INTO `admin_roles` (`name`, `display_name`, `description`, `is_system`) VALUES (?, ?, ?, TRUE) ON DUPLICATE KEY UPDATE `display_name` = VALUES(`display_name`), `description` = VALUES(`description`)",
-        [roleName, preset.displayName, preset.description]
-      );
-
-      for (const permCode of preset.permissions) {
+    // 9. Seed/Update roles & role permissions if not already populated
+    const [roleCountResult] = await connection.query<RowDataPacket[]>("SELECT COUNT(*) as cnt FROM `admin_roles`");
+    const existingRoleCount = (roleCountResult[0] as any)?.cnt || 0;
+    if (existingRoleCount < Object.keys(ROLE_PRESETS).length) {
+      for (const [roleName, preset] of Object.entries(ROLE_PRESETS)) {
         await connection.query(
-          "INSERT IGNORE INTO `role_permissions` (`role_name`, `permission_code`) VALUES (?, ?)",
-          [roleName, permCode]
+          "INSERT INTO `admin_roles` (`name`, `display_name`, `description`, `is_system`) VALUES (?, ?, ?, TRUE) ON DUPLICATE KEY UPDATE `display_name` = VALUES(`display_name`), `description` = VALUES(`description`)",
+          [roleName, preset.displayName, preset.description]
         );
+
+        for (const permCode of preset.permissions) {
+          await connection.query(
+            "INSERT IGNORE INTO `role_permissions` (`role_name`, `permission_code`) VALUES (?, ?)",
+            [roleName, permCode]
+          );
+        }
       }
     }
 

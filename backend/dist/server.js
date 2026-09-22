@@ -21,26 +21,49 @@ async function startServer() {
         console.log(`📌 Node: ${process.version}`);
         console.log(`📌 Environment: ${env_1.env.NODE_ENV}`);
         console.log(`📌 Working Directory: ${process.cwd()}`);
-        console.log(`📌 Port / Pipe: ${env_1.env.PORT}`);
+        const port = env_1.env.PORT;
+        const isNumericPort = typeof port === "number" || (!isNaN(Number(port)) && !String(port).includes("/"));
+        const numericPort = isNumericPort ? Number(port) : port;
+        console.log(`📌 Port / Pipe: ${port}`);
+        console.log(`📌 Host: ${isNumericPort ? "0.0.0.0" : "(socket/pipe)"}`);
+        // Test DB connection safely without crashing server if DB is temporarily unavailable
         if (!env_1.env.DATABASE_URL) {
-            throw new Error("No DATABASE_URL or DB credentials found in .env! Please create a .env file with your DATABASE_URL or MySQL credentials.");
+            console.warn("⚠️ Warning: No DATABASE_URL or DB credentials found in environment. Database queries will fail.");
         }
-        // Test DB connection
-        const connection = await db_1.pool.getConnection();
-        console.log("✅ Database connected successfully");
-        connection.release();
-        // Bootstrap and sync RBAC permissions, roles, and safety tables
-        try {
-            await (0, initRbac_1.initializeRbac)();
-            console.log("✅ RBAC & security initialized");
+        else {
+            try {
+                const connection = await db_1.pool.getConnection();
+                console.log("✅ Database connected successfully");
+                connection.release();
+                // Bootstrap and sync RBAC permissions, roles, and safety tables
+                try {
+                    await (0, initRbac_1.initializeRbac)();
+                    console.log("✅ RBAC & security initialized");
+                }
+                catch (rbacError) {
+                    console.warn("⚠️ RBAC auto-init notice:", rbacError?.message || rbacError);
+                }
+            }
+            catch (dbError) {
+                console.error("⚠️ Database connection error during startup:", dbError?.message || dbError);
+                if (dbError?.code === "ECONNREFUSED") {
+                    console.error("💡 Connection refused: Unable to connect to MySQL host/port.");
+                }
+                else if (dbError?.code === "ER_ACCESS_DENIED_ERROR") {
+                    console.error("💡 Access denied: MySQL rejected credentials in DATABASE_URL.");
+                }
+                console.warn("⚠️ Server will continue running to allow cPanel diagnostics. Note: DB queries will fail until credentials are corrected.");
+            }
         }
-        catch (rbacError) {
-            console.warn("⚠️ RBAC auto-init notice:", rbacError?.message || rbacError);
-        }
-        const server = app_1.default.listen(env_1.env.PORT, () => {
-            console.log(`✅ Server is listening on ${env_1.env.PORT}`);
-            console.log("=========================================");
-        });
+        const server = isNumericPort
+            ? app_1.default.listen(Number(numericPort), "0.0.0.0", () => {
+                console.log(`✅ Server is listening on http://0.0.0.0:${numericPort}`);
+                console.log("=========================================");
+            })
+            : app_1.default.listen(port, () => {
+                console.log(`✅ Server is listening on Passenger pipe/socket: ${port}`);
+                console.log("=========================================");
+            });
         // Graceful shutdown
         const shutdown = (signal) => {
             console.log(`\n${signal} received — shutting down gracefully`);
