@@ -16,14 +16,30 @@ if (!fs_1.default.existsSync(uploadsDir)) {
 }
 async function startServer() {
     try {
+        console.log("=========================================");
+        console.log("🚀 Mama Bazar Backend Server Starting...");
+        console.log(`📌 Node: ${process.version}`);
+        console.log(`📌 Environment: ${env_1.env.NODE_ENV}`);
+        console.log(`📌 Working Directory: ${process.cwd()}`);
+        console.log(`📌 Port / Pipe: ${env_1.env.PORT}`);
+        if (!env_1.env.DATABASE_URL) {
+            console.warn("⚠️ Warning: No DATABASE_URL or DB credentials found in .env! Database queries will fail.");
+        }
         // Test DB connection
         const connection = await db_1.pool.getConnection();
-        console.log("Database connected successfully");
+        console.log("✅ Database connected successfully");
         connection.release();
         // Bootstrap and sync RBAC permissions, roles, and safety tables
-        await (0, initRbac_1.initializeRbac)();
+        try {
+            await (0, initRbac_1.initializeRbac)();
+            console.log("✅ RBAC & security initialized");
+        }
+        catch (rbacError) {
+            console.warn("⚠️ RBAC auto-init notice:", rbacError?.message || rbacError);
+        }
         const server = app_1.default.listen(env_1.env.PORT, () => {
-            console.log(`Server running on http://localhost:${env_1.env.PORT}`);
+            console.log(`✅ Server is listening on ${env_1.env.PORT}`);
+            console.log("=========================================");
         });
         // Graceful shutdown
         const shutdown = (signal) => {
@@ -38,7 +54,13 @@ async function startServer() {
         process.on("SIGINT", () => shutdown("SIGINT"));
     }
     catch (error) {
-        console.error("Failed to start server:", error);
+        console.error("=========================================");
+        console.error("❌ Failed to start server:", error?.message || error);
+        if (error?.stack) {
+            console.error(error.stack);
+        }
+        console.error("Please verify your database connection in .env and check credentials.");
+        console.error("=========================================");
         process.exit(1);
     }
 }

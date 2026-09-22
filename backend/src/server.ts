@@ -14,16 +14,33 @@ if (!fs.existsSync(uploadsDir)) {
 
 async function startServer() {
   try {
+    console.log("=========================================");
+    console.log("🚀 Mama Bazar Backend Server Starting...");
+    console.log(`📌 Node: ${process.version}`);
+    console.log(`📌 Environment: ${env.NODE_ENV}`);
+    console.log(`📌 Working Directory: ${process.cwd()}`);
+    console.log(`📌 Port / Pipe: ${env.PORT}`);
+
+    if (!env.DATABASE_URL) {
+      console.warn("⚠️ Warning: No DATABASE_URL or DB credentials found in .env! Database queries will fail.");
+    }
+
     // Test DB connection
     const connection = await pool.getConnection();
-    console.log("Database connected successfully");
+    console.log("✅ Database connected successfully");
     connection.release();
 
     // Bootstrap and sync RBAC permissions, roles, and safety tables
-    await initializeRbac();
+    try {
+      await initializeRbac();
+      console.log("✅ RBAC & security initialized");
+    } catch (rbacError: any) {
+      console.warn("⚠️ RBAC auto-init notice:", rbacError?.message || rbacError);
+    }
 
     const server = app.listen(env.PORT, () => {
-      console.log(`Server running on http://localhost:${env.PORT}`);
+      console.log(`✅ Server is listening on ${env.PORT}`);
+      console.log("=========================================");
     });
 
     // Graceful shutdown
@@ -38,10 +55,17 @@ async function startServer() {
 
     process.on("SIGTERM", () => shutdown("SIGTERM"));
     process.on("SIGINT", () => shutdown("SIGINT"));
-  } catch (error) {
-    console.error("Failed to start server:", error);
+  } catch (error: any) {
+    console.error("=========================================");
+    console.error("❌ Failed to start server:", error?.message || error);
+    if (error?.stack) {
+      console.error(error.stack);
+    }
+    console.error("Please verify your database connection in .env and check credentials.");
+    console.error("=========================================");
     process.exit(1);
   }
 }
 
 startServer();
+

@@ -2,11 +2,14 @@
   "name": "bornobazar-backend",
   "version": "1.0.0",
   "description": "bornobazar eCommerce Backend",
-  "main": "dist/server.js",
+  "main": "server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node server.js",
+    "setup": "node dist/setup.js",
+    "db:setup": "node dist/setup.js",
+    "restart": "mkdir -p tmp && touch tmp/restart.txt",
     "vercel-build": "echo 'Build complete'",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
@@ -16,6 +19,9 @@
     "seed": "npm run db:seed",
     "db:seed-pages": "tsx scripts/seed-pages-run.ts",
     "db:studio": "drizzle-kit studio"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@types/compression": "^1.8.1",
