@@ -1,11 +1,26 @@
 import dotenv from "dotenv";
 import path from "path";
 
-// Load environment variables from current directory and parent paths
+import fs from "fs";
+
+// Load environment variables from candidate env files in working directory and parent directories
+const candidateFiles = [".env", ".env.local", ".env.production"];
+const candidateDirs = [
+  process.cwd(),
+  path.resolve(__dirname, "../../"),
+  path.resolve(__dirname, "../"),
+  path.resolve(__dirname, "./"),
+];
+
+for (const dir of candidateDirs) {
+  for (const file of candidateFiles) {
+    const fullPath = path.resolve(dir, file);
+    if (fs.existsSync(fullPath)) {
+      dotenv.config({ path: fullPath });
+    }
+  }
+}
 dotenv.config();
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // Construct DATABASE_URL if separate DB credentials are provided (standard in cPanel)
 let databaseUrl = process.env.DATABASE_URL;

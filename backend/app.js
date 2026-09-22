@@ -2,10 +2,17 @@
  * Root startup file for cPanel Phusion Passenger / PM2 / Node.js
  * Compatible with cPanel Setup Node.js App when startup file is 'app.js' (cPanel default)
  */
+const fs = require("fs");
 const path = require("path");
 
-// Ensure environment variables from .env in application root are loaded
-require("dotenv").config({ path: path.join(__dirname, ".env") });
+// Load environment variables (.env, .env.local, or .env.production)
+const candidateFiles = [".env", ".env.local", ".env.production"];
+for (const file of candidateFiles) {
+  const envPath = path.join(__dirname, file);
+  if (fs.existsSync(envPath)) {
+    require("dotenv").config({ path: envPath });
+  }
+}
 
 // Start the pre-compiled Express application
 require("./dist/server.js");

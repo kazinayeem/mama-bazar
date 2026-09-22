@@ -6,11 +6,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.env = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
-// Load environment variables from current directory and parent paths
+const fs_1 = __importDefault(require("fs"));
+// Load environment variables from candidate env files in working directory and parent directories
+const candidateFiles = [".env", ".env.local", ".env.production"];
+const candidateDirs = [
+    process.cwd(),
+    path_1.default.resolve(__dirname, "../../"),
+    path_1.default.resolve(__dirname, "../"),
+    path_1.default.resolve(__dirname, "./"),
+];
+for (const dir of candidateDirs) {
+    for (const file of candidateFiles) {
+        const fullPath = path_1.default.resolve(dir, file);
+        if (fs_1.default.existsSync(fullPath)) {
+            dotenv_1.default.config({ path: fullPath });
+        }
+    }
+}
 dotenv_1.default.config();
-dotenv_1.default.config({ path: path_1.default.resolve(process.cwd(), ".env") });
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../../.env") });
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../.env") });
 // Construct DATABASE_URL if separate DB credentials are provided (standard in cPanel)
 let databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl && process.env.DB_USER && process.env.DB_NAME) {

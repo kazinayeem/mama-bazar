@@ -23,7 +23,7 @@ async function startServer() {
         console.log(`📌 Working Directory: ${process.cwd()}`);
         console.log(`📌 Port / Pipe: ${env_1.env.PORT}`);
         if (!env_1.env.DATABASE_URL) {
-            console.warn("⚠️ Warning: No DATABASE_URL or DB credentials found in .env! Database queries will fail.");
+            throw new Error("No DATABASE_URL or DB credentials found in .env! Please create a .env file with your DATABASE_URL or MySQL credentials.");
         }
         // Test DB connection
         const connection = await db_1.pool.getConnection();
@@ -56,10 +56,14 @@ async function startServer() {
     catch (error) {
         console.error("=========================================");
         console.error("❌ Failed to start server:", error?.message || error);
-        if (error?.stack) {
-            console.error(error.stack);
+        if (error?.code === "ECONNREFUSED") {
+            console.error("\n💡 Connection refused: The backend tried to connect to MySQL on localhost:3306.");
+            console.error("   Ensure a local MySQL server is running, or set DATABASE_URL in your .env to a remote database.");
         }
-        console.error("Please verify your database connection in .env and check credentials.");
+        else if (error?.code === "ER_ACCESS_DENIED_ERROR") {
+            console.error("\n💡 Access denied: MySQL rejected the credentials in DATABASE_URL.");
+            console.error("   Please check your username, password, and IP access list (allowlist) in your database provider (e.g. TiDB Cloud).");
+        }
         console.error("=========================================");
         process.exit(1);
     }
