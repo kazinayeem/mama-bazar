@@ -14,14 +14,13 @@ class CheckoutController extends Controller
 {
     public function index()
     {
+        PaymentMethod::ensureDefaults();
+
         $shippingMethods = ShippingMethod::where('status', 'active')
             ->orderBy('priority', 'asc')
             ->get();
 
-        $paymentMethods = PaymentMethod::where('enabled', true)
-            ->where('maintenance_mode', false)
-            ->orderBy('sort_order', 'asc')
-            ->get();
+        $paymentMethods = PaymentMethod::activeCheckout()->get();
 
         $checkoutNotice = CheckoutNotice::where('status', 'active')
             ->orderBy('priority', 'desc')
@@ -39,10 +38,34 @@ class CheckoutController extends Controller
             'items' => 'required|array|min:1',
             'payment_method' => 'required|string',
             'shipping_method_id' => 'required|integer',
+            'sender_number' => 'nullable|string|max:30',
+            'transaction_id' => 'nullable|string|max:100',
         ]);
 
+        $paymentMethodCode = strtolower($request->input('payment_method'));
+        $isCod = $paymentMethodCode === 'cod';
+
+        $activeMethod = PaymentMethod::activeCheckout()->where('code', $paymentMethodCode)->first();
+        if (!$activeMethod) {
+            return back()->withInput()->with('error', 'Selected payment method is unavailable.');
+        }
+
+        if (!$isCod) {
+            $request->validate([
+                'sender_number' => 'required|string|max:30',
+                'transaction_id' => 'required|string|max:100',
+            ]);
+        }
+
         try {
-            $order = OrderService::createOrder($request->all());
+            $payload = $request->all();
+            $payload['payment_method'] = $paymentMethodCode;
+            $payload['transaction_id'] = $request->input('transaction_id');
+            $payload['sender_number'] = $request->input('sender_number');
+            $payload['transactionId'] = $request->input('transaction_id');
+            $payload['senderNumber'] = $request->input('sender_number');
+
+            $order = OrderService::createOrder($payload);
             $orderId = is_array($order) ? ($order['orderId'] ?? $order['order_id'] ?? '') : $order->order_id;
 
             return redirect()->route('order.success', ['orderId' => $orderId])

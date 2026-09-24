@@ -312,7 +312,9 @@ class OrderService
             if ($paymentMethodCode === 'cod') {
                 $paymentStatus = 'success';
                 $orderStatus = 'pending';
-            } elseif (!empty($input['paymentScreenshot']) || !empty($input['transactionId']) || !empty($input['senderNumber'])) {
+            } elseif (!empty($input['paymentScreenshot']) || !empty($input['payment_screenshot'])
+                || !empty($input['transactionId']) || !empty($input['transaction_id'])
+                || !empty($input['senderNumber']) || !empty($input['sender_number'])) {
                 $paymentStatus = 'payment_verification';
                 $orderStatus = 'payment_verification';
             } else {
@@ -390,9 +392,9 @@ class OrderService
                 'admin_notes' => $input['adminNotes'] ?? null,
                 'total_price' => $totalPrice,
                 'payment_method' => $paymentMethodCode,
-                'transaction_id' => $input['transactionId'] ?? null,
-                'sender_number' => $input['senderNumber'] ?? null,
-                'payment_screenshot' => $input['paymentScreenshot'] ?? null,
+                'transaction_id' => $input['transactionId'] ?? $input['transaction_id'] ?? null,
+                'sender_number' => $input['senderNumber'] ?? $input['sender_number'] ?? null,
+                'payment_screenshot' => $input['paymentScreenshot'] ?? $input['payment_screenshot'] ?? null,
                 'amount_sent' => isset($input['amountSent']) ? (float) $input['amountSent'] : null,
                 'payment_instructions' => $input['paymentInstructions'] ?? null,
                 'payment_status' => $paymentStatus,

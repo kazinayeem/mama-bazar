@@ -17,6 +17,20 @@ use Exception;
 
 class ProductService
 {
+    /** Relations needed for a full product detail / API payload (avoids N+1). */
+    public const DETAIL_RELATIONS = [
+        'brandRel',
+        'category',
+        'subCategory',
+        'childCategory',
+        'collection',
+        'vendor',
+        'supplierRel',
+        'variants',
+        'specs',
+        'productRelations',
+    ];
+
     public static function ensureUniqueSlug(string $slug, array $opts = []): string
     {
         $excludeId = $opts['excludeId'] ?? null;
@@ -213,17 +227,29 @@ class ProductService
                 'warranty' => $v->warranty,
                 'availability' => (bool) $v->availability,
             ])->toArray();
+
+            // Generic option axis (Storage/Color/RAM/Size/Strap/…) derived from variant.options
+            $formatted['optionGroups'] = self::deriveOptionGroups(
+                $formatted['variants'],
+                $formatted['colorOptions'] ?? [],
+                $formatted['sizeOptions'] ?? []
+            );
         }
 
-        if ($withChildren) {
+        if ($withChildren || $product->relationLoaded('specs')) {
             $formatted['specs'] = $product->specs->map(fn($s) => [
                 'id' => $s->id,
                 'label' => $s->label,
                 'value' => $s->value,
                 'sortOrder' => (int) $s->sort_order,
             ])->toArray();
+        }
 
-            $relatedProducts = Product::whereIn('id', $product->productRelations->pluck('related_product_id'))->get()->keyBy('id');
+        if ($withChildren || $product->relationLoaded('productRelations')) {
+            $relatedIds = $product->productRelations->pluck('related_product_id')->filter()->unique()->values()->all();
+            $relatedProducts = $relatedIds
+                ? Product::whereIn('id', $relatedIds)->get()->keyBy('id')
+                : collect();
             $formatted['relations'] = $product->productRelations->map(fn($r) => [
                 'id' => $r->id,
                 'type' => $r->type,
@@ -240,6 +266,138 @@ class ProductService
         }
 
         return $formatted;
+    }
+
+    /**
+     * Build dynamic option groups from variant.options keys (not hardcoded to color/size).
+     * Falls back to product-level colorOptions / sizeOptions when variants lack those axes.
+     *
+     * @param  array<int, array<string, mixed>>  $variants
+     * @param  array<int, mixed>  $colorOptions
+     * @param  array<int, mixed>  $sizeOptions
+     * @return array<int, array{key: string, label: string, type: string, values: array<int, array{name: string, value?: string|null, image?: string|null}>}>
+     */
+    public static function deriveOptionGroups(array $variants, array $colorOptions = [], array $sizeOptions = []): array
+    {
+        $active = array_values(array_filter(
+            $variants,
+            fn($v) => ($v['status'] ?? 'active') !== 'inactive' && ($v['availability'] ?? true) !== false
+        ));
+
+        $keyOrder = [];
+        $valuesByKey = [];
+
+        foreach ($active as $variant) {
+            $opts = $variant['options'] ?? [];
+            if (!is_array($opts)) {
+                continue;
+            }
+            foreach ($opts as $key => $value) {
+                $key = (string) $key;
+                $value = trim((string) $value);
+                if ($key === '' || $value === '') {
+                    continue;
+                }
+                if (!isset($valuesByKey[$key])) {
+                    $keyOrder[] = $key;
+                    $valuesByKey[$key] = [];
+                }
+                if (!isset($valuesByKey[$key][$value])) {
+                    $valuesByKey[$key][$value] = true;
+                }
+            }
+        }
+
+        // Fallback axes from product-level fields when variants don't declare them
+        if (empty($valuesByKey['Color']) && empty($valuesByKey['color']) && !empty($colorOptions)) {
+            $keyOrder[] = 'Color';
+            $valuesByKey['Color'] = [];
+            foreach ($colorOptions as $c) {
+                $name = is_array($c) ? trim((string) ($c['name'] ?? '')) : trim((string) $c);
+                if ($name !== '') {
+                    $valuesByKey['Color'][$name] = true;
+                }
+            }
+        }
+        if (empty($valuesByKey['Size']) && empty($valuesByKey['size']) && !empty($sizeOptions)) {
+            $keyOrder[] = 'Size';
+            $valuesByKey['Size'] = [];
+            foreach ($sizeOptions as $s) {
+                $name = is_array($s) ? trim((string) ($s['name'] ?? '')) : trim((string) $s);
+                if ($name !== '') {
+                    $valuesByKey['Size'][$name] = true;
+                }
+            }
+        }
+
+        if (empty($keyOrder)) {
+            return [];
+        }
+
+        $colorMeta = [];
+        foreach ($colorOptions as $c) {
+            if (!is_array($c) || empty($c['name'])) {
+                continue;
+            }
+            $colorMeta[mb_strtolower((string) $c['name'])] = [
+                'value' => $c['value'] ?? $c['hex'] ?? null,
+                'image' => $c['image'] ?? null,
+            ];
+        }
+
+        // Enrich Color-like groups with hex from catalog when available
+        $catalogHex = [];
+        try {
+            if (class_exists(\App\Models\Color::class)) {
+                foreach (\App\Models\Color::query()->get(['name', 'hex', 'slug']) as $row) {
+                    if (!empty($row->hex)) {
+                        $catalogHex[mb_strtolower((string) $row->name)] = $row->hex;
+                        if (!empty($row->slug)) {
+                            $catalogHex[mb_strtolower((string) $row->slug)] = $row->hex;
+                            $catalogHex[str_replace('-', ' ', mb_strtolower((string) $row->slug))] = $row->hex;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // colors table may be absent in some environments
+        }
+
+        $groups = [];
+        foreach ($keyOrder as $key) {
+            $names = array_keys($valuesByKey[$key] ?? []);
+            if (empty($names)) {
+                continue;
+            }
+            $isColor = strcasecmp($key, 'Color') === 0 || strcasecmp($key, 'Colour') === 0;
+            $type = $isColor ? 'color' : (strcasecmp($key, 'Size') === 0 ? 'size' : 'text');
+
+            $values = [];
+            foreach ($names as $name) {
+                $entry = ['name' => $name];
+                if ($isColor) {
+                    $lk = mb_strtolower($name);
+                    $meta = $colorMeta[$lk] ?? null;
+                    $hex = $meta['value'] ?? $catalogHex[$lk] ?? $catalogHex[str_replace(' ', '-', $lk)] ?? null;
+                    if ($hex) {
+                        $entry['value'] = $hex;
+                    }
+                    if (!empty($meta['image'])) {
+                        $entry['image'] = $meta['image'];
+                    }
+                }
+                $values[] = $entry;
+            }
+
+            $groups[] = [
+                'key' => $key,
+                'label' => $key,
+                'type' => $type,
+                'values' => $values,
+            ];
+        }
+
+        return $groups;
     }
 
     public static function fetchRatingMap(array $productIds): array
@@ -515,8 +673,10 @@ class ProductService
 
     public static function getById(int $id): ?array
     {
-        $product = Product::with(['brandRel', 'variants', 'specs', 'productRelations'])->find($id);
-        if (!$product) return null;
+        $product = Product::with(self::DETAIL_RELATIONS)->find($id);
+        if (!$product) {
+            return null;
+        }
 
         $ratingMap = self::fetchRatingMap([$id]);
         return self::formatProduct($product, $ratingMap[$id] ?? null, true);
@@ -524,8 +684,10 @@ class ProductService
 
     public static function getBySlug(string $slug): ?array
     {
-        $product = Product::with(['brandRel', 'variants', 'specs', 'productRelations'])->where('slug', $slug)->first();
-        if (!$product) return null;
+        $product = Product::with(self::DETAIL_RELATIONS)->where('slug', $slug)->first();
+        if (!$product) {
+            return null;
+        }
 
         $ratingMap = self::fetchRatingMap([$product->id]);
         return self::formatProduct($product, $ratingMap[$product->id] ?? null, true);
@@ -533,7 +695,8 @@ class ProductService
 
     public static function getRelated(int $categoryId, int $excludeId, int $limit = 8): array
     {
-        $products = Product::where('category_id', $categoryId)
+        $products = Product::with(['brandRel', 'variants'])
+            ->where('category_id', $categoryId)
             ->where('id', '!=', $excludeId)
             ->where('status', 'active')
             ->orderBy('created_at', 'desc')
@@ -543,6 +706,65 @@ class ProductService
         $ratingMap = self::fetchRatingMap($products->pluck('id')->toArray());
 
         return $products->map(fn($p) => self::formatProduct($p, $ratingMap[$p->id] ?? null, false))->toArray();
+    }
+
+    /**
+     * Upsert variants by id (preserve cart/checkout variantId) and delete removed ones.
+     *
+     * @param  array<int, array<string, mixed>>  $variants
+     */
+    public static function syncVariants(int $productId, array $variants): void
+    {
+        $existingIds = ProductVariant::where('product_id', $productId)->pluck('id')->map(fn($id) => (int) $id)->all();
+        $existingSet = array_flip($existingIds);
+        $keptIds = [];
+
+        foreach ($variants as $v) {
+            if (!is_array($v) || empty($v['name'])) {
+                continue;
+            }
+
+            $options = $v['options'] ?? [];
+            if (is_string($options)) {
+                $options = json_decode($options, true) ?: [];
+            }
+            if (!is_array($options)) {
+                $options = [];
+            }
+
+            $payload = [
+                'product_id' => $productId,
+                'name' => $v['name'],
+                'options' => $options,
+                'price' => $v['price'] ?? null,
+                'discount_price' => $v['discountPrice'] ?? $v['salePrice'] ?? null,
+                'sku' => $v['sku'] ?? null,
+                'barcode' => $v['barcode'] ?? null,
+                'stock' => (int) ($v['stock'] ?? 0),
+                'weight' => $v['weight'] ?? null,
+                'dimensions' => $v['dimensions'] ?? null,
+                'images' => $v['images'] ?? [],
+                'thumbnail' => $v['thumbnail'] ?? null,
+                'status' => $v['status'] ?? 'active',
+                'shipping_cost' => $v['shippingCost'] ?? null,
+                'warranty' => $v['warranty'] ?? null,
+                'availability' => array_key_exists('availability', $v) ? (bool) $v['availability'] : true,
+            ];
+
+            $id = isset($v['id']) ? (int) $v['id'] : 0;
+            if ($id > 0 && isset($existingSet[$id])) {
+                ProductVariant::where('id', $id)->where('product_id', $productId)->update($payload);
+                $keptIds[] = $id;
+            } else {
+                $created = ProductVariant::create($payload);
+                $keptIds[] = (int) $created->id;
+            }
+        }
+
+        $removed = array_diff($existingIds, $keptIds);
+        if (!empty($removed)) {
+            ProductVariant::where('product_id', $productId)->whereIn('id', $removed)->delete();
+        }
     }
 
     public static function create(array $data): array
@@ -556,29 +778,10 @@ class ProductService
             $product = Product::create($data);
 
             if (!empty($variants)) {
-                foreach ($variants as $v) {
-                    $options = $v['options'] ?? [];
-                    if (is_string($options)) {
-                        $options = json_decode($options, true) ?: [];
-                    }
-                    ProductVariant::create([
-                        'product_id' => $product->id,
-                        'name' => $v['name'],
-                        'options' => $options,
-                        'price' => $v['price'] ?? null,
-                        'discount_price' => $v['discountPrice'] ?? $v['salePrice'] ?? null,
-                        'sku' => $v['sku'] ?? null,
-                        'barcode' => $v['barcode'] ?? null,
-                        'stock' => $v['stock'] ?? 0,
-                        'weight' => $v['weight'] ?? null,
-                        'dimensions' => $v['dimensions'] ?? null,
-                        'images' => $v['images'] ?? [],
-                        'thumbnail' => $v['thumbnail'] ?? null,
-                        'status' => $v['status'] ?? 'active',
-                        'shipping_cost' => $v['shippingCost'] ?? null,
-                        'warranty' => $v['warranty'] ?? null,
-                        'availability' => $v['availability'] ?? true,
-                    ]);
+                self::syncVariants($product->id, $variants);
+                $variantStock = collect($variants)->sum(fn($v) => (int) ($v['stock'] ?? 0));
+                if (!isset($data['stock']) || (int) ($data['stock'] ?? 0) === 0) {
+                    $product->update(['stock' => $variantStock]);
                 }
             }
 
@@ -620,30 +823,10 @@ class ProductService
             $product->update($data);
 
             if ($variants !== null) {
-                ProductVariant::where('product_id', $id)->delete();
-                foreach ($variants as $v) {
-                    $options = $v['options'] ?? [];
-                    if (is_string($options)) {
-                        $options = json_decode($options, true) ?: [];
-                    }
-                    ProductVariant::create([
-                        'product_id' => $product->id,
-                        'name' => $v['name'],
-                        'options' => $options,
-                        'price' => $v['price'] ?? null,
-                        'discount_price' => $v['discountPrice'] ?? $v['salePrice'] ?? null,
-                        'sku' => $v['sku'] ?? null,
-                        'barcode' => $v['barcode'] ?? null,
-                        'stock' => $v['stock'] ?? 0,
-                        'weight' => $v['weight'] ?? null,
-                        'dimensions' => $v['dimensions'] ?? null,
-                        'images' => $v['images'] ?? [],
-                        'thumbnail' => $v['thumbnail'] ?? null,
-                        'status' => $v['status'] ?? 'active',
-                        'shipping_cost' => $v['shippingCost'] ?? null,
-                        'warranty' => $v['warranty'] ?? null,
-                        'availability' => $v['availability'] ?? true,
-                    ]);
+                self::syncVariants($id, $variants);
+                if (!empty($variants)) {
+                    $variantStock = collect($variants)->sum(fn($v) => (int) ($v['stock'] ?? 0));
+                    $product->update(['stock' => $variantStock]);
                 }
             }
 

@@ -289,10 +289,24 @@
 
             <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row">
                 <p>&copy; {{ date('Y') }} MamaBazar. All rights reserved.</p>
-                <div class="flex items-center gap-2">
-                    <span class="rounded border border-brand-green-200 bg-brand-green-50 px-2 py-0.5 text-[10px] font-bold text-brand-green-700">Cash on Delivery</span>
-                    <span class="rounded border border-pink-200 bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-pink-700">bKash</span>
-                    <span class="rounded border border-brand-orange-200 bg-brand-orange-50 px-2 py-0.5 text-[10px] font-bold text-brand-orange-700">Nagad</span>
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    <span class="mr-1 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">We Accept</span>
+                    @forelse(($footerPaymentMethods ?? collect())->reject(fn ($m) => $m->code === 'cod') as $pm)
+                        @php
+                            $style = match($pm->code) {
+                                'bkash' => 'border-pink-200 bg-pink-50 text-pink-700',
+                                'nagad' => 'border-brand-orange-200 bg-brand-orange-50 text-brand-orange-700',
+                                'rocket' => 'border-violet-200 bg-violet-50 text-violet-700',
+                                'bank' => 'border-sky-200 bg-sky-50 text-sky-700',
+                                default => 'border-brand-green-200 bg-brand-green-50 text-brand-green-700',
+                            };
+                        @endphp
+                        <span class="rounded border px-2 py-0.5 text-[10px] font-bold {{ $style }}">{{ $pm->name }}</span>
+                    @empty
+                        <span class="rounded border border-brand-green-200 bg-brand-green-50 px-2 py-0.5 text-[10px] font-bold text-brand-green-700">Cash on Delivery</span>
+                        <span class="rounded border border-pink-200 bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-pink-700">bKash</span>
+                        <span class="rounded border border-brand-orange-200 bg-brand-orange-50 px-2 py-0.5 text-[10px] font-bold text-brand-orange-700">Nagad</span>
+                    @endforelse
                 </div>
             </div>
         </div>

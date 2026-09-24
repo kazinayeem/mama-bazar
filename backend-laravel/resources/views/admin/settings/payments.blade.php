@@ -127,7 +127,7 @@
                             <template x-for="m in methods" :key="'t-'+m.id">
                                 <tr>
                                     <td>
-                                        <input type="checkbox" :checked="selected.has(m.id)" @change="toggleRow(m.id)">
+                                        <input type="checkbox" :checked="selected.includes(m.id)" @change="toggleRow(m.id)">
                                     </td>
                                     <td>
                                         <span class="flex items-center gap-2 font-semibold text-slate-900">
@@ -406,7 +406,7 @@ function paymentMethodsAdmin(initialMethods) {
 
     return {
         methods: initialMethods,
-        selected: new Set(),
+        selected: [],
         dialogOpen: false,
         editing: null,
         deleteTarget: null,
@@ -430,7 +430,7 @@ function paymentMethodsAdmin(initialMethods) {
         pickerUploading: false,
 
         get allSelected() {
-            return this.methods.length > 0 && this.selected.size === this.methods.length;
+            return this.methods.length > 0 && this.selected.length === this.methods.length;
         },
 
         init() {
@@ -476,15 +476,16 @@ function paymentMethodsAdmin(initialMethods) {
         },
 
         toggleRow(id) {
-            const next = new Set(this.selected);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            this.selected = next;
+            if (this.selected.includes(id)) {
+                this.selected = this.selected.filter((x) => x !== id);
+            } else {
+                this.selected = [...this.selected, id];
+            }
         },
 
         toggleAll() {
-            if (this.allSelected) this.selected = new Set();
-            else this.selected = new Set(this.methods.map(m => m.id));
+            if (this.allSelected) this.selected = [];
+            else this.selected = this.methods.map((m) => m.id);
         },
 
         openPicker() {

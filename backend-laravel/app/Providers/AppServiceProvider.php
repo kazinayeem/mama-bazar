@@ -32,6 +32,15 @@ class AppServiceProvider extends ServiceProvider
                     'textColor' => '#ffffff',
                 ]);
             }
+
+            try {
+                \App\Models\PaymentMethod::ensureDefaults();
+                $footerPayments = \App\Models\PaymentMethod::activeCheckout()
+                    ->get(['code', 'name', 'type']);
+                $view->with('footerPaymentMethods', $footerPayments);
+            } catch (\Throwable $e) {
+                $view->with('footerPaymentMethods', collect());
+            }
         });
     }
 }

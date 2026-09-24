@@ -1206,7 +1206,7 @@
                             <th class="px-2.5 py-2.5 w-24">Price (৳)</th>
                             <th class="px-2.5 py-2.5 w-24">Sale Price (৳)</th>
                             <th class="px-2.5 py-2.5 w-20">Stock</th>
-                            <th class="px-2.5 py-2.5 w-32">Image URL</th>
+                            <th class="px-2.5 py-2.5 w-32">Image</th>
                             <th class="px-2.5 py-2.5 w-16 text-center">Active</th>
                             <th class="px-2.5 py-2.5 w-8"></th>
                         </tr>
@@ -1263,12 +1263,42 @@
                                     />
                                 </td>
                                 <td class="px-2.5 py-2">
-                                    <input
-                                        type="text"
-                                        x-model="v.thumbnail"
-                                        placeholder="Image URL"
-                                        class="w-full px-2 py-1 text-[11px] border border-slate-300 rounded"
-                                    />
+                                    <div class="flex flex-col items-center gap-1.5">
+                                        {{-- Thumbnail preview / click to pick --}}
+                                        <div class="w-14 h-14 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer"
+                                             :class="v.thumbnail ? '' : 'border-dashed'"
+                                             @click="openVariantFilePicker($event, v.key)">
+                                            <template x-if="v.thumbnail">
+                                                <img :src="v.thumbnail" class="w-full h-full object-cover" title="Click to replace">
+                                            </template>
+                                            <template x-if="!v.thumbnail">
+                                                <div class="flex flex-col items-center gap-0.5 p-1 text-center">
+                                                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <span class="text-[9px] text-slate-400 leading-tight">Add</span>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        {{-- Hidden file input — identified by data-varkey, not :x-ref --}}
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            class="hidden"
+                                            :data-varkey="v.key"
+                                            @change="uploadVariantImage($event, v)"
+                                        >
+
+                                        {{-- Remove button --}}
+                                        <button
+                                            x-show="v.thumbnail && !v._uploading"
+                                            type="button"
+                                            @click.stop="v.thumbnail = ''"
+                                            class="text-[9px] text-red-400 hover:text-red-600 leading-none mt-0.5"
+                                        >Remove</button>
+
+                                        {{-- Upload spinner --}}
+                                        <span x-show="v._uploading" class="text-[9px] text-brand-green-600 animate-pulse">Uploading…</span>
+                                    </div>
                                 </td>
                                 <td class="px-2.5 py-2 text-center">
                                     <input
@@ -1747,6 +1777,64 @@ document.addEventListener('alpine:init', () => {
             this.bulkPrice = '';
             this.bulkSalePrice = '';
             this.bulkStock = '';
+        },
+
+        // ---------- Variant image upload ----------
+        openVariantFilePicker(event, varKey) {
+            const input = event.target.closest('tr').querySelector(`input[data-varkey="${varKey}"]`);
+            if (input) input.click();
+        },
+        async uploadVariantImage(event, variant) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate client-side: type and size (5 MB max)
+            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!allowed.includes(file.type)) {
+                alert('Only JPG, PNG, and WEBP images are allowed.');
+                event.target.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image must be 5 MB or smaller.');
+                event.target.value = '';
+                return;
+            }
+
+            // Instant browser preview while uploading
+            const previewUrl = URL.createObjectURL(file);
+            variant.thumbnail = previewUrl;
+            variant._uploading = true;
+
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('folder', 'products/variants');
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+                           || document.querySelector('input[name="_token"]')?.value
+                           || '';
+
+            try {
+                const res = await fetch('{{ route('admin.products.upload-image') }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: fd,
+                });
+                const json = await res.json();
+                if (json.success && json.url) {
+                    variant.thumbnail = json.url;   // replace blob preview with real storage URL
+                } else {
+                    variant.thumbnail = '';          // upload failed — clear preview
+                    alert('Image upload failed. Please try again.');
+                }
+            } catch (err) {
+                variant.thumbnail = '';
+                alert('Upload error: ' + err.message);
+            } finally {
+                variant._uploading = false;
+                URL.revokeObjectURL(previewUrl);
+                event.target.value = ''; // reset so the same file can be re-selected
+            }
         }
     }));
 
