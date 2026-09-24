@@ -95,7 +95,34 @@ class MediaStorageService
     public static function storeUploaded(UploadedFile $file, string $folder = 'products/variants'): array
     {
         $folder = trim(preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $folder) ?: 'products/variants', '/');
+
+        // Ensure folder directory exists with 0755 permissions (vital for cPanel)
+        $fullFolder = storage_path('app/public/' . $folder);
+        if (! is_dir($fullFolder)) {
+            @mkdir($fullFolder, 0755, true);
+        }
+
         $path = $file->store($folder, 'public');
+
+        // Set proper 0644 file permissions so web server can read it
+        $storedFullPath = storage_path('app/public/' . $path);
+        if (file_exists($storedFullPath)) {
+            @chmod($storedFullPath, 0644);
+        }
+
+        // On cPanel, if public/storage is a real directory (not a symlink), sync the file there
+        $publicDir = public_path('storage');
+        if (is_dir($publicDir) && ! is_link($publicDir)) {
+            $publicFile = $publicDir . '/' . $path;
+            $parentDir = dirname($publicFile);
+            if (! is_dir($parentDir)) {
+                @mkdir($parentDir, 0755, true);
+            }
+            if (file_exists($storedFullPath)) {
+                @copy($storedFullPath, $publicFile);
+                @chmod($publicFile, 0644);
+            }
+        }
 
         return [
             'url' => '/storage/' . $path,
@@ -121,6 +148,12 @@ class MediaStorageService
             return self::storeUploaded($file, $folder);
         }
 
+        $folder = trim(preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $folder) ?: 'general', '/');
+        $fullFolder = storage_path('app/public/' . $folder);
+        if (! is_dir($fullFolder)) {
+            @mkdir($fullFolder, 0755, true);
+        }
+
         $disk = Storage::disk('public');
 
         // String path
@@ -138,6 +171,25 @@ class MediaStorageService
             $path = $folder . '/' . $filename;
             $size = 0;
             $mimeType = 'image/jpeg';
+        }
+
+        $storedFullPath = storage_path('app/public/' . $path);
+        if (file_exists($storedFullPath)) {
+            @chmod($storedFullPath, 0644);
+        }
+
+        // On cPanel, if public/storage is a real directory (not a symlink), sync the file there
+        $publicDir = public_path('storage');
+        if (is_dir($publicDir) && ! is_link($publicDir)) {
+            $publicFile = $publicDir . '/' . $path;
+            $parentDir = dirname($publicFile);
+            if (! is_dir($parentDir)) {
+                @mkdir($parentDir, 0755, true);
+            }
+            if (file_exists($storedFullPath)) {
+                @copy($storedFullPath, $publicFile);
+                @chmod($publicFile, 0644);
+            }
         }
 
         $url = '/storage/' . $path;

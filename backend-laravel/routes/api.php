@@ -289,10 +289,14 @@ Route::prefix('checkout-notices')->group(function () {
 });
 
 // ==================== UPLOADS ====================
-Route::prefix('uploads')->middleware('jwt.auth')->group(function () {
-    Route::post('/', [UploadController::class, 'upload']);
-    Route::post('/multiple', [UploadController::class, 'uploadMultiple']);
-    Route::delete('/{publicId}', [UploadController::class, 'delete']);
+Route::prefix('uploads')->group(function () {
+    Route::post('/payment-proof', [UploadController::class, 'uploadPaymentProof']);
+
+    Route::middleware('jwt.auth')->group(function () {
+        Route::post('/', [UploadController::class, 'upload']);
+        Route::post('/multiple', [UploadController::class, 'uploadMultiple']);
+        Route::delete('/{publicId}', [UploadController::class, 'delete'])->where('publicId', '.*');
+    });
 });
 
 // ==================== REVIEWS ====================

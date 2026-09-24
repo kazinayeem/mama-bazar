@@ -197,4 +197,9 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/inventory/{id}/adjust', [AdminModuleWebController::class, 'adjustStock'])->name('admin.inventory.adjust');
     Route::get('/settings', [AdminSettingWebController::class, 'settings'])->name('admin.settings.index');
     Route::post('/settings', [AdminSettingWebController::class, 'updateSettings'])->name('admin.settings.update');
+    Route::match(['get', 'post'], '/fix-storage', [AdminSettingWebController::class, 'fixStorageWeb'])->name('admin.fix-storage');
 });
+
+// Storage and upload fallbacks for cPanel / shared hosting environments where symlink may be broken or disabled
+Route::get('/storage/{path}', [\App\Http\Controllers\StorageFileController::class, 'show'])->where('path', '.*');
+Route::get('/uploads/{path}', [\App\Http\Controllers\StorageFileController::class, 'showUploads'])->where('path', '.*');

@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block access to hidden and sensitive files (.env, .git, etc.)
+    <FilesMatch "^\.(env|git|gitignore|htaccess|htpasswd)">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    # Block direct access to storage and vendor if placed in webroot
+    RewriteRule ^(storage|bootstrap|vendor|app|config|database|routes|tests)(/.*)?$ - [F,L]
+
+    # Forward all other requests to the public/ folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

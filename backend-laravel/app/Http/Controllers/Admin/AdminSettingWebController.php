@@ -302,4 +302,86 @@ class AdminSettingWebController extends Controller
 
         return back()->with('success', "Database backup created: {$backup->filename}");
     }
+
+    /**
+     * Fix storage permissions, directories, and symlinks for cPanel environments.
+     */
+    public function fixStorageWeb(Request $request)
+    {
+        $results = [];
+
+        // 1. Ensure required storage directories exist
+        $dirs = [
+            storage_path('app'),
+            storage_path('app/public'),
+            storage_path('app/public/products'),
+            storage_path('app/public/categories'),
+            storage_path('app/public/banners'),
+            storage_path('app/public/payments'),
+            storage_path('app/public/general'),
+            storage_path('framework'),
+            storage_path('framework/cache'),
+            storage_path('framework/sessions'),
+            storage_path('framework/views'),
+            storage_path('logs'),
+            base_path('bootstrap/cache'),
+        ];
+
+        foreach ($dirs as $dir) {
+            if (! is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+                $results[] = "Created directory: " . basename($dir);
+            }
+            @chmod($dir, 0775);
+        }
+
+        // 2. Check and fix public/storage symlink
+        $link = public_path('storage');
+        $target = storage_path('app/public');
+
+        if (is_link($link)) {
+            $currentTarget = @readlink($link);
+            if (! file_exists($link) || ! file_exists($currentTarget)) {
+                @unlink($link);
+                $results[] = "Removed broken symlink at public/storage";
+            }
+        }
+
+        if (! file_exists($link)) {
+            // Attempt relative symlink first (best for cPanel)
+            $success = false;
+            try {
+                $relativeTarget = '../storage/app/public';
+                $success = @symlink($relativeTarget, $link);
+            } catch (\Throwable $e) {
+                $success = false;
+            }
+
+            if (! $success) {
+                try {
+                    $success = @symlink($target, $link);
+                } catch (\Throwable $e) {
+                    $success = false;
+                }
+            }
+
+            if ($success) {
+                $results[] = "Successfully created storage symlink!";
+            } else {
+                $results[] = "Note: Symlink creation is restricted by host, but the built-in HTTP storage fallback route is active and serving all uploaded images.";
+            }
+        } else {
+            $results[] = "Storage link or folder is present and ready.";
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Storage check complete',
+                'details' => $results,
+            ]);
+        }
+
+        return redirect()->route('admin.settings.index')->with('success', 'Storage check complete: ' . implode(' | ', $results));
+    }
 }
