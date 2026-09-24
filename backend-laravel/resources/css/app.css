@@ -1,0 +1,235 @@
+@import 'tailwindcss';
+
+@source '../views/**/*.blade.php';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* Self-hosted fonts — match React frontend/src/index.css */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/noto-sans-bengali-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/noto-sans-bengali-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/noto-sans-bengali-700.woff2') format('woff2');
+}
+
+@theme {
+    --font-headline: 'Neue Haas Grotesk Display', 'Helvetica Now Display', 'Helvetica Neue', Helvetica, Arial, 'Inter', sans-serif;
+    --font-body: 'Inter', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    --color-brand-green-50: #EAF6EF;
+    --color-brand-green-100: #C6E9D3;
+    --color-brand-green-200: #8FD4AE;
+    --color-brand-green-300: #58BF89;
+    --color-brand-green-400: #2EA665;
+    --color-brand-green-500: #176B3A;
+    --color-brand-green-600: #0F4D2C;
+    --color-brand-green-700: #0A3820;
+
+    --color-brand-orange-50: #FFF1E6;
+    --color-brand-orange-100: #FFE0C2;
+    --color-brand-orange-200: #FFC08A;
+    --color-brand-orange-300: #FF9F52;
+    --color-brand-orange-400: #F88A34;
+    --color-brand-orange-500: #F47B20;
+    --color-brand-orange-600: #D96510;
+    --color-brand-orange-700: #B54E0A;
+
+    --color-canvas-cream: #F8FAF8;
+    --color-canvas-light: #FFFFFF;
+    --color-hairline-light: #E4E4E7;
+    --color-ink: #17221B;
+    --color-shade-30: #D4D4D8;
+    --color-shade-40: #A1A1AA;
+    --color-shade-50: #71717A;
+    --color-shade-60: #52525B;
+    --color-shade-70: #3F3F46;
+
+    --color-primary: #176B3A;
+    --color-accent: #F47B20;
+    --color-background: #F8FAF8;
+
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.07);
+    --shadow-lift: 0 20px 40px rgba(0, 0, 0, 0.14);
+    --shadow-panel: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+:root {
+  font-family: 'Inter', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #17221B;
+  background-color: #F8FAF8;
+  font-feature-settings: 'ss03';
+}
+
+[x-cloak] { display: none !important; }
+
+/* Navbar glass — match React index.css exactly */
+.navbar-root {
+  background-color: #ffffff;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    background-color 280ms ease,
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    backdrop-filter 280ms ease,
+    -webkit-backdrop-filter 280ms ease;
+}
+.navbar-root.navbar--scrolled {
+  background-color: rgba(255, 255, 255, 0.90);
+  border-color: rgba(34, 197, 94, 0.15);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.07);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+}
+
+/* Product card GPU hover — match React */
+@keyframes card-fadein {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.product-card-fadein {
+  animation: card-fadein 0.35s ease-out both;
+}
+.product-card {
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-color: #C6E9D3;
+  transition: transform 200ms ease, border-color 200ms ease;
+  will-change: transform;
+}
+.product-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  border-color: #8FD4AE;
+}
+.product-card:hover::after {
+  opacity: 1;
+}
+
+.bangla, .bangla-text, .bangla-label {
+  font-family: 'Noto Sans Bengali', 'Noto Sans', system-ui, sans-serif;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ---------- Admin design tokens (React parity) ---------- */
+:root {
+  --admin-radius: 0.75rem;
+  --admin-radius-sm: 0.5rem;
+  --admin-border: #e4ebe6;
+  --admin-muted: #f4f7f5;
+  --admin-ring: rgba(23, 107, 58, 0.28);
+}
+
+.admin-page-title {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.admin-page-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.admin-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.admin-focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-ring);
+}
+
+.admin-nav-active {
+  background-color: rgba(23, 107, 58, 0.1);
+  color: #0f4d2c;
+}
+
+.admin-skeleton {
+  background: linear-gradient(90deg, #f1f5f4 25%, #e8eeea 50%, #f1f5f4 75%);
+  background-size: 200% 100%;
+  animation: admin-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes admin-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Prevent horizontal overflow on admin shell */
+.admin-shell,
+.admin-shell * {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .admin-hide-sm { display: none !important; }
+}
