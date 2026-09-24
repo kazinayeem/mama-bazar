@@ -3,64 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Mama Bazar</title>
+    <title>Admin Login — Mama Bazar</title>
     <link rel="icon" type="image/png" href="/brandlogo.png">
     <link rel="preload" href="/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-body antialiased">
+<body class="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-green-700 via-brand-green-600 to-brand-green-800 p-4 font-body antialiased">
 
-    <div class="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl space-y-6">
-        
-        <!-- Logo -->
-        <div class="text-center space-y-2">
-            <div class="w-12 h-12 rounded-2xl bg-brand-green-600 text-white font-black text-xl flex items-center justify-center mx-auto shadow-md">
-                M
+    <div class="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl">
+        <div class="bg-brand-green-500 px-8 py-6 text-center text-white">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                <img src="/brandlogo.png" alt="" class="h-8 w-8 rounded-lg object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <span class="hidden h-full w-full items-center justify-center text-lg font-bold">MB</span>
             </div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Admin Portal</h1>
-            <p class="text-xs text-slate-500">Sign in to manage Mama Bazar products, orders, and settings.</p>
+            <h1 class="mt-4 text-xl font-bold tracking-tight">Mama Bazar Admin</h1>
+            <p class="mt-1 text-xs text-brand-green-100">Sign in to manage products, orders, and store settings.</p>
         </div>
 
-        @if($errors->any())
-            <div class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-1">
-                @foreach($errors->all() as $error)
-                    <p class="font-medium">{{ $error }}</p>
-                @endforeach
-            </div>
-        @endif
+        <div class="space-y-5 p-8">
+            @if($errors->any())
+                <div class="space-y-1 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+                    @foreach($errors->all() as $error)
+                        <p class="font-medium">{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
 
-        <form action="{{ route('admin.login.submit') }}" method="POST" class="space-y-4">
-            @csrf
+            <form action="{{ route('admin.login.submit') }}" method="POST" class="space-y-4">
+                @csrf
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Email or Phone Number</label>
-                <input type="text" name="login" required value="{{ old('login') }}" placeholder="admin@example.com or 01700000000"
-                    class="w-full text-xs rounded-xl border border-slate-200 p-3 focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
-            </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-semibold text-slate-700">Email or phone</label>
+                    <input type="text" name="login" required value="{{ old('login') }}" placeholder="admin@example.com or 01700000000"
+                        class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
+                </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-                <input type="password" name="password" required placeholder="••••••••"
-                    class="w-full text-xs rounded-xl border border-slate-200 p-3 focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
-            </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-semibold text-slate-700">Password</label>
+                    <input type="password" name="password" required placeholder="Your password"
+                        class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
+                </div>
 
-            <div class="flex items-center justify-between text-xs">
-                <label class="flex items-center gap-2 cursor-pointer text-slate-600">
-                    <input type="checkbox" name="remember" class="rounded text-brand-green-600">
-                    <span>Remember me</span>
+                <label class="flex cursor-pointer items-center gap-2 text-xs text-slate-600">
+                    <input type="checkbox" name="remember" class="rounded border-slate-300 text-brand-green-500 focus:ring-brand-green-500">
+                    <span>Remember me on this device</span>
                 </label>
-            </div>
 
-            <button type="submit" class="w-full py-3 px-4 rounded-full bg-brand-green-600 hover:bg-brand-green-700 text-white font-bold text-xs shadow-md transition">
-                Sign In to Dashboard &rarr;
-            </button>
-        </form>
+                <button type="submit" class="w-full rounded-full bg-brand-green-500 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-green-600 focus:outline-none focus:ring-2 focus:ring-brand-green-300 focus:ring-offset-2">
+                    Sign in to dashboard
+                </button>
+            </form>
 
-        <div class="pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
-            Mama Bazar Administration Panel &bull; SQLite Database
+            <p class="border-t border-slate-100 pt-4 text-center text-[11px] text-slate-400">
+                Authorized personnel only · Mama Bazar Administration
+            </p>
         </div>
-
     </div>
 
 </body>

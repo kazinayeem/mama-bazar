@@ -23,7 +23,7 @@
     @endforeach
 </div>
 
-<div class="mt-4 flex gap-2">
+<div class="mt-4 flex flex-wrap gap-2">
     @foreach(['all' => 'All', 'low' => 'Low (≤10)', 'out' => 'Out of stock'] as $key => $label)
         <a href="{{ route('admin.inventory.index', ['filter' => $key]) }}"
            class="rounded-full px-4 py-1.5 text-xs font-semibold {{ $filter === $key ? 'bg-brand-green-500 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
@@ -33,6 +33,55 @@
 </div>
 
 <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft">
+    {{-- Mobile cards --}}
+    <div class="divide-y divide-slate-100 md:hidden">
+        @forelse($products as $product)
+            @php
+                $stock = (int) $product->stock;
+                $badge = $stock <= 0 ? 'bg-red-50 text-red-700' : ($stock <= 10 ? 'bg-amber-50 text-amber-700' : 'bg-brand-green-50 text-brand-green-700');
+                $pct = min(100, max(0, $stock <= 0 ? 0 : ($stock / max(50, $stock)) * 100));
+            @endphp
+            <div class="p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-slate-900 line-clamp-2">{{ $product->title }}</p>
+                        <p class="mt-0.5 text-xs text-slate-400">{{ $product->stock_status }}</p>
+                    </div>
+                    <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold {{ $badge }}">{{ $stock }}</span>
+                </div>
+                <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                    <div>
+                        <dt class="font-semibold uppercase tracking-wide text-slate-400">SKU</dt>
+                        <dd class="font-mono text-slate-600">{{ $product->sku ?: '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="font-semibold uppercase tracking-wide text-slate-400">Price</dt>
+                        <dd class="font-bold text-slate-900">৳{{ number_format($product->sale_price ?: $product->price, 0) }}</dd>
+                    </div>
+                </dl>
+                <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div class="h-full rounded-full bg-brand-green-500" style="width: {{ $pct }}%"></div>
+                </div>
+                <div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                    <span class="mr-auto text-[10px] font-semibold uppercase tracking-wide text-slate-400">Adjust stock</span>
+                    <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="delta" value="-1">
+                        <button type="submit" class="h-9 w-9 rounded-lg border border-slate-200 text-sm font-bold hover:bg-slate-50">−</button>
+                    </form>
+                    <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="delta" value="1">
+                        <button type="submit" class="h-9 w-9 rounded-lg border border-slate-200 text-sm font-bold hover:bg-brand-green-50 hover:border-brand-green-200">+</button>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="px-4 py-12 text-center text-sm text-slate-500">No products found</div>
+        @endforelse
+    </div>
+
+    <div class="hidden overflow-x-auto md:block">
     <table class="w-full text-left text-sm">
         <thead class="border-b bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
@@ -83,6 +132,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     @if($products->hasPages())
         <div class="border-t p-3">{{ $products->links() }}</div>
     @endif

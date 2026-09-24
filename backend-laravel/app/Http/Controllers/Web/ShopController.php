@@ -11,7 +11,6 @@ use App\Models\Review;
 use App\Models\Size;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ShopController extends Controller
 {
@@ -75,8 +74,20 @@ class ShopController extends Controller
         }
 
         $selectedCategory = $categorySlug
-            ? Category::where('slug', $categorySlug)->first()
+            ? Category::with(['children' => fn ($q) => $q->where('status', 'active')->orderBy('name')])->where('slug', $categorySlug)->first()
             : null;
+        if ($selectedCategory) {
+            foreach ($selectedCategory->children as $child) {
+                $child->product_count = (int) Product::where('status', 'active')
+                    ->where('product_status', 'published')
+                    ->where(function ($q) use ($child) {
+                        $q->where('sub_category_id', $child->id)
+                          ->orWhere('category_id', $child->id)
+                          ->orWhere('child_category_id', $child->id);
+                    })
+                    ->count();
+            }
+        }
         $selectedSubcategory = $subcategorySlug
             ? Category::where('slug', $subcategorySlug)->first()
             : null;
@@ -228,6 +239,7 @@ class ShopController extends Controller
         }
 
         return view('web.products.index', [
+            'title' => ($seoTitle ?? 'Shop') . ' | Mama Bazar',
             'products' => $products,
             'pagination' => $pagination,
             'from' => $from,

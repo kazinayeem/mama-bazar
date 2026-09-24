@@ -51,7 +51,7 @@
             </button>
             <a
                 href="{{ route('admin.products.create') }}"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-slate-900 rounded-lg hover:bg-slate-800 shadow-sm transition"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-brand-green-500 rounded-full hover:bg-brand-green-600 shadow-sm transition"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add Product
@@ -60,7 +60,11 @@
     </div>
 
     <!-- Filters Card -->
-    <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
+    @php
+        $hasActiveFilters = request()->hasAny(['search', 'category', 'brand', 'supplier', 'vendor', 'collection', 'stock', 'productStatus', 'label', 'minPrice', 'maxPrice', 'dateFrom', 'dateTo'])
+            || (request('sort') && request('sort') !== 'newest');
+    @endphp
+    <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-xs" x-data="{ filtersOpen: {{ $hasActiveFilters ? 'true' : 'false' }} }">
         <form method="GET" action="{{ route('admin.products.index') }}" id="filtersForm" class="space-y-3">
             <!-- Row 1: Search & Sort -->
             <div class="flex flex-col gap-2 lg:flex-row lg:items-center">
@@ -71,7 +75,7 @@
                         name="search"
                         value="{{ request('search') }}"
                         placeholder="Search by name, SKU, barcode, brand…"
-                        class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 bg-white"
+                        class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand-green-100 focus:border-brand-green-500 bg-white"
                         @keydown.enter.prevent="$el.form.submit()"
                     />
                 </div>
@@ -92,8 +96,17 @@
                 </div>
             </div>
 
+            <button
+                type="button"
+                @click="filtersOpen = !filtersOpen"
+                class="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 md:hidden"
+            >
+                <span>More filters{{ $hasActiveFilters ? ' (active)' : '' }}</span>
+                <svg class="h-4 w-4 text-slate-400 transition-transform" :class="filtersOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
             <!-- Row 2: Dropdowns & Range -->
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2" :class="filtersOpen ? 'flex' : 'hidden md:flex'">
                 <!-- Category Select -->
                 <select
                     name="category"
@@ -318,9 +331,157 @@
         </button>
     </div>
 
-    <!-- Product Table Card -->
+    <!-- Product list: mobile cards + desktop table -->
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
-        <div class="overflow-x-auto">
+        {{-- Mobile: select all --}}
+        @if(count($products) > 0)
+            <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-4 py-2.5 md:hidden">
+                <input
+                    type="checkbox"
+                    :checked="allSelected"
+                    @change="toggleSelectAll($event.target.checked)"
+                    class="rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500 h-4 w-4"
+                />
+                <span class="text-xs font-semibold text-slate-600">Select all on this page</span>
+            </div>
+        @endif
+
+        {{-- Mobile cards --}}
+        <div class="divide-y divide-slate-100 md:hidden">
+            @forelse($products as $product)
+                @php
+                    $isArchived = ($product['productStatus'] ?? '') === 'archived';
+                    $status = $product['productStatus'] ?? ($product['status'] ?? 'draft');
+                    $variantsCount = isset($product['variants']) ? count($product['variants']) : 0;
+                    $stock = (int) ($product['stock'] ?? 0);
+                    $lowStockAlert = (int) ($product['lowStockAlert'] ?? 10);
+                    $firstImage = !empty($product['images'][0]) ? $product['images'][0] : null;
+                    $statusBadge = match($status) {
+                        'published', 'active' => 'bg-brand-green-50 text-brand-green-700 border-brand-green-200',
+                        'draft' => 'bg-slate-100 text-slate-600 border-slate-200',
+                        'hidden' => 'bg-amber-50 text-amber-700 border-amber-200',
+                        'archived' => 'bg-slate-200 text-slate-600 border-slate-300',
+                        default => 'bg-slate-100 text-slate-600 border-slate-200',
+                    };
+                @endphp
+                <div class="p-4 {{ $isArchived ? 'opacity-50' : '' }}">
+                    <div class="flex gap-3">
+                        <input
+                            type="checkbox"
+                            :value="{{ $product['id'] }}"
+                            x-model="selected"
+                            class="mt-1 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500 h-4 w-4 shrink-0"
+                        />
+                        @if($firstImage)
+                            <img src="{{ $firstImage }}" alt="{{ $product['title'] }}" class="h-14 w-14 rounded-lg border border-slate-200 object-cover bg-slate-50 shrink-0" loading="lazy" />
+                        @else
+                            <div class="flex h-14 w-14 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-slate-400 shrink-0">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            </div>
+                        @endif
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-start justify-between gap-2">
+                                <a href="{{ route('admin.products.show', $product['id']) }}" class="font-semibold text-slate-900 hover:text-brand-green-700 transition line-clamp-2">
+                                    {{ $product['title'] }}
+                                </a>
+                                <div class="relative shrink-0 text-left" x-data="{ open: false }">
+                                    <button type="button" @click="open = !open" @click.outside="open = false" class="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black/5">
+                                        <a href="{{ route('admin.products.show', $product['id']) }}" class="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">View</a>
+                                        <a href="{{ route('admin.products.edit', $product['id']) }}" class="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">Edit</a>
+                                        <button type="button" @click="open = false; duplicateProduct({{ $product['id'] }})" class="flex w-full items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 text-left">Duplicate</button>
+                                        @if(!empty($product['slug']))
+                                            <a href="{{ url('/products/' . $product['slug']) }}" target="_blank" class="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">View on storefront</a>
+                                        @endif
+                                        <button type="button" @click="open = false; confirmDelete({{ $product['id'] }}, '{{ addslashes($product['title']) }}')" class="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50 text-left">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border capitalize {{ $statusBadge }}">{{ $status }}</span>
+                                <p class="text-sm font-bold text-slate-900">৳{{ number_format((float)($product['price'] ?? 0), 2) }}</p>
+                                @if((float)($product['discount'] ?? 0) > 0)
+                                    <span class="text-[10px] text-red-600 font-semibold">-{{ $product['discount'] }}%</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                        <div>
+                            <dt class="font-semibold uppercase tracking-wide text-slate-400">SKU</dt>
+                            <dd class="font-mono text-slate-600">{{ $product['sku'] ?: '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="font-semibold uppercase tracking-wide text-slate-400">Stock</dt>
+                            <dd>
+                                @if($stock <= 0)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">0</span>
+                                @elseif($stock <= $lowStockAlert)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">{{ $variantsCount > 0 ? "{$stock} (total)" : $stock }}</span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-green-50 text-brand-green-700 border border-brand-green-200">{{ $variantsCount > 0 ? "{$stock} (total)" : $stock }}</span>
+                                @endif
+                            </dd>
+                        </div>
+                        <div class="col-span-2">
+                            <dt class="font-semibold uppercase tracking-wide text-slate-400">Brand · Category</dt>
+                            <dd class="text-slate-700 truncate">{{ $product['brandInfo']['name'] ?? ($product['brand'] ?: '—') }} · {{ $product['category']['name'] ?? '—' }}</dd>
+                        </div>
+                    </dl>
+                    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                        <div class="flex flex-wrap gap-1">
+                            @if(!empty($product['isFeatured']))
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-brand-green-50 text-brand-green-700 border border-brand-green-200">Featured</span>
+                            @endif
+                            @if(!empty($product['isTrending']))
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Trending</span>
+                            @endif
+                            @if(!empty($product['isFlashSale']))
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Flash</span>
+                            @endif
+                            @if(!empty($product['isHotDeal']))
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-50 text-orange-700 border border-orange-200">Hot Deal</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center gap-2" x-data="{ featured: {{ !empty($product['isFeatured']) ? 'true' : 'false' }}, loading: false }">
+                            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Featured</span>
+                            <button
+                                type="button"
+                                @click="
+                                    loading = true;
+                                    fetch('{{ route('admin.products.toggle-featured', $product['id']) }}', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                                        body: JSON.stringify({ featured: !featured })
+                                    })
+                                    .then(r => r.json())
+                                    .then(d => { featured = d.isFeatured; })
+                                    .finally(() => { loading = false; })
+                                "
+                                :disabled="loading"
+                                class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden"
+                                :class="featured ? 'bg-brand-green-600' : 'bg-slate-300'"
+                                role="switch"
+                                :aria-checked="featured"
+                            >
+                                <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out" :class="featured ? 'translate-x-4' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="py-14 text-center px-4">
+                    <svg class="mx-auto mb-2 h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <p class="text-sm font-semibold text-slate-800">No products found</p>
+                    <p class="mt-1 text-xs text-slate-500">Try adjusting your search or filters.</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Desktop table --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">

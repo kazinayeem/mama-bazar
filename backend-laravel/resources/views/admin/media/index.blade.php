@@ -6,19 +6,19 @@
     <!-- Upload Card -->
     <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
         <h3 class="text-sm font-bold text-slate-900 mb-3">Upload File to Local Storage</h3>
-        <form action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
+        <form action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             @csrf
 
-            <input type="file" name="file" required accept="image/*" class="text-xs rounded-xl border border-slate-200 p-2 focus:outline-none file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:bg-brand-green-50 file:text-brand-green-700">
+            <input type="file" name="file" required accept="image/*" class="w-full text-xs rounded-xl border border-slate-200 p-2 focus:outline-none file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:bg-brand-green-50 file:text-brand-green-700 sm:w-auto sm:flex-1 sm:min-w-[200px]">
 
-            <select name="folder" class="text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none bg-white">
+            <select name="folder" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none bg-white sm:w-auto">
                 <option value="general">Folder: General</option>
                 <option value="products">Folder: Products</option>
                 <option value="banners">Folder: Banners</option>
                 <option value="categories">Folder: Categories</option>
             </select>
 
-            <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white font-bold text-xs shadow-sm transition">
+            <button type="submit" class="w-full px-5 py-2.5 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white font-bold text-xs shadow-sm transition sm:w-auto">
                 Upload Local File
             </button>
         </form>

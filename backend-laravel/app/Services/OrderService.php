@@ -450,4 +450,38 @@ class OrderService
         $order = Order::where('order_id', $orderId)->first();
         return $order ? self::formatOrder($order) : null;
     }
+
+    /**
+     * Public-facing order tracking: find an order by its order_id string,
+     * with an optional phone number verification step.
+     *
+     * @param  string|null  $orderId  e.g. "MB-000123"
+     * @param  string|null  $phone    customer phone for verification
+     * @return array|null             formatted order or null if not found / mismatch
+     */
+    public static function trackOrder(?string $orderId, ?string $phone = null): ?array
+    {
+        if (empty($orderId)) {
+            return null;
+        }
+
+        // Normalise: trim whitespace, make case-insensitive
+        $orderId = trim($orderId);
+
+        $query = Order::whereRaw('LOWER(order_id) = ?', [strtolower($orderId)]);
+
+        // If a phone number is supplied, verify it matches
+        if (!empty($phone)) {
+            $cleanPhone = preg_replace('/\s+/', '', trim($phone));
+            $query->where(function ($q) use ($cleanPhone) {
+                $q->whereRaw("REPLACE(phone, ' ', '') = ?", [$cleanPhone])
+                  ->orWhereRaw("REPLACE(alternative_phone, ' ', '') = ?", [$cleanPhone]);
+            });
+        }
+
+        $order = $query->first();
+
+        return $order ? self::formatOrder($order) : null;
+    }
 }
+

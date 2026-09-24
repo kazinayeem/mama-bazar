@@ -5,7 +5,11 @@
     'type' => 'text',
 ])
 
-<div {{ $attributes->only('class')->merge(['class' => 'space-y-1.5']) }}>
+@php
+    $wrapperClass = $attributes->get('class');
+@endphp
+
+<div class="{{ $wrapperClass ?: 'space-y-1.5' }}">
     @if($label)
         <label class="block text-xs font-bold text-slate-800">{{ $label }}</label>
     @endif

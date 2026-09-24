@@ -140,23 +140,36 @@ class HomepageService
     {
         $config = self::getConfig();
 
-        $heroBanners = Banner::where('status', 'active')
-            ->where('position', 'hero')
-            ->orderBy('priority', 'desc')
-            ->get();
+        // Prefer homepage_config.heroSlides (React/admin builder). Fall back to Banner rows.
+        $configSlides = collect($config['heroSlides'] ?? [])
+            ->filter(fn ($s) => ($s['status'] ?? 'active') === 'active')
+            ->sortByDesc(fn ($s) => (int) ($s['priority'] ?? 0))
+            ->values()
+            ->all();
 
-        $slides = $heroBanners->map(fn($b) => [
-            'id' => (string) $b->id,
-            'title' => $b->title,
-            'subtitle' => $b->subtitle,
-            'desktopImage' => $b->image,
-            'mobileImage' => $b->image_mobile,
-            'tabletImage' => $b->image_tablet,
-            'link' => $b->link,
-            'buttonText' => $b->button_text,
-            'status' => $b->status,
-            'priority' => $b->priority,
-        ])->toArray();
+        if (count($configSlides) > 0) {
+            $slides = $configSlides;
+        } else {
+            $heroBanners = Banner::where('status', 'active')
+                ->where('position', 'hero')
+                ->orderBy('priority', 'desc')
+                ->get();
+
+            $slides = $heroBanners->map(fn($b) => [
+                'id' => (string) $b->id,
+                'title' => $b->title,
+                'subtitle' => $b->subtitle,
+                'desktopImage' => $b->image,
+                'mobileImage' => $b->image_mobile,
+                'tabletImage' => $b->image_tablet,
+                'link' => $b->link,
+                'buttonText' => $b->button_text,
+                'primaryButtonText' => $b->button_text,
+                'primaryButtonUrl' => $b->link,
+                'status' => $b->status,
+                'priority' => $b->priority,
+            ])->toArray();
+        }
 
         $categories = Category::where('status', 'active')
             ->whereNull('parent_id')
@@ -226,53 +239,92 @@ class HomepageService
         $bestSellers = $fetchLabelProducts('is_best_seller', 12);
         $trendingProducts = $fetchLabelProducts('is_trending', 12);
 
+        $labelMap = [
+            'flash_deals' => $flashSaleProducts,
+            'featured' => $featuredProducts,
+            'new_arrivals' => $newArrivals,
+            'best_sellers' => $bestSellers,
+            'trending' => $trendingProducts,
+            'limited_edition' => $fetchLabelProducts('is_limited_edition', 12),
+            'official' => $fetchLabelProducts('is_official', 12),
+            'hot_deals' => $fetchLabelProducts('is_hot_deal', 12),
+            // Column not in Laravel schema yet — keep section type for admin parity
+            'emi_available' => [],
+        ];
+
         $sections = array_map(function ($section) use (
             $slides, $categories, $brands, $collections, $promoBanners, $reviews,
-            $flashSaleProducts, $featuredProducts, $newArrivals, $bestSellers, $trendingProducts, $config
+            $labelMap, $config, $fetchLabelProducts
         ) {
             $data = [];
-            switch ($section['type']) {
+            $type = $section['type'] ?? '';
+            $limit = max(1, min(24, (int) ($section['limit'] ?? 12)));
+
+            switch ($type) {
                 case 'hero':
                     $data['slides'] = $slides;
                     break;
                 case 'trust_strip':
-                    $data['items'] = $config['trustStrip'] ?? [];
+                    $data['items'] = array_map(function ($item) {
+                        if (!isset($item['text']) && isset($item['subtitle'])) {
+                            $item['text'] = $item['subtitle'];
+                        }
+                        return $item;
+                    }, $config['trustStrip'] ?? []);
                     break;
                 case 'categories':
-                    $data['items'] = $categories;
+                    $data['items'] = array_slice($categories, 0, $limit);
                     break;
                 case 'brands':
-                    $data['items'] = $brands;
+                    $data['items'] = array_slice($brands, 0, $limit);
                     break;
                 case 'collections':
-                    $data['items'] = $collections;
+                    $data['items'] = $collections->take($limit)->values();
                     break;
                 case 'promo_banner':
                     $data['items'] = $promoBanners;
                     break;
                 case 'reviews':
-                    $data['items'] = $reviews;
+                    $data['items'] = array_slice($reviews, 0, $limit);
                     break;
-                case 'flash_deals':
-                    $data['items'] = $flashSaleProducts;
-                    break;
-                case 'featured':
-                    $data['items'] = $featuredProducts;
-                    break;
-                case 'new_arrivals':
-                    $data['items'] = $newArrivals;
-                    break;
-                case 'best_sellers':
-                    $data['items'] = $bestSellers;
-                    break;
-                case 'trending':
-                    $data['items'] = $trendingProducts;
+                case 'category_products':
+                    $categoryId = (int) ($section['categoryId'] ?? 0);
+                    $cat = $categoryId ? Category::find($categoryId) : null;
+                    $data['category'] = $cat ? [
+                        'id' => $cat->id,
+                        'name' => $cat->name,
+                        'slug' => $cat->slug,
+                    ] : null;
+                    if ($cat) {
+                        $prods = Product::where('status', 'active')
+                            ->where('category_id', $cat->id)
+                            ->orderByDesc('created_at')
+                            ->take($limit)
+                            ->get();
+                        $ratings = ProductService::fetchRatingMap($prods->pluck('id')->toArray());
+                        $data['items'] = $prods->map(fn ($p) => ProductService::formatProduct($p, $ratings[$p->id] ?? null))->toArray();
+                    } else {
+                        $data['items'] = [];
+                    }
                     break;
                 case 'why_choose_us':
-                    $data['items'] = $config['whyChooseUs'] ?? [];
+                    $data['items'] = array_map(function ($item) {
+                        if (!isset($item['text']) && isset($item['description'])) {
+                            $item['text'] = $item['description'];
+                        }
+                        return $item;
+                    }, $config['whyChooseUs'] ?? []);
                     break;
                 case 'newsletter':
                     $data['settings'] = $config['newsletter'] ?? [];
+                    break;
+                case 'recommendations':
+                    $data['items'] = $labelMap['featured'] ?? [];
+                    break;
+                default:
+                    if (isset($labelMap[$type])) {
+                        $data['items'] = array_slice($labelMap[$type], 0, $limit);
+                    }
                     break;
             }
             $section['data'] = $data;

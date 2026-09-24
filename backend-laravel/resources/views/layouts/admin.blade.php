@@ -11,7 +11,8 @@
 <body class="flex h-screen overflow-hidden bg-background font-body text-slate-800 antialiased"
       x-data="adminShell()"
       x-init="init()"
-      @keydown.window="onKey($event)">
+      @keydown.window="onKey($event)"
+      @keydown.escape.window="mobileOpen = false">
 
     @php
         $lucide = \App\Support\AdminNav::lucide();
@@ -25,16 +26,19 @@
          @click="mobileOpen = false"
          x-transition.opacity></div>
 
-    {{-- Sidebar --}}
-    <aside class="fixed inset-y-0 left-0 z-[201] flex shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 lg:static"
-           :class="collapsed ? 'w-16' : 'w-60'"
-           :style="!mobileOpen && window.innerWidth < 1024 ? 'transform: translateX(-100%)' : 'transform: translateX(0)'"
-           x-show="mobileOpen || window.innerWidth >= 1024"
-           x-cloak>
+    {{-- Sidebar: mobile off-canvas drawer (w-64), desktop static --}}
+    <aside class="fixed inset-y-0 left-0 z-[201] flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-transform duration-200 ease-out lg:static lg:w-auto"
+           :class="[
+               mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+               collapsed ? 'lg:w-16' : 'lg:w-60',
+           ]">
 
         {{-- Brand header h-16 --}}
-        <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200"
-             :class="collapsed ? 'justify-center px-0' : 'px-4'">
+        <div class="relative flex h-16 shrink-0 items-center gap-3 border-b border-slate-200"
+             :class="collapsed ? 'justify-center px-0 lg:px-0' : 'px-4'">
+            <button type="button" @click="mobileOpen = false" class="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden" aria-label="Close sidebar">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-green-500 text-white shadow-sm">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">{!! $lucide['store'] !!}</svg>
             </div>
@@ -85,7 +89,7 @@
                             @endphp
                             <a href="{{ $url }}"
                                title="{{ $item['label'] }}"
-                               @click="if(window.innerWidth < 1024) mobileOpen = false"
+                               @click="mobileOpen = false"
                                class="flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors {{ $active ? 'bg-brand-green-50 text-brand-green-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800' }}"
                                :class="collapsed ? 'justify-center px-1.5' : 'px-3'">
                                 <svg class="h-[18px] w-[18px] shrink-0 {{ $active ? 'text-brand-green-600' : '' }}"
@@ -203,12 +207,6 @@
         </header>
 
         <main class="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
-            @if(session('success'))
-                <div class="flex items-center gap-2 rounded-xl border border-brand-green-200 bg-brand-green-50 p-3 text-xs font-medium text-brand-green-800">{{ session('success') }}</div>
-            @endif
-            @if(session('error'))
-                <div class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-800">{{ session('error') }}</div>
-            @endif
             @yield('content')
         </main>
     </div>
@@ -238,6 +236,8 @@
             </div>
         </div>
     </div>
+
+    <x-admin.toast />
 
     <script>
         function adminShell() {
