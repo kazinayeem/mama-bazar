@@ -19,7 +19,7 @@
     </div>
 
     <!-- Status Update Form -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+    <div class="admin-surface p-4">
         <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Update Order Status</h3>
         <form action="{{ route('admin.orders.status', $order->id) }}" method="POST" class="flex flex-wrap items-end gap-3">
             @csrf
@@ -47,7 +47,7 @@
 
     <!-- Customer & Shipping Details -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft space-y-2 text-xs">
+        <div class="admin-surface p-4 space-y-2 text-xs">
             <h3 class="font-bold text-slate-900 uppercase tracking-wider text-xs border-b border-slate-100 pb-2">Customer & Shipping</h3>
             <p><span class="text-slate-400 font-semibold">Name:</span> <span class="font-bold text-slate-800">{{ $order->customer_name }}</span></p>
             <p><span class="text-slate-400 font-semibold">Phone:</span> <span class="font-semibold text-slate-800">{{ $order->phone }}</span></p>
@@ -58,7 +58,7 @@
             <p><span class="text-slate-400 font-semibold">Method:</span> {{ $order->shipping_method_name ?: 'Standard Delivery' }}</p>
         </div>
 
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft space-y-2 text-xs">
+        <div class="admin-surface p-4 space-y-2 text-xs">
             <h3 class="font-bold text-slate-900 uppercase tracking-wider text-xs border-b border-slate-100 pb-2">Payment Info</h3>
             <p><span class="text-slate-400 font-semibold">Method:</span> <span class="uppercase font-bold text-slate-800">{{ $order->payment_method }}</span></p>
             <p><span class="text-slate-400 font-semibold">Status:</span> <span class="font-bold {{ $order->payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600' }}">{{ ucfirst($order->payment_status) }}</span></p>
@@ -72,7 +72,7 @@
     </div>
 
     <!-- Items Table -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
+    <div class="admin-table-wrap">
         <div class="p-4 border-b border-slate-100 font-bold text-xs uppercase tracking-wider text-slate-700">Order Items</div>
         <table class="w-full text-left text-xs">
             <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">

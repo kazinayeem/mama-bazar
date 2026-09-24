@@ -6,7 +6,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         <!-- Create Backup Card -->
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft space-y-4">
+        <div class="admin-surface p-4 space-y-4">
             <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">Create SQLite Database Snapshot</h3>
             <p class="text-xs text-slate-500">Backs up all 41 SQLite database tables, records, schemas, and manifest into a secure downloadable ZIP package.</p>
 
@@ -20,14 +20,14 @@
                     <p class="text-[10px] text-slate-400 mt-1">Hint: Server Challenge Code is active.</p>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white font-bold text-xs shadow-sm transition">
+                <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-[6px] bg-brand-green-500 text-sm font-medium text-white hover:bg-brand-green-600">
                     Generate Full Backup Now
                 </button>
             </form>
         </div>
 
         <!-- Info Card -->
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft space-y-3 text-xs">
+        <div class="admin-surface p-4 space-y-3 text-xs">
             <h3 class="font-bold text-slate-900 uppercase tracking-wider text-xs border-b border-slate-100 pb-2">Backup Architecture</h3>
             <p class="text-slate-600">Mama Bazar uses SQLite as its primary database file at <code class="bg-slate-100 px-1 py-0.5 rounded text-brand-green-700">database/database.sqlite</code>.</p>
             <div class="p-3 rounded-2xl bg-brand-green-50/60 border border-brand-green-100 space-y-1">
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Existing Backups Table -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
+    <div class="admin-table-wrap">
         <div class="p-4 border-b border-slate-100 font-bold text-xs uppercase tracking-wider text-slate-700">Stored Backups ({{ count($backups) }})</div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">

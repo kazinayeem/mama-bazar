@@ -37,7 +37,8 @@ class AdminCatalogWebController extends Controller
                     ['name' => 'homepage_visibility', 'label' => 'Show on Homepage', 'type' => 'checkbox'],
                     ['name' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => ['active' => 'Active', 'inactive' => 'Inactive']],
                 ],
-                'columns' => ['name', 'slug', 'status', 'featured'],
+                'columns' => ['logo', 'name', 'slug', 'products_count', 'featured', 'status', 'created_at'],
+                'withCount' => ['products'],
             ],
             'collections' => [
                 'model' => Collection::class,
@@ -178,6 +179,10 @@ class AdminCatalogWebController extends Controller
 
         if ($status = request('status')) {
             $q->where('status', $status);
+        }
+
+        if (! empty($config['withCount'])) {
+            $q->withCount($config['withCount']);
         }
 
         $items = $q->orderByDesc('id')->paginate(20)->withQueryString();

@@ -63,7 +63,7 @@
 
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Homepage Builder</h1>
+            <h1 class="admin-page-title">Homepage Builder</h1>
             <p class="text-sm text-slate-500">Design the storefront homepage — sections, hero slides, and content.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -73,7 +73,7 @@
             <button type="button" @click="resetOpen = true" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 Reset
             </button>
-            <button type="button" @click="publish()" :disabled="saving || !dirty" class="inline-flex items-center gap-2 rounded-full bg-brand-green-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-green-600 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" @click="publish()" :disabled="saving || !dirty" class="inline-flex items-center gap-2 inline-flex h-10 items-center justify-center rounded-[6px] bg-brand-green-500 px-3.5 text-sm font-medium text-white hover:bg-brand-green-600 disabled:cursor-not-allowed disabled:opacity-50">
                 <span x-show="saving" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
                 <span x-text="dirty ? 'Publish Changes' : 'Published'"></span>
             </button>
@@ -105,7 +105,7 @@
         <p class="text-sm text-slate-500">Drag to reorder, toggle to show or hide. Empty sections are automatically hidden on the storefront.</p>
         <div x-ref="sectionList" class="space-y-2">
             <template x-for="(section, index) in knownSections()" :key="section.id">
-                <div class="rounded-xl border border-slate-200 bg-white shadow-soft" :data-section-id="section.id">
+                <div class="admin-surface" :data-section-id="section.id">
                     <div class="flex flex-wrap items-center gap-3 p-3">
                         <button type="button" class="drag-handle cursor-grab touch-none text-slate-400 hover:text-slate-600 active:cursor-grabbing" aria-label="Drag to reorder">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M8 9h8M8 15h8"/></svg>
@@ -202,12 +202,12 @@
             <p class="text-sm text-slate-500"><span x-text="config.heroSlides.length"></span> slides · reorder via arrows · first slide shows first</p>
             <button type="button" @click="openSlideCreate()" class="rounded-full bg-brand-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-green-600">+ Add Slide</button>
         </div>
-        <div x-show="config.heroSlides.length === 0" class="rounded-xl border bg-white py-14 text-center shadow-soft">
+        <div x-show="config.heroSlides.length === 0" class="rounded-xl border bg-white py-14 text-center">
             <p class="text-sm text-slate-500">No slides yet. Add your first hero slide — or leave empty to hide the carousel.</p>
         </div>
         <div class="space-y-2">
             <template x-for="(slide, index) in config.heroSlides" :key="slide.id">
-                <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-soft">
+                <div class="rounded-xl border border-slate-200 bg-white p-3">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <div class="flex items-center gap-1">
                             <button type="button" :disabled="index === 0" @click="moveSlide(index, -1)" class="rounded-lg p-2 hover:bg-slate-50 disabled:opacity-30">↑</button>
@@ -241,7 +241,7 @@
 
     {{-- Content --}}
     <div x-show="tab === 'content'" x-cloak class="grid gap-4 pt-4">
-        <div class="rounded-xl border bg-white p-5 shadow-soft">
+        <div class="admin-surface p-4">
             <h3 class="text-base font-bold text-slate-900">Announcement Bar</h3>
             <div class="mt-3 space-y-3">
                 <label class="flex items-center gap-2 text-sm">
@@ -268,7 +268,7 @@
             </div>
         </div>
 
-        <div class="rounded-xl border bg-white p-5 shadow-soft">
+        <div class="admin-surface p-4">
             <h3 class="text-base font-bold text-slate-900">Trust Strip</h3>
             <p class="text-xs text-slate-500">Icon perks shown right below the hero.</p>
             <div class="mt-3 space-y-2">
@@ -296,7 +296,7 @@
             <button type="button" @click="addContentItem('trustStrip')" class="mt-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold hover:bg-slate-50">+ Add item</button>
         </div>
 
-        <div class="rounded-xl border bg-white p-5 shadow-soft">
+        <div class="admin-surface p-4">
             <h3 class="text-base font-bold text-slate-900">Why Choose Us</h3>
             <p class="text-xs text-slate-500">Value proposition cards near the bottom of the homepage.</p>
             <template x-for="(item, idx) in config.whyChooseUs" :key="'why-' + idx">
@@ -322,7 +322,7 @@
             <button type="button" @click="addContentItem('whyChooseUs')" class="mt-2 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold hover:bg-slate-50">+ Add item</button>
         </div>
 
-        <div class="rounded-xl border bg-white p-5 shadow-soft">
+        <div class="admin-surface p-4">
             <h3 class="text-base font-bold text-slate-900">Flash Sale Window</h3>
             <p class="text-xs text-slate-500">Optional date range that powers the Flash Deals countdown. Leave empty for a daily sale ending at midnight.</p>
             <div class="mt-3 grid gap-3 sm:grid-cols-3">
@@ -341,7 +341,7 @@
             </div>
         </div>
 
-        <div class="rounded-xl border bg-white p-5 shadow-soft">
+        <div class="admin-surface p-4">
             <h3 class="text-base font-bold text-slate-900">Newsletter Section</h3>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
                 <label class="flex items-center gap-2 text-sm sm:col-span-2">
@@ -363,7 +363,7 @@
             </div>
         </div>
 
-        <div class="rounded-xl border bg-white p-5 shadow-soft">
+        <div class="admin-surface p-4">
             <h3 class="text-base font-bold text-slate-900">Popular Searches</h3>
             <p class="text-xs text-slate-500">Suggested chips shown in the search bar overlay.</p>
             <div class="mt-3 flex flex-wrap gap-2">
@@ -380,10 +380,10 @@
 
     {{-- Subscribers --}}
     <div x-show="tab === 'subscribers'" x-cloak class="pt-4">
-        <div x-show="subscribers.length === 0" class="rounded-xl border bg-white py-14 text-center shadow-soft">
+        <div x-show="subscribers.length === 0" class="rounded-xl border bg-white py-14 text-center">
             <p class="mt-3 text-sm text-slate-500">No subscribers yet. Emails collected from the homepage newsletter form appear here.</p>
         </div>
-        <div x-show="subscribers.length > 0" class="overflow-hidden rounded-xl border bg-white shadow-soft">
+        <div x-show="subscribers.length > 0" class="admin-table-wrap">
             <div class="divide-y divide-slate-100">
                 <template x-for="sub in subscribers" :key="sub.id">
                     <div class="flex items-center justify-between gap-3 px-4 py-3">

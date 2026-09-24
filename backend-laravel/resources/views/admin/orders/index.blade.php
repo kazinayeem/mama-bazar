@@ -5,7 +5,7 @@
 
     <form method="GET" action="{{ route('admin.orders.index') }}" class="flex flex-col gap-3" x-data="{ filtersOpen: {{ request('status') ? 'true' : 'false' }} }">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by Order ID, customer name or phone..."
-            class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
+            class="admin-control w-full focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
         <button type="button" @click="filtersOpen = !filtersOpen"
                 class="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 md:hidden">
             <span>Status{{ request('status') ? ': '.ucfirst(request('status')) : '' }}</span>
@@ -13,7 +13,7 @@
         </button>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center"
              :class="filtersOpen ? 'flex' : 'hidden md:flex'">
-            <select name="status" class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm focus:border-brand-green-500 focus:outline-none md:flex-1">
+            <select name="status" class="admin-control w-full focus:border-brand-green-500 focus:outline-none md:flex-1">
                 <option value="">All Statuses</option>
                 <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
@@ -26,7 +26,7 @@
         </div>
     </form>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft">
+    <div class="admin-table-wrap">
         @if($orders->isEmpty())
             <x-admin.empty-state title="No orders found" description="Try a different search term or status filter." />
         @else

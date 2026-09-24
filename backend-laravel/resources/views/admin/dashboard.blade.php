@@ -9,7 +9,7 @@
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+            <h1 class="admin-page-title">Dashboard</h1>
             <p class="text-sm text-slate-500">Business overview and performance metrics</p>
         </div>
         <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap items-center gap-2">
@@ -83,11 +83,11 @@
         @endphp
 
         @foreach($kpiCards as $card)
-            <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft transition-shadow hover:shadow-md">
+            <div class="admin-surface p-4 transition-shadow hover:shadow-md">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <p class="text-sm text-slate-500">{{ $card['label'] }}</p>
-                        <p class="mt-1 text-2xl font-bold tracking-tight text-slate-900">{{ $card['value'] }}</p>
+                        <p class="mt-1 admin-page-title">{{ $card['value'] }}</p>
                         <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                             @if(!empty($card['hint']))
                                 <span class="font-medium {{ !empty($card['warn']) ? 'text-brand-orange-600' : 'text-brand-green-600' }}">{{ $card['hint'] }}</span>
@@ -107,7 +107,7 @@
 
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {{-- Revenue chart --}}
-        <div class="rounded-xl border border-slate-200 bg-white shadow-soft xl:col-span-2">
+        <div class="admin-surface xl:col-span-2">
             <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <h2 class="text-base font-bold text-slate-900">Revenue Overview</h2>
                 <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -123,7 +123,7 @@
         </div>
 
         {{-- Order status donut --}}
-        <div class="rounded-xl border border-slate-200 bg-white shadow-soft">
+        <div class="admin-surface">
             <div class="border-b border-slate-100 px-5 py-4">
                 <h2 class="text-base font-bold text-slate-900">Order Status</h2>
             </div>
@@ -161,7 +161,7 @@
                 ];
             @endphp
             @foreach($expenseCards as $ec)
-                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-soft sm:p-5">
+                <div class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
                     <div class="flex items-start justify-between gap-2">
                         <div>
                             <p class="text-xs text-slate-500 sm:text-sm">{{ $ec['label'] }}</p>
@@ -179,7 +179,7 @@
 
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {{-- Recent orders --}}
-        <div class="rounded-xl border border-slate-200 bg-white shadow-soft xl:col-span-2">
+        <div class="admin-surface xl:col-span-2">
             <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <h2 class="text-base font-bold text-slate-900">Recent Orders</h2>
                 <a href="{{ route('admin.orders.index') }}" class="text-xs font-semibold text-brand-green-600 hover:text-brand-green-700">View all</a>
@@ -253,7 +253,7 @@
         </div>
 
         {{-- Top products --}}
-        <div class="rounded-xl border border-slate-200 bg-white shadow-soft">
+        <div class="admin-surface">
             <div class="border-b border-slate-100 px-5 py-4">
                 <h2 class="text-base font-bold text-slate-900">Top Products</h2>
             </div>
@@ -284,7 +284,7 @@
     </div>
 
     {{-- Low stock --}}
-    <div class="rounded-xl border border-slate-200 bg-white shadow-soft">
+    <div class="admin-surface">
         <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <h2 class="text-base font-bold text-slate-900">Low Stock Alerts</h2>
             <a href="{{ route('admin.inventory.index') }}" class="text-xs font-semibold text-brand-green-600 hover:text-brand-green-700">Manage inventory</a>

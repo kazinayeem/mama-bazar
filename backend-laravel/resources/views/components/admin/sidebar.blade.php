@@ -1,9 +1,5 @@
-{{--
-  Admin sidebar is composed inside layouts/admin.blade.php to share Alpine adminShell() state
-  (collapsed / mobileOpen). This component documents the contract and can be included later
-  if the shell is split further.
---}}
+{{-- Sidebar chrome is rendered in layouts/admin.blade.php for shared Alpine shell state. --}}
 @props([])
-<div {{ $attributes }}>
+<aside {{ $attributes->merge(['class' => 'flex w-64 shrink-0 flex-col border-r border-[var(--admin-border)] bg-white']) }}>
     {{ $slot }}
-</div>
+</aside>

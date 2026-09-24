@@ -17,7 +17,7 @@
 >
     <template x-for="toast in toasts" :key="toast.id">
         <div
-            class="pointer-events-auto rounded-xl border px-4 py-3 text-sm font-medium shadow-panel"
+            class="pointer-events-auto rounded-[8px] border px-3.5 py-2.5 text-sm font-medium shadow-panel"
             :class="toast.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-brand-green-200 bg-brand-green-50 text-brand-green-800'"
             x-transition
             x-text="toast.message"

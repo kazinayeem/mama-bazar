@@ -4,7 +4,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <!-- Add Banner Form -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft space-y-4 h-fit">
+    <div class="admin-surface p-4 space-y-4 h-fit">
         <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">Upload Banner</h3>
 
         <form action="{{ route('admin.banners.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
@@ -34,14 +34,14 @@
                 <input type="text" name="link" placeholder="/shop?sale=true" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
             </div>
 
-            <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white font-bold text-xs shadow-sm transition">
+            <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-[6px] bg-brand-green-500 text-sm font-medium text-white hover:bg-brand-green-600">
                 Save & Publish Banner
             </button>
         </form>
     </div>
 
     <!-- Banners Table -->
-    <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
+    <div class="lg:col-span-2 admin-table-wrap">
         <div class="p-4 border-b border-slate-100 font-bold text-xs uppercase tracking-wider text-slate-700">Configured Banners ({{ $banners->count() }})</div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">

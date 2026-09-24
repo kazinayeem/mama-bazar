@@ -3,7 +3,7 @@
 @section('content')
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Inventory</h1>
+        <h1 class="admin-page-title">Inventory</h1>
         <p class="text-sm text-slate-500">Stock levels and quick adjustments</p>
     </div>
 </div>
@@ -15,7 +15,7 @@
         ['Low Stock', $stats['low'], 'bg-amber-50 text-amber-700'],
         ['Out of Stock', $stats['out'], 'bg-red-50 text-red-700'],
     ] as [$label, $val, $cls])
-        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+        <div class="admin-surface p-4">
             <p class="text-sm text-slate-500">{{ $label }}</p>
             <p class="mt-1 text-2xl font-bold tracking-tight">{{ number_format($val) }}</p>
             <span class="mt-2 inline-block rounded-lg px-2 py-1 text-[10px] font-bold {{ $cls }}">Live</span>
@@ -26,13 +26,13 @@
 <div class="mt-4 flex flex-wrap gap-2">
     @foreach(['all' => 'All', 'low' => 'Low (≤10)', 'out' => 'Out of stock'] as $key => $label)
         <a href="{{ route('admin.inventory.index', ['filter' => $key]) }}"
-           class="rounded-full px-4 py-1.5 text-xs font-semibold {{ $filter === $key ? 'bg-brand-green-500 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
+           class="inline-flex h-8 items-center rounded-[6px] px-3 text-xs font-semibold {{ $filter === $key ? 'bg-brand-green-500 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
             {{ $label }}
         </a>
     @endforeach
 </div>
 
-<div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft">
+<div class="mt-4 admin-table-wrap">
     {{-- Mobile cards --}}
     <div class="divide-y divide-slate-100 md:hidden">
         @forelse($products as $product)

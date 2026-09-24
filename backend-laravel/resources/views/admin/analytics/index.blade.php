@@ -3,7 +3,7 @@
 @section('content')
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Analytics</h1>
+        <h1 class="admin-page-title">Analytics</h1>
         <p class="text-sm text-slate-500">Business performance from live SQLite data</p>
     </div>
     <form method="GET">
@@ -16,14 +16,14 @@
 </div>
 
 <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">Revenue</p><p class="mt-1 text-2xl font-bold">৳{{ number_format($revenue, 0) }}</p></div>
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">Orders</p><p class="mt-1 text-2xl font-bold">{{ number_format($orderCount) }}</p></div>
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">New Customers</p><p class="mt-1 text-2xl font-bold">{{ number_format($customers) }}</p></div>
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">Avg Order</p><p class="mt-1 text-2xl font-bold">৳{{ number_format($avgOrder, 0) }}</p></div>
+    <div class="admin-surface p-4"><p class="text-sm text-slate-500">Revenue</p><p class="mt-1 text-2xl font-bold">৳{{ number_format($revenue, 0) }}</p></div>
+    <div class="admin-surface p-4"><p class="text-sm text-slate-500">Orders</p><p class="mt-1 text-2xl font-bold">{{ number_format($orderCount) }}</p></div>
+    <div class="admin-surface p-4"><p class="text-sm text-slate-500">New Customers</p><p class="mt-1 text-2xl font-bold">{{ number_format($customers) }}</p></div>
+    <div class="admin-surface p-4"><p class="text-sm text-slate-500">Avg Order</p><p class="mt-1 text-2xl font-bold">৳{{ number_format($avgOrder, 0) }}</p></div>
 </div>
 
 <div class="mt-4 grid gap-4 xl:grid-cols-3">
-    <div class="rounded-xl border bg-white p-5 shadow-soft xl:col-span-2">
+    <div class="admin-surface p-4 xl:col-span-2">
         <h3 class="mb-4 text-sm font-bold">Revenue Trend</h3>
         <div class="space-y-2 max-h-80 overflow-y-auto">
             @forelse($revenueTrend as $row)
@@ -40,7 +40,7 @@
             @endforelse
         </div>
     </div>
-    <div class="rounded-xl border bg-white p-5 shadow-soft">
+    <div class="admin-surface p-4">
         <h3 class="mb-4 text-sm font-bold">Order Status</h3>
         <div class="space-y-2">
             @foreach($statusBreakdown as $row)
@@ -62,7 +62,7 @@
     </div>
 </div>
 
-<div class="mt-4 overflow-hidden rounded-xl border bg-white shadow-soft">
+<div class="mt-4 admin-table-wrap">
     <div class="border-b px-5 py-3 text-sm font-bold">Top Products</div>
     <table class="w-full text-sm">
         <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-3 text-left">Product</th><th class="px-4 py-3 text-right">Qty</th><th class="px-4 py-3 text-right">Revenue</th></tr></thead>

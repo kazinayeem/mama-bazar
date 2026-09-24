@@ -22,7 +22,7 @@ class AdminProductWebController extends Controller
     public function index(Request $request)
     {
         $params = $request->all();
-        $params['limit'] = $params['limit'] ?? 10;
+        $params['limit'] = $params['limit'] ?? 20;
         $params['status'] = $params['status'] ?? 'all';
 
         $result = ProductService::getAll($params);

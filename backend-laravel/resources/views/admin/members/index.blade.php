@@ -3,23 +3,23 @@
 @section('content')
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Team Members</h1>
+        <h1 class="admin-page-title">Team Members</h1>
         <p class="text-sm text-slate-500">Admin staff, roles, and security audit log</p>
     </div>
     <button type="button" onclick="document.getElementById('member-form').classList.toggle('hidden')"
-            class="rounded-full bg-brand-green-500 px-5 py-2.5 text-sm font-medium text-white">Add Member</button>
+            class="inline-flex h-10 items-center justify-center rounded-[6px] bg-brand-green-500 px-3.5 text-sm font-medium text-white hover:bg-brand-green-600">Add Member</button>
 </div>
 
-<div id="member-form" class="mt-4 hidden rounded-xl border bg-white p-5 shadow-soft">
+<div id="member-form" class="mt-4 hidden admin-surface p-4">
     <form action="{{ route('admin.members.store') }}" method="POST" class="grid gap-3 sm:grid-cols-2">
         @csrf
-        <div><label class="mb-1 block text-xs font-bold">Name *</label><input name="name" required class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div><label class="mb-1 block text-xs font-bold">Phone *</label><input name="phone" required class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div><label class="mb-1 block text-xs font-bold">Email</label><input type="email" name="email" class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div><label class="mb-1 block text-xs font-bold">Password *</label><input type="password" name="password" required class="w-full rounded-xl border p-2.5 text-xs"></div>
+        <div><label class="mb-1 block text-xs font-bold">Name *</label><input name="name" required class="admin-control w-full text-sm"></div>
+        <div><label class="mb-1 block text-xs font-bold">Phone *</label><input name="phone" required class="admin-control w-full text-sm"></div>
+        <div><label class="mb-1 block text-xs font-bold">Email</label><input type="email" name="email" class="admin-control w-full text-sm"></div>
+        <div><label class="mb-1 block text-xs font-bold">Password *</label><input type="password" name="password" required class="admin-control w-full text-sm"></div>
         <div>
             <label class="mb-1 block text-xs font-bold">Role *</label>
-            <select name="role" required class="w-full rounded-xl border bg-white p-2.5 text-xs">
+            <select name="role" required class="admin-control w-full text-sm">
                 <option value="admin">Admin</option>
                 <option value="manager">Manager</option>
                 <option value="editor">Editor</option>
@@ -28,16 +28,16 @@
         </div>
         <div>
             <label class="mb-1 block text-xs font-bold">Status</label>
-            <select name="status" class="w-full rounded-xl border bg-white p-2.5 text-xs">
+            <select name="status" class="admin-control w-full text-sm">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
         </div>
-        <div class="sm:col-span-2 flex justify-end"><button class="rounded-full bg-brand-green-500 px-5 py-2 text-sm font-medium text-white">Create Member</button></div>
+        <div class="sm:col-span-2 flex justify-end"><button class="inline-flex h-10 items-center justify-center rounded-[6px] bg-brand-green-500 px-3.5 text-sm font-medium text-white">Create Member</button></div>
     </form>
 </div>
 
-<div class="mt-4 overflow-hidden rounded-xl border bg-white shadow-soft">
+<div class="mt-4 admin-table-wrap">
     <div class="border-b bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Team</div>
     <table class="w-full text-sm">
         <thead class="border-b text-xs uppercase text-slate-500">
@@ -92,7 +92,7 @@
     </table>
 </div>
 
-<div class="mt-6 overflow-hidden rounded-xl border bg-white shadow-soft">
+<div class="mt-6 admin-table-wrap">
     <div class="border-b bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Security Audit Log</div>
     <table class="w-full text-sm">
         <thead class="border-b text-xs uppercase text-slate-500">

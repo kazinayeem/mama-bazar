@@ -1,114 +1,154 @@
 @extends('layouts.admin', ['headerTitle' => 'Expenses'])
 
 @section('content')
-<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Expenses</h1>
-        <p class="text-sm text-slate-500">{{ $stats['count'] }} records · ৳{{ number_format($stats['total'], 0) }} total</p>
+<div class="admin-page" x-data="{ formOpen: false, filtersOpen: {{ request()->hasAny(['q','status','category_id']) ? 'true' : 'false' }} }">
+    <x-admin.page-header title="Expenses" :subtitle="$stats['count'].' records · ৳'.number_format($stats['total'], 0).' total'">
+        <x-slot:actions>
+            <x-admin.button type="button" size="sm" @click="formOpen = !formOpen">Add Expense</x-admin.button>
+        </x-slot:actions>
+    </x-admin.page-header>
+
+    <div class="admin-metric-grid">
+        <x-admin.metric-card label="Total" :value="'৳'.number_format($stats['total'], 0)" />
+        <x-admin.metric-card label="Approved" :value="'৳'.number_format($stats['approved'], 0)" tone="success" />
+        <x-admin.metric-card label="Pending" :value="'৳'.number_format($stats['pending'], 0)" tone="warning" />
+        <x-admin.metric-card label="Count" :value="number_format($stats['count'])" />
     </div>
-    <button type="button" onclick="document.getElementById('expense-form').classList.toggle('hidden')"
-            class="rounded-full bg-brand-green-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-green-600">Add Expense</button>
-</div>
 
-<div class="mt-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">Total</p><p class="mt-1 text-2xl font-bold">৳{{ number_format($stats['total'], 0) }}</p></div>
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">Approved</p><p class="mt-1 text-2xl font-bold text-brand-green-700">৳{{ number_format($stats['approved'], 0) }}</p></div>
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">Pending</p><p class="mt-1 text-2xl font-bold text-amber-600">৳{{ number_format($stats['pending'], 0) }}</p></div>
-    <div class="rounded-xl border bg-white p-5 shadow-soft"><p class="text-sm text-slate-500">Count</p><p class="mt-1 text-2xl font-bold">{{ number_format($stats['count']) }}</p></div>
-</div>
-
-<div id="expense-form" class="mt-4 hidden rounded-xl border bg-white p-5 shadow-soft">
-    <form action="{{ route('admin.expenses.store') }}" method="POST" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        @csrf
-        <div class="sm:col-span-2"><label class="mb-1 block text-xs font-bold">Title *</label><input name="title" required class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div><label class="mb-1 block text-xs font-bold">Amount *</label><input type="number" step="0.01" name="amount" required class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div><label class="mb-1 block text-xs font-bold">Date *</label><input type="date" name="expense_date" value="{{ date('Y-m-d') }}" required class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div>
-            <label class="mb-1 block text-xs font-bold">Category</label>
-            <select name="category_id" class="w-full rounded-xl border bg-white p-2.5 text-xs">
+    <div x-show="formOpen" x-cloak class="admin-surface p-4">
+        <form action="{{ route('admin.expenses.store') }}" method="POST" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            @csrf
+            <div class="sm:col-span-2">
+                <x-admin.input label="Title *" name="title" required />
+            </div>
+            <x-admin.input label="Amount *" type="number" name="amount" step="0.01" required />
+            <x-admin.input label="Date *" type="date" name="expense_date" value="{{ date('Y-m-d') }}" required />
+            <x-admin.select label="Category" name="category_id">
                 <option value="">—</option>
                 @foreach($categories as $cat)<option value="{{ $cat->id }}">{{ $cat->name }}</option>@endforeach
-            </select>
-        </div>
-        <div>
-            <label class="mb-1 block text-xs font-bold">Member</label>
-            <select name="member_id" class="w-full rounded-xl border bg-white p-2.5 text-xs">
+            </x-admin.select>
+            <x-admin.select label="Member" name="member_id">
                 <option value="">—</option>
                 @foreach($members as $m)<option value="{{ $m->id }}">{{ $m->name }}</option>@endforeach
-            </select>
-        </div>
-        <div><label class="mb-1 block text-xs font-bold">Payment Method</label><input name="payment_method" value="cash" class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div>
-            <label class="mb-1 block text-xs font-bold">Status</label>
-            <select name="status" class="w-full rounded-xl border bg-white p-2.5 text-xs">
+            </x-admin.select>
+            <x-admin.input label="Payment Method" name="payment_method" value="cash" />
+            <x-admin.select label="Status" name="status">
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
+            </x-admin.select>
+            <x-admin.input label="Reference" name="reference_number" />
+            <x-admin.input label="Vendor" name="vendor" />
+            <div class="sm:col-span-2">
+                <x-admin.textarea label="Description" name="description" rows="2" />
+            </div>
+            <div class="sm:col-span-2">
+                <x-admin.textarea label="Notes" name="notes" rows="2" />
+            </div>
+            <div class="flex justify-end sm:col-span-2 lg:col-span-4">
+                <x-admin.button type="submit" size="sm">Create Expense</x-admin.button>
+            </div>
+        </form>
+    </div>
+
+    <form method="GET" class="admin-filter-bar">
+        <x-admin.search-input name="q" placeholder="Search expenses..." class="lg:max-w-md" />
+        <button type="button" @click="filtersOpen = !filtersOpen"
+                class="flex w-full items-center justify-between rounded-[6px] border border-[var(--admin-border)] bg-[var(--admin-muted)] px-3 py-2.5 text-xs font-semibold text-slate-700 md:hidden">
+            <span>Filters</span>
+            <svg class="h-4 w-4 text-slate-400 transition-transform" :class="filtersOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"
+             :class="filtersOpen ? 'flex' : 'hidden md:flex'">
+            <select name="status" class="admin-control w-full sm:w-40" onchange="this.form.submit()">
+                <option value="">All statuses</option>
+                @foreach(['pending','approved','rejected'] as $s)
+                    <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst($s) }}</option>
+                @endforeach
+            </select>
+            <select name="category_id" class="admin-control w-full sm:w-44" onchange="this.form.submit()">
+                <option value="">All categories</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" @selected(request('category_id')==$cat->id)>{{ $cat->name }}</option>
+                @endforeach
             </select>
         </div>
-        <div><label class="mb-1 block text-xs font-bold">Reference</label><input name="reference_number" class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div><label class="mb-1 block text-xs font-bold">Vendor</label><input name="vendor" class="w-full rounded-xl border p-2.5 text-xs"></div>
-        <div class="sm:col-span-2"><label class="mb-1 block text-xs font-bold">Description</label><textarea name="description" rows="2" class="w-full rounded-xl border p-2.5 text-xs"></textarea></div>
-        <div class="sm:col-span-2"><label class="mb-1 block text-xs font-bold">Notes</label><textarea name="notes" rows="2" class="w-full rounded-xl border p-2.5 text-xs"></textarea></div>
-        <div class="sm:col-span-2 lg:col-span-4 flex justify-end"><button class="rounded-full bg-brand-green-500 px-5 py-2 text-sm font-medium text-white">Create Expense</button></div>
     </form>
-</div>
 
-<form method="GET" class="mt-4 grid gap-3 lg:grid-cols-4">
-    <input type="text" name="q" value="{{ request('q') }}" placeholder="Search..." class="rounded-lg border p-2.5 text-sm lg:col-span-2">
-    <select name="status" class="rounded-lg border bg-white p-2.5 text-sm" onchange="this.form.submit()">
-        <option value="">All statuses</option>
-        @foreach(['pending','approved','rejected'] as $s)
-            <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst($s) }}</option>
-        @endforeach
-    </select>
-    <select name="category_id" class="rounded-lg border bg-white p-2.5 text-sm" onchange="this.form.submit()">
-        <option value="">All categories</option>
-        @foreach($categories as $cat)
-            <option value="{{ $cat->id }}" @selected(request('category_id')==$cat->id)>{{ $cat->name }}</option>
-        @endforeach
-    </select>
-</form>
+    <div class="admin-table-wrap">
+        @if($expenses->isEmpty())
+            <x-admin.empty-state title="No expenses found" description="Add an expense or adjust filters." />
+        @else
+            <div class="md:hidden">
+                @foreach($expenses as $expense)
+                    @php
+                        $statusVariant = match($expense->status) {
+                            'approved' => 'default',
+                            'pending' => 'warning',
+                            default => 'destructive',
+                        };
+                    @endphp
+                    <div class="admin-mobile-card">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-slate-900">{{ $expense->title }}</p>
+                                <p class="mt-0.5 text-xs text-slate-500">{{ $expense->category?->name ?? '—' }} · {{ optional($expense->expense_date)->format('Y-m-d') }}</p>
+                            </div>
+                            <x-admin.badge :variant="$statusVariant">{{ $expense->status }}</x-admin.badge>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between">
+                            <p class="text-sm font-bold text-slate-900">৳{{ number_format($expense->amount, 0) }}</p>
+                            <form action="{{ route('admin.expenses.destroy', $expense->id) }}" method="POST" onsubmit="return confirm('Delete expense?')">
+                                @csrf @method('DELETE')
+                                <x-admin.button type="submit" variant="ghost" size="sm" class="text-red-600">Delete</x-admin.button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
 
-<div class="mt-4 overflow-hidden rounded-xl border bg-white shadow-soft">
-    <table class="w-full text-left text-sm">
-        <thead class="border-b bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <tr>
-                <th class="px-4 py-3">Title</th>
-                <th class="px-4 py-3">Category</th>
-                <th class="px-4 py-3">Member</th>
-                <th class="px-4 py-3">Date</th>
-                <th class="px-4 py-3">Amount</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3 text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y">
-            @forelse($expenses as $expense)
-                <tr class="hover:bg-slate-50/60">
-                    <td class="px-4 py-3 font-semibold text-slate-900">{{ $expense->title }}</td>
-                    <td class="px-4 py-3 text-slate-600">{{ $expense->category?->name ?? '—' }}</td>
-                    <td class="px-4 py-3 text-slate-600">{{ $expense->member_name ?? '—' }}</td>
-                    <td class="px-4 py-3 text-slate-500">{{ optional($expense->expense_date)->format('Y-m-d') }}</td>
-                    <td class="px-4 py-3 font-bold">৳{{ number_format($expense->amount, 0) }}</td>
-                    <td class="px-4 py-3">
-                        @php $sc = match($expense->status) { 'approved' => 'bg-brand-green-50 text-brand-green-700', 'pending' => 'bg-amber-50 text-amber-700', default => 'bg-red-50 text-red-700' }; @endphp
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $sc }}">{{ $expense->status }}</span>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                        <form action="{{ route('admin.expenses.destroy', $expense->id) }}" method="POST" onsubmit="return confirm('Delete expense?')" class="inline">
-                            @csrf @method('DELETE')
-                            <button class="text-xs font-semibold text-red-600 hover:underline">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="7" class="px-4 py-12 text-center text-sm text-slate-500">No expenses found</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-    @if($expenses->hasPages())
-        <div class="border-t p-3">{{ $expenses->links() }}</div>
-    @endif
+            <div class="hidden overflow-x-auto md:block">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th class="admin-hide-sm">Category</th>
+                            <th class="admin-hide-md">Member</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($expenses as $expense)
+                            @php
+                                $statusVariant = match($expense->status) {
+                                    'approved' => 'default',
+                                    'pending' => 'warning',
+                                    default => 'destructive',
+                                };
+                            @endphp
+                            <tr>
+                                <td class="font-semibold text-slate-900">{{ $expense->title }}</td>
+                                <td class="admin-hide-sm text-slate-600">{{ $expense->category?->name ?? '—' }}</td>
+                                <td class="admin-hide-md text-slate-600">{{ $expense->member_name ?? '—' }}</td>
+                                <td class="text-slate-500">{{ optional($expense->expense_date)->format('Y-m-d') }}</td>
+                                <td class="font-bold text-slate-900">৳{{ number_format($expense->amount, 0) }}</td>
+                                <td><x-admin.badge :variant="$statusVariant">{{ $expense->status }}</x-admin.badge></td>
+                                <td class="text-right">
+                                    <form action="{{ route('admin.expenses.destroy', $expense->id) }}" method="POST" onsubmit="return confirm('Delete expense?')" class="inline">
+                                        @csrf @method('DELETE')
+                                        <x-admin.button type="submit" variant="ghost" size="sm" class="text-red-600 hover:bg-red-50">Delete</x-admin.button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <x-admin.pagination :paginator="$expenses" />
+        @endif
+    </div>
 </div>
 @endsection

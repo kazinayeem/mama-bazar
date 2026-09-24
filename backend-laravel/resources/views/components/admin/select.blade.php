@@ -6,10 +6,10 @@
 
 <div class="space-y-1.5">
     @if($label)
-        <label class="block text-xs font-bold text-slate-800">{{ $label }}</label>
+        <label class="block text-xs font-semibold text-slate-700">{{ $label }}</label>
     @endif
     <select {{ $attributes->merge([
-        'class' => 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-500/20'.($error ? ' border-red-300' : '')
+        'class' => 'admin-control w-full'.($error ? ' border-red-300' : '')
     ]) }}>
         {{ $slot }}
     </select>

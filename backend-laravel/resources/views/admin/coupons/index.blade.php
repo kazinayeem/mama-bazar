@@ -3,7 +3,7 @@
 @section('content')
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-    <div class="h-fit space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+    <div class="h-fit space-y-4 admin-surface p-4">
         <h3 class="border-b border-slate-100 pb-3 text-sm font-bold text-slate-900">Create Coupon</h3>
 
         <form action="{{ route('admin.coupons.store') }}" method="POST" class="space-y-4">
@@ -16,7 +16,7 @@
 
             <div>
                 <label class="mb-1 block text-xs font-bold text-slate-700">Discount Type *</label>
-                <select name="discount_type" required class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs focus:border-brand-green-500 focus:outline-none">
+                <select name="discount_type" required class="admin-control w-full text-sm focus:border-brand-green-500 focus:outline-none">
                     <option value="fixed">Fixed Amount (৳)</option>
                     <option value="percentage">Percentage (%)</option>
                 </select>
@@ -24,24 +24,24 @@
 
             <div>
                 <label class="mb-1 block text-xs font-bold text-slate-700">Discount Value *</label>
-                <input type="number" step="0.01" name="discount_value" required placeholder="e.g. 50" class="w-full rounded-xl border border-slate-200 p-2.5 text-xs focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
+                <input type="number" step="0.01" name="discount_value" required placeholder="e.g. 50" class="admin-control w-full text-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
             </div>
 
             <div>
                 <label class="mb-1 block text-xs font-bold text-slate-700">Minimum Order Amount (৳)</label>
-                <input type="number" step="0.01" name="min_order_amount" value="0" placeholder="0" class="w-full rounded-xl border border-slate-200 p-2.5 text-xs focus:border-brand-green-500 focus:outline-none">
+                <input type="number" step="0.01" name="min_order_amount" value="0" placeholder="0" class="admin-control w-full text-sm focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <div>
                 <label class="mb-1 block text-xs font-bold text-slate-700">Expiry Date (Optional)</label>
-                <input type="date" name="expiry_date" class="w-full rounded-xl border border-slate-200 p-2.5 text-xs focus:border-brand-green-500 focus:outline-none">
+                <input type="date" name="expiry_date" class="admin-control w-full text-sm focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <x-admin.button type="submit" class="w-full">Create Coupon</x-admin.button>
         </form>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft lg:col-span-2">
+    <div class="admin-table-wrap lg:col-span-2">
         <div class="border-b border-slate-100 p-4 text-xs font-bold uppercase tracking-wider text-slate-700">
             Active Coupons ({{ $coupons->count() }})
         </div>

@@ -5,10 +5,10 @@
 
     <form method="GET" action="{{ route('admin.customers.index') }}" class="w-full max-w-md">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customer by name, phone, or email..."
-            class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
+            class="admin-control w-full focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
     </form>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft">
+    <div class="admin-table-wrap">
         @if($customers->isEmpty())
             <x-admin.empty-state title="No customers found" description="Try a different search term." />
         @else

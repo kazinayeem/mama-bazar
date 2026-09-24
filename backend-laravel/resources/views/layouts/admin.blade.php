@@ -8,7 +8,7 @@
     <link rel="preload" href="/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex h-screen overflow-hidden bg-background font-body text-slate-800 antialiased"
+<body class="admin-shell flex h-screen overflow-hidden font-body antialiased"
       x-data="adminShell()"
       x-init="init()"
       @keydown.window="onKey($event)"
@@ -22,25 +22,25 @@
 
     {{-- Mobile backdrop --}}
     <div x-show="mobileOpen" x-cloak
-         class="fixed inset-0 z-[200] bg-black/60 lg:hidden"
+         class="fixed inset-0 z-[200] bg-black/50 lg:hidden"
          @click="mobileOpen = false"
          x-transition.opacity></div>
 
-    {{-- Sidebar: mobile off-canvas drawer (w-64), desktop static --}}
-    <aside class="fixed inset-y-0 left-0 z-[201] flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-transform duration-200 ease-out lg:static lg:w-auto"
+    {{-- Sidebar: ~256px desktop, drawer on mobile --}}
+    <aside class="fixed inset-y-0 left-0 z-[201] flex w-64 shrink-0 flex-col border-r border-[var(--admin-border)] bg-white transition-transform duration-200 ease-out lg:static lg:w-auto"
            :class="[
                mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-               collapsed ? 'lg:w-16' : 'lg:w-60',
+               collapsed ? 'lg:w-16' : 'lg:w-64',
            ]">
 
-        {{-- Brand header h-16 --}}
-        <div class="relative flex h-16 shrink-0 items-center gap-3 border-b border-slate-200"
-             :class="collapsed ? 'justify-center px-0 lg:px-0' : 'px-4'">
-            <button type="button" @click="mobileOpen = false" class="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden" aria-label="Close sidebar">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        {{-- Brand header --}}
+        <div class="relative flex h-14 shrink-0 items-center gap-2.5 border-b border-[var(--admin-border)]"
+             :class="collapsed ? 'justify-center px-0' : 'px-3.5'">
+            <button type="button" @click="mobileOpen = false" class="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-[6px] p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden" aria-label="Close sidebar">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-green-500 text-white shadow-sm">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">{!! $lucide['store'] !!}</svg>
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-brand-green-500 text-white">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">{!! $lucide['store'] !!}</svg>
             </div>
             <div class="min-w-0" x-show="!collapsed">
                 <p class="truncate text-sm font-bold leading-tight text-slate-900">MamaBazar</p>
@@ -55,13 +55,13 @@
         </div>
 
         {{-- Nav --}}
-        <nav class="flex-1 space-y-4 overflow-y-auto py-4" :class="collapsed ? 'px-1.5' : 'px-3'">
+        <nav class="flex-1 space-y-3 overflow-y-auto py-3" :class="collapsed ? 'px-1.5' : 'px-2.5'">
             @foreach($adminNavSections as $section)
                 @php $sectionActive = collect($section['items'])->contains(fn($item) => request()->routeIs($item['match'])); @endphp
                 <div x-data="{ open: {{ $sectionActive ? 'true' : 'true' }} }">
                     <button type="button"
                             @click="if(!collapsed) open = !open"
-                            class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors hover:text-slate-800"
+                            class="flex w-full items-center gap-2 rounded-[6px] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors hover:text-slate-800"
                             :class="{
                                 'justify-center': collapsed,
                                 'text-brand-green-600': {{ $sectionActive ? 'true' : 'false' }},
@@ -76,7 +76,7 @@
                         @endif
                     </button>
 
-                    <div x-show="open || collapsed" class="mt-1 space-y-0.5">
+                    <div x-show="open || collapsed" class="mt-0.5 space-y-0.5">
                         @foreach($section['items'] as $item)
                             @php
                                 $active = request()->routeIs($item['match']);
@@ -90,9 +90,9 @@
                             <a href="{{ $url }}"
                                title="{{ $item['label'] }}"
                                @click="mobileOpen = false"
-                               class="flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors {{ $active ? 'bg-brand-green-50 text-brand-green-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800' }}"
-                               :class="collapsed ? 'justify-center px-1.5' : 'px-3'">
-                                <svg class="h-[18px] w-[18px] shrink-0 {{ $active ? 'text-brand-green-600' : '' }}"
+                               class="flex items-center gap-2.5 rounded-[6px] py-1.5 text-[13px] font-medium transition-colors {{ $active ? 'bg-brand-green-50 text-brand-green-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800' }}"
+                               :class="collapsed ? 'justify-center px-1.5' : 'px-2.5'">
+                                <svg class="h-[16px] w-[16px] shrink-0 {{ $active ? 'text-brand-green-600' : '' }}"
                                      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                     {!! $lucide[$item['icon']] ?? '' !!}
                                 </svg>
@@ -104,9 +104,9 @@
             @endforeach
         </nav>
 
-        {{-- Footer v1.0 --}}
-        <div class="shrink-0 border-t border-slate-200 p-3">
-            <div class="rounded-lg bg-slate-50 px-3 py-2 text-center" :class="collapsed && 'px-1'">
+        {{-- Footer --}}
+        <div class="shrink-0 border-t border-[var(--admin-border)] p-2.5">
+            <div class="rounded-[6px] bg-[var(--admin-muted)] px-2.5 py-1.5 text-center" :class="collapsed && 'px-1'">
                 <p class="text-[10px] font-semibold text-slate-400" x-show="!collapsed">MamaBazar Admin v1.0</p>
                 <p class="text-[10px] font-semibold text-slate-400" x-show="collapsed">v1.0</p>
             </div>
@@ -115,11 +115,11 @@
 
     {{-- Main --}}
     <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6">
-            <button type="button" @click="mobileOpen = true" class="rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:hidden" aria-label="Open sidebar">
+        <header class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2.5 border-b border-[var(--admin-border)] bg-white/95 px-3 backdrop-blur sm:px-5">
+            <button type="button" @click="mobileOpen = true" class="rounded-[6px] p-2 text-slate-500 hover:bg-slate-100 lg:hidden" aria-label="Open sidebar">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <button type="button" @click="toggleCollapse()" class="hidden rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:inline-flex" aria-label="Toggle sidebar">
+            <button type="button" @click="toggleCollapse()" class="hidden rounded-[6px] p-2 text-slate-500 hover:bg-slate-100 lg:inline-flex" aria-label="Toggle sidebar">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
@@ -132,10 +132,10 @@
             <div class="flex-1"></div>
 
             <button type="button" @click="commandOpen = true"
-                    class="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-100 sm:flex">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <span class="hidden text-xs lg:inline">Search anything...</span>
-                <kbd class="ml-2 rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘K</kbd>
+                    class="hidden items-center gap-2 rounded-[6px] border border-[var(--admin-border)] bg-[var(--admin-muted)] px-2.5 py-1.5 text-sm text-slate-400 hover:bg-slate-100 sm:flex">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <span class="hidden text-xs lg:inline">Search…</span>
+                <kbd class="ml-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-400">⌘K</kbd>
             </button>
 
             @php
@@ -145,21 +145,21 @@
             @endphp
             <div class="relative" x-data="{ notifOpen: false }">
                 <button type="button" @click="notifOpen = !notifOpen" @click.away="notifOpen = false"
-                        class="relative rounded-md p-2 text-slate-500 hover:bg-slate-100">
+                        class="relative rounded-[6px] p-2 text-slate-500 hover:bg-slate-100">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     @if($notifCount > 0)
                         <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500"></span>
                     @endif
                 </button>
                 <div x-show="notifOpen" x-cloak x-transition
-                     class="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-                    <div class="flex items-center justify-between border-b p-3">
+                     class="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-[10px] border border-[var(--admin-border)] bg-white shadow-panel">
+                    <div class="flex h-11 items-center justify-between border-b border-[var(--admin-border)] px-3">
                         <span class="text-sm font-bold">Notifications</span>
-                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">{{ $notifCount }}</span>
+                        <span class="rounded-[6px] bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">{{ $notifCount }}</span>
                     </div>
                     <div class="max-h-80 overflow-y-auto">
                         @forelse($pendingNotifs as $o)
-                            <a href="{{ route('admin.orders.show', $o->id) }}" class="flex gap-3 border-b px-4 py-3 text-sm hover:bg-slate-50">
+                            <a href="{{ route('admin.orders.show', $o->id) }}" class="flex gap-3 border-b border-slate-50 px-4 py-3 text-sm hover:bg-slate-50">
                                 <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-green-500"></span>
                                 <div>
                                     <p class="font-semibold">Order {{ $o->order_id }}</p>
@@ -169,7 +169,7 @@
                         @empty
                         @endforelse
                         @foreach($lowStockNotifs as $p)
-                            <a href="{{ route('admin.inventory.index', ['filter' => 'low']) }}" class="flex gap-3 border-b px-4 py-3 text-sm hover:bg-slate-50">
+                            <a href="{{ route('admin.inventory.index', ['filter' => 'low']) }}" class="flex gap-3 border-b border-slate-50 px-4 py-3 text-sm hover:bg-slate-50">
                                 <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-amber-500"></span>
                                 <div>
                                     <p class="font-semibold">Low stock: {{ \Illuminate\Support\Str::limit($p->title, 28) }}</p>
@@ -190,14 +190,14 @@
                     {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
                 </button>
                 <div x-show="userMenu" x-cloak x-transition
-                     class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1 shadow-xl">
-                    <div class="border-b px-4 py-3">
+                     class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-[10px] border border-[var(--admin-border)] bg-white py-1 shadow-panel">
+                    <div class="border-b border-[var(--admin-border)] px-4 py-3">
                         <p class="text-sm font-bold">{{ auth()->user()->name ?? 'Admin' }}</p>
                         <p class="truncate text-xs text-slate-400">{{ auth()->user()->phone ?? auth()->user()->email }}</p>
                     </div>
                     <a href="{{ route('home') }}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50">View Storefront</a>
                     <a href="{{ route('admin.settings.index') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50">Settings</a>
-                    <div class="my-1 border-t"></div>
+                    <div class="my-1 border-t border-[var(--admin-border)]"></div>
                     <form action="{{ route('admin.logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Logout</button>
@@ -206,28 +206,28 @@
             </div>
         </header>
 
-        <main class="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
+        <main class="flex-1 overflow-y-auto p-3 sm:p-5">
             @yield('content')
         </main>
     </div>
 
     {{-- Command Palette ⌘K --}}
-    <div x-show="commandOpen" x-cloak class="fixed inset-0 z-[300] flex items-start justify-center bg-black/40 pt-[15%] px-4"
+    <div x-show="commandOpen" x-cloak class="fixed inset-0 z-[300] flex items-start justify-center bg-black/40 pt-[12%] px-4"
          @click.self="commandOpen = false">
-        <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-panel"
+        <div class="w-full max-w-lg overflow-hidden rounded-[10px] border border-[var(--admin-border)] bg-white shadow-panel"
              x-data="{ q: '', selected: 0 }"
              @keydown.escape.window="commandOpen = false">
-            <div class="flex items-center gap-2 border-b px-4">
+            <div class="flex h-12 items-center gap-2 border-b border-[var(--admin-border)] px-4">
                 <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input x-model="q" x-ref="cmdInput" type="text" placeholder="Search pages..."
-                       class="h-12 flex-1 bg-transparent text-sm outline-none"
+                       class="h-full flex-1 bg-transparent text-sm outline-none"
                        @keydown.enter.prevent="const links = [...$el.closest('div').parentElement.querySelectorAll('[data-cmd-link]')].filter(a => !a.classList.contains('hidden')); if(links[selected]) location.href = links[selected].href">
             </div>
             <div class="max-h-80 overflow-y-auto p-2">
                 @foreach($allAdminNavItems as $i => $item)
                     <a data-cmd-link href="{{ route($item['route'], $item['params'] ?? []) }}"
                        x-show="!q || '{{ strtolower($item['label'].' '.$item['section']) }}'.includes(q.toLowerCase())"
-                       class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-brand-green-50 hover:text-brand-green-700"
+                       class="flex items-center gap-3 rounded-[6px] px-3 py-2 text-sm text-slate-700 hover:bg-brand-green-50 hover:text-brand-green-700"
                        @click="commandOpen = false">
                         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $item['section'] }}</span>
                         <span class="font-medium">{{ $item['label'] }}</span>

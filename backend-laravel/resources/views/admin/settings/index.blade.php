@@ -8,7 +8,7 @@
         <p class="text-xs text-slate-500">Configure global shop information, contact details, and tax rules.</p>
     </div>
 
-    <form action="{{ route('admin.settings.update') }}" method="POST" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-soft space-y-4">
+    <form action="{{ route('admin.settings.update') }}" method="POST" class="bg-white p-6 sm:p-8 admin-surface space-y-4">
         @csrf
 
         <div>

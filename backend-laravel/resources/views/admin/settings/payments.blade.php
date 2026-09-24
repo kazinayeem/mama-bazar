@@ -10,7 +10,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @foreach($methods as $method)
-            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-soft flex flex-col justify-between space-y-4">
+            <div class="admin-surface p-4 flex flex-col justify-between space-y-4">
                 <div class="space-y-1">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-slate-900 text-sm">{{ $method->name }}</span>

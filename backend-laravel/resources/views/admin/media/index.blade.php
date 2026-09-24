@@ -4,7 +4,7 @@
 <div class="space-y-6">
 
     <!-- Upload Card -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+    <div class="admin-surface p-4">
         <h3 class="text-sm font-bold text-slate-900 mb-3">Upload File to Local Storage</h3>
         <form action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             @csrf
@@ -18,14 +18,14 @@
                 <option value="categories">Folder: Categories</option>
             </select>
 
-            <button type="submit" class="w-full px-5 py-2.5 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white font-bold text-xs shadow-sm transition sm:w-auto">
+            <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-[6px] bg-brand-green-500 px-3.5 text-sm font-medium text-white hover:bg-brand-green-600 sm:w-auto">
                 Upload Local File
             </button>
         </form>
     </div>
 
     <!-- Media Grid -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-soft space-y-4">
+    <div class="admin-surface p-4 space-y-4">
         <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Stored Media Assets ({{ $media->total() }})</h3>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
