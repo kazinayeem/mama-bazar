@@ -46,8 +46,60 @@ class AdminSettingWebController extends Controller
 
     public function paymentMethods()
     {
-        $methods = PaymentMethod::orderBy('sort_order', 'asc')->get();
+        PaymentMethod::ensureDefaults();
+        $methods = PaymentMethod::ordered()->get();
+
         return view('admin.settings.payments', compact('methods'));
+    }
+
+    public function storePaymentMethod(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|max:50|unique:payment_methods,code',
+            'name' => 'required|string|max:100',
+            'type' => 'required|in:cod,mobile_banking,bank,online',
+            'enabled' => 'nullable|boolean',
+            'sort_order' => 'nullable|integer',
+            'maintenance_mode' => 'nullable|boolean',
+            'config' => 'nullable|array',
+        ]);
+
+        PaymentMethod::create([
+            'code' => strtolower(trim($validated['code'])),
+            'name' => trim($validated['name']),
+            'type' => $validated['type'],
+            'enabled' => $request->boolean('enabled', true),
+            'sort_order' => (int) ($validated['sort_order'] ?? 0),
+            'maintenance_mode' => $request->boolean('maintenance_mode'),
+            'config' => $this->normalizePaymentConfig($request->input('config', [])),
+        ]);
+
+        return back()->with('success', 'Payment method created.');
+    }
+
+    public function updatePaymentMethod(Request $request, $id)
+    {
+        $method = PaymentMethod::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'type' => 'required|in:cod,mobile_banking,bank,online',
+            'enabled' => 'nullable|boolean',
+            'sort_order' => 'nullable|integer',
+            'maintenance_mode' => 'nullable|boolean',
+            'config' => 'nullable|array',
+        ]);
+
+        $method->update([
+            'name' => trim($validated['name']),
+            'type' => $validated['type'],
+            'enabled' => $request->boolean('enabled'),
+            'sort_order' => (int) ($validated['sort_order'] ?? 0),
+            'maintenance_mode' => $request->boolean('maintenance_mode'),
+            'config' => $this->normalizePaymentConfig($request->input('config', [])),
+        ]);
+
+        return back()->with('success', 'Payment method updated.');
     }
 
     public function togglePaymentMethod($id)
@@ -55,7 +107,52 @@ class AdminSettingWebController extends Controller
         $method = PaymentMethod::findOrFail($id);
         $method->enabled = !$method->enabled;
         $method->save();
-        return back()->with('success', 'Payment method status toggled.');
+
+        return back()->with('success', $method->enabled ? 'Payment method enabled.' : 'Payment method disabled.');
+    }
+
+    public function bulkPaymentMethodsStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+            'enabled' => 'required|boolean',
+        ]);
+
+        PaymentMethod::whereIn('id', $validated['ids'])
+            ->update(['enabled' => $request->boolean('enabled')]);
+
+        $action = $request->boolean('enabled') ? 'Enabled' : 'Disabled';
+
+        return back()->with('success', "{$action} " . count($validated['ids']) . ' payment method(s).');
+    }
+
+    public function destroyPaymentMethod($id)
+    {
+        PaymentMethod::findOrFail($id)->delete();
+
+        return back()->with('success', 'Payment method deleted.');
+    }
+
+    private function normalizePaymentConfig($config): array
+    {
+        if (!is_array($config)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($config as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            if (in_array($key, ['minAmount', 'maxAmount', 'extraFee', 'extraFeePercent'], true) && is_numeric($value)) {
+                $out[$key] = 0 + $value;
+            } else {
+                $out[$key] = is_string($value) ? trim($value) : $value;
+            }
+        }
+
+        return $out;
     }
 
     public function banners()

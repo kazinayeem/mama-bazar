@@ -272,7 +272,7 @@
                     @endforeach
                 </div>
             @else
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                <div class="store-product-grid">
                     @foreach($products as $index => $product)
                         <x-product-card :product="$product" :index="$index" />
                     @endforeach

@@ -59,10 +59,10 @@
                             <p x-show="slide.description" class="text-sm opacity-80" x-text="slide.description"></p>
                             <div class="flex flex-wrap gap-3 pt-2" :class="slide.alignment === 'center' ? 'justify-center' : (slide.alignment === 'right' ? 'justify-end' : '')">
                                 <template x-if="slide.primaryButtonText && slide.primaryButtonUrl">
-                                    <a :href="slide.primaryButtonUrl" class="inline-flex items-center gap-2 rounded-full border-2 border-white px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/10" x-text="slide.primaryButtonText"></a>
+                                    <a :href="slide.primaryButtonUrl" class="store-btn store-btn-primary !rounded-full !px-6 !py-2.5 !text-sm shadow-md" x-text="slide.primaryButtonText"></a>
                                 </template>
                                 <template x-if="slide.secondaryButtonText && slide.secondaryButtonUrl">
-                                    <a :href="slide.secondaryButtonUrl" class="inline-flex items-center rounded-full border border-white/40 bg-white/15 px-6 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25" x-text="slide.secondaryButtonText"></a>
+                                    <a :href="slide.secondaryButtonUrl" class="inline-flex items-center rounded-full border border-white/50 bg-white/15 px-6 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25" x-text="slide.secondaryButtonText"></a>
                                 </template>
                             </div>
                         </div>
@@ -91,15 +91,15 @@
 @endif
 
 @if(count($searches) > 0)
-    <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col items-start gap-3 rounded-3xl border border-slate-100 bg-white/90 px-4 py-4 shadow-soft sm:flex-row sm:items-center sm:justify-between sm:px-5">
+    <section class="store-container pt-4">
+        <div class="flex flex-col items-start gap-3 rounded-[10px] border border-slate-200 bg-white px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div class="min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-900">Popular searches</p>
-                <p class="mt-1 text-sm text-slate-500">Jump into the products shoppers are looking for right now.</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Popular searches</p>
+                <p class="mt-0.5 text-sm text-slate-600">Jump into what shoppers are looking for.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 @foreach($searches as $term)
-                    <a href="{{ route('shop', ['q' => $term]) }}" class="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-green-500 hover:bg-brand-green-500 hover:text-white">{{ $term }}</a>
+                    <a href="{{ route('shop', ['q' => $term]) }}" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-brand-green-500 hover:bg-brand-green-500 hover:text-white">{{ $term }}</a>
                 @endforeach
             </div>
         </div>

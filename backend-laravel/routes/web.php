@@ -154,7 +154,11 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/shipping', [AdminSettingWebController::class, 'shipping'])->name('admin.shipping.index');
     Route::post('/shipping', [AdminSettingWebController::class, 'storeShipping'])->name('admin.shipping.store');
     Route::get('/payment-methods', [AdminSettingWebController::class, 'paymentMethods'])->name('admin.payment-methods.index');
+    Route::post('/payment-methods', [AdminSettingWebController::class, 'storePaymentMethod'])->name('admin.payment-methods.store');
+    Route::put('/payment-methods/{id}', [AdminSettingWebController::class, 'updatePaymentMethod'])->name('admin.payment-methods.update');
     Route::post('/payment-methods/{id}/toggle', [AdminSettingWebController::class, 'togglePaymentMethod'])->name('admin.payment-methods.toggle');
+    Route::post('/payment-methods/bulk-status', [AdminSettingWebController::class, 'bulkPaymentMethodsStatus'])->name('admin.payment-methods.bulk-status');
+    Route::delete('/payment-methods/{id}', [AdminSettingWebController::class, 'destroyPaymentMethod'])->name('admin.payment-methods.destroy');
     Route::get('/payments', fn () => redirect()->route('admin.payment-methods.index')); // legacy alias
 
     // Content

@@ -1,8 +1,13 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('homepageBuilder', (opts) => ({
-        config: structuredClone(opts.initialConfig),
+/**
+ * Global factory (same pattern as adminShell) — do NOT use Alpine.data + alpine:init here.
+ * @stack('scripts') can race Alpine.start(); a window function is always available for x-data.
+ */
+window.homepageBuilder = function homepageBuilder(opts) {
+    opts = opts || {};
+    return {
+        config: structuredClone(opts.initialConfig || { sections: [], heroSlides: [] }),
         categories: opts.categories || [],
         subscribers: opts.subscribers || [],
         sectionMeta: opts.sectionMeta || {},
@@ -367,6 +372,6 @@ document.addEventListener('alpine:init', () => {
                 return iso;
             }
         },
-    }));
-});
+    };
+};
 </script>

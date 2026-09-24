@@ -42,22 +42,31 @@
             'subscribedAt' => $s->subscribed_at?->toIso8601String(),
         ];
     })->values();
+
+    // Boot payload MUST NOT be inlined into an HTML attribute — JSON double-quotes break x-data="...".
+    $builderBoot = [
+        'initialConfig' => $config,
+        'categories' => $categories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'slug' => $c->slug])->values(),
+        'subscribers' => $subscriberRows,
+        'sectionMeta' => $sectionMeta,
+        'sectionOrder' => $sectionOrder,
+        'iconOptions' => $iconOptions,
+        'saveUrl' => route('admin.homepage.save'),
+        'resetUrl' => route('admin.homepage.reset'),
+        'mediaListUrl' => route('admin.media.picker'),
+        'mediaUploadUrl' => route('admin.media.picker.upload'),
+        'csrf' => csrf_token(),
+    ];
 @endphp
 
+{{-- Safe JSON boot (not inside an HTML attribute — JSON quotes break x-data="...") --}}
+<script type="application/json" id="homepage-builder-boot">@json($builderBoot)</script>
+
+{{-- Load Sortable + homepageBuilder factory BEFORE Alpine evaluates x-data --}}
+<x-admin.homepage.builder-script />
+
 <div
-    x-data="homepageBuilder({
-        initialConfig: @json($config),
-        categories: @json($categories),
-        subscribers: @json($subscriberRows),
-        sectionMeta: @json($sectionMeta),
-        sectionOrder: @json($sectionOrder),
-        iconOptions: @json($iconOptions),
-        saveUrl: @json(route('admin.homepage.save')),
-        resetUrl: @json(route('admin.homepage.reset')),
-        mediaListUrl: @json(route('admin.media.picker')),
-        mediaUploadUrl: @json(route('admin.media.picker.upload')),
-        csrf: @json(csrf_token()),
-    })"
+    x-data="homepageBuilder(JSON.parse(document.getElementById('homepage-builder-boot').textContent))"
     x-init="init()"
     class="admin-page space-y-4"
 >
@@ -91,23 +100,24 @@
         You have unpublished changes — press “Publish Changes” to apply them to the storefront.
     </div>
 
-    {{-- Tabs: Layout | Hero | Content | Subscribers (same as React) --}}
+    {{-- Tabs: Layout | Hero | Content | Subscribers (same as React AdminHomepagePage) --}}
     <div class="overflow-x-auto border-b border-slate-200">
-        <nav class="-mb-px flex min-w-max gap-1">
-            <button type="button" @click="setTab('layout')" :class="tab === 'layout' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="border-b-2 px-4 py-2.5 text-sm font-semibold transition">Layout</button>
-            <button type="button" @click="setTab('hero')" :class="tab === 'hero' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="inline-flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-semibold transition">
+        <nav class="-mb-px flex min-w-max gap-1" role="tablist">
+            <button type="button" role="tab" @click="setTab('layout')" :aria-selected="tab === 'layout'" :class="tab === 'layout' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="border-b-2 px-4 py-2.5 text-sm font-semibold transition">Layout</button>
+            <button type="button" role="tab" @click="setTab('hero')" :aria-selected="tab === 'hero'" :class="tab === 'hero' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="inline-flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-semibold transition">
                 Hero Slides
                 <span x-show="config.heroSlides.length > 0" class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600" x-text="config.heroSlides.length"></span>
             </button>
-            <button type="button" @click="setTab('content')" :class="tab === 'content' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="border-b-2 px-4 py-2.5 text-sm font-semibold transition">Content</button>
-            <button type="button" @click="setTab('subscribers')" :class="tab === 'subscribers' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="inline-flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-semibold transition">
+            <button type="button" role="tab" @click="setTab('content')" :aria-selected="tab === 'content'" :class="tab === 'content' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="border-b-2 px-4 py-2.5 text-sm font-semibold transition">Content</button>
+            <button type="button" role="tab" @click="setTab('subscribers')" :aria-selected="tab === 'subscribers'" :class="tab === 'subscribers' ? 'border-brand-green-500 text-brand-green-700' : 'border-transparent text-slate-500 hover:text-slate-700'" class="inline-flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-semibold transition">
                 Subscribers
                 <span x-show="subscribers.length > 0" class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600" x-text="subscribers.length"></span>
             </button>
         </nav>
     </div>
 
-    <div x-show="tab === 'layout'" x-cloak>
+    {{-- Do NOT x-cloak the default Layout tab — if Alpine fails, at least show a fallback notice --}}
+    <div x-show="tab === 'layout'">
         <x-admin.homepage.layout-tab />
     </div>
     <div x-show="tab === 'hero'" x-cloak>
@@ -121,7 +131,7 @@
     </div>
 
     {{-- Reset dialog --}}
-    <div x-show="resetOpen" x-cloak class="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="resetOpen = false">
+    <div x-show="resetOpen" x-cloak class="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-4" @keydown.escape.window="if(resetOpen) resetOpen = false">
         <div class="w-full max-w-md rounded-[10px] bg-white p-6 shadow-xl" @click.outside="resetOpen = false">
             <h3 class="text-lg font-bold text-slate-900">Reset homepage to defaults?</h3>
             <p class="mt-2 text-sm text-slate-500">This restores the default section layout and content. Your changes stay in the editor until you press Publish.</p>
@@ -140,7 +150,3 @@
     </form>
 </div>
 @endsection
-
-@push('scripts')
-    <x-admin.homepage.builder-script />
-@endpush

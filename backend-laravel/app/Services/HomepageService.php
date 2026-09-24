@@ -288,21 +288,27 @@ class HomepageService
                     $data['items'] = array_slice($reviews, 0, $limit);
                     break;
                 case 'category_products':
+                    // Match ProductService / React ProgressiveProductRail:
+                    // products may sit on category_id, sub_category_id, or child_category_id.
                     $categoryId = (int) ($section['categoryId'] ?? 0);
+                    $categorySlug = trim((string) ($section['categorySlug'] ?? ''));
                     $cat = $categoryId ? Category::find($categoryId) : null;
+                    if (!$cat && $categorySlug !== '') {
+                        $cat = Category::where('slug', $categorySlug)->first();
+                    }
                     $data['category'] = $cat ? [
                         'id' => $cat->id,
                         'name' => $cat->name,
                         'slug' => $cat->slug,
                     ] : null;
                     if ($cat) {
-                        $prods = Product::where('status', 'active')
-                            ->where('category_id', $cat->id)
-                            ->orderByDesc('created_at')
-                            ->take($limit)
-                            ->get();
-                        $ratings = ProductService::fetchRatingMap($prods->pluck('id')->toArray());
-                        $data['items'] = $prods->map(fn ($p) => ProductService::formatProduct($p, $ratings[$p->id] ?? null))->toArray();
+                        $result = ProductService::getAll([
+                            'category' => $cat->slug,
+                            'limit' => $limit,
+                            'page' => 1,
+                            'status' => 'active',
+                        ]);
+                        $data['items'] = $result['data'] ?? [];
                     } else {
                         $data['items'] = [];
                     }
