@@ -56,7 +56,7 @@
             </form>
         </details>
     @empty
-        <div class="rounded-xl border bg-white p-12 text-center text-sm text-slate-500">No policy pages yet</div>
+        <div class="rounded-[8px] border bg-white p-12 text-center text-sm text-slate-500">No policy pages yet</div>
     @endforelse
 </div>
 @endsection

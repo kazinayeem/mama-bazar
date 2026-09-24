@@ -1,6 +1,7 @@
 @extends('layouts.admin', ['headerTitle' => 'Shipping Methods'])
 
 @section('content')
+<div class="admin-page">
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <div class="admin-surface p-4 space-y-4 h-fit">
@@ -11,17 +12,17 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Method Name *</label>
-                <input type="text" name="name" required placeholder="e.g. Inside Dhaka Express" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
+                <input type="text" name="name" required placeholder="e.g. Inside Dhaka Express" class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Delivery Charge (৳) *</label>
-                <input type="number" step="0.01" name="charge" required placeholder="60" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
+                <input type="number" step="0.01" name="charge" required placeholder="60" class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Estimated Delivery Time</label>
-                <input type="text" name="estimated_delivery" placeholder="e.g. 24 - 48 Hours" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
+                <input type="text" name="estimated_delivery" placeholder="e.g. 24 - 48 Hours" class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-[6px] bg-brand-green-500 text-sm font-medium text-white hover:bg-brand-green-600">
@@ -64,5 +65,6 @@
         </div>
     </div>
 
+</div>
 </div>
 @endsection

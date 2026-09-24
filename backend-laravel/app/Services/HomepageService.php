@@ -331,15 +331,44 @@ class HomepageService
             return $section;
         }, $config['sections'] ?? []);
 
+        $flashWindow = $config['flashSaleWindow'] ?? [];
+        $flashSaleActive = true;
+        $flashSaleEndsAt = null;
+        if (!empty($flashWindow['enabled']) && !empty($flashWindow['start']) && !empty($flashWindow['end'])) {
+            $now = now()->timestamp;
+            $start = strtotime($flashWindow['start']);
+            $end = strtotime($flashWindow['end']);
+            $flashSaleActive = $start !== false && $end !== false && $now >= $start && $now < $end;
+            $flashSaleEndsAt = $flashWindow['end'];
+        }
+        $flashExpired = !empty($flashWindow['enabled'])
+            && !empty($flashWindow['start'])
+            && !empty($flashWindow['end'])
+            && !$flashSaleActive;
+
+        // Hide flash deal products when a scheduled window has expired.
+        if ($flashExpired) {
+            $sections = array_map(function ($section) {
+                if (($section['type'] ?? '') === 'flash_deals') {
+                    $section['data']['items'] = [];
+                }
+                return $section;
+            }, $sections);
+        }
+
         return [
             'announcement' => $config['announcement'] ?? null,
             'heroSlides' => $slides,
-            'flashSaleWindow' => array_merge($config['flashSaleWindow'] ?? [], [
-                'isActive' => true,
-                'endsAt' => $config['flashSaleWindow']['end'] ?? null,
+            'flashSaleWindow' => array_merge($flashWindow, [
+                'isActive' => $flashSaleActive,
+                'endsAt' => $flashSaleEndsAt,
             ]),
             'popularSearches' => $config['popularSearches'] ?? [],
             'sections' => $sections,
+            // Expose content blocks so Blade/public consumers can render without a second fetch.
+            'trustStrip' => $config['trustStrip'] ?? [],
+            'whyChooseUs' => $config['whyChooseUs'] ?? [],
+            'newsletter' => $config['newsletter'] ?? [],
         ];
     }
 
@@ -359,13 +388,40 @@ class HomepageService
             'email' => $normalized,
             'source' => $source ?: 'homepage',
             'status' => 'subscribed',
+            'subscribed_at' => now(),
         ]);
 
         return ['email' => $normalized, 'alreadySubscribed' => false];
     }
 
-    public static function getSubscribers()
+    public static function getSubscribers(): array
     {
-        return Newsletter::orderBy('subscribed_at', 'desc')->get();
+        return Newsletter::orderByDesc('subscribed_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'email' => $s->email,
+                'source' => $s->source,
+                'status' => $s->status ?? 'subscribed',
+                'subscribedAt' => $s->subscribed_at?->toIso8601String(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Resolve announcement for site-wide layout (matches React SiteNavbar).
+     */
+    public static function getAnnouncement(): array
+    {
+        $config = self::getConfig();
+
+        return $config['announcement'] ?? [
+            'enabled' => false,
+            'text' => '',
+            'backgroundColor' => '#1e293b',
+            'textColor' => '#ffffff',
+        ];
     }
 }

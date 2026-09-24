@@ -6,25 +6,19 @@
     $chartColors = ['#16a34a', '#f97316', '#0284c7', '#eab308', '#dc2626', '#64748b', '#0d9488'];
 @endphp
 
-<div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="admin-page-title">Dashboard</h1>
-            <p class="text-sm text-slate-500">Business overview and performance metrics</p>
-        </div>
-        <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap items-center gap-2">
-            <select name="range" onchange="this.form.submit()"
-                    class="w-full min-w-[9rem] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-500/20 sm:w-36">
-                <option value="7" @selected($range === 7)>Last 7 days</option>
-                <option value="30" @selected($range === 30)>Last 30 days</option>
-                <option value="365" @selected($range === 365)>Last 365 days</option>
-            </select>
-            <a href="{{ route('admin.dashboard', ['range' => $range]) }}"
-               class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
-                Refresh
-            </a>
-        </form>
-    </div>
+<div class="admin-page">
+    <x-admin.page-header title="Dashboard" subtitle="Business overview and performance metrics">
+        <x-slot:actions>
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap items-center gap-2">
+                <select name="range" onchange="this.form.submit()" class="admin-control min-w-[9rem] sm:w-36">
+                    <option value="7" @selected($range === 7)>Last 7 days</option>
+                    <option value="30" @selected($range === 30)>Last 30 days</option>
+                    <option value="365" @selected($range === 365)>Last 365 days</option>
+                </select>
+                <x-admin.button :href="route('admin.dashboard', ['range' => $range])" variant="outline" size="sm">Refresh</x-admin.button>
+            </form>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- KPI cards --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -1,6 +1,7 @@
 @extends('layouts.admin', ['headerTitle' => 'Database Backup & Restore'])
 
 @section('content')
+<div class="admin-page">
 <div class="max-w-4xl mx-auto space-y-6">
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -16,7 +17,7 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Security PIN Verification *</label>
                     <input type="password" name="pin" required placeholder="Enter security PIN" 
-                        class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none font-mono">
+                        class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none font-mono">
                     <p class="text-[10px] text-slate-400 mt-1">Hint: Server Challenge Code is active.</p>
                 </div>
 
@@ -30,7 +31,7 @@
         <div class="admin-surface p-4 space-y-3 text-xs">
             <h3 class="font-bold text-slate-900 uppercase tracking-wider text-xs border-b border-slate-100 pb-2">Backup Architecture</h3>
             <p class="text-slate-600">Mama Bazar uses SQLite as its primary database file at <code class="bg-slate-100 px-1 py-0.5 rounded text-brand-green-700">database/database.sqlite</code>.</p>
-            <div class="p-3 rounded-2xl bg-brand-green-50/60 border border-brand-green-100 space-y-1">
+            <div class="p-3 rounded-[10px] bg-brand-green-50/60 border border-brand-green-100 space-y-1">
                 <span class="font-bold text-brand-green-800 text-[11px] block">Safe Atomic Restores</span>
                 <p class="text-slate-600 text-[11px]">When restoring, a pre-restore safety snapshot is automatically generated before importing.</p>
             </div>
@@ -72,5 +73,6 @@
         </div>
     </div>
 
+</div>
 </div>
 @endsection

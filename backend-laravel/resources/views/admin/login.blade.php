@@ -11,7 +11,7 @@
 </head>
 <body class="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-green-700 via-brand-green-600 to-brand-green-800 p-4 font-body antialiased">
 
-    <div class="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl">
+    <div class="w-full max-w-md overflow-hidden overflow-hidden rounded-[10px] border border-white/10 bg-white shadow-panel">
         <div class="bg-brand-green-500 px-8 py-6 text-center text-white">
             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
                 <img src="/brandlogo.png" alt="" class="h-8 w-8 rounded-lg object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
@@ -36,13 +36,13 @@
                 <div>
                     <label class="mb-1.5 block text-xs font-semibold text-slate-700">Email or phone</label>
                     <input type="text" name="login" required value="{{ old('login') }}" placeholder="admin@example.com or 01700000000"
-                        class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
+                        class="w-full admin-control w-full focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
                 </div>
 
                 <div>
                     <label class="mb-1.5 block text-xs font-semibold text-slate-700">Password</label>
                     <input type="password" name="password" required placeholder="Your password"
-                        class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
+                        class="w-full admin-control w-full focus:border-brand-green-500 focus:outline-none focus:ring-2 focus:ring-brand-green-100">
                 </div>
 
                 <label class="flex cursor-pointer items-center gap-2 text-xs text-slate-600">
@@ -50,7 +50,7 @@
                     <span>Remember me on this device</span>
                 </label>
 
-                <button type="submit" class="w-full rounded-full bg-brand-green-500 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-green-600 focus:outline-none focus:ring-2 focus:ring-brand-green-300 focus:ring-offset-2">
+                <button type="submit" class="inline-flex h-11 w-full items-center justify-center rounded-[6px] bg-brand-green-500 text-sm font-bold text-white hover:bg-brand-green-600 focus:outline-none focus:ring-2 focus:ring-[var(--admin-ring)]">
                     Sign in to dashboard
                 </button>
             </form>

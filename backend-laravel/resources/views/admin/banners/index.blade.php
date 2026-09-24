@@ -1,6 +1,7 @@
 @extends('layouts.admin', ['headerTitle' => 'Banner Management'])
 
 @section('content')
+<div class="admin-page">
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <!-- Add Banner Form -->
@@ -12,12 +13,12 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Banner Title *</label>
-                <input type="text" name="title" required placeholder="e.g. Summer Grocery Festival" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
+                <input type="text" name="title" required placeholder="e.g. Summer Grocery Festival" class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Position *</label>
-                <select name="position" required class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none bg-white">
+                <select name="position" required class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none bg-white">
                     <option value="hero">Hero Main Banner</option>
                     <option value="promo">Promotional Strip</option>
                     <option value="sidebar">Sidebar Ad</option>
@@ -26,12 +27,12 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Banner Image (Stored Locally) *</label>
-                <input type="file" name="image" required accept="image/*" class="w-full text-xs rounded-xl border border-slate-200 p-2 focus:border-brand-green-500 focus:outline-none file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:bg-brand-green-50 file:text-brand-green-700">
+                <input type="file" name="image" required accept="image/*" class="w-full text-xs admin-control p-2 focus:border-brand-green-500 focus:outline-none file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:bg-brand-green-50 file:text-brand-green-700">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Target Click URL (Optional)</label>
-                <input type="text" name="link" placeholder="/shop?sale=true" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
+                <input type="text" name="link" placeholder="/shop?sale=true" class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-[6px] bg-brand-green-500 text-sm font-medium text-white hover:bg-brand-green-600">
@@ -81,5 +82,6 @@
         </div>
     </div>
 
+</div>
 </div>
 @endsection

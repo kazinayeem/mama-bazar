@@ -1,14 +1,9 @@
 @extends('layouts.admin', ['headerTitle' => 'Marketing'])
 
 @section('content')
-<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h1 class="admin-page-title">Marketing</h1>
-        <p class="text-sm text-slate-500">Pixels, tags, and campaign integrations</p>
-    </div>
-</div>
-
-<div class="mt-4 grid gap-6 lg:grid-cols-3">
+<div class="admin-page">
+    <x-admin.page-header title="Marketing" subtitle="Pixels, tags, and campaign integrations" />
+    <div class="grid gap-4 lg:grid-cols-3">
     <div class="admin-surface p-4 h-fit">
         <h3 class="mb-4 text-sm font-bold">Add Integration</h3>
         <form action="{{ route('admin.marketing.store') }}" method="POST" class="space-y-3">
@@ -24,7 +19,7 @@
                 </select>
             </div>
             <div><label class="mb-1 block text-xs font-bold">Pixel / Tag ID</label><input name="pixel_id" class="admin-control w-full text-sm font-mono"></div>
-            <div><label class="mb-1 block text-xs font-bold">Script Code</label><textarea name="script_code" rows="4" class="admin-control w-full text-sm font-mono"></textarea></div>
+            <div><label class="mb-1 block text-xs font-bold">Script Code</label><textarea name="script_code" rows="4" class="w-full rounded-[6px] border border-[var(--admin-border)] px-3 py-2.5 font-mono text-sm"></textarea></div>
             <div><label class="mb-1 block text-xs font-bold">Access Token</label><input name="access_token" class="admin-control w-full text-sm"></div>
             <div><label class="mb-1 block text-xs font-bold">Test Event Code</label><input name="test_event_code" class="admin-control w-full text-sm"></div>
             <div>
@@ -40,15 +35,15 @@
 
     <div class="lg:col-span-2 admin-table-wrap">
         <div class="border-b px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">Active Integrations ({{ $integrations->count() }})</div>
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-3 text-left">Name</th><th class="px-4 py-3">Type</th><th class="px-4 py-3">Pixel ID</th><th class="px-4 py-3">Status</th><th class="px-4 py-3 text-right">Actions</th></tr></thead>
+        <table class="admin-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Pixel ID</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
             <tbody class="divide-y">
                 @forelse($integrations as $item)
                     <tr>
                         <td class="px-4 py-3 font-semibold">{{ $item->name }}</td>
                         <td class="px-4 py-3 text-xs uppercase text-slate-500">{{ $item->type }}</td>
                         <td class="px-4 py-3 font-mono text-xs">{{ $item->pixel_id ?: '—' }}</td>
-                        <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $item->status==='active' ? 'bg-brand-green-50 text-brand-green-700' : 'bg-slate-100 text-slate-500' }}">{{ $item->status }}</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex items-center rounded-[6px] border px-1.5 py-0.5 text-[10px] font-bold {{ $item->status==='active' ? 'bg-brand-green-50 text-brand-green-700' : 'bg-slate-100 text-slate-500' }}">{{ $item->status }}</span></td>
                         <td class="px-4 py-3 text-right">
                             <form action="{{ route('admin.marketing.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Delete?')">
                                 @csrf @method('DELETE')
@@ -62,5 +57,6 @@
             </tbody>
         </table>
     </div>
+</div>
 </div>
 @endsection

@@ -16,12 +16,17 @@
 <body class="min-h-screen flex flex-col bg-[#F8FAF8] font-body text-slate-800 antialiased" x-data="{ mobileMenu: false }">
 
     <!-- Top Announcement Bar -->
-    <div class="bg-brand-green-600 text-white text-xs font-medium py-1.5 px-4 text-center">
-        <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
-            <svg class="w-3.5 h-3.5 text-brand-orange-400 fill-brand-orange-400" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span>Welcome to Mama Bazar! Fast delivery across Bangladesh. Cash on Delivery available!</span>
+    @php
+        $announcement = $announcement ?? ['enabled' => false, 'text' => '', 'backgroundColor' => '#0F4D2C', 'textColor' => '#ffffff'];
+    @endphp
+    @if(!empty($announcement['enabled']) && !empty($announcement['text']))
+        <div class="px-4 py-1.5 text-center text-xs font-medium" style="background-color: {{ $announcement['backgroundColor'] ?? '#0F4D2C' }}; color: {{ $announcement['textColor'] ?? '#ffffff' }}">
+            <div class="mx-auto flex max-w-7xl items-center justify-center gap-2">
+                <svg class="h-3.5 w-3.5 shrink-0 fill-current opacity-80" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span class="truncate">{{ $announcement['text'] }}</span>
+            </div>
         </div>
-    </div>
+    @endif
 
     <!-- Main Navigation Header -->
     <header class="navbar-root sticky top-0 z-40 border-b border-brand-green-100 transition duration-300">

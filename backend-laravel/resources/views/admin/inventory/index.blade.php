@@ -1,140 +1,121 @@
 @extends('layouts.admin', ['headerTitle' => 'Inventory'])
 
 @section('content')
-<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h1 class="admin-page-title">Inventory</h1>
-        <p class="text-sm text-slate-500">Stock levels and quick adjustments</p>
-    </div>
-</div>
+<div class="admin-page">
+    <x-admin.page-header title="Inventory" subtitle="Stock levels and quick adjustments" />
 
-<div class="mt-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
-    @foreach([
-        ['Total Products', $stats['total'], 'bg-brand-green-50 text-brand-green-700'],
-        ['In Stock', $stats['in_stock'], 'bg-emerald-50 text-emerald-700'],
-        ['Low Stock', $stats['low'], 'bg-amber-50 text-amber-700'],
-        ['Out of Stock', $stats['out'], 'bg-red-50 text-red-700'],
-    ] as [$label, $val, $cls])
-        <div class="admin-surface p-4">
-            <p class="text-sm text-slate-500">{{ $label }}</p>
-            <p class="mt-1 text-2xl font-bold tracking-tight">{{ number_format($val) }}</p>
-            <span class="mt-2 inline-block rounded-lg px-2 py-1 text-[10px] font-bold {{ $cls }}">Live</span>
-        </div>
-    @endforeach
-</div>
-
-<div class="mt-4 flex flex-wrap gap-2">
-    @foreach(['all' => 'All', 'low' => 'Low (≤10)', 'out' => 'Out of stock'] as $key => $label)
-        <a href="{{ route('admin.inventory.index', ['filter' => $key]) }}"
-           class="inline-flex h-8 items-center rounded-[6px] px-3 text-xs font-semibold {{ $filter === $key ? 'bg-brand-green-500 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
-            {{ $label }}
-        </a>
-    @endforeach
-</div>
-
-<div class="mt-4 admin-table-wrap">
-    {{-- Mobile cards --}}
-    <div class="divide-y divide-slate-100 md:hidden">
-        @forelse($products as $product)
-            @php
-                $stock = (int) $product->stock;
-                $badge = $stock <= 0 ? 'bg-red-50 text-red-700' : ($stock <= 10 ? 'bg-amber-50 text-amber-700' : 'bg-brand-green-50 text-brand-green-700');
-                $pct = min(100, max(0, $stock <= 0 ? 0 : ($stock / max(50, $stock)) * 100));
-            @endphp
-            <div class="p-4">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="font-semibold text-slate-900 line-clamp-2">{{ $product->title }}</p>
-                        <p class="mt-0.5 text-xs text-slate-400">{{ $product->stock_status }}</p>
-                    </div>
-                    <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold {{ $badge }}">{{ $stock }}</span>
-                </div>
-                <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                    <div>
-                        <dt class="font-semibold uppercase tracking-wide text-slate-400">SKU</dt>
-                        <dd class="font-mono text-slate-600">{{ $product->sku ?: '—' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="font-semibold uppercase tracking-wide text-slate-400">Price</dt>
-                        <dd class="font-bold text-slate-900">৳{{ number_format($product->sale_price ?: $product->price, 0) }}</dd>
-                    </div>
-                </dl>
-                <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div class="h-full rounded-full bg-brand-green-500" style="width: {{ $pct }}%"></div>
-                </div>
-                <div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                    <span class="mr-auto text-[10px] font-semibold uppercase tracking-wide text-slate-400">Adjust stock</span>
-                    <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="delta" value="-1">
-                        <button type="submit" class="h-9 w-9 rounded-lg border border-slate-200 text-sm font-bold hover:bg-slate-50">−</button>
-                    </form>
-                    <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="delta" value="1">
-                        <button type="submit" class="h-9 w-9 rounded-lg border border-slate-200 text-sm font-bold hover:bg-brand-green-50 hover:border-brand-green-200">+</button>
-                    </form>
-                </div>
-            </div>
-        @empty
-            <div class="px-4 py-12 text-center text-sm text-slate-500">No products found</div>
-        @endforelse
+    <div class="admin-metric-grid">
+        <x-admin.metric-card label="Total Products" :value="number_format($stats['total'])" />
+        <x-admin.metric-card label="In Stock" :value="number_format($stats['in_stock'])" tone="success" />
+        <x-admin.metric-card label="Low Stock" :value="number_format($stats['low'])" tone="warning" />
+        <x-admin.metric-card label="Out of Stock" :value="number_format($stats['out'])" tone="danger" />
     </div>
 
-    <div class="hidden overflow-x-auto md:block">
-    <table class="w-full text-left text-sm">
-        <thead class="border-b bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <tr>
-                <th class="px-4 py-3">Product</th>
-                <th class="px-4 py-3">SKU</th>
-                <th class="px-4 py-3">Price</th>
-                <th class="px-4 py-3">Stock</th>
-                <th class="px-4 py-3 text-right">Adjust</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
+    <div class="flex flex-wrap gap-2">
+        @foreach(['all' => 'All', 'low' => 'Low (≤10)', 'out' => 'Out of stock'] as $key => $label)
+            <a href="{{ route('admin.inventory.index', ['filter' => $key]) }}"
+               class="inline-flex h-8 items-center rounded-[6px] px-3 text-xs font-semibold {{ $filter === $key ? 'bg-brand-green-500 text-white' : 'border border-[var(--admin-border)] bg-white text-slate-600 hover:bg-[var(--admin-muted)]' }}">
+                {{ $label }}
+            </a>
+        @endforeach
+    </div>
+
+    <div class="admin-table-wrap">
+        <div class="md:hidden">
             @forelse($products as $product)
                 @php
                     $stock = (int) $product->stock;
-                    $badge = $stock <= 0 ? 'bg-red-50 text-red-700' : ($stock <= 10 ? 'bg-amber-50 text-amber-700' : 'bg-brand-green-50 text-brand-green-700');
-                    $pct = min(100, max(0, $stock <= 0 ? 0 : ($stock / max(50, $stock)) * 100));
+                    $badge = $stock <= 0 ? 'destructive' : ($stock <= 10 ? 'warning' : 'default');
+                    $pct = min(100, max(0, $stock <= 0 ? 0 : min(100, ($stock / 50) * 100)));
                 @endphp
-                <tr class="hover:bg-slate-50/60">
-                    <td class="px-4 py-3">
-                        <div class="font-semibold text-slate-900">{{ $product->title }}</div>
-                        <div class="text-xs text-slate-400">{{ $product->stock_status }}</div>
-                    </td>
-                    <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ $product->sku ?: '—' }}</td>
-                    <td class="px-4 py-3 font-semibold">৳{{ number_format($product->sale_price ?: $product->price, 0) }}</td>
-                    <td class="px-4 py-3">
-                        <div class="mb-1 h-2 w-28 overflow-hidden rounded-full bg-slate-100">
-                            <div class="h-full rounded-full bg-brand-green-500" style="width: {{ $pct }}%"></div>
+                <div class="admin-mobile-card">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="line-clamp-2 font-semibold text-slate-900">{{ $product->title }}</p>
+                            <p class="mt-0.5 text-xs text-slate-400">{{ $product->stock_status }}</p>
                         </div>
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $badge }}">{{ $stock }}</span>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                        <div class="inline-flex items-center gap-1">
-                            <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="delta" value="-1">
-                                <button class="h-8 w-8 rounded-lg border border-slate-200 text-sm font-bold hover:bg-slate-50">−</button>
-                            </form>
-                            <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="delta" value="1">
-                                <button class="h-8 w-8 rounded-lg border border-slate-200 text-sm font-bold hover:bg-slate-50">+</button>
-                            </form>
+                        <x-admin.badge :variant="$badge">{{ $stock }}</x-admin.badge>
+                    </div>
+                    <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <dt class="font-semibold uppercase tracking-wide text-slate-400">SKU</dt>
+                            <dd class="font-mono text-slate-600">{{ $product->sku ?: '—' }}</dd>
                         </div>
-                    </td>
-                </tr>
+                        <div>
+                            <dt class="font-semibold uppercase tracking-wide text-slate-400">Price</dt>
+                            <dd class="font-bold text-slate-900">৳{{ number_format($product->sale_price ?: $product->price, 0) }}</dd>
+                        </div>
+                    </dl>
+                    <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div class="h-full rounded-full bg-brand-green-500" style="width: {{ $pct }}%"></div>
+                    </div>
+                    <div class="mt-3 flex items-center justify-end gap-2 border-t border-[var(--admin-border)] pt-3">
+                        <span class="mr-auto text-[10px] font-semibold uppercase tracking-wide text-slate-400">Adjust</span>
+                        <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="delta" value="-1">
+                            <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[6px] border border-[var(--admin-border)] text-sm font-bold hover:bg-slate-50">−</button>
+                        </form>
+                        <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="delta" value="1">
+                            <button type="submit" class="flex h-9 w-9 items-center justify-center rounded-[6px] border border-[var(--admin-border)] text-sm font-bold hover:border-brand-green-200 hover:bg-brand-green-50">+</button>
+                        </form>
+                    </div>
+                </div>
             @empty
-                <tr><td colspan="5" class="px-4 py-12 text-center text-sm text-slate-500">No products found</td></tr>
+                <x-admin.empty-state title="No products found" />
             @endforelse
-        </tbody>
-    </table>
+        </div>
+
+        <div class="hidden overflow-x-auto md:block">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                        <th class="text-right">Adjust</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($products as $product)
+                        @php
+                            $stock = (int) $product->stock;
+                            $badge = $stock <= 0 ? 'destructive' : ($stock <= 10 ? 'warning' : 'default');
+                        @endphp
+                        <tr>
+                            <td class="max-w-[240px] truncate font-semibold text-slate-900">{{ $product->title }}</td>
+                            <td class="font-mono text-xs text-slate-500">{{ $product->sku ?: '—' }}</td>
+                            <td><x-admin.badge :variant="$badge">{{ $stock }}</x-admin.badge></td>
+                            <td class="text-slate-500">{{ $product->stock_status }}</td>
+                            <td class="font-bold">৳{{ number_format($product->sale_price ?: $product->price, 0) }}</td>
+                            <td class="text-right">
+                                <div class="inline-flex items-center gap-1">
+                                    <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="delta" value="-1">
+                                        <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-[6px] border border-[var(--admin-border)] text-sm font-bold hover:bg-slate-50">−</button>
+                                    </form>
+                                    <form action="{{ route('admin.inventory.adjust', $product->id) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="delta" value="1">
+                                        <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-[6px] border border-[var(--admin-border)] text-sm font-bold hover:border-brand-green-200 hover:bg-brand-green-50">+</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="!h-auto py-8"><x-admin.empty-state title="No products found" class="border-0" /></td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($products, 'hasPages'))
+            <x-admin.pagination :paginator="$products" />
+        @endif
     </div>
-    @if($products->hasPages())
-        <div class="border-t p-3">{{ $products->links() }}</div>
-    @endif
 </div>
 @endsection

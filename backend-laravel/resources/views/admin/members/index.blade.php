@@ -1,16 +1,14 @@
 @extends('layouts.admin', ['headerTitle' => 'Team Members'])
 
 @section('content')
-<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h1 class="admin-page-title">Team Members</h1>
-        <p class="text-sm text-slate-500">Admin staff, roles, and security audit log</p>
-    </div>
-    <button type="button" onclick="document.getElementById('member-form').classList.toggle('hidden')"
-            class="inline-flex h-10 items-center justify-center rounded-[6px] bg-brand-green-500 px-3.5 text-sm font-medium text-white hover:bg-brand-green-600">Add Member</button>
-</div>
+<div class="admin-page" x-data="{ formOpen: false }">
+    <x-admin.page-header title="Team Members" subtitle="Admin staff, roles, and security audit log">
+        <x-slot:actions>
+            <x-admin.button type="button" size="sm" @click="formOpen = !formOpen">Add Member</x-admin.button>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-<div id="member-form" class="mt-4 hidden admin-surface p-4">
+    <div id="member-form" x-show="formOpen" x-cloak class="admin-surface p-4">
     <form action="{{ route('admin.members.store') }}" method="POST" class="grid gap-3 sm:grid-cols-2">
         @csrf
         <div><label class="mb-1 block text-xs font-bold">Name *</label><input name="name" required class="admin-control w-full text-sm"></div>
@@ -37,9 +35,9 @@
     </form>
 </div>
 
-<div class="mt-4 admin-table-wrap">
+<div class="admin-table-wrap">
     <div class="border-b bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Team</div>
-    <table class="w-full text-sm">
+    <table class="admin-table">
         <thead class="border-b text-xs uppercase text-slate-500">
             <tr>
                 <th class="px-4 py-3 text-left">Member</th>
@@ -92,9 +90,9 @@
     </table>
 </div>
 
-<div class="mt-6 admin-table-wrap">
+<div class="admin-table-wrap">
     <div class="border-b bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Security Audit Log</div>
-    <table class="w-full text-sm">
+    <table class="admin-table">
         <thead class="border-b text-xs uppercase text-slate-500">
             <tr>
                 <th class="px-4 py-3 text-left">Time</th>
@@ -120,5 +118,6 @@
             @endforelse
         </tbody>
     </table>
+</div>
 </div>
 @endsection

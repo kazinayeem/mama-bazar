@@ -8,7 +8,6 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\MarketingIntegration;
 use App\Models\Category;
-use App\Models\Newsletter;
 use App\Models\Order;
 use App\Models\PolicyPage;
 use App\Models\Product;
@@ -323,7 +322,7 @@ class AdminModuleWebController extends Controller
     public function homepage()
     {
         $config = HomepageService::getConfig();
-        $subscribers = Newsletter::orderByDesc('subscribed_at')->orderByDesc('id')->get();
+        $subscribers = HomepageService::getSubscribers();
         $categories = Category::where('status', 'active')->orderBy('name')->get(['id', 'name', 'slug']);
 
         return view('admin.homepage.index', [

@@ -1,28 +1,27 @@
 @extends('layouts.admin', ['headerTitle' => 'Analytics'])
 
 @section('content')
-<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-        <h1 class="admin-page-title">Analytics</h1>
-        <p class="text-sm text-slate-500">Business performance from live SQLite data</p>
-    </div>
-    <form method="GET">
-        <select name="range" onchange="this.form.submit()" class="rounded-lg border bg-white px-3 py-2 text-sm">
-            <option value="7" @selected($range===7)>Last 7 days</option>
-            <option value="30" @selected($range===30)>Last 30 days</option>
-            <option value="365" @selected($range===365)>Last 365 days</option>
-        </select>
-    </form>
-</div>
+<div class="admin-page">
+    <x-admin.page-header title="Analytics" subtitle="Business performance from live SQLite data">
+        <x-slot:actions>
+            <form method="GET">
+                <select name="range" onchange="this.form.submit()" class="admin-control">
+                    <option value="7" @selected($range===7)>Last 7 days</option>
+                    <option value="30" @selected($range===30)>Last 30 days</option>
+                    <option value="365" @selected($range===365)>Last 365 days</option>
+                </select>
+            </form>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="admin-metric-grid">
     <div class="admin-surface p-4"><p class="text-sm text-slate-500">Revenue</p><p class="mt-1 text-2xl font-bold">৳{{ number_format($revenue, 0) }}</p></div>
     <div class="admin-surface p-4"><p class="text-sm text-slate-500">Orders</p><p class="mt-1 text-2xl font-bold">{{ number_format($orderCount) }}</p></div>
     <div class="admin-surface p-4"><p class="text-sm text-slate-500">New Customers</p><p class="mt-1 text-2xl font-bold">{{ number_format($customers) }}</p></div>
     <div class="admin-surface p-4"><p class="text-sm text-slate-500">Avg Order</p><p class="mt-1 text-2xl font-bold">৳{{ number_format($avgOrder, 0) }}</p></div>
 </div>
 
-<div class="mt-4 grid gap-4 xl:grid-cols-3">
+<div class="grid gap-4 xl:grid-cols-3">
     <div class="admin-surface p-4 xl:col-span-2">
         <h3 class="mb-4 text-sm font-bold">Revenue Trend</h3>
         <div class="space-y-2 max-h-80 overflow-y-auto">
@@ -78,5 +77,6 @@
             @endforelse
         </tbody>
     </table>
+</div>
 </div>
 @endsection

@@ -46,6 +46,7 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
 Route::get('/track', [OrderTrackingController::class, 'index'])->name('track');
+Route::post('/newsletter/subscribe', [HomeController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
 
 Route::get('/login', [AuthWebController::class, 'showLogin'])->name('login');
 Route::get('/auth/login', [AuthWebController::class, 'showLogin']);
@@ -169,6 +170,8 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::delete('/banners/{id}', [AdminSettingWebController::class, 'destroyBanner'])->name('admin.banners.destroy');
     Route::get('/media', [AdminSettingWebController::class, 'media'])->name('admin.media.index');
     Route::post('/media', [AdminSettingWebController::class, 'storeMedia'])->name('admin.media.store');
+    Route::get('/media/picker', [AdminSettingWebController::class, 'mediaPicker'])->name('admin.media.picker');
+    Route::post('/media/picker', [AdminSettingWebController::class, 'mediaPickerUpload'])->name('admin.media.picker.upload');
 
     // Insights
     Route::get('/analytics', [AdminModuleWebController::class, 'analytics'])->name('admin.analytics.index');

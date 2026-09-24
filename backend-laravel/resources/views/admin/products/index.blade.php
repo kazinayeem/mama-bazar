@@ -172,24 +172,10 @@
                     More
                 </button>
 
-                {{-- View toggle --}}
-                <div class="ml-auto flex items-center rounded-xl border border-slate-200 bg-white p-0.5" role="group" aria-label="View mode">
-                    <button type="button" @click="setView('table')"
-                            class="flex h-8 w-8 items-center justify-center rounded-lg {{ $listView === 'table' ? 'bg-brand-green-600 text-white' : 'text-slate-500 hover:bg-slate-50' }}"
-                            aria-label="Table view" aria-pressed="{{ $listView === 'table' ? 'true' : 'false' }}">
-                        <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg>
-                    </button>
-                    <button type="button" @click="setView('cards')"
-                            class="flex h-8 w-8 items-center justify-center rounded-lg {{ $listView === 'cards' ? 'bg-brand-green-600 text-white' : 'text-slate-500 hover:bg-slate-50' }}"
-                            aria-label="Card view" aria-pressed="{{ $listView === 'cards' ? 'true' : 'false' }}">
-                        <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/></svg>
-                    </button>
-                </div>
             </div>
         </div>
 
         {{-- Hidden fields kept for drawer submit --}}
-        <input type="hidden" name="view" value="{{ $listView }}">
         <input type="hidden" name="supplier" value="{{ request('supplier') }}" id="filter-supplier">
         <input type="hidden" name="vendor" value="{{ request('vendor') }}" id="filter-vendor">
         <input type="hidden" name="collection" value="{{ request('collection') }}" id="filter-collection">
@@ -210,7 +196,7 @@
                     {{ $chip['label'] }} <span aria-hidden="true">×</span>
                 </a>
             @endforeach
-            <a href="{{ route('admin.products.index', ['view' => $listView]) }}" class="text-[11px] font-bold text-slate-500 hover:text-brand-orange-600 hover:underline">Clear all</a>
+            <a href="{{ route('admin.products.index') }}" class="text-[11px] font-bold text-slate-500 hover:text-brand-orange-600 hover:underline">Clear all</a>
         </div>
     @endif
 
@@ -226,73 +212,68 @@
         <button type="button" @click="selected = []" class="ml-auto text-xs font-medium text-white/70 hover:text-white">Clear</button>
     </div>
 
-    {{-- ONE primary list: table XOR cards (server-rendered from cookie / view toggle) --}}
-    @if($listView === 'cards')
-        <div class="space-y-2" data-products-view="cards">
-            @if(count($products) > 0)
-                <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-                    <input type="checkbox" :checked="allSelected" @change="toggleSelectAll($event.target.checked)"
-                           class="h-4 w-4 rounded border-slate-300 text-brand-green-600" aria-label="Select all">
-                    <span class="text-xs font-semibold text-slate-600">Select all on this page</span>
-                </div>
-            @endif
+    {{-- Single presentation: mobile cards + desktop table --}}
+    <div class="admin-table-wrap" data-products-view="responsive">
+        @if(count($products) > 0)
+            <div class="flex items-center gap-2 border-b border-[var(--admin-border)] bg-[var(--admin-muted)] px-4 py-2.5 md:hidden">
+                <input type="checkbox" :checked="allSelected" @change="toggleSelectAll($event.target.checked)"
+                       class="h-4 w-4 rounded border-slate-300 text-brand-green-600" aria-label="Select all">
+                <span class="text-xs font-semibold text-slate-600">Select all on this page</span>
+            </div>
+        @endif
+
+        <div class="md:hidden">
             @forelse($products as $product)
                 @include('admin.products.partials.row-card', ['product' => $product])
             @empty
-                <div class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-16 text-center">
-                    @if(count($chips))
-                        <p class="text-sm font-semibold text-slate-800">No products found</p>
-                        <a href="{{ route('admin.products.index') }}" class="mt-3 inline-flex rounded-full bg-brand-green-600 px-4 py-2 text-xs font-bold text-white">Clear filters</a>
-                    @else
-                        <p class="text-sm font-semibold text-slate-800">No products yet</p>
-                        <a href="{{ route('admin.products.create') }}" class="mt-3 inline-flex rounded-full bg-brand-green-600 px-4 py-2 text-xs font-bold text-white">Add Product</a>
-                    @endif
-                </div>
+                <x-admin.empty-state
+                    :title="count($chips) ? 'No products found' : 'No products yet'"
+                    :description="count($chips) ? 'Try changing your filters or search.' : null"
+                    :action-label="count($chips) ? 'Clear filters' : 'Add Product'"
+                    :action-href="count($chips) ? route('admin.products.index') : route('admin.products.create')"
+                />
             @endforelse
         </div>
-    @else
-        <div class="admin-table-wrap" data-products-view="table">
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[960px] border-collapse text-left text-xs">
-                    <thead class="sticky top-0 z-10">
-                        <tr class="border-b border-slate-200 bg-slate-50/95 text-[10px] font-semibold uppercase tracking-wider text-slate-500 backdrop-blur">
-                            <th class="w-10 px-3 py-2.5">
-                                <input type="checkbox" :checked="allSelected" @change="toggleSelectAll($event.target.checked)"
-                                       class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500" aria-label="Select all">
-                            </th>
-                            <th class="px-3 py-2.5">Product</th>
-                            <th class="w-28 px-3 py-2.5 text-right">Price</th>
-                            <th class="w-24 px-3 py-2.5 text-center">Variants</th>
-                            <th class="w-24 px-3 py-2.5 text-center">Stock</th>
-                            <th class="w-24 px-3 py-2.5">Status</th>
-                            <th class="w-20 px-3 py-2.5 text-center">Featured</th>
-                            <th class="w-24 px-3 py-2.5">Created</th>
-                            <th class="w-12 px-3 py-2.5 text-right"> </th>
+
+        <div class="hidden overflow-x-auto md:block">
+            <table class="admin-table min-w-[960px]">
+                <thead>
+                    <tr>
+                        <th class="w-10">
+                            <input type="checkbox" :checked="allSelected" @change="toggleSelectAll($event.target.checked)"
+                                   class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500" aria-label="Select all">
+                        </th>
+                        <th>Product</th>
+                        <th class="w-28 text-right">Price</th>
+                        <th class="w-24 text-center">Variants</th>
+                        <th class="w-24 text-center">Stock</th>
+                        <th class="w-24">Status</th>
+                        <th class="w-20 text-center">Featured</th>
+                        <th class="w-24">Created</th>
+                        <th class="w-12 text-right"> </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($products as $product)
+                        @include('admin.products.partials.row-table', ['product' => $product])
+                    @empty
+                        <tr>
+                            <td colspan="9" class="!h-auto px-4 py-12">
+                                <x-admin.empty-state
+                                    class="border-0"
+                                    :title="count($chips) ? 'No products found' : 'No products yet'"
+                                    :description="count($chips) ? 'Try changing your filters or search.' : null"
+                                    :action-label="count($chips) ? 'Clear filters' : 'Add Product'"
+                                    :action-href="count($chips) ? route('admin.products.index') : route('admin.products.create')"
+                                />
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($products as $product)
-                            @include('admin.products.partials.row-table', ['product' => $product])
-                        @empty
-                            <tr>
-                                <td colspan="9" class="px-4 py-16 text-center">
-                                    <svg class="mx-auto mb-2 h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                    @if(count($chips))
-                                        <p class="text-sm font-semibold text-slate-800">No products found</p>
-                                        <p class="mt-1 text-xs text-slate-500">Try changing your filters or search.</p>
-                                        <a href="{{ route('admin.products.index') }}" class="mt-3 inline-flex rounded-full bg-brand-green-600 px-4 py-2 text-xs font-bold text-white">Clear filters</a>
-                                    @else
-                                        <p class="text-sm font-semibold text-slate-800">No products yet</p>
-                                        <a href="{{ route('admin.products.create') }}" class="mt-3 inline-flex rounded-full bg-brand-green-600 px-4 py-2 text-xs font-bold text-white">Add Product</a>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-    @endif
+    </div>
+
 
     {{-- Pagination --}}
     <div class="flex flex-col items-center justify-between gap-3 pt-1 sm:flex-row">
@@ -407,7 +388,7 @@
                     <p class="hidden text-xs text-slate-400 sm:block">Use the Stock dropdown in the toolbar.</p>
                 </div>
                 <div class="flex gap-2 border-t border-slate-100 pt-4">
-                    <a href="{{ route('admin.products.index', ['view' => $listView]) }}" class="flex-1 rounded-xl border border-slate-200 py-2.5 text-center text-xs font-bold text-slate-600">Clear</a>
+                    <a href="{{ route('admin.products.index') }}" class="flex-1 rounded-[6px] border border-[var(--admin-border)] py-2.5 text-center text-xs font-bold text-slate-600">Clear</a>
                     <button type="button"
                             @click="
                                 document.getElementById('filter-supplier').value = supplier || '';
@@ -481,27 +462,10 @@ document.addEventListener('alpine:init', () => {
         products: config.products,
         csrfToken: config.csrfToken,
         routes: config.routes,
-        viewMode: config.listView || 'table',
-
         init() {
-            // Prefer cards on narrow screens when no explicit view is in the URL.
-            const params = new URLSearchParams(window.location.search);
-            if (!params.has('view') && window.matchMedia('(max-width: 767px)').matches) {
-                params.set('view', 'cards');
-                window.location.replace(`${window.location.pathname}?${params.toString()}`);
-                return;
-            }
             this.$watch('moreFilters', (open) => {
                 document.body.style.overflow = open ? 'hidden' : '';
             });
-        },
-
-        setView(mode) {
-            if (mode !== 'table' && mode !== 'cards') return;
-            try { localStorage.setItem('mamabazar:admin_products_view', mode); } catch (e) {}
-            const params = new URLSearchParams(window.location.search);
-            params.set('view', mode);
-            window.location.href = `${window.location.pathname}?${params.toString()}`;
         },
 
         get allSelected() {

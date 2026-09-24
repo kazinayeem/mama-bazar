@@ -116,6 +116,69 @@ class AdminSettingWebController extends Controller
         return back()->with('success', 'File uploaded locally.');
     }
 
+    /** JSON media library for Alpine media pickers (Homepage Builder, etc.). */
+    public function mediaPicker(Request $request)
+    {
+        $query = MediaAsset::query()->orderByDesc('created_at');
+
+        if ($request->filled('folder') && $request->input('folder') !== 'all') {
+            $query->where('folder', $request->input('folder'));
+        }
+        if ($request->filled('search')) {
+            $s = $request->input('search');
+            $query->where(function ($q) use ($s) {
+                $q->where('filename', 'like', "%{$s}%")
+                    ->orWhere('alt', 'like', "%{$s}%");
+            });
+        }
+
+        $limit = min(60, max(12, (int) $request->input('limit', 30)));
+        $paginator = $query->paginate($limit);
+
+        $folders = MediaAsset::query()
+            ->select('folder')
+            ->whereNotNull('folder')
+            ->distinct()
+            ->pluck('folder')
+            ->filter()
+            ->values()
+            ->all();
+
+        return response()->json([
+            'success' => true,
+            'data' => $paginator->items(),
+            'pagination' => [
+                'page' => $paginator->currentPage(),
+                'limit' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'totalPages' => $paginator->lastPage(),
+            ],
+            'folders' => array_values(array_unique(array_merge(['general', 'products', 'banners', 'hero'], $folders))),
+        ]);
+    }
+
+    public function mediaPickerUpload(Request $request)
+    {
+        $request->validate(['file' => 'required|file|image|max:10240']);
+        $file = $request->file('file');
+        $folder = $request->input('folder', 'banners');
+
+        $upload = MediaStorageService::uploadFile($file, $folder);
+
+        $asset = MediaAsset::create([
+            'url' => $upload['url'],
+            'public_id' => $upload['publicId'],
+            'filename' => $file->getClientOriginalName(),
+            'mime_type' => $file->getClientMimeType(),
+            'size' => $file->getSize(),
+            'provider' => 'local',
+            'folder' => $folder,
+            'uploader_id' => Auth::id(),
+        ]);
+
+        return response()->json(['success' => true, 'data' => $asset], 201);
+    }
+
     public function backup()
     {
         $backups = BackupService::getBackupList();

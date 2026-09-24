@@ -9,6 +9,22 @@ use App\Services\MediaStorageService;
 
 class MediaController extends Controller
 {
+    /** Alias for route: GET /api/media */
+    public function list(Request $request)
+    {
+        return $this->getAll($request);
+    }
+
+    /** Alias for route: POST /api/media */
+    public function create(Request $request)
+    {
+        if ($request->hasFile('files')) {
+            return $this->uploadMultiple($request);
+        }
+
+        return $this->upload($request);
+    }
+
     public function upload(Request $request)
     {
         $request->validate(['file' => 'required|file']);

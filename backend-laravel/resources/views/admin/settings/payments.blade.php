@@ -1,6 +1,7 @@
 @extends('layouts.admin', ['headerTitle' => 'Payment Methods'])
 
 @section('content')
+<div class="admin-page">
 <div class="space-y-6">
 
     <div class="pb-4 border-b border-slate-200">
@@ -23,7 +24,7 @@
 
                 <form action="{{ route('admin.payment-methods.toggle', $method->id) }}" method="POST">
                     @csrf
-                    <button type="submit" class="w-full py-2 px-3 rounded-xl border text-xs font-semibold transition {{ $method->enabled ? 'border-amber-200 text-amber-700 hover:bg-amber-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' }}">
+                    <button type="submit" class="w-full py-2 px-3 rounded-[8px] border text-xs font-semibold transition {{ $method->enabled ? 'border-amber-200 text-amber-700 hover:bg-amber-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' }}">
                         {{ $method->enabled ? 'Disable Payment Method' : 'Enable Payment Method' }}
                     </button>
                 </form>
@@ -31,5 +32,6 @@
         @endforeach
     </div>
 
+</div>
 </div>
 @endsection

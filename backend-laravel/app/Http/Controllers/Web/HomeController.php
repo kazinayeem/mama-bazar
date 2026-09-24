@@ -4,10 +4,6 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Services\HomepageService;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\Banner;
-use App\Models\Review;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -15,54 +11,41 @@ class HomeController extends Controller
     public function index()
     {
         $homepageData = HomepageService::getHomepage();
+        $config = HomepageService::getConfig();
 
-        $categories = Category::whereNull('parent_id')
-            ->where('status', 'active')
-            ->orderBy('sort_order', 'asc')
-            ->get();
+        return view('web.home', [
+            'homepageData' => $homepageData,
+            'config' => $config,
+        ]);
+    }
 
-        $banners = Banner::where('status', 'active')
-            ->orderBy('priority', 'desc')
-            ->get();
+    public function subscribeNewsletter(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
 
-        $heroBanners = $banners->where('position', 'hero')->values();
-        $promoBanners = $banners->where('position', 'promo')->values();
+        try {
+            $result = HomepageService::subscribeNewsletter(
+                $request->input('email'),
+                $request->input('source', 'homepage')
+            );
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
 
-        $flashSaleProducts = Product::where('status', 'active')
-            ->where('is_flash_sale', true)
-            ->take(8)
-            ->get();
+            return back()->with('error', $e->getMessage());
+        }
 
-        $featuredProducts = Product::where('status', 'active')
-            ->where('is_featured', true)
-            ->take(8)
-            ->get();
+        if ($request->expectsJson()) {
+            $status = $result['alreadySubscribed'] ? 200 : 201;
 
-        $trendingProducts = Product::where('status', 'active')
-            ->where('is_trending', true)
-            ->take(8)
-            ->get();
+            return response()->json(['success' => true, 'data' => $result], $status);
+        }
 
-        $newArrivals = Product::where('status', 'active')
-            ->orderBy('created_at', 'desc')
-            ->take(8)
-            ->get();
+        $message = $result['alreadySubscribed']
+            ? 'You are already subscribed!'
+            : 'Subscribed! Check your inbox for updates.';
 
-        $reviews = Review::where('status', 'approved')
-            ->orderBy('created_at', 'desc')
-            ->take(6)
-            ->get();
-
-        return view('web.home', compact(
-            'homepageData',
-            'categories',
-            'heroBanners',
-            'promoBanners',
-            'flashSaleProducts',
-            'featuredProducts',
-            'trendingProducts',
-            'newArrivals',
-            'reviews'
-        ));
+        return back()->with('success', $message);
     }
 }

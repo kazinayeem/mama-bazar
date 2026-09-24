@@ -311,6 +311,15 @@ Route::prefix('reviews')->group(function () {
 // ==================== HOMEPAGE ====================
 Route::prefix('homepage')->group(function () {
     Route::get('/', [HomepageController::class, 'getHomepageData']);
+    Route::get('/config', [HomepageController::class, 'getConfig']);
+    Route::post('/newsletter/subscribe', [HomepageController::class, 'subscribeNewsletter']);
+
+    Route::middleware('jwt.auth')->group(function () {
+        Route::get('/admin/config', [HomepageController::class, 'getConfig'])->middleware('require.permission:homepage.view');
+        Route::put('/admin/config', [HomepageController::class, 'saveConfig'])->middleware('require.permission:homepage.manage');
+        Route::post('/admin/reset-defaults', [HomepageController::class, 'resetConfig'])->middleware('require.permission:homepage.manage');
+        Route::get('/admin/subscribers', [HomepageController::class, 'getSubscribers'])->middleware('require.permission:marketing.view');
+    });
 });
 
 // ==================== PAGES ====================
