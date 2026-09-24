@@ -15,6 +15,7 @@ use App\Models\Size;
 use App\Services\ProductService;
 use App\Services\MediaStorageService;
 use App\Services\SlugService;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
 
 class AdminProductWebController extends Controller
@@ -77,6 +78,7 @@ class AdminProductWebController extends Controller
     public function store(AdminProductRequest $request)
     {
         $payload = $this->normalizePayload($request);
+        $payload = $this->processVariantImages($request, $payload);
 
         $product = ProductService::create($payload);
 
@@ -124,6 +126,7 @@ class AdminProductWebController extends Controller
     public function update(AdminProductRequest $request, $id)
     {
         $payload = $this->normalizePayload($request);
+        $payload = $this->processVariantImages($request, $payload);
 
         $product = ProductService::update((int) $id, $payload);
 
@@ -264,31 +267,67 @@ class AdminProductWebController extends Controller
     public function uploadImage(Request $request)
     {
         $request->validate([
-            'file' => 'nullable|file|mimes:jpeg,jpg,png,webp,gif,svg|max:20480',
-            'files' => 'nullable|array',
+            'file'    => 'nullable|file|mimes:jpeg,jpg,png,webp,gif,svg|max:20480',
+            'files'   => 'nullable|array',
             'files.*' => 'file|mimes:jpeg,jpg,png,webp,gif,svg|max:20480',
+            'folder'  => 'nullable|string|max:80',
         ]);
+
+        // Resolve folder — sanitise to prevent path traversal
+        $rawFolder = $request->input('folder', 'products');
+        $folder = preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $rawFolder) ?: 'products';
 
         $uploaded = [];
 
         if ($request->hasFile('file')) {
-            $res = MediaStorageService::uploadFile($request->file('file'), 'products');
+            $res = MediaStorageService::uploadFile($request->file('file'), $folder);
             $uploaded[] = $res['url'];
         }
 
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $f) {
-                $res = MediaStorageService::uploadFile($f, 'products');
+                $res = MediaStorageService::uploadFile($f, $folder);
                 $uploaded[] = $res['url'];
             }
         }
 
         return response()->json([
             'success' => true,
-            'url' => $uploaded[0] ?? null,
-            'urls' => $uploaded,
+            'url'     => $uploaded[0] ?? null,
+            'urls'    => $uploaded,
         ]);
     }
+
+    /**
+     * Rich-text editor image upload — local storage only, jpg/png/webp.
+     */
+    public function uploadEditorImage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:jpeg,jpg,png,webp|max:5120',
+            'alt'  => 'nullable|string|max:255',
+        ]);
+
+        $res = MediaStorageService::uploadFile($request->file('file'), 'products/descriptions');
+        $url = $res['url'];
+
+        if (! HtmlSanitizer::isAllowedImageSrc($url)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only local storage image URLs are allowed.',
+            ], 422);
+        }
+
+        $alt = trim((string) $request->input('alt', ''));
+
+        return response()->json([
+            'success' => true,
+            'url'     => $url,
+            'alt'     => $alt,
+            'path'    => $res['path'] ?? null,
+        ]);
+    }
+
 
     protected function normalizePayload(Request $request): array
     {
@@ -401,6 +440,75 @@ class AdminProductWebController extends Controller
                 $data['price'] = min($vPrices);
             }
         }
+
+        // When variants are disabled, clear the list so sync removes old rows
+        if (isset($data['has_variants']) && !filter_var($data['has_variants'], FILTER_VALIDATE_BOOLEAN)) {
+            $data['variants'] = [];
+        } elseif (
+            filter_var($data['has_variants'] ?? false, FILTER_VALIDATE_BOOLEAN)
+            && (!isset($data['variants']) || !is_array($data['variants']))
+        ) {
+            $data['variants'] = [];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Process multipart variants[n][image] uploads into local storage paths.
+     * Saves relative paths (products/variants/…) in the payload thumbnail field.
+     */
+    protected function processVariantImages(Request $request, array $data): array
+    {
+        if (empty($data['variants']) || !is_array($data['variants'])) {
+            return $data;
+        }
+
+        foreach ($data['variants'] as $i => &$variant) {
+            if (!is_array($variant)) {
+                continue;
+            }
+
+            $oldThumbnail = $variant['thumbnail'] ?? null;
+            $remove = filter_var($variant['remove_image'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $variantId = isset($variant['id']) ? (int) $variant['id'] : null;
+
+            if ($request->hasFile("variants.$i.image")) {
+                $upload = MediaStorageService::storeUploaded(
+                    $request->file("variants.$i.image"),
+                    'products/variants'
+                );
+                $variant['thumbnail'] = $upload['path'];
+                $variant['images'] = [$upload['url']];
+
+                if ($oldThumbnail) {
+                    MediaStorageService::deleteIfUnreferenced($oldThumbnail, $variantId ?: null);
+                }
+            } elseif ($remove) {
+                if ($oldThumbnail) {
+                    MediaStorageService::deleteIfUnreferenced($oldThumbnail, $variantId ?: null);
+                }
+                $variant['thumbnail'] = null;
+                $variant['images'] = [];
+            } else {
+                // Keep existing path; normalize to relative when local
+                if (is_string($oldThumbnail) && $oldThumbnail !== '') {
+                    $relative = MediaStorageService::toRelativePath($oldThumbnail);
+                    $variant['thumbnail'] = $relative ?: $oldThumbnail;
+                } else {
+                    $variant['thumbnail'] = null;
+                }
+            }
+
+            unset($variant['remove_image'], $variant['image'], $variant['key'], $variant['_preview'], $variant['_savedPath'], $variant['_uploading']);
+
+            if (array_key_exists('availability', $variant)) {
+                $variant['availability'] = filter_var($variant['availability'], FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+        unset($variant);
+
+        $data['variants'] = array_values($data['variants']);
 
         return $data;
     }

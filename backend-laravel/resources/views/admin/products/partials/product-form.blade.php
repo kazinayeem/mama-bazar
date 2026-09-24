@@ -20,6 +20,7 @@
     $existingVariants = [];
     if (!empty($product['variants']) && is_array($product['variants'])) {
         foreach ($product['variants'] as $v) {
+            $rawThumb = $v['thumbnail'] ?? '';
             $existingVariants[] = [
                 'key' => uniqid(),
                 'id' => $v['id'] ?? null,
@@ -30,7 +31,10 @@
                 'sku' => $v['sku'] ?? '',
                 'barcode' => $v['barcode'] ?? '',
                 'stock' => isset($v['stock']) ? (string)$v['stock'] : '0',
-                'thumbnail' => $v['thumbnail'] ?? '',
+                'thumbnail' => $rawThumb,
+                '_savedPath' => $rawThumb,
+                '_preview' => null,
+                'removeImage' => false,
                 'availability' => isset($v['availability']) ? (bool)$v['availability'] : true,
             ];
         }
@@ -146,6 +150,7 @@
     id="productMainForm"
     action="{{ $actionUrl }}"
     method="POST"
+    enctype="multipart/form-data"
     x-data="productForm({
         initial: {{ Js::from($initialForm) }},
         isEditing: {{ $isEditing ? 'true' : 'false' }},
@@ -169,7 +174,7 @@
     <input type="hidden" name="size_options" :value="JSON.stringify(form.sizeOptions)">
     <input type="hidden" name="color_options" :value="JSON.stringify(form.colorOptions)">
     <input type="hidden" name="images" :value="JSON.stringify(form.images.map(i => i.url))">
-    <input type="hidden" name="variants" :value="JSON.stringify(form.variants)">
+    {{-- Variants are submitted as variants[n][…] fields (incl. image files), not JSON --}}
     <input type="hidden" name="specs" :value="JSON.stringify(form.specs)">
     <input type="hidden" name="relations" :value="JSON.stringify(form.relations)">
 
@@ -327,39 +332,84 @@
                 ></textarea>
             </div>
 
-            <!-- Full Description (Rich HTML) -->
-            <div class="sm:col-span-2 space-y-1.5" x-data="richEditor({ initial: form.description })">
+            <!-- Full Description (Tiptap rich HTML) -->
+            <div
+                class="sm:col-span-2 space-y-1.5"
+                x-data="productRichEditor({
+                    initial: form.description,
+                    uploadUrl: @js(route('admin.products.upload-editor-image')),
+                    csrfToken: @js(csrf_token()),
+                })"
+            >
                 <label class="text-xs font-bold text-slate-800">Full Description</label>
-                <!-- Editor Toolbar -->
-                <div class="flex flex-wrap items-center gap-1 rounded-t-lg border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs">
-                    <button type="button" @click="format('bold')" class="p-1 hover:bg-slate-200 rounded font-bold" title="Bold">B</button>
-                    <button type="button" @click="format('italic')" class="p-1 hover:bg-slate-200 rounded italic" title="Italic">I</button>
-                    <button type="button" @click="format('underline')" class="p-1 hover:bg-slate-200 rounded underline" title="Underline">U</button>
-                    <span class="text-slate-300">|</span>
-                    <button type="button" @click="formatBlock('h2')" class="p-1 hover:bg-slate-200 rounded text-[11px] font-bold" title="Heading 2">H2</button>
-                    <button type="button" @click="formatBlock('h3')" class="p-1 hover:bg-slate-200 rounded text-[11px] font-bold" title="Heading 3">H3</button>
-                    <button type="button" @click="formatBlock('p')" class="p-1 hover:bg-slate-200 rounded text-[11px]" title="Paragraph">¶</button>
-                    <span class="text-slate-300">|</span>
-                    <button type="button" @click="format('insertUnorderedList')" class="p-1 hover:bg-slate-200 rounded" title="Bullet List">• List</button>
-                    <button type="button" @click="format('insertOrderedList')" class="p-1 hover:bg-slate-200 rounded" title="Numbered List">1. List</button>
-                    <button type="button" @click="toggleSource()" class="ml-auto p-1 hover:bg-slate-200 rounded text-[10px] font-mono text-slate-600" x-text="sourceMode ? 'WYSIWYG' : 'HTML View'"></button>
+                <div class="mb-rte">
+                    <div class="mb-rte-toolbar" x-show="!sourceMode">
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('bold') }" @click="run(e => e.chain().focus().toggleBold().run())" title="Bold (Ctrl+B)"><span class="font-bold">B</span></button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('italic') }" @click="run(e => e.chain().focus().toggleItalic().run())" title="Italic (Ctrl+I)"><span class="italic">I</span></button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('underline') }" @click="run(e => e.chain().focus().toggleUnderline().run())" title="Underline (Ctrl+U)"><span class="underline">U</span></button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('strike') }" @click="run(e => e.chain().focus().toggleStrike().run())" title="Strikethrough"><span class="line-through">S</span></button>
+                        <span class="mb-rte-sep"></span>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('heading', { level: 1 }) }" @click="run(e => e.chain().focus().toggleHeading({ level: 1 }).run())" title="Heading 1">H1</button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('heading', { level: 2 }) }" @click="run(e => e.chain().focus().toggleHeading({ level: 2 }).run())" title="Heading 2">H2</button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('heading', { level: 3 }) }" @click="run(e => e.chain().focus().toggleHeading({ level: 3 }).run())" title="Heading 3">H3</button>
+                        <span class="mb-rte-sep"></span>
+                        <select class="mb-rte-select" @change="setColor($event.target.value); $event.target.value=''" title="Text color">
+                            <option value="">Color</option>
+                            <template x-for="c in colors" :key="c.value || 'def'">
+                                <option :value="c.value" x-text="c.label"></option>
+                            </template>
+                        </select>
+                        <select class="mb-rte-select" @change="setHighlight($event.target.value); $event.target.value=''" title="Highlight">
+                            <option value="">Highlight</option>
+                            <template x-for="h in highlights" :key="h.value || 'none'">
+                                <option :value="h.value" x-text="h.label"></option>
+                            </template>
+                        </select>
+                        <span class="mb-rte-sep"></span>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('bulletList') }" @click="run(e => e.chain().focus().toggleBulletList().run())" title="Bullet list">• List</button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('orderedList') }" @click="run(e => e.chain().focus().toggleOrderedList().run())" title="Numbered list">1. List</button>
+                        <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().sinkListItem('listItem').run())" title="Indent">Indent</button>
+                        <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().liftListItem('listItem').run())" title="Outdent">Outdent</button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('blockquote') }" @click="run(e => e.chain().focus().toggleBlockquote().run())" title="Blockquote">Quote</button>
+                        <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().setHorizontalRule().run())" title="Horizontal rule">HR</button>
+                        <span class="mb-rte-sep"></span>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive({ textAlign: 'left' }) }" @click="run(e => e.chain().focus().setTextAlign('left').run())" title="Align left">Left</button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive({ textAlign: 'center' }) }" @click="run(e => e.chain().focus().setTextAlign('center').run())" title="Align center">Center</button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive({ textAlign: 'right' }) }" @click="run(e => e.chain().focus().setTextAlign('right').run())" title="Align right">Right</button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive({ textAlign: 'justify' }) }" @click="run(e => e.chain().focus().setTextAlign('justify').run())" title="Justify">Justify</button>
+                        <span class="mb-rte-sep"></span>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('link') }" @click="setLink()" title="Insert link">Link</button>
+                        <button type="button" class="mb-rte-btn" :disabled="uploading" @click="$refs.imageInput.click()" title="Upload image" x-text="uploading ? '…' : 'Image'"></button>
+                        <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('table') }" @click="run(e => e.isActive('table') ? e.chain().focus().deleteTable().run() : e.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())" title="Insert / delete table">Table</button>
+                        <template x-if="isActive('table')">
+                            <span class="inline-flex items-center gap-0.5">
+                                <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().addRowAfter().run())" title="Add row">+Row</button>
+                                <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().addColumnAfter().run())" title="Add column">+Col</button>
+                                <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().deleteRow().run())" title="Delete row">-Row</button>
+                                <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().deleteColumn().run())" title="Delete column">-Col</button>
+                            </span>
+                        </template>
+                        <span class="mb-rte-sep"></span>
+                        <button type="button" class="mb-rte-btn" @click="clearFormat()" title="Clear formatting">Clear</button>
+                        <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().undo().run())" title="Undo (Ctrl+Z)">Undo</button>
+                        <button type="button" class="mb-rte-btn" @click="run(e => e.chain().focus().redo().run())" title="Redo (Ctrl+Shift+Z)">Redo</button>
+                        <button type="button" class="mb-rte-btn ml-auto text-[10px] font-mono" @click="toggleSource()" title="HTML source">HTML</button>
+                        <input type="file" class="hidden" x-ref="imageInput" accept="image/jpeg,image/png,image/webp" @change="uploadImages($event.target.files)">
+                    </div>
+                    <div x-show="!sourceMode" x-ref="editorMount" class="min-h-[180px]"></div>
+                    <textarea
+                        x-cloak
+                        x-show="sourceMode"
+                        x-model="sourceHtml"
+                        @input="onSourceInput()"
+                        rows="10"
+                        class="w-full border-0 p-3 text-xs font-mono focus:outline-hidden bg-slate-900 text-slate-100"
+                        aria-label="HTML source"
+                    ></textarea>
                 </div>
-
-                <div
-                    x-show="!sourceMode"
-                    x-ref="editor"
-                    contenteditable="true"
-                    @input="syncToForm()"
-                    class="min-h-[160px] w-full rounded-b-lg border-x border-b border-slate-300 p-3 text-xs focus:outline-hidden prose prose-sm max-w-none bg-white"
-                ></div>
-
-                <textarea
-                    x-show="sourceMode"
-                    x-model="form.description"
-                    rows="8"
-                    class="w-full rounded-b-lg border-x border-b border-slate-300 p-3 text-xs font-mono focus:outline-hidden bg-slate-900 text-slate-100"
-                ></textarea>
-                <input type="hidden" name="description" :value="form.description">
+                <p class="text-[11px] text-slate-400">Rich HTML is sanitized on save. Images upload to local storage only (JPG/PNG/WebP).</p>
+                {{-- Local descriptionHtml is the source of truth for submit (parent form is also synced). --}}
+                <input type="hidden" name="description" :value="descriptionHtml">
             </div>
         </div>
 
@@ -1082,8 +1132,8 @@
             />
         </div>
 
-        <!-- Variants Workspace -->
-        <div x-show="form.hasVariants" class="space-y-5">
+        // Variants workspace — only mount fields when variants are enabled
+        <div x-show="form.hasVariants" x-cloak class="space-y-5">
             <!-- Color & Size Selection -->
             <div class="grid gap-4 sm:grid-cols-2">
                 <!-- Color Options -->
@@ -1202,11 +1252,12 @@
                                 />
                             </th>
                             <th class="px-2.5 py-2.5 min-w-[140px]">Variant</th>
+                            <th class="px-2.5 py-2.5 min-w-[160px]">Options JSON</th>
                             <th class="px-2.5 py-2.5 w-28">SKU</th>
                             <th class="px-2.5 py-2.5 w-24">Price (৳)</th>
                             <th class="px-2.5 py-2.5 w-24">Sale Price (৳)</th>
                             <th class="px-2.5 py-2.5 w-20">Stock</th>
-                            <th class="px-2.5 py-2.5 w-32">Image</th>
+                            <th class="px-2.5 py-2.5 w-40">Image</th>
                             <th class="px-2.5 py-2.5 w-16 text-center">Active</th>
                             <th class="px-2.5 py-2.5 w-8"></th>
                         </tr>
@@ -1218,8 +1269,14 @@
                                     <input type="checkbox" :value="v.key" x-model="selectedVariants" class="rounded border-slate-300">
                                 </td>
                                 <td class="px-2.5 py-2">
+                                    <input type="hidden" :name="`variants[${idx}][id]`" :value="v.id || ''">
+                                    <input type="hidden" :name="`variants[${idx}][barcode]`" :value="v.barcode || ''">
+                                    <input type="hidden" :name="`variants[${idx}][availability]`" :value="v.availability ? 1 : 0">
+                                    <input type="hidden" :name="`variants[${idx}][thumbnail]`" :value="persistedVariantPath(v)">
+                                    <input type="hidden" :name="`variants[${idx}][remove_image]`" :value="v.removeImage ? 1 : 0">
                                     <input
                                         type="text"
+                                        :name="`variants[${idx}][name]`"
                                         x-model="v.name"
                                         placeholder="Black / L"
                                         class="w-full px-2 py-1 text-xs border border-slate-300 rounded font-medium"
@@ -1228,6 +1285,17 @@
                                 <td class="px-2.5 py-2">
                                     <input
                                         type="text"
+                                        :name="`variants[${idx}][options]`"
+                                        x-model="v.options"
+                                        placeholder='{"Color":"Black","Size":"L"}'
+                                        class="w-full px-2 py-1 text-[11px] font-mono border border-slate-300 rounded"
+                                        title="Option axes as JSON — any keys (Color, Size, Storage, RAM, Strap, …)"
+                                    />
+                                </td>
+                                <td class="px-2.5 py-2">
+                                    <input
+                                        type="text"
+                                        :name="`variants[${idx}][sku]`"
                                         x-model="v.sku"
                                         placeholder="SKU"
                                         class="w-full px-2 py-1 text-xs font-mono border border-slate-300 rounded"
@@ -1238,6 +1306,7 @@
                                         type="number"
                                         step="0.01"
                                         min="0"
+                                        :name="`variants[${idx}][price]`"
                                         x-model="v.price"
                                         placeholder="1490"
                                         class="w-full px-2 py-1 text-xs border border-slate-300 rounded"
@@ -1248,6 +1317,7 @@
                                         type="number"
                                         step="0.01"
                                         min="0"
+                                        :name="`variants[${idx}][salePrice]`"
                                         x-model="v.salePrice"
                                         placeholder="1290"
                                         class="w-full px-2 py-1 text-xs border border-slate-300 rounded"
@@ -1257,47 +1327,58 @@
                                     <input
                                         type="number"
                                         min="0"
+                                        :name="`variants[${idx}][stock]`"
                                         x-model="v.stock"
                                         placeholder="0"
                                         class="w-full px-2 py-1 text-xs border border-slate-300 rounded text-center"
                                     />
                                 </td>
                                 <td class="px-2.5 py-2">
-                                    <div class="flex flex-col items-center gap-1.5">
-                                        {{-- Thumbnail preview / click to pick --}}
-                                        <div class="w-14 h-14 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer"
-                                             :class="v.thumbnail ? '' : 'border-dashed'"
-                                             @click="openVariantFilePicker($event, v.key)">
-                                            <template x-if="v.thumbnail">
-                                                <img :src="v.thumbnail" class="w-full h-full object-cover" title="Click to replace">
+                                    <div
+                                        class="flex flex-col items-center gap-1.5 min-w-[7.5rem]"
+                                        @dragover.prevent="$event.currentTarget.classList.add('ring-2','ring-emerald-400')"
+                                        @dragleave.prevent="$event.currentTarget.classList.remove('ring-2','ring-emerald-400')"
+                                        @drop.prevent="$event.currentTarget.classList.remove('ring-2','ring-emerald-400'); onVariantImageDrop($event, v, idx)"
+                                    >
+                                        <div
+                                            class="w-14 h-14 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center shrink-0"
+                                            :class="variantImageSrc(v) ? '' : 'border-dashed'"
+                                        >
+                                            <template x-if="variantImageSrc(v)">
+                                                <img :src="variantImageSrc(v)" alt="" class="w-full h-full object-cover">
                                             </template>
-                                            <template x-if="!v.thumbnail">
+                                            <template x-if="!variantImageSrc(v)">
                                                 <div class="flex flex-col items-center gap-0.5 p-1 text-center">
                                                     <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                    <span class="text-[9px] text-slate-400 leading-tight">Add</span>
+                                                    <span class="text-[9px] text-slate-400 leading-tight">Image</span>
                                                 </div>
                                             </template>
                                         </div>
 
-                                        {{-- Hidden file input — identified by data-varkey, not :x-ref --}}
                                         <input
                                             type="file"
-                                            accept="image/jpeg,image/png,image/webp"
+                                            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                                             class="hidden"
+                                            :name="`variants[${idx}][image]`"
                                             :data-varkey="v.key"
-                                            @change="uploadVariantImage($event, v)"
+                                            @change="onVariantImageSelected($event, v)"
                                         >
 
-                                        {{-- Remove button --}}
-                                        <button
-                                            x-show="v.thumbnail && !v._uploading"
-                                            type="button"
-                                            @click.stop="v.thumbnail = ''"
-                                            class="text-[9px] text-red-400 hover:text-red-600 leading-none mt-0.5"
-                                        >Remove</button>
-
-                                        {{-- Upload spinner --}}
-                                        <span x-show="v._uploading" class="text-[9px] text-brand-green-600 animate-pulse">Uploading…</span>
+                                        <div class="flex flex-wrap items-center justify-center gap-1">
+                                            <button
+                                                type="button"
+                                                @click="openVariantFilePicker($event, v.key)"
+                                                class="px-1.5 py-0.5 text-[10px] font-semibold rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                                                x-text="variantImageSrc(v) ? 'Replace' : 'Choose Image'"
+                                            ></button>
+                                            <button
+                                                type="button"
+                                                x-show="variantImageSrc(v)"
+                                                @click.stop="removeVariantImage($event, v)"
+                                                class="px-1.5 py-0.5 text-[10px] font-semibold rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                                            >Remove</button>
+                                        </div>
+                                        <p class="text-[9px] text-slate-400 leading-tight text-center">JPG · PNG · WEBP · 5MB</p>
                                     </div>
                                 </td>
                                 <td class="px-2.5 py-2 text-center">
@@ -1324,6 +1405,7 @@
 
             <div x-show="form.variants.length === 0" class="rounded-xl border border-dashed border-slate-300 p-8 text-center text-xs text-slate-500">
                 No variants yet. Select color and size options above, then click <strong>Generate Variants</strong>.
+                For Storage/RAM/Strap axes, add a blank variant and edit the <strong>Options JSON</strong> column (e.g. <code>{"Storage":"256GB","Color":"Black"}</code>).
             </div>
         </div>
     </div>
@@ -1582,41 +1664,6 @@
 
 <script>
 document.addEventListener('alpine:init', () => {
-    // Rich editor mini helper
-    Alpine.data('richEditor', (config) => ({
-        sourceMode: false,
-        init() {
-            this.$nextTick(() => {
-                if (this.$refs.editor && config.initial) {
-                    this.$refs.editor.innerHTML = config.initial;
-                }
-            });
-        },
-        format(cmd, val = null) {
-            document.execCommand(cmd, false, val);
-            this.syncToForm();
-        },
-        formatBlock(tag) {
-            document.execCommand('formatBlock', false, tag);
-            this.syncToForm();
-        },
-        syncToForm() {
-            if (this.$refs.editor) {
-                this.form.description = this.$refs.editor.innerHTML;
-            }
-        },
-        toggleSource() {
-            this.sourceMode = !this.sourceMode;
-            if (!this.sourceMode) {
-                this.$nextTick(() => {
-                    if (this.$refs.editor) {
-                        this.$refs.editor.innerHTML = this.form.description;
-                    }
-                });
-            }
-        }
-    }));
-
     // Image uploader
     Alpine.data('imageUploader', () => ({
         isDragging: false,
@@ -1691,7 +1738,9 @@ document.addEventListener('alpine:init', () => {
             const existingKeys = new Set(this.form.variants.map(v => {
                 try {
                     const parsed = JSON.parse(v.options || '{}');
-                    return `${parsed.color || ''}::${parsed.size || ''}`.toLowerCase();
+                    const color = parsed.Color || parsed.color || '';
+                    const size = parsed.Size || parsed.size || '';
+                    return `${color}::${size}`.toLowerCase();
                 } catch(e) {
                     return v.name.toLowerCase();
                 }
@@ -1701,9 +1750,10 @@ document.addEventListener('alpine:init', () => {
             colors.forEach(color => {
                 sizes.forEach(size => {
                     const parts = [];
+                    // Capitalized keys match storefront generic option engine / seeded catalog
                     const opts = {};
-                    if (color) { parts.push(color); opts.color = color; }
-                    if (size) { parts.push(size); opts.size = size; }
+                    if (color) { parts.push(color); opts.Color = color; }
+                    if (size) { parts.push(size); opts.Size = size; }
                     const name = parts.join(' / ');
                     const key = `${color}::${size}`.toLowerCase();
 
@@ -1725,6 +1775,9 @@ document.addEventListener('alpine:init', () => {
                             barcode: '',
                             stock: this.form.stock || '0',
                             thumbnail: '',
+                            _savedPath: '',
+                            _preview: null,
+                            removeImage: false,
                             availability: true
                         });
                         added++;
@@ -1750,6 +1803,9 @@ document.addEventListener('alpine:init', () => {
                 barcode: '',
                 stock: '0',
                 thumbnail: '',
+                _savedPath: '',
+                _preview: null,
+                removeImage: false,
                 availability: true
             });
         },
@@ -1779,62 +1835,89 @@ document.addEventListener('alpine:init', () => {
             this.bulkStock = '';
         },
 
-        // ---------- Variant image upload ----------
+        // ---------- Variant image (multipart on form submit) ----------
+        normalizeVariantSrc(path) {
+            if (!path) return '';
+            if (
+                path.startsWith('blob:') ||
+                path.startsWith('data:') ||
+                path.startsWith('http://') ||
+                path.startsWith('https://') ||
+                path.startsWith('/storage/') ||
+                path.startsWith('/uploads/')
+            ) {
+                return path;
+            }
+            if (path.startsWith('storage/')) return '/' + path;
+            return '/storage/' + path.replace(/^\//, '');
+        },
+        variantImageSrc(v) {
+            if (v.removeImage) return '';
+            if (v._preview) return v._preview;
+            return this.normalizeVariantSrc(v.thumbnail || v._savedPath || '');
+        },
+        persistedVariantPath(v) {
+            // Always send the last known disk path so the server can delete on remove/replace.
+            // remove_image=1 tells the backend to clear the DB field after cleanup.
+            const saved = v._savedPath || '';
+            if (saved && !saved.startsWith('blob:') && !saved.startsWith('data:')) return saved;
+            const t = v.thumbnail || '';
+            if (t && !t.startsWith('blob:') && !t.startsWith('data:')) return t;
+            return '';
+        },
         openVariantFilePicker(event, varKey) {
             const input = event.target.closest('tr').querySelector(`input[data-varkey="${varKey}"]`);
             if (input) input.click();
         },
-        async uploadVariantImage(event, variant) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // Validate client-side: type and size (5 MB max)
+        validateVariantImageFile(file) {
+            if (!file) return false;
             const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-            if (!allowed.includes(file.type)) {
+            const okType = allowed.includes(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name || '');
+            if (!okType) {
                 alert('Only JPG, PNG, and WEBP images are allowed.');
-                event.target.value = '';
-                return;
+                return false;
             }
             if (file.size > 5 * 1024 * 1024) {
                 alert('Image must be 5 MB or smaller.');
+                return false;
+            }
+            return true;
+        },
+        onVariantImageSelected(event, variant) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (!this.validateVariantImageFile(file)) {
                 event.target.value = '';
                 return;
             }
-
-            // Instant browser preview while uploading
-            const previewUrl = URL.createObjectURL(file);
-            variant.thumbnail = previewUrl;
-            variant._uploading = true;
-
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('folder', 'products/variants');
-
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-                           || document.querySelector('input[name="_token"]')?.value
-                           || '';
-
-            try {
-                const res = await fetch('{{ route('admin.products.upload-image') }}', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                    body: fd,
-                });
-                const json = await res.json();
-                if (json.success && json.url) {
-                    variant.thumbnail = json.url;   // replace blob preview with real storage URL
-                } else {
-                    variant.thumbnail = '';          // upload failed — clear preview
-                    alert('Image upload failed. Please try again.');
-                }
-            } catch (err) {
-                variant.thumbnail = '';
-                alert('Upload error: ' + err.message);
-            } finally {
-                variant._uploading = false;
-                URL.revokeObjectURL(previewUrl);
-                event.target.value = ''; // reset so the same file can be re-selected
+            if (variant._preview) URL.revokeObjectURL(variant._preview);
+            variant._preview = URL.createObjectURL(file);
+            variant.removeImage = false;
+            // Keep _savedPath so replace can delete the old file server-side
+        },
+        onVariantImageDrop(event, variant, idx) {
+            const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+            if (!file) return;
+            if (!this.validateVariantImageFile(file)) return;
+            const input = event.currentTarget.querySelector(`input[data-varkey="${variant.key}"]`)
+                || event.target.closest('tr')?.querySelector(`input[name="variants[${idx}][image]"]`);
+            if (!input) return;
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            if (variant._preview) URL.revokeObjectURL(variant._preview);
+            variant._preview = URL.createObjectURL(file);
+            variant.removeImage = false;
+        },
+        removeVariantImage(event, variant) {
+            if (variant._preview) {
+                URL.revokeObjectURL(variant._preview);
+                variant._preview = null;
             }
+            variant.removeImage = true;
+            variant.thumbnail = '';
+            const input = event.target.closest('tr')?.querySelector(`input[data-varkey="${variant.key}"]`);
+            if (input) input.value = '';
         }
     }));
 
@@ -1950,7 +2033,12 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             this.submitting = true;
-            document.getElementById('productMainForm').submit();
+            const formEl = document.getElementById('productMainForm');
+            // When variants are off, disable named variant fields so they are not posted
+            if (!this.form.hasVariants) {
+                formEl.querySelectorAll('[name^="variants["]').forEach((el) => { el.disabled = true; });
+            }
+            formEl.submit();
         }
     }));
 });

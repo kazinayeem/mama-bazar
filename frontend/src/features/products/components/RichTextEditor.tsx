@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
-import { Node } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
@@ -8,20 +7,24 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
 import TiptapImage from '@tiptap/extension-image'
 import { TableKit } from '@tiptap/extension-table'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Color } from '@tiptap/extension-color'
+import Highlight from '@tiptap/extension-highlight'
 import {
   AlignCenter,
   AlignJustify,
   AlignLeft,
   AlignRight,
   Bold,
-  Code,
   Columns3,
+  Eraser,
   Eye,
   Heading1,
   Heading2,
   Heading3,
-  Image as ImageIcon,
+  Highlighter,
   ImagePlus,
+  ListIndentIncrease,
   Italic,
   Link2,
   Link2Off,
@@ -29,23 +32,24 @@ import {
   ListOrdered,
   Loader2,
   Minus,
+  ListIndentDecrease,
+  Palette,
   PenLine,
   Quote,
   Redo2,
   Rows3,
-  Square,
   Strikethrough,
   Table,
   Table2,
   Underline as UnderlineIcon,
   Undo2,
-  Video as VideoIcon,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { sanitizeProductHtml } from '@/lib/sanitizeHtml'
 import { useUploadMediaMutation } from '@/store/services/adminProductsApi'
 
 interface RichTextEditorProps {
@@ -56,46 +60,45 @@ interface RichTextEditorProps {
   maxHeight?: number
 }
 
-// ---------- Custom iframe video node ----------
-const Video = Node.create({
-  name: 'video',
-  group: 'block',
-  atom: true,
-  draggable: true,
+const TEXT_COLORS = [
+  { label: 'Default', value: '' },
+  { label: 'Slate', value: '#0f172a' },
+  { label: 'Green', value: '#0F4D2C' },
+  { label: 'Orange', value: '#F47B20' },
+  { label: 'Red', value: '#dc2626' },
+  { label: 'Blue', value: '#2563eb' },
+]
 
-  addAttributes() {
-    return {
-      src: { default: null },
-    }
-  },
+const HIGHLIGHT_COLORS = [
+  { label: 'None', value: '' },
+  { label: 'Yellow', value: '#fef08a' },
+  { label: 'Green', value: '#bbf7d0' },
+  { label: 'Orange', value: '#fed7aa' },
+  { label: 'Blue', value: '#bfdbfe' },
+]
 
-  parseHTML() {
-    return [{ tag: 'iframe[src]' }]
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ['div', { class: 'video-embed' }, ['iframe', { ...HTMLAttributes, frameborder: '0', allowfullscreen: 'true' }]]
-  },
-
-  addCommands() {
-    return {
-      setVideo:
-        (options: { src: string }) =>
-        ({ commands }) =>
-          commands.insertContent({ type: this.name, attrs: options }),
-    }
-  },
-})
-
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    video: {
-      setVideo: (options: { src: string }) => ReturnType
-    }
+const isSafeHttpUrl = (url: string) => {
+  try {
+    const u = new URL(url, window.location.origin)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
   }
 }
 
-// ---------- Toolbar ----------
+const isLocalStorageImage = (src: string) => {
+  if (src.startsWith('/storage/') || src.startsWith('/uploads/')) return true
+  try {
+    const u = new URL(src, window.location.origin)
+    return (
+      u.origin === window.location.origin &&
+      (u.pathname.startsWith('/storage/') || u.pathname.startsWith('/uploads/'))
+    )
+  } catch {
+    return false
+  }
+}
+
 const ToolbarButton = ({
   active,
   onClick,
@@ -122,27 +125,29 @@ const ToolbarButton = ({
   </Button>
 )
 
-const sanitizeHtml = (html: string): string =>
-  html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-
 const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeight = 520 }: RichTextEditorProps) => {
   const [uploadMedia, { isLoading: uploadingImage }] = useUploadMediaMutation()
   const [preview, setPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const previewHtml = useMemo(() => sanitizeHtml(value || ''), [value])
+  const previewHtml = useMemo(() => sanitizeProductHtml(value || ''), [value])
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      Link.configure({ openOnClick: false, autolink: true }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' },
+        isAllowedUri: (url) => isSafeHttpUrl(url),
+      }),
       Placeholder.configure({ placeholder: placeholder || 'Write a detailed description...' }),
-      TiptapImage.configure({ inline: false, allowBase64: true }),
+      TiptapImage.configure({ inline: false, allowBase64: false }),
       TableKit,
-      Video,
     ],
     content: value || '',
     onUpdate: ({ editor: e }) => onChange(e.getHTML()),
@@ -174,42 +179,45 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
       editor.chain().focus().extendMarkRange('link').unsetLink().run()
       return
     }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    if (!isSafeHttpUrl(url)) {
+      toast.error('Only http(s) links are allowed')
+      return
+    }
+    editor.chain().focus().extendMarkRange('link').setLink({
+      href: url,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    }).run()
   }
 
   const handleImageFiles = async (files: FileList | File[] | null) => {
-    const list = files ? Array.from(files).filter((f) => f.type.startsWith('image/')) : []
-    if (list.length === 0) return
+    const list = files
+      ? Array.from(files).filter((f) => ['image/jpeg', 'image/png', 'image/webp'].includes(f.type))
+      : []
+    if (list.length === 0) {
+      toast.error('Only JPG, PNG, or WebP images are allowed')
+      return
+    }
     try {
-      const assets = await uploadMedia({ files: list, folder: 'products/editor' }).unwrap()
-      assets.forEach((asset) => editor.chain().focus().setImage({ src: asset.url }).run())
+      const assets = await uploadMedia({ files: list, folder: 'products/descriptions' }).unwrap()
+      assets.forEach((asset) => {
+        if (!isLocalStorageImage(asset.url)) {
+          toast.error('Only local storage images are allowed')
+          return
+        }
+        const alt = window.prompt('Image alt text', '') ?? ''
+        editor.chain().focus().setImage({ src: asset.url, alt }).run()
+      })
       toast.success(`${assets.length} image(s) inserted`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Image upload failed')
     }
   }
 
-  const handleImageUrl = () => {
-    const url = window.prompt('Enter image URL')
-    if (url) editor.chain().focus().setImage({ src: url }).run()
-  }
-
-  const handleVideo = () => {
-    const url = window.prompt('Enter video URL (YouTube / Vimeo / direct mp4)')
-    if (!url) return
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
-    const vimeo = url.match(/vimeo\.com\/(\d+)/)
-    let embed = url
-    if (match) embed = `https://www.youtube.com/embed/${match[1]}`
-    else if (vimeo) embed = `https://player.vimeo.com/video/${vimeo[1]}`
-    editor.chain().focus().setVideo({ src: embed }).run()
-  }
-
   const inTable = editor.isActive('table')
 
   return (
     <div className="overflow-hidden rounded-lg border">
-      {/* Sticky toolbar */}
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 border-b bg-muted/50 p-1.5 backdrop-blur">
         <ToolbarButton title="Bold" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold className="h-4 w-4" />
@@ -222,9 +230,6 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
         </ToolbarButton>
         <ToolbarButton title="Strikethrough" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}>
           <Strikethrough className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton title="Inline code" active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()}>
-          <Code className="h-4 w-4" />
         </ToolbarButton>
 
         <Separator orientation="vertical" className="mx-1 h-6" />
@@ -244,11 +249,14 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
         <ToolbarButton title="Numbered list" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
           <ListOrdered className="h-4 w-4" />
         </ToolbarButton>
+        <ToolbarButton title="Indent" onClick={() => editor.chain().focus().sinkListItem('listItem').run()}>
+          <ListIndentIncrease className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton title="Outdent" onClick={() => editor.chain().focus().liftListItem('listItem').run()}>
+          <ListIndentDecrease className="h-4 w-4" />
+        </ToolbarButton>
         <ToolbarButton title="Blockquote" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
           <Quote className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton title="Code block" active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
-          <Square className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton title="Horizontal rule" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
           <Minus className="h-4 w-4" />
@@ -271,6 +279,47 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
+        <div className="relative inline-flex">
+          <ToolbarButton title="Text color" onClick={() => {}}>
+            <Palette className="h-4 w-4" />
+          </ToolbarButton>
+          <select
+            aria-label="Text color"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            defaultValue=""
+            onChange={(e) => {
+              const v = e.target.value
+              if (!v) editor.chain().focus().unsetColor().run()
+              else editor.chain().focus().setColor(v).run()
+              e.target.value = ''
+            }}
+          >
+            {TEXT_COLORS.map((c) => (
+              <option key={c.label} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="relative inline-flex">
+          <ToolbarButton title="Highlight" onClick={() => {}}>
+            <Highlighter className="h-4 w-4" />
+          </ToolbarButton>
+          <select
+            aria-label="Highlight color"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            defaultValue=""
+            onChange={(e) => {
+              const v = e.target.value
+              if (!v) editor.chain().focus().unsetHighlight().run()
+              else editor.chain().focus().toggleHighlight({ color: v }).run()
+              e.target.value = ''
+            }}
+          >
+            {HIGHLIGHT_COLORS.map((c) => (
+              <option key={c.label} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+
         <ToolbarButton title="Insert link" active={editor.isActive('link')} onClick={setLink}>
           <Link2 className="h-4 w-4" />
         </ToolbarButton>
@@ -280,12 +329,6 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
         <ToolbarButton title="Upload image" disabled={uploadingImage} onClick={() => fileInputRef.current?.click()}>
           {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
         </ToolbarButton>
-        <ToolbarButton title="Insert image by URL" onClick={handleImageUrl}>
-          <ImageIcon className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton title="Embed video" onClick={handleVideo}>
-          <VideoIcon className="h-4 w-4" />
-        </ToolbarButton>
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -294,22 +337,13 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
         </ToolbarButton>
         {inTable && (
           <>
-            <ToolbarButton title="Add column before" onClick={() => editor.chain().focus().addColumnBefore().run()}>
-              <Columns3 className="h-4 w-4" />
-            </ToolbarButton>
             <ToolbarButton title="Add column after" onClick={() => editor.chain().focus().addColumnAfter().run()}>
               <Columns3 className="h-4 w-4" />
-            </ToolbarButton>
-            <ToolbarButton title="Add row above" onClick={() => editor.chain().focus().addRowBefore().run()}>
-              <Rows3 className="h-4 w-4" />
             </ToolbarButton>
             <ToolbarButton title="Add row below" onClick={() => editor.chain().focus().addRowAfter().run()}>
               <Rows3 className="h-4 w-4" />
             </ToolbarButton>
             <ToolbarButton title="Delete row" onClick={() => editor.chain().focus().deleteRow().run()}>
-              <X className="h-4 w-4" />
-            </ToolbarButton>
-            <ToolbarButton title="Delete column" onClick={() => editor.chain().focus().deleteColumn().run()}>
               <X className="h-4 w-4" />
             </ToolbarButton>
             <ToolbarButton title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>
@@ -320,6 +354,9 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
+        <ToolbarButton title="Clear formatting" onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}>
+          <Eraser className="h-4 w-4" />
+        </ToolbarButton>
         <ToolbarButton title="Undo" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}>
           <Undo2 className="h-4 w-4" />
         </ToolbarButton>
@@ -341,7 +378,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           multiple
           className="hidden"
           onChange={(e) => {
@@ -351,10 +388,9 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 200, maxHeig
         />
       </div>
 
-      {/* Editable content with internal scroll — no viewport overflow */}
       {preview ? (
         <div
-          className="rich-text-editor rich-text-preview"
+          className="product-description rich-text-editor rich-text-preview overflow-x-auto px-3 py-2"
           style={{ minHeight, maxHeight }}
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />

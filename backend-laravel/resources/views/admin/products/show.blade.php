@@ -189,8 +189,8 @@
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
         <h2 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Description</h2>
         @if(!empty($product['description']))
-            <div class="prose prose-sm max-w-none text-slate-700 text-xs">
-                {!! $product['description'] !!}
+            <div class="product-description text-xs">
+                {!! \App\Services\HtmlSanitizer::forDisplay($product['description']) !!}
             </div>
         @else
             <p class="text-xs text-slate-400">No description provided</p>

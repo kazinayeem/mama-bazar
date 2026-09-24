@@ -9,6 +9,7 @@ import { currency } from '@/lib/format'
 import { parseError, useGetAdminProductByIdQuery } from '@/store/services/adminProductsApi'
 import type { AdminProduct } from '@/types/admin'
 import { SEO } from '@/components/common/SEO'
+import { sanitizeProductHtml } from '@/lib/sanitizeHtml'
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
@@ -169,8 +170,8 @@ const AdminProductViewPage = () => {
           <CardContent>
             {product.description ? (
               <div
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+                className="product-description prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: sanitizeProductHtml(product.description) }}
               />
             ) : (
               <p className="text-sm text-muted-foreground">No description</p>

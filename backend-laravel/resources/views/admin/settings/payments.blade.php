@@ -372,7 +372,7 @@
                 <p class="text-[11px] text-slate-500">Local storage · no Cloudinary</p>
                 <div class="flex gap-2">
                     <x-admin.button type="button" variant="outline" size="sm" @click="pickerOpen = false">Cancel</x-admin.button>
-                    <x-admin.button type="button" size="sm" :disabled="!pickerSelected" @click="confirmPicker()">Use selected</x-admin.button>
+                    <x-admin.button type="button" size="sm" x-bind:disabled="!pickerSelected" @@click="confirmPicker()">Use selected</x-admin.button>
                 </div>
             </div>
         </div>

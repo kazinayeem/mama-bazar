@@ -509,6 +509,13 @@ button {
   border-radius: 0.375rem;
   margin: 0.5rem 0;
 }
+.product-description img {
+  max-width: 100%;
+  height: auto;
+}
+.product-description {
+  overflow-x: auto;
+}
 .rich-text-editor .tiptap ul[data-type='taskList'] {
   list-style: none;
   padding-left: 0.25rem;

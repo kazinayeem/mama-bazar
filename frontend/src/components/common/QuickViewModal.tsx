@@ -9,6 +9,7 @@ import { findVariantByOptions, getVariantEffectivePrice } from '../../types'
 import { useAppDispatch } from '../../store/hooks'
 import { addToCart } from '../../store/slices/cartSlice'
 import StarRating from './StarRating'
+import { sanitizeProductHtml } from '../../lib/sanitizeHtml'
 
 interface QuickViewModalProps {
   product: Product | null
@@ -122,8 +123,8 @@ const QuickViewModal = ({ product, onClose }: QuickViewModalProps) => {
               {/* Render HTML description safely */}
               {product.description && (
                 <div
-                  className="prose prose-sm max-w-none text-sm leading-6 text-slate-600 [&_img]:mt-2 [&_img]:max-w-full [&_img]:rounded-md [&_img]:shadow-sm [&_p]:mt-2 [&_p]:leading-6 [&_strong]:font-semibold [&_strong]:text-slate-800"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
+                  className="product-description prose prose-sm max-w-none text-sm leading-6 text-slate-600 [&_img]:mt-2 [&_img]:max-w-full [&_img]:rounded-md [&_img]:shadow-sm [&_p]:mt-2 [&_p]:leading-6 [&_strong]:font-semibold [&_strong]:text-slate-800"
+                  dangerouslySetInnerHTML={{ __html: sanitizeProductHtml(product.description) }}
                 />
               )}
 

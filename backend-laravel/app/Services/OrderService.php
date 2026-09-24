@@ -208,10 +208,14 @@ class OrderService
                 $itemPrice = 0;
 
                 if ($variantId) {
-                    $variant = ProductVariant::find($variantId);
+                    $variant = ProductVariant::where('id', $variantId)->where('product_id', $productId)->first();
                     if (!$variant) throw new Exception("Variant not found for product {$product->title}", 400);
-                    if (!$variant->availability) throw new Exception("Variant \"{$variant->name}\" is not available", 400);
-                    if ($variant->stock < $quantity) throw new Exception("Insufficient stock for {$product->title} - {$variant->name}", 400);
+                    if (!$variant->availability || $variant->status === 'inactive') {
+                        throw new Exception("Variant \"{$variant->name}\" is not available", 400);
+                    }
+                    if (!$product->unlimited_stock && $variant->stock < $quantity) {
+                        throw new Exception("Insufficient stock for {$product->title} - {$variant->name}", 400);
+                    }
                     $itemPrice = $variant->discount_price ?: ($variant->price ?: (float) $product->price);
                 } elseif (!empty($item['size']) || !empty($item['color'])) {
                     $size = $item['size'] ?? null;
@@ -232,7 +236,16 @@ class OrderService
                     $itemPrice = $matchedVariant->discount_price ?: ($matchedVariant->price ?: (float) $product->price);
                     $variantId = $matchedVariant->id;
                 } else {
-                    if ($product->stock < $quantity) throw new Exception("Insufficient stock for {$product->title}", 400);
+                    $hasVariants = ProductVariant::where('product_id', $productId)
+                        ->where('status', 'active')
+                        ->where('availability', true)
+                        ->exists();
+                    if ($hasVariants) {
+                        throw new Exception("Please select a variant for {$product->title}", 400);
+                    }
+                    if (!$product->unlimited_stock && $product->stock < $quantity) {
+                        throw new Exception("Insufficient stock for {$product->title}", 400);
+                    }
                     $salePrice = (float) ($product->sale_price ?: 0);
                     $discountRate = min((float) ($product->discount ?: 0), 100);
 

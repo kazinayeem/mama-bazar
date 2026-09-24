@@ -10,6 +10,7 @@ import { setWhatsAppProduct } from '../lib/whatsapp'
 import { authStorage } from '../lib/authStorage'
 import { formatPrice, salePrice } from '../lib/format'
 import { trackViewContent } from '../lib/pixel'
+import { sanitizeProductHtml, stripHtmlToText } from '../lib/sanitizeHtml'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { addToCart } from '../store/slices/cartSlice'
 import { openCart, toggleCompare, toggleWishlist } from '../store/slices/uiSlice'
@@ -447,7 +448,7 @@ const ProductDetailsPage = () => {
 
           {(product.shortDescription || product.description) && (
             <p className="mt-4 text-[15px] leading-8 text-slate-600">
-              {product.shortDescription || product.description}
+              {product.shortDescription || stripHtmlToText(product.description).slice(0, 220)}
             </p>
           )}
 
@@ -645,7 +646,7 @@ const ProductDetailsPage = () => {
             <div className="mb-8">
               <h2 className="mb-4 font-headline text-xl font-extrabold text-slate-900">Description</h2>
               <div
-                className="prose prose-sm max-w-none text-slate-600
+                className="product-description prose prose-sm max-w-none overflow-x-auto text-slate-600
                   [&_h2]:mt-6 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-slate-900
                   [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold
                   [&_p]:mt-3 [&_p]:leading-7
@@ -657,7 +658,7 @@ const ProductDetailsPage = () => {
                   [&_table]:mt-4 [&_table]:w-full [&_table]:border [&_table]:border-slate-200
                   [&_th]:bg-slate-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-sm [&_th]:font-semibold
                   [&_td]:border-t [&_td]:border-slate-200 [&_td]:px-3 [&_td]:py-2 [&_td]:text-sm"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeProductHtml(product.description) }}
               />
             </div>
           )}

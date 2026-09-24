@@ -41,6 +41,9 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/shop/suggest', [ShopController::class, 'suggest'])->name('shop.suggest');
 Route::get('/products/{slug}', [ProductWebController::class, 'show'])->name('products.show');
+Route::post('/products/{slug}/reviews', [ProductWebController::class, 'storeReview'])
+    ->middleware('auth')
+    ->name('products.review');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
@@ -94,6 +97,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/products/import', [AdminProductWebController::class, 'importCsv'])->name('admin.products.import');
     Route::post('/products/bulk', [AdminProductWebController::class, 'bulkAction'])->name('admin.products.bulk');
     Route::post('/products/upload-image', [AdminProductWebController::class, 'uploadImage'])->name('admin.products.upload-image');
+    Route::post('/products/upload-editor-image', [AdminProductWebController::class, 'uploadEditorImage'])->name('admin.products.upload-editor-image');
     Route::get('/products/{id}', [AdminProductWebController::class, 'show'])->name('admin.products.show');
     Route::get('/products/{id}/edit', [AdminProductWebController::class, 'edit'])->name('admin.products.edit');
     Route::put('/products/{id}', [AdminProductWebController::class, 'update'])->name('admin.products.update');

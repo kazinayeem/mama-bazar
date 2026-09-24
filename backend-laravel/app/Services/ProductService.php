@@ -12,6 +12,7 @@ use App\Models\Vendor;
 use App\Models\Supplier;
 use App\Models\Collection;
 use App\Models\Review;
+use App\Services\HtmlSanitizer;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -129,7 +130,7 @@ class ProductService
             'id' => $product->id,
             'title' => $product->title,
             'slug' => $product->slug,
-            'description' => $product->description,
+            'description' => HtmlSanitizer::clean($product->description),
             'shortDescription' => $product->short_description,
             'price' => (string) $product->price,
             'salePrice' => $product->sale_price !== null ? (string) $product->sale_price : null,
@@ -220,8 +221,11 @@ class ProductService
                 'stock' => (int) $v->stock,
                 'weight' => $v->weight,
                 'dimensions' => $v->dimensions,
-                'images' => $v->images ?: [],
-                'thumbnail' => $v->thumbnail,
+                'images' => array_values(array_filter(array_map(
+                    [MediaStorageService::class, 'toPublicUrl'],
+                    $v->images ?: []
+                ))),
+                'thumbnail' => MediaStorageService::toPublicUrl($v->thumbnail),
                 'status' => $v->status,
                 'shippingCost' => $v->shipping_cost !== null ? (string) $v->shipping_cost : null,
                 'warranty' => $v->warranty,
@@ -349,13 +353,16 @@ class ProductService
         $catalogHex = [];
         try {
             if (class_exists(\App\Models\Color::class)) {
-                foreach (\App\Models\Color::query()->get(['name', 'hex', 'slug']) as $row) {
+                foreach (\App\Models\Color::query()->get(['name', 'hex', 'display_name']) as $row) {
                     if (!empty($row->hex)) {
                         $catalogHex[mb_strtolower((string) $row->name)] = $row->hex;
-                        if (!empty($row->slug)) {
-                            $catalogHex[mb_strtolower((string) $row->slug)] = $row->hex;
-                            $catalogHex[str_replace('-', ' ', mb_strtolower((string) $row->slug))] = $row->hex;
+                        if (!empty($row->display_name)) {
+                            $catalogHex[mb_strtolower((string) $row->display_name)] = $row->hex;
                         }
+                        // slug-ish lookup: "Space Black" ↔ "space-black"
+                        $slugish = str_replace(' ', '-', mb_strtolower((string) $row->name));
+                        $catalogHex[$slugish] = $row->hex;
+                        $catalogHex[str_replace('-', ' ', $slugish)] = $row->hex;
                     }
                 }
             }
@@ -715,7 +722,8 @@ class ProductService
      */
     public static function syncVariants(int $productId, array $variants): void
     {
-        $existingIds = ProductVariant::where('product_id', $productId)->pluck('id')->map(fn($id) => (int) $id)->all();
+        $existing = ProductVariant::where('product_id', $productId)->get()->keyBy('id');
+        $existingIds = $existing->keys()->map(fn($id) => (int) $id)->all();
         $existingSet = array_flip($existingIds);
         $keptIds = [];
 
@@ -732,6 +740,23 @@ class ProductService
                 $options = [];
             }
 
+            // Prefer relative storage path in DB (e.g. products/variants/xyz.webp)
+            $thumbnail = $v['thumbnail'] ?? null;
+            if (is_string($thumbnail) && $thumbnail !== '') {
+                $relative = MediaStorageService::toRelativePath($thumbnail);
+                $thumbnail = $relative ?: $thumbnail;
+            } else {
+                $thumbnail = null;
+            }
+
+            $images = $v['images'] ?? [];
+            if (!is_array($images)) {
+                $images = [];
+            }
+            if ($thumbnail && empty($images)) {
+                $images = [MediaStorageService::toPublicUrl($thumbnail)];
+            }
+
             $payload = [
                 'product_id' => $productId,
                 'name' => $v['name'],
@@ -743,8 +768,8 @@ class ProductService
                 'stock' => (int) ($v['stock'] ?? 0),
                 'weight' => $v['weight'] ?? null,
                 'dimensions' => $v['dimensions'] ?? null,
-                'images' => $v['images'] ?? [],
-                'thumbnail' => $v['thumbnail'] ?? null,
+                'images' => $images,
+                'thumbnail' => $thumbnail,
                 'status' => $v['status'] ?? 'active',
                 'shipping_cost' => $v['shippingCost'] ?? null,
                 'warranty' => $v['warranty'] ?? null,
@@ -753,8 +778,15 @@ class ProductService
 
             $id = isset($v['id']) ? (int) $v['id'] : 0;
             if ($id > 0 && isset($existingSet[$id])) {
+                $old = $existing->get($id);
+                $oldThumb = $old?->thumbnail;
                 ProductVariant::where('id', $id)->where('product_id', $productId)->update($payload);
                 $keptIds[] = $id;
+
+                // If thumbnail changed/cleared, drop the old file when unused
+                if ($oldThumb && $oldThumb !== $thumbnail) {
+                    MediaStorageService::deleteIfUnreferenced($oldThumb, $id);
+                }
             } else {
                 $created = ProductVariant::create($payload);
                 $keptIds[] = (int) $created->id;
@@ -763,6 +795,12 @@ class ProductService
 
         $removed = array_diff($existingIds, $keptIds);
         if (!empty($removed)) {
+            foreach ($removed as $rid) {
+                $old = $existing->get($rid);
+                if ($old?->thumbnail) {
+                    MediaStorageService::deleteIfUnreferenced($old->thumbnail, (int) $rid);
+                }
+            }
             ProductVariant::where('product_id', $productId)->whereIn('id', $removed)->delete();
         }
     }
@@ -774,6 +812,10 @@ class ProductService
             $specs = $data['specs'] ?? [];
             $relations = $data['relations'] ?? [];
             unset($data['variants'], $data['specs'], $data['relations']);
+
+            if (array_key_exists('description', $data)) {
+                $data['description'] = HtmlSanitizer::clean($data['description']);
+            }
 
             $product = Product::create($data);
 
@@ -819,6 +861,10 @@ class ProductService
             $specs = $data['specs'] ?? null;
             $relations = $data['relations'] ?? null;
             unset($data['variants'], $data['specs'], $data['relations']);
+
+            if (array_key_exists('description', $data)) {
+                $data['description'] = HtmlSanitizer::clean($data['description']);
+            }
 
             $product->update($data);
 
@@ -961,9 +1007,12 @@ class ProductService
             $slug = SlugService::toAsciiSlug($title) . '-' . substr(uniqid(), -5);
             $slug = self::ensureUniqueSlug($slug, ['autoSuffix' => true]);
 
+            $rawDescription = $data['description'] ?? $data['desc'] ?? null;
+
             Product::create([
                 'title' => $title,
                 'slug' => $slug,
+                'description' => HtmlSanitizer::clean($rawDescription),
                 'price' => (float) $price,
                 'sale_price' => !empty($data['saleprice']) ? (float)$data['saleprice'] : null,
                 'discount' => !empty($data['discount']) ? (float)$data['discount'] : 0,
