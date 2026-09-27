@@ -26,6 +26,32 @@ class AdminProductRequest extends FormRequest
                 }
             }
         }
+
+        if ($this->has('images') && is_array($this->input('images'))) {
+            $cleanedImages = array_values(array_filter($this->input('images'), function ($img) {
+                return is_string($img) && trim($img) !== '' && !str_starts_with($img, 'blob:') && !str_starts_with($img, 'data:');
+            }));
+            $this->merge(['images' => $cleanedImages]);
+        }
+
+        foreach ([
+            'category_id', 'sub_category_id', 'child_category_id', 'brand_id',
+            'collection_id', 'vendor_id', 'supplier_id', 'low_stock_alert',
+            'min_order', 'max_order', 'price', 'sale_price', 'cost_price',
+            'profit_margin', 'tax', 'vat', 'shipping_charge', 'cod_fee', 'flash_sale_price',
+            'wholesale_price', 'dealer_price'
+        ] as $nullableField) {
+            if ($this->has($nullableField) && ($this->input($nullableField) === '' || $this->input($nullableField) === null)) {
+                $this->merge([$nullableField => null]);
+            }
+        }
+
+        if ($this->has('discount') && ($this->input('discount') === '' || $this->input('discount') === null)) {
+            $this->merge(['discount' => 0]);
+        }
+        if ($this->has('stock') && ($this->input('stock') === '' || $this->input('stock') === null)) {
+            $this->merge(['stock' => 0]);
+        }
     }
 
     public function rules(): array
@@ -106,6 +132,11 @@ class AdminProductRequest extends FormRequest
             'specs' => 'nullable|array',
             'relations' => 'nullable|array',
             'images' => 'nullable|array',
+            'images.*' => ['required', 'string', 'max:500', function ($attribute, $value, $fail) {
+                if (str_starts_with($value, 'blob:') || str_starts_with($value, 'data:')) {
+                    $fail('Product images must be uploaded to server storage before saving.');
+                }
+            }],
             'tags' => 'nullable|array',
             'features' => 'nullable|array',
             'size_options' => 'nullable|array',

@@ -390,6 +390,12 @@ document.addEventListener('alpine:init', () => {
         },
 
         syncVariantImage() {
+            // For simple products without user-selectable option axes, use product images directly
+            if (!this.needsOptions) {
+                this.variantImage = null;
+                return;
+            }
+
             const v = this.activeVariant;
             if (v) {
                 if (v.thumbnail) {

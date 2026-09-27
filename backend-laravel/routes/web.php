@@ -97,6 +97,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/products/import', [AdminProductWebController::class, 'importCsv'])->name('admin.products.import');
     Route::post('/products/bulk', [AdminProductWebController::class, 'bulkAction'])->name('admin.products.bulk');
     Route::post('/products/upload-image', [AdminProductWebController::class, 'uploadImage'])->name('admin.products.upload-image');
+    Route::post('/products/{id}/upload-image', [AdminProductWebController::class, 'uploadImage'])->name('admin.products.upload-image-product');
     Route::post('/products/upload-editor-image', [AdminProductWebController::class, 'uploadEditorImage'])->name('admin.products.upload-editor-image');
     Route::get('/products/{id}', [AdminProductWebController::class, 'show'])->name('admin.products.show');
     Route::get('/products/{id}/edit', [AdminProductWebController::class, 'edit'])->name('admin.products.edit');
@@ -105,6 +106,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/products/{id}/duplicate', [AdminProductWebController::class, 'duplicate'])->name('admin.products.duplicate');
     Route::post('/products/{id}/toggle-featured', [AdminProductWebController::class, 'toggleFeatured'])->name('admin.products.toggle-featured');
     Route::post('/products/{id}/toggle', [AdminProductWebController::class, 'toggleStatus'])->name('admin.products.toggle');
+    Route::post('/products/{id}/delete-image', [AdminProductWebController::class, 'deleteImage'])->name('admin.products.delete-image');
 
     // Orders
     Route::get('/orders', [AdminOrderWebController::class, 'index'])->name('admin.orders.index');

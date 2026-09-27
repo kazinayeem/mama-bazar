@@ -266,35 +266,129 @@ class AdminProductWebController extends Controller
 
     public function uploadImage(Request $request)
     {
-        $request->validate([
-            'file'    => 'nullable|file|mimes:jpeg,jpg,png,webp,gif,svg|max:20480',
-            'files'   => 'nullable|array',
-            'files.*' => 'file|mimes:jpeg,jpg,png,webp,gif,svg|max:20480',
-            'folder'  => 'nullable|string|max:80',
-        ]);
+        try {
+            $request->validate([
+                'file'    => 'nullable|file|mimes:jpeg,jpg,png,webp,gif,svg|max:20480',
+                'files'   => 'nullable|array',
+                'files.*' => 'file|mimes:jpeg,jpg,png,webp,gif,svg|max:20480',
+                'folder'  => 'nullable|string|max:80',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first() ?: 'Invalid image file provided.',
+                'errors'  => $e->errors(),
+            ], 422);
+        }
 
         // Resolve folder — sanitise to prevent path traversal
         $rawFolder = $request->input('folder', 'products');
         $folder = preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $rawFolder) ?: 'products';
 
         $uploaded = [];
+        $data = [];
 
-        if ($request->hasFile('file')) {
-            $res = MediaStorageService::uploadFile($request->file('file'), $folder);
-            $uploaded[] = $res['url'];
-        }
-
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $f) {
+        try {
+            if ($request->hasFile('file')) {
+                $f = $request->file('file');
+                if (!$f->isValid()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Uploaded file is invalid or corrupted.',
+                    ], 422);
+                }
                 $res = MediaStorageService::uploadFile($f, $folder);
                 $uploaded[] = $res['url'];
+                $data[] = [
+                    'url'  => $res['url'],
+                    'path' => $res['path'] ?? null,
+                ];
+            }
+
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $f) {
+                    if (!$f->isValid()) {
+                        continue;
+                    }
+                    $res = MediaStorageService::uploadFile($f, $folder);
+                    $uploaded[] = $res['url'];
+                    $data[] = [
+                        'url'  => $res['url'],
+                        'path' => $res['path'] ?? null,
+                    ];
+                }
+            }
+
+            if (empty($uploaded)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid image files received.',
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => count($uploaded) > 1 ? count($uploaded) . ' images uploaded successfully.' : 'Image uploaded successfully.',
+                'url'     => $uploaded[0] ?? null,
+                'urls'    => $uploaded,
+                'data'    => count($data) === 1 ? $data[0] : $data,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to store image: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete an individual image from a product.
+     * Enforces ownership to prevent modifying other products' images.
+     */
+    public function deleteImage(Request $request, $id)
+    {
+        $product = Product::findOrFail((int) $id);
+
+        $targetUrl = trim((string) ($request->input('image') ?: $request->input('url')));
+        if ($targetUrl === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'The image or url parameter is required.',
+            ], 422);
+        }
+
+        $targetRel = MediaStorageService::toRelativePath($targetUrl);
+        $images = is_array($product->images) ? $product->images : [];
+
+        $found = false;
+        $updatedImages = [];
+        foreach ($images as $img) {
+            $imgRel = MediaStorageService::toRelativePath($img);
+            if ($img === $targetUrl || ($targetRel && $imgRel === $targetRel)) {
+                $found = true;
+            } else {
+                $updatedImages[] = $img;
             }
         }
 
+        if (!$found) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image does not belong to this product.',
+            ], 404);
+        }
+
+        $product->images = array_values($updatedImages);
+        $product->save();
+
+        MediaStorageService::deleteIfUnreferenced($targetUrl);
+
         return response()->json([
             'success' => true,
-            'url'     => $uploaded[0] ?? null,
-            'urls'    => $uploaded,
+            'message' => 'Image deleted successfully.',
+            'data'    => [
+                'images' => $product->images,
+            ],
         ]);
     }
 
@@ -388,12 +482,71 @@ class AdminProductWebController extends Controller
         }
 
         // Handle JSON encoded string payloads from Blade forms
-        foreach (['tags', 'features', 'size_options', 'color_options', 'images', 'variants', 'specs', 'relations'] as $jsonField) {
+        foreach (['tags', 'features', 'size_options', 'color_options', 'images', 'variants', 'specs', 'relations', 'deleted_images'] as $jsonField) {
             if (isset($data[$jsonField]) && is_string($data[$jsonField])) {
                 $decoded = json_decode($data[$jsonField], true);
                 if (is_array($decoded)) {
                     $data[$jsonField] = $decoded;
                 }
+            }
+        }
+
+        // Clean and sanitize images array: reject blob and data URLs, preserve order, remove duplicates
+        if (isset($data['images']) && is_array($data['images'])) {
+            $cleanedImages = [];
+            foreach ($data['images'] as $img) {
+                if (is_string($img)) {
+                    $img = trim($img);
+                    if ($img !== '' && !str_starts_with($img, 'blob:') && !str_starts_with($img, 'data:')) {
+                        $cleanedImages[] = $img;
+                    }
+                }
+            }
+            $data['images'] = array_values(array_unique($cleanedImages));
+        }
+
+        // Convert empty strings to null for integer and foreign key columns
+        foreach ([
+            'category_id', 'sub_category_id', 'child_category_id', 'brand_id',
+            'collection_id', 'vendor_id', 'supplier_id', 'low_stock_alert',
+            'min_order', 'max_order'
+        ] as $intField) {
+            if (array_key_exists($intField, $data)) {
+                $v = $data[$intField];
+                $data[$intField] = ($v === '' || $v === null || $v === 'null') ? null : (int) $v;
+            }
+        }
+        if (array_key_exists('stock', $data)) {
+            $v = $data['stock'];
+            $data['stock'] = ($v === '' || $v === null || $v === 'null') ? 0 : (int) $v;
+        }
+
+        // Convert empty strings to null for float columns (or 0 for non-nullables like discount)
+        foreach ([
+            'sale_price', 'cost_price', 'profit_margin',
+            'tax', 'vat', 'shipping_charge', 'cod_fee', 'flash_sale_price',
+            'wholesale_price', 'dealer_price'
+        ] as $floatField) {
+            if (array_key_exists($floatField, $data)) {
+                $v = $data[$floatField];
+                $data[$floatField] = ($v === '' || $v === null || $v === 'null') ? null : (float) $v;
+            }
+        }
+        if (array_key_exists('discount', $data)) {
+            $v = $data['discount'];
+            $data['discount'] = ($v === '' || $v === null || $v === 'null') ? 0.0 : (float) $v;
+        }
+
+        // Convert empty strings to null for optional string columns
+        foreach ([
+            'sku', 'barcode', 'country_of_origin', 'warranty', 'weight',
+            'dimensions', 'warehouse', 'video_url', 'payment_phone_number',
+            'seo_title', 'seo_description', 'seo_keywords', 'canonical_url',
+            'og_image', 'twitter_image', 'return_policy', 'short_description'
+        ] as $strField) {
+            if (array_key_exists($strField, $data) && is_string($data[$strField])) {
+                $trimmed = trim($data[$strField]);
+                $data[$strField] = $trimmed === '' ? null : $trimmed;
             }
         }
 

@@ -866,13 +866,40 @@ class ProductService
                 $data['description'] = HtmlSanitizer::clean($data['description']);
             }
 
+            $oldImages = is_array($product->images) ? $product->images : [];
+            $newImages = $data['images'] ?? null;
+            $deletedImages = $data['deleted_images'] ?? null;
+            unset($data['deleted_images']);
+
             $product->update($data);
+
+            if (is_array($newImages)) {
+                $removedImages = array_diff($oldImages, $newImages);
+                foreach ($removedImages as $removed) {
+                    MediaStorageService::deleteIfUnreferenced($removed);
+                }
+            }
+
+            if (is_array($deletedImages)) {
+                foreach ($deletedImages as $del) {
+                    MediaStorageService::deleteIfUnreferenced($del);
+                }
+            }
 
             if ($variants !== null) {
                 self::syncVariants($id, $variants);
                 if (!empty($variants)) {
                     $variantStock = collect($variants)->sum(fn($v) => (int) ($v['stock'] ?? 0));
                     $product->update(['stock' => $variantStock]);
+                }
+            } else {
+                // If variants were not explicitly submitted, keep single/default variant thumbnail synced with main image
+                $mainImg = is_array($product->images) ? ($product->images[0] ?? null) : null;
+                if ($mainImg) {
+                    $vCount = ProductVariant::where('product_id', $id)->count();
+                    if ($vCount <= 1) {
+                        ProductVariant::where('product_id', $id)->update(['thumbnail' => $mainImg]);
+                    }
                 }
             }
 

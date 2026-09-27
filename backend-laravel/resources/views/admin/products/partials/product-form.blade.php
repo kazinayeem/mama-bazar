@@ -3,16 +3,31 @@
     $actionUrl = $isEditing ? route('admin.products.update', $product['id']) : route('admin.products.store');
     $method = $isEditing ? 'PUT' : 'POST';
 
-    // Format existing images for the uploader
+    // Format existing images for the uploader with old() support
     $existingImages = [];
-    if (!empty($product['images']) && is_array($product['images'])) {
-        foreach ($product['images'] as $url) {
-            $existingImages[] = [
-                'id' => uniqid(),
-                'url' => $url,
-                'status' => 'done',
-                'progress' => 100,
-            ];
+    $rawImages = old('images');
+    if ($rawImages) {
+        if (is_string($rawImages)) {
+            $decoded = json_decode($rawImages, true);
+            $rawImages = is_array($decoded) ? $decoded : [];
+        }
+    } elseif (!empty($product['images']) && is_array($product['images'])) {
+        $rawImages = $product['images'];
+    } else {
+        $rawImages = [];
+    }
+
+    if (is_array($rawImages)) {
+        foreach ($rawImages as $img) {
+            $url = is_array($img) ? ($img['url'] ?? '') : (is_string($img) ? $img : '');
+            if ($url !== '' && !str_starts_with($url, 'blob:') && !str_starts_with($url, 'data:')) {
+                $existingImages[] = [
+                    'id' => uniqid('img_'),
+                    'url' => $url,
+                    'status' => 'done',
+                    'progress' => 100,
+                ];
+            }
         }
     }
 
@@ -73,72 +88,72 @@
     }
 
     $initialForm = [
-        'hasVariants' => !empty($existingVariants),
-        'title' => $product['title'] ?? '',
-        'slug' => $product['slug'] ?? '',
-        'description' => $product['description'] ?? '',
-        'shortDescription' => $product['shortDescription'] ?? '',
-        'returnPolicy' => $product['returnPolicy'] ?? '',
-        'categoryId' => !empty($product['categoryId']) ? (string)$product['categoryId'] : '',
-        'subCategoryId' => !empty($product['subCategoryId']) ? (string)$product['subCategoryId'] : '',
-        'childCategoryId' => !empty($product['childCategoryId']) ? (string)$product['childCategoryId'] : '',
-        'brandId' => !empty($product['brandId']) ? (string)$product['brandId'] : '',
-        'collectionId' => !empty($product['collectionId']) ? (string)$product['collectionId'] : '',
-        'vendorId' => !empty($product['vendorId']) ? (string)$product['vendorId'] : '',
-        'supplierId' => !empty($product['supplierId']) ? (string)$product['supplierId'] : '',
-        'sku' => $product['sku'] ?? '',
-        'barcode' => $product['barcode'] ?? '',
-        'warehouse' => $product['warehouse'] ?? '',
-        'countryOfOrigin' => $product['countryOfOrigin'] ?? '',
-        'weight' => $product['weight'] ?? '',
-        'dimensions' => $product['dimensions'] ?? '',
-        'warranty' => $product['warranty'] ?? '',
-        'videoUrl' => $product['videoUrl'] ?? '',
-        'paymentPhoneNumber' => $product['paymentPhoneNumber'] ?? '',
-        'price' => isset($product['price']) ? (string)$product['price'] : '',
-        'salePrice' => isset($product['salePrice']) ? (string)$product['salePrice'] : '',
-        'discount' => isset($product['discount']) ? (string)$product['discount'] : '',
-        'costPrice' => isset($product['costPrice']) ? (string)$product['costPrice'] : '',
-        'profitMargin' => isset($product['profitMargin']) ? (string)$product['profitMargin'] : '',
-        'tax' => isset($product['tax']) ? (string)$product['tax'] : '',
-        'vat' => isset($product['vat']) ? (string)$product['vat'] : '',
-        'shippingCharge' => isset($product['shippingCharge']) ? (string)$product['shippingCharge'] : '',
-        'codFee' => isset($product['codFee']) ? (string)$product['codFee'] : '',
-        'flashSalePrice' => isset($product['flashSalePrice']) ? (string)$product['flashSalePrice'] : '',
-        'wholesalePrice' => isset($product['wholesalePrice']) ? (string)$product['wholesalePrice'] : '',
-        'dealerPrice' => isset($product['dealerPrice']) ? (string)$product['dealerPrice'] : '',
-        'stock' => isset($product['stock']) ? (string)$product['stock'] : '0',
-        'lowStockAlert' => isset($product['lowStockAlert']) ? (string)$product['lowStockAlert'] : '',
-        'minOrder' => isset($product['minOrder']) ? (string)$product['minOrder'] : '',
-        'maxOrder' => isset($product['maxOrder']) ? (string)$product['maxOrder'] : '',
-        'stockStatus' => $product['stockStatus'] ?? 'in_stock',
-        'unlimitedStock' => !empty($product['unlimitedStock']),
-        'backorder' => !empty($product['backorder']),
-        'trackInventory' => $product['trackInventory'] ?? true,
-        'productStatus' => $product['productStatus'] ?? 'draft',
-        'status' => $product['status'] ?? 'inactive',
-        'isFeatured' => !empty($product['isFeatured']),
-        'isTrending' => !empty($product['isTrending']),
-        'isFlashSale' => !empty($product['isFlashSale']),
-        'isNewArrival' => !empty($product['isNewArrival']),
-        'isBestSeller' => !empty($product['isBestSeller']),
-        'isLimitedEdition' => !empty($product['isLimitedEdition']),
-        'isOfficial' => !empty($product['isOfficial']),
-        'isHotDeal' => !empty($product['isHotDeal']),
-        'emiAvailable' => !empty($product['emiAvailable']),
-        'seoTitle' => $product['seoTitle'] ?? '',
-        'seoDescription' => $product['seoDescription'] ?? '',
-        'seoKeywords' => $product['seoKeywords'] ?? '',
-        'canonicalUrl' => $product['canonicalUrl'] ?? '',
-        'ogImage' => $product['ogImage'] ?? '',
-        'twitterImage' => $product['twitterImage'] ?? '',
-        'structuredData' => $structuredDataString,
-        'tags' => $product['tags'] ?? [],
-        'features' => $product['features'] ?? [],
-        'sizeOptions' => $product['sizeOptions'] ?? [],
-        'colorOptions' => !empty($product['colorOptions']) 
+        'hasVariants' => (bool) old('has_variants', !empty($existingVariants)),
+        'title' => old('title', $product['title'] ?? ''),
+        'slug' => old('slug', $product['slug'] ?? ''),
+        'description' => old('description', $product['description'] ?? ''),
+        'shortDescription' => old('short_description', old('shortDescription', $product['shortDescription'] ?? '')),
+        'returnPolicy' => old('return_policy', old('returnPolicy', $product['returnPolicy'] ?? '')),
+        'categoryId' => (string) old('category_id', old('categoryId', $product['categoryId'] ?? '')),
+        'subCategoryId' => (string) old('sub_category_id', old('subCategoryId', $product['subCategoryId'] ?? '')),
+        'childCategoryId' => (string) old('child_category_id', old('childCategoryId', $product['childCategoryId'] ?? '')),
+        'brandId' => (string) old('brand_id', old('brandId', $product['brandId'] ?? '')),
+        'collectionId' => (string) old('collection_id', old('collectionId', $product['collectionId'] ?? '')),
+        'vendorId' => (string) old('vendor_id', old('vendorId', $product['vendorId'] ?? '')),
+        'supplierId' => (string) old('supplier_id', old('supplierId', $product['supplierId'] ?? '')),
+        'sku' => old('sku', $product['sku'] ?? ''),
+        'barcode' => old('barcode', $product['barcode'] ?? ''),
+        'warehouse' => old('warehouse', $product['warehouse'] ?? ''),
+        'countryOfOrigin' => old('country_of_origin', old('countryOfOrigin', $product['countryOfOrigin'] ?? '')),
+        'weight' => old('weight', $product['weight'] ?? ''),
+        'dimensions' => old('dimensions', $product['dimensions'] ?? ''),
+        'warranty' => old('warranty', $product['warranty'] ?? ''),
+        'videoUrl' => old('video_url', old('videoUrl', $product['videoUrl'] ?? '')),
+        'paymentPhoneNumber' => old('payment_phone_number', old('paymentPhoneNumber', $product['paymentPhoneNumber'] ?? '')),
+        'price' => (string) old('price', isset($product['price']) ? $product['price'] : ''),
+        'salePrice' => (string) old('sale_price', old('salePrice', isset($product['salePrice']) ? $product['salePrice'] : '')),
+        'discount' => (string) old('discount', isset($product['discount']) ? $product['discount'] : ''),
+        'costPrice' => (string) old('cost_price', old('costPrice', isset($product['costPrice']) ? $product['costPrice'] : '')),
+        'profitMargin' => (string) old('profit_margin', old('profitMargin', isset($product['profitMargin']) ? $product['profitMargin'] : '')),
+        'tax' => (string) old('tax', isset($product['tax']) ? $product['tax'] : ''),
+        'vat' => (string) old('vat', isset($product['vat']) ? $product['vat'] : ''),
+        'shippingCharge' => (string) old('shipping_charge', old('shippingCharge', isset($product['shippingCharge']) ? $product['shippingCharge'] : '')),
+        'codFee' => (string) old('cod_fee', old('codFee', isset($product['codFee']) ? $product['codFee'] : '')),
+        'flashSalePrice' => (string) old('flash_sale_price', old('flashSalePrice', isset($product['flashSalePrice']) ? $product['flashSalePrice'] : '')),
+        'wholesalePrice' => (string) old('wholesale_price', old('wholesalePrice', isset($product['wholesalePrice']) ? $product['wholesalePrice'] : '')),
+        'dealerPrice' => (string) old('dealer_price', old('dealerPrice', isset($product['dealerPrice']) ? $product['dealerPrice'] : '')),
+        'stock' => (string) old('stock', isset($product['stock']) ? $product['stock'] : '0'),
+        'lowStockAlert' => (string) old('low_stock_alert', old('lowStockAlert', isset($product['lowStockAlert']) ? $product['lowStockAlert'] : '')),
+        'minOrder' => (string) old('min_order', old('minOrder', isset($product['minOrder']) ? $product['minOrder'] : '')),
+        'maxOrder' => (string) old('max_order', old('maxOrder', isset($product['maxOrder']) ? $product['maxOrder'] : '')),
+        'stockStatus' => old('stock_status', old('stockStatus', $product['stockStatus'] ?? 'in_stock')),
+        'unlimitedStock' => (bool) old('unlimited_stock', old('unlimitedStock', !empty($product['unlimitedStock']))),
+        'backorder' => (bool) old('backorder', !empty($product['backorder'])),
+        'trackInventory' => (bool) old('track_inventory', old('trackInventory', $product['trackInventory'] ?? true)),
+        'productStatus' => old('product_status', old('productStatus', $product['productStatus'] ?? 'draft')),
+        'status' => old('status', $product['status'] ?? 'inactive'),
+        'isFeatured' => (bool) old('is_featured', old('isFeatured', !empty($product['isFeatured']))),
+        'isTrending' => (bool) old('is_trending', old('isTrending', !empty($product['isTrending']))),
+        'isFlashSale' => (bool) old('is_flash_sale', old('isFlashSale', !empty($product['isFlashSale']))),
+        'isNewArrival' => (bool) old('is_new_arrival', old('isNewArrival', !empty($product['isNewArrival']))),
+        'isBestSeller' => (bool) old('is_best_seller', old('isBestSeller', !empty($product['isBestSeller']))),
+        'isLimitedEdition' => (bool) old('is_limited_edition', old('isLimitedEdition', !empty($product['isLimitedEdition']))),
+        'isOfficial' => (bool) old('is_official', old('isOfficial', !empty($product['isOfficial']))),
+        'isHotDeal' => (bool) old('is_hot_deal', old('isHotDeal', !empty($product['isHotDeal']))),
+        'emiAvailable' => (bool) old('emi_available', old('emiAvailable', !empty($product['emiAvailable']))),
+        'seoTitle' => old('seo_title', old('seoTitle', $product['seoTitle'] ?? '')),
+        'seoDescription' => old('seo_description', old('seoDescription', $product['seoDescription'] ?? '')),
+        'seoKeywords' => old('seo_keywords', old('seoKeywords', $product['seoKeywords'] ?? '')),
+        'canonicalUrl' => old('canonical_url', old('canonicalUrl', $product['canonicalUrl'] ?? '')),
+        'ogImage' => old('og_image', old('ogImage', $product['ogImage'] ?? '')),
+        'twitterImage' => old('twitter_image', old('twitterImage', $product['twitterImage'] ?? '')),
+        'structuredData' => old('structured_data', old('structuredData', $structuredDataString)),
+        'tags' => old('tags', $product['tags'] ?? []),
+        'features' => old('features', $product['features'] ?? []),
+        'sizeOptions' => old('size_options', old('sizeOptions', $product['sizeOptions'] ?? [])),
+        'colorOptions' => old('color_options', old('colorOptions', !empty($product['colorOptions']) 
             ? array_map(fn($c) => is_array($c) ? ($c['name'] ?? '') : $c, $product['colorOptions']) 
-            : [],
+            : [])),
         'images' => $existingImages,
         'variants' => $existingVariants,
         'specs' => $existingSpecs,
@@ -173,7 +188,8 @@
     <input type="hidden" name="features" :value="JSON.stringify(form.features)">
     <input type="hidden" name="size_options" :value="JSON.stringify(form.sizeOptions)">
     <input type="hidden" name="color_options" :value="JSON.stringify(form.colorOptions)">
-    <input type="hidden" name="images" :value="JSON.stringify(form.images.map(i => i.url))">
+    <input type="hidden" name="deleted_images" :value="JSON.stringify(deletedImageUrls)">
+    <input type="hidden" name="images" :value="JSON.stringify(form.images.filter(i => (!i.status || i.status === 'done') && i.url && !i.url.startsWith('blob:') && !i.url.startsWith('data:')).map(i => i.url))">
     {{-- Variants are submitted as variants[n][…] fields (incl. image files), not JSON --}}
     <input type="hidden" name="specs" :value="JSON.stringify(form.specs)">
     <input type="hidden" name="relations" :value="JSON.stringify(form.relations)">
@@ -237,21 +253,21 @@
                 <button
                     type="button"
                     @click="submitMode('draft')"
-                    :disabled="submitting"
-                    class="inline-flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition disabled:opacity-50"
+                    :disabled="submitting || uploadingCount > 0"
+                    class="inline-flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition disabled:opacity-50 cursor-pointer"
                 >
                     <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                    <span x-text="submitting && saveMode === 'draft' ? 'Saving…' : 'Save Draft'">Save Draft</span>
+                    <span x-text="submitting && saveMode === 'draft' ? 'Saving…' : (uploadingCount > 0 ? 'Uploading…' : 'Save Draft')">Save Draft</span>
                 </button>
 
                 <button
                     type="button"
                     @click="submitMode('publish')"
-                    :disabled="submitting"
-                    class="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-sm transition disabled:opacity-50"
+                    :disabled="submitting || uploadingCount > 0"
+                    class="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    <span x-text="submitting && saveMode === 'publish' ? 'Saving…' : (isEditing ? 'Save & Publish' : 'Publish')">
+                    <span x-text="submitting && saveMode === 'publish' ? 'Saving…' : (uploadingCount > 0 ? 'Uploading…' : (isEditing ? 'Save & Publish' : 'Publish'))">
                         {{ $isEditing ? 'Save & Publish' : 'Publish' }}
                     </span>
                 </button>
@@ -259,7 +275,19 @@
         </div>
     </div>
 
-    <!-- Error Banner -->
+    @if(isset($errors) && $errors->any())
+        <!-- Server Validation Errors Banner -->
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p class="text-xs font-bold text-red-700">Please correct the following errors:</p>
+            <ul class="mt-1.5 list-disc list-inside text-xs text-red-600 space-y-0.5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <!-- Client Error Banner -->
     <div x-show="validationErrors.length > 0" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4">
         <p class="text-xs font-bold text-red-700">Please correct the following issues:</p>
         <ul class="mt-1 list-disc list-inside text-xs text-red-600 space-y-0.5">
@@ -1011,14 +1039,32 @@
     </div>
 
     <!-- Section 4: Images (Local Storage Uploader) -->
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs space-y-5" x-data="imageUploader()">
-        <div class="border-b border-slate-100 pb-3">
-            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Images
-            </h2>
-            <p class="text-xs text-slate-500">Local storage uploader — drag & drop, reorder, replace or delete</p>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs space-y-5">
+        <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div>
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Images
+                </h2>
+                <p class="text-xs text-slate-500">Local storage uploader — drag & drop, reorder, replace or delete</p>
+            </div>
+            <div x-show="uploadingCount > 0" x-cloak class="flex items-center gap-1.5 text-xs text-brand-green-700 bg-brand-green-50 px-2.5 py-1 rounded-full font-medium">
+                <svg class="w-3.5 h-3.5 animate-spin text-brand-green-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span x-text="`Uploading ${uploadingCount} image${uploadingCount > 1 ? 's' : ''}...`"></span>
+            </div>
         </div>
+
+        <!-- Hidden input for single-image replace -->
+        <input
+            type="file"
+            x-ref="replaceImageInput"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+            class="hidden"
+            @change="onReplaceFileSelected($event)"
+        />
 
         <!-- Dropzone Area -->
         <div
@@ -1026,13 +1072,13 @@
             @dragleave.prevent="isDragging = false"
             @drop.prevent="isDragging = false; uploadFiles($event.dataTransfer.files)"
             @click="$refs.imageUploadInput.click()"
-            class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition"
-            :class="isDragging ? 'border-slate-900 bg-slate-50' : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50/50'"
+            class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition select-none"
+            :class="isDragging ? 'border-brand-green-600 bg-brand-green-50/60' : 'border-slate-300 hover:border-brand-green-500 hover:bg-slate-50/50'"
         >
             <input
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
                 x-ref="imageUploadInput"
                 class="hidden"
                 @change="uploadFiles($event.target.files)"
@@ -1040,64 +1086,153 @@
             <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <div>
                 <p class="text-xs font-bold text-slate-800">
-                    Drag &amp; drop product images, or <span class="text-emerald-700 underline">browse</span>
+                    Drag &amp; drop product images, or <span class="text-brand-green-600 underline">browse</span>
                 </p>
-                <p class="text-[11px] text-slate-400">JPEG · PNG · WebP · GIF — stored locally in storage/app/public</p>
+                <p class="text-[11px] text-slate-400">JPEG · JPG · PNG · WebP · GIF · SVG — up to 20MB</p>
             </div>
         </div>
 
         <!-- Image Tiles Grid -->
         <div x-show="form.images.length > 0" class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5 pt-2">
-            <template x-for="(img, idx) in form.images" :key="img.id">
-                <div class="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                    <img :src="img.url" alt="" class="h-full w-full object-cover">
+            <template x-for="(img, idx) in form.images" :key="img.id || img.url || idx">
+                <div
+                    draggable="true"
+                    @dragstart="onImageDragStart($event, idx)"
+                    @dragover.prevent="onImageDragOver($event, idx)"
+                    @dragleave="onImageDragLeave($event, idx)"
+                    @drop.prevent="onImageDrop($event, idx)"
+                    @dragend="onImageDragEnd()"
+                    class="group relative aspect-square overflow-hidden rounded-xl border bg-slate-100 flex items-center justify-center transition-all select-none"
+                    :class="{
+                        'ring-2 ring-brand-green-500 border-brand-green-500 shadow-md': idx === 0,
+                        'border-slate-200': idx !== 0,
+                        'opacity-40 scale-95 border-dashed border-slate-400': draggedImageIndex === idx,
+                        'ring-2 ring-blue-500 border-blue-500 scale-[1.02]': dragOverIndex === idx && draggedImageIndex !== idx
+                    }"
+                >
+                    <!-- Image tag with error fallback -->
+                    <img
+                        :src="img.url"
+                        alt=""
+                        class="h-full w-full object-cover transition"
+                        :class="img.status === 'uploading' ? 'filter blur-xs scale-105' : ''"
+                        x-on:error="handleImgError($event, img)"
+                        loading="lazy"
+                    >
 
-                    <!-- Thumbnail Badge for Main Image -->
+                    <!-- Uploading status overlay -->
+                    <div
+                        x-show="img.status === 'uploading'"
+                        class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex flex-col items-center justify-center text-white text-xs gap-1.5 z-20"
+                    >
+                        <svg class="w-5 h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span class="text-[10px] font-semibold tracking-wide">Uploading...</span>
+                    </div>
+
+                    <!-- Upload Failed Error Overlay -->
+                    <div
+                        x-show="img.status === 'error'"
+                        class="absolute inset-0 bg-red-950/85 p-2 flex flex-col items-center justify-center text-center text-white text-xs gap-1.5 z-20"
+                    >
+                        <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <span class="text-[10px] font-bold text-red-200" x-text="img.errorMessage || 'Upload failed'">Upload failed</span>
+                        <div class="flex items-center gap-1.5 mt-1">
+                            <button
+                                type="button"
+                                @click.stop="retryUpload(img)"
+                                class="px-2 py-0.5 text-[10px] font-semibold bg-white text-red-900 rounded hover:bg-red-50 cursor-pointer"
+                            >
+                                Retry
+                            </button>
+                            <button
+                                type="button"
+                                @click.stop="removeImage(idx)"
+                                class="px-2 py-0.5 text-[10px] font-semibold bg-red-800 text-white rounded hover:bg-red-700 cursor-pointer"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Image Badge -->
                     <span
                         x-show="idx === 0"
-                        class="absolute left-1.5 top-1.5 flex items-center gap-1 rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs"
+                        class="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-[4px] bg-brand-green-600 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs z-10"
                     >
                         ★ Main
                     </span>
 
-                    <!-- Overlay Controls on Hover -->
-                    <div class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-6 opacity-0 transition group-hover:opacity-100">
+                    <!-- Set as Main Button (for non-main images) -->
+                    <button
+                        type="button"
+                        x-show="idx !== 0 && img.status !== 'uploading' && img.status !== 'error'"
+                        @click.stop="makeMain(idx)"
+                        class="absolute left-1.5 top-1.5 rounded-[4px] bg-slate-900/80 hover:bg-slate-900 text-white px-1.5 py-0.5 text-[9px] font-bold shadow-xs z-10 opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        title="Set as main thumbnail"
+                    >
+                        ★ Set Main
+                    </button>
+
+                    <!-- Drag Handle Indicator on Hover -->
+                    <div
+                        class="absolute right-1.5 top-1.5 p-1 rounded-[4px] bg-black/40 text-white/90 opacity-0 group-hover:opacity-100 transition cursor-grab active:cursor-grabbing z-10"
+                        title="Drag to reorder"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+                            <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+                            <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+                        </svg>
+                    </div>
+
+                    <!-- Overlay Controls on Hover (Move, Replace, Delete) -->
+                    <div
+                        x-show="img.status !== 'uploading' && img.status !== 'error'"
+                        class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/85 via-black/50 to-transparent px-2 pb-1.5 pt-6 opacity-0 transition group-hover:opacity-100 z-10"
+                    >
+                        <!-- Move Arrows -->
                         <div class="flex items-center gap-1">
                             <button
                                 type="button"
-                                @click="moveImage(idx, idx - 1)"
+                                @click.stop="moveImage(idx, idx - 1)"
                                 :disabled="idx === 0"
-                                class="p-1 rounded bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 text-xs"
+                                class="p-1 rounded bg-white/20 text-white hover:bg-white/40 disabled:opacity-20 text-xs transition cursor-pointer"
                                 title="Move left"
                             >
                                 ←
                             </button>
                             <button
                                 type="button"
-                                @click="moveImage(idx, idx + 1)"
+                                @click.stop="moveImage(idx, idx + 1)"
                                 :disabled="idx === form.images.length - 1"
-                                class="p-1 rounded bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 text-xs"
+                                class="p-1 rounded bg-white/20 text-white hover:bg-white/40 disabled:opacity-20 text-xs transition cursor-pointer"
                                 title="Move right"
                             >
                                 →
                             </button>
                         </div>
 
+                        <!-- Actions: Replace & Delete -->
                         <div class="flex items-center gap-1">
                             <button
                                 type="button"
-                                x-show="idx !== 0"
-                                @click="makeMain(idx)"
-                                class="p-1 rounded bg-white/20 text-white hover:bg-white/40 text-xs"
-                                title="Set as main"
+                                @click.stop="triggerReplace(idx)"
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/20 text-white hover:bg-white/40 text-[10px] font-semibold transition cursor-pointer"
+                                title="Replace this image with a new file"
                             >
-                                ★
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <span>Replace</span>
                             </button>
                             <button
                                 type="button"
-                                @click="removeImage(idx)"
-                                class="p-1 rounded bg-red-600/80 text-white hover:bg-red-600 text-xs"
-                                title="Delete"
+                                @click.stop="removeImage(idx)"
+                                class="p-1 rounded bg-red-600/80 text-white hover:bg-red-600 text-xs transition cursor-pointer"
+                                title="Delete image"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
@@ -1664,48 +1799,6 @@
 
 <script>
 document.addEventListener('alpine:init', () => {
-    // Image uploader
-    Alpine.data('imageUploader', () => ({
-        isDragging: false,
-        uploadFiles(files) {
-            if (!files || files.length === 0) return;
-            const formData = new FormData();
-            Array.from(files).forEach(f => formData.append('files[]', f));
-            formData.append('_token', this.csrfToken);
-
-            fetch(this.uploadUrl, {
-                method: 'POST',
-                body: formData,
-                headers: { 'Accept': 'application/json' }
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.urls && res.urls.length > 0) {
-                    res.urls.forEach(url => {
-                        this.form.images.push({
-                            id: Math.random().toString(36).substring(7),
-                            url: url,
-                            status: 'done',
-                            progress: 100
-                        });
-                    });
-                }
-            })
-            .catch(err => alert('Image upload failed'));
-        },
-        moveImage(from, to) {
-            if (to < 0 || to >= this.form.images.length) return;
-            const item = this.form.images.splice(from, 1)[0];
-            this.form.images.splice(to, 0, item);
-        },
-        makeMain(idx) {
-            const item = this.form.images.splice(idx, 1)[0];
-            this.form.images.unshift(item);
-        },
-        removeImage(idx) {
-            this.form.images.splice(idx, 1);
-        }
-    }));
 
     // Variant manager
     Alpine.data('variantManager', () => ({
@@ -1957,6 +2050,213 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         validationErrors: [],
 
+        // Image Management State
+        isDragging: false,
+        draggedImageIndex: null,
+        dragOverIndex: null,
+        replaceTargetIndex: null,
+        deletedImageUrls: [],
+        uploadingCount: 0,
+
+        handleImgError(event, img) {
+            if (img && img.url && img.url.startsWith('/storage/')) {
+                const fallbackUrl = img.url.replace(/^\/storage\//, '/uploads/');
+                if (event.target.src !== window.location.origin + fallbackUrl && event.target.src !== fallbackUrl) {
+                    event.target.src = fallbackUrl;
+                    return;
+                }
+            }
+            event.target.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' width='100%' height='100%' fill='%23f1f5f9'><rect width='200' height='200' rx='12'/><path d='M65 135l25-30 20 22 25-32 30 40H35z' fill='%23cbd5e1'/><circle cx='70' cy='65' r='14' fill='%23cbd5e1'/></svg>";
+        },
+
+        uploadFiles(files) {
+            if (!files || files.length === 0) return;
+            const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+
+            Array.from(files).forEach(file => {
+                const okType = allowed.includes(file.type) || /\.(jpe?g|png|webp|gif|svg)$/i.test(file.name || '');
+                if (!okType) {
+                    alert(`"${file.name}" is not a supported image type (JPEG, PNG, WebP, GIF, SVG).`);
+                    return;
+                }
+                if (file.size > 20 * 1024 * 1024) {
+                    alert(`"${file.name}" exceeds the 20MB limit.`);
+                    return;
+                }
+
+                const tempId = Math.random().toString(36).substring(7);
+                const localUrl = URL.createObjectURL(file);
+                const item = {
+                    id: tempId,
+                    url: localUrl,
+                    status: 'uploading',
+                    progress: 25,
+                    _file: file,
+                    errorMessage: null
+                };
+
+                this.form.images.push(item);
+                this.uploadSingleFile(file, tempId, localUrl);
+            });
+        },
+
+        uploadSingleFile(file, tempId, localUrl) {
+            this.uploadingCount++;
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('_token', this.csrfToken);
+
+            fetch(this.uploadUrl, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(async r => {
+                const res = await r.json().catch(() => ({}));
+                if (!r.ok || !res.success) {
+                    throw new Error(res.message || ('Server error: HTTP ' + r.status));
+                }
+                return res;
+            })
+            .then(res => {
+                const serverUrl = res.url || (res.urls && res.urls[0]) || (res.data && res.data.url);
+                if (!serverUrl) throw new Error('No URL returned from server.');
+
+                const found = this.form.images.find(img => img.id === tempId);
+                if (found) {
+                    try { URL.revokeObjectURL(localUrl); } catch(e) {}
+                    found.url = serverUrl;
+                    found.status = 'done';
+                    found.progress = 100;
+                    delete found._file;
+                }
+            })
+            .catch(err => {
+                console.error('Image upload failed:', err);
+                const found = this.form.images.find(img => img.id === tempId);
+                if (found) {
+                    found.status = 'error';
+                    found.errorMessage = err.message || 'Upload failed';
+                }
+            })
+            .finally(() => {
+                this.uploadingCount = Math.max(0, this.uploadingCount - 1);
+            });
+        },
+
+        retryUpload(img) {
+            if (!img._file) {
+                alert('File data is no longer available in memory. Please remove and re-select the image.');
+                return;
+            }
+            img.status = 'uploading';
+            img.errorMessage = null;
+            this.uploadSingleFile(img._file, img.id, img.url);
+        },
+
+        triggerReplace(idx) {
+            this.replaceTargetIndex = idx;
+            if (this.$refs.replaceImageInput) {
+                this.$refs.replaceImageInput.value = '';
+                this.$refs.replaceImageInput.click();
+            }
+        },
+
+        onReplaceFileSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            const targetIdx = this.replaceTargetIndex;
+            if (!file || targetIdx === null || targetIdx === undefined || !this.form.images[targetIdx]) return;
+
+            const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+            const okType = allowed.includes(file.type) || /\.(jpe?g|png|webp|gif|svg)$/i.test(file.name || '');
+            if (!okType) {
+                alert('Only JPEG, PNG, WebP, GIF, and SVG images are allowed.');
+                return;
+            }
+            if (file.size > 20 * 1024 * 1024) {
+                alert('Image must be 20MB or smaller.');
+                return;
+            }
+
+            const oldItem = this.form.images[targetIdx];
+            const oldUrl = oldItem.url;
+            if (oldUrl && !oldUrl.startsWith('blob:') && !oldUrl.startsWith('data:') && !this.deletedImageUrls.includes(oldUrl)) {
+                this.deletedImageUrls.push(oldUrl);
+            }
+
+            const tempId = Math.random().toString(36).substring(7);
+            const localUrl = URL.createObjectURL(file);
+            const newItem = {
+                id: tempId,
+                url: localUrl,
+                status: 'uploading',
+                progress: 25,
+                _file: file,
+                errorMessage: null
+            };
+
+            // Replace in-place at the exact same index
+            this.form.images.splice(targetIdx, 1, newItem);
+            this.replaceTargetIndex = null;
+            this.uploadSingleFile(file, tempId, localUrl);
+        },
+
+        removeImage(idx) {
+            if (idx < 0 || idx >= this.form.images.length) return;
+            if (!confirm('Are you sure you want to remove this image?')) return;
+
+            const removed = this.form.images.splice(idx, 1)[0];
+            if (removed && removed.url) {
+                if (removed.url.startsWith('blob:')) {
+                    try { URL.revokeObjectURL(removed.url); } catch(e) {}
+                } else if (!removed.url.startsWith('data:') && !this.deletedImageUrls.includes(removed.url)) {
+                    this.deletedImageUrls.push(removed.url);
+                }
+            }
+        },
+
+        makeMain(idx) {
+            if (idx <= 0 || idx >= this.form.images.length) return;
+            const item = this.form.images.splice(idx, 1)[0];
+            this.form.images.unshift(item);
+        },
+
+        moveImage(from, to) {
+            if (to < 0 || to >= this.form.images.length || from === to) return;
+            const item = this.form.images.splice(from, 1)[0];
+            this.form.images.splice(to, 0, item);
+        },
+
+        onImageDragStart(event, idx) {
+            this.draggedImageIndex = idx;
+            event.dataTransfer.effectAllowed = 'move';
+            try { event.dataTransfer.setData('text/plain', idx.toString()); } catch(e) {}
+        },
+
+        onImageDragOver(event, idx) {
+            this.dragOverIndex = idx;
+        },
+
+        onImageDragLeave(event, idx) {
+            if (this.dragOverIndex === idx) {
+                this.dragOverIndex = null;
+            }
+        },
+
+        onImageDrop(event, idx) {
+            if (this.draggedImageIndex !== null && this.draggedImageIndex !== idx) {
+                const item = this.form.images.splice(this.draggedImageIndex, 1)[0];
+                this.form.images.splice(idx, 0, item);
+            }
+            this.draggedImageIndex = null;
+            this.dragOverIndex = null;
+        },
+
+        onImageDragEnd() {
+            this.draggedImageIndex = null;
+            this.dragOverIndex = null;
+        },
+
         handleTitleChange(title) {
             if (!this.slugTouched) {
                 this.form.slug = title.toLowerCase()
@@ -2020,7 +2320,13 @@ document.addEventListener('alpine:init', () => {
                     this.validationErrors.push('A valid positive price is required when no variants are defined.');
                 }
             }
-            if (this.form.structuredData.trim()) {
+            if (this.uploadingCount > 0 || this.form.images.some(i => i.status === 'uploading')) {
+                this.validationErrors.push('Please wait for image uploads to complete before saving.');
+            }
+            if (this.form.images.some(i => i.status === 'error')) {
+                this.validationErrors.push('Please retry or remove failed image uploads before saving.');
+            }
+            if (this.form.structuredData && this.form.structuredData.trim()) {
                 try { JSON.parse(this.form.structuredData); }
                 catch(e) { this.validationErrors.push('Structured Data (JSON-LD) contains invalid JSON.'); }
             }

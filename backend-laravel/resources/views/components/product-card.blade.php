@@ -113,6 +113,7 @@
                 loading="lazy"
                 decoding="async"
                 class="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                onerror="this.onerror=null;this.src='/brandlogo.png';"
             >
         </a>
 

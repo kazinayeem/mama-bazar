@@ -7,8 +7,9 @@
         Deny from all
     </FilesMatch>
 
-    # Block direct access to storage and vendor if placed in webroot
-    RewriteRule ^(storage|bootstrap|vendor|app|config|database|routes|tests)(/.*)?$ - [F,L]
+    # Block direct access to sensitive backend directories and private storage
+    RewriteRule ^storage/(framework|logs|app/private)(/.*)?$ - [F,L]
+    RewriteRule ^(bootstrap|vendor|app|config|database|routes|tests)(/.*)?$ - [F,L]
 
     # Forward all other requests to the public/ folder
     RewriteCond %{REQUEST_URI} !^/public/

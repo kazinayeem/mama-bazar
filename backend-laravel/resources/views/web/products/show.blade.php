@@ -73,6 +73,7 @@
                         alt="{{ $product['title'] }} - Mama Bazar"
                         class="aspect-square w-full object-contain"
                         loading="eager"
+                        onerror="this.onerror=null;this.src='/brandlogo.png';"
                     >
                     <span class="pointer-events-none absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 opacity-0 shadow-sm transition group-hover:opacity-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -90,7 +91,7 @@
                             @click="selectGalleryImage(idx)"
                             :aria-label="'View image ' + (idx + 1)"
                         >
-                            <img :src="img" :alt="'{{ addslashes($product['title'] ?? '') }} ' + (idx + 1)" class="aspect-square w-full object-cover" loading="lazy">
+                            <img :src="img" :alt="'{{ addslashes($product['title'] ?? '') }} ' + (idx + 1)" class="aspect-square w-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='/brandlogo.png';">
                         </button>
                     </template>
                 </div>
