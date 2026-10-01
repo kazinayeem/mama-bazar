@@ -3,153 +3,470 @@
 namespace App\Services;
 
 use App\Models\EmailTemplate;
-use Illuminate\Support\Str;
+use App\Support\EmailHtmlSanitizer;
+use App\Support\PdfBranding;
+use Throwable;
 
+/**
+ * Safe email template rendering.
+ *
+ * Templates use a fixed allowlist of {{placeholders}}; no PHP/Blade is ever
+ * evaluated from admin input. Values are HTML-escaped unless the placeholder
+ * is a system-generated HTML fragment (see RAW_HTML_PLACEHOLDERS).
+ */
 class EmailTemplateService
 {
+    public const CATEGORIES = [
+        'auth' => 'Account & Security',
+        'order' => 'Orders',
+        'engagement' => 'Engagement',
+        'notification' => 'Internal Notifications',
+        'marketing' => 'Marketing Campaigns',
+    ];
+
+    /** Placeholders whose values are trusted, system-built (or sanitized) HTML. */
+    public const RAW_HTML_PLACEHOLDERS = ['items_table', 'order_summary_table', 'announcement_body', 'product_cards', 'hero_image_block', 'coupon_block'];
+
+    /** Placeholders that must appear for a template to work. */
+    public const REQUIRED_PLACEHOLDERS = [
+        'account_verification_otp' => ['otp_code'],
+        'login_otp' => ['otp_code'],
+        'email_change_otp' => ['otp_code'],
+        'password_reset' => ['reset_url'],
+    ];
+
+    /** Placeholders never allowed in a subject line (subjects are stored in logs). */
+    public const SUBJECT_FORBIDDEN = ['otp_code', 'reset_url'];
+
+    protected static bool $defaultsEnsured = false;
+
     /**
-     * Standard allowed placeholder definitions.
+     * @return array<string, array<string, string>>
      */
-    public static function placeholderDefinitions(): array
+    public static function placeholderGroups(): array
     {
         return [
-            '{{customer_name}}' => 'Recipient / Customer Name',
-            '{{customer_email}}' => 'Customer Email Address',
-            '{{order_number}}' => 'Order Reference (e.g. BS-XXXXXX)',
-            '{{order_total}}' => 'Total Amount (e.g. ৳1,450)',
-            '{{order_status}}' => 'Order Status (e.g. Confirmed, Shipped)',
-            '{{order_date}}' => 'Date order was placed',
-            '{{payment_method}}' => 'Payment Method (COD, bKash, etc.)',
-            '{{payment_status}}' => 'Payment Status (Paid, Pending)',
-            '{{shipping_address}}' => 'Delivery Address',
-            '{{items_table}}' => 'Formatted HTML table of ordered items',
-            '{{tracking_url}}' => 'Public order tracking page URL',
-            '{{invoice_url}}' => 'Invoice download URL',
-            '{{otp_code}}' => '6-digit OTP Verification Code',
-            '{{otp_expires_minutes}}' => 'OTP validity duration in minutes',
-            '{{reset_url}}' => 'Password reset action URL',
-            '{{business_name}}' => 'Configured Business Name',
-            '{{support_email}}' => 'Official Customer Support Email',
-            '{{support_phone}}' => 'Customer Helpline Phone Number',
-            '{{support_url}}' => 'Customer Support Help Center URL',
-            '{{website_url}}' => 'Storefront Website URL',
-            '{{copyright_rendered}}' => 'Dynamic Copyright Notice',
-            '{{unsubscribe_url}}' => 'Signed Marketing Unsubscribe Link',
-            '{{announcement_title}}' => 'Campaign / Announcement Title',
-            '{{announcement_body}}' => 'Campaign / Announcement Message',
-            '{{cta_url}}' => 'Action Button Destination URL',
-            '{{cta_text}}' => 'Action Button Label',
+            'Business' => [
+                'business_name' => 'Business name (Business Information)',
+                'support_email' => 'Customer support email',
+                'support_phone' => 'Customer helpline number',
+                'business_address' => 'Business address',
+                'website_url' => 'Storefront URL',
+                'support_url' => 'Help / contact page URL',
+                'logo_url' => 'Logo image URL',
+                'copyright_rendered' => 'Copyright notice',
+            ],
+            'Customer' => [
+                'customer_name' => 'Recipient name',
+                'customer_email' => 'Recipient email',
+            ],
+            'Order' => [
+                'order_number' => 'Order number (e.g. BS-XXXXXX)',
+                'order_date' => 'Order date',
+                'order_status' => 'Current order status',
+                'order_subtotal' => 'Items subtotal',
+                'order_discount' => 'Discount amount',
+                'order_shipping' => 'Shipping charge',
+                'order_total' => 'Final amount',
+                'payment_method' => 'Payment method',
+                'payment_status' => 'Payment status',
+                'paid_amount' => 'Verified paid amount',
+                'payment_date' => 'Payment date',
+                'transaction_reference' => 'Payment transaction reference',
+                'shipping_address' => 'Delivery address',
+                'courier_tracking_number' => 'Courier tracking number',
+                'items_table' => 'Ordered items table (HTML)',
+                'order_summary_table' => 'Totals table (HTML)',
+                'tracking_url' => 'Secure order tracking link',
+                'invoice_url' => 'Secure invoice download link',
+                'review_url' => 'Product review link',
+            ],
+            'Account' => [
+                'otp_code' => 'One-time verification code',
+                'otp_expires_minutes' => 'OTP validity in minutes',
+                'reset_url' => 'Password reset link',
+                'reset_expires_minutes' => 'Reset link validity in minutes',
+                'security_event' => 'Security event description',
+                'security_time' => 'Time of the security event',
+                'login_url' => 'Sign-in page URL',
+            ],
+            'Contact' => [
+                'contact_name' => 'Contact form name',
+                'contact_phone' => 'Contact form phone',
+                'contact_email' => 'Contact form email',
+                'contact_message' => 'Contact form message',
+            ],
+            'Campaign' => [
+                'announcement_title' => 'Campaign headline',
+                'announcement_body' => 'Campaign content (HTML)',
+                'cta_text' => 'Button label',
+                'cta_url' => 'Button link',
+                'hero_image_url' => 'Hero image URL',
+                'hero_image_block' => 'Hero image (HTML, empty when no image)',
+                'coupon_code' => 'Coupon code',
+                'offer_expires' => 'Offer expiry date',
+                'coupon_block' => 'Coupon box (HTML, empty when no coupon)',
+                'product_cards' => 'Selected products grid (HTML)',
+                'unsubscribe_url' => 'Signed unsubscribe link',
+                'preferences_url' => 'Email preferences link',
+            ],
         ];
     }
 
     /**
-     * Seed or restore all default system templates.
+     * @return array<string, string> placeholder name => description
+     */
+    public static function allowedPlaceholders(): array
+    {
+        return array_merge(...array_values(self::placeholderGroups()));
+    }
+
+    /**
+     * Back-compat: "{{name}}" => description.
+     */
+    public static function placeholderDefinitions(): array
+    {
+        $out = [];
+        foreach (self::allowedPlaceholders() as $name => $label) {
+            $out['{{'.$name.'}}'] = $label;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array<int, string> placeholder names used in the text
+     */
+    public static function extractPlaceholders(string $text): array
+    {
+        preg_match_all('/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/', $text, $matches);
+
+        return array_values(array_unique($matches[1] ?? []));
+    }
+
+    /**
+     * @return array<int, string> placeholder names not in the allowlist
+     */
+    public static function unknownPlaceholders(string $text): array
+    {
+        return array_values(array_diff(self::extractPlaceholders($text), array_keys(self::allowedPlaceholders())));
+    }
+
+    /**
+     * Validate admin-submitted template content.
+     *
+     * @return array<string, string> field => error message
+     */
+    public static function validateTemplateContent(string $key, string $subject, string $html, ?string $plain): array
+    {
+        $errors = [];
+
+        $unknown = self::unknownPlaceholders($subject.' '.$html.' '.$plain);
+        if ($unknown) {
+            $errors['body_html'] = 'Unknown placeholders: {{'.implode('}}, {{', $unknown).'}}. Only the listed variables are allowed.';
+        }
+
+        $inSubject = array_intersect(self::extractPlaceholders($subject), self::SUBJECT_FORBIDDEN);
+        if ($inSubject) {
+            $errors['subject'] = 'The subject cannot contain {{'.implode('}}, {{', $inSubject).'}} — subjects are stored in email logs.';
+        }
+
+        foreach (self::REQUIRED_PLACEHOLDERS[$key] ?? [] as $required) {
+            if (! in_array($required, self::extractPlaceholders($html), true)) {
+                $errors['body_html'] = "This template must include {{{$required}}} in the HTML body.";
+            }
+        }
+
+        return $errors;
+    }
+
+    public static function sanitizeTemplateHtml(?string $html): string
+    {
+        return EmailHtmlSanitizer::sanitize($html);
+    }
+
+    /**
+     * Insert any missing default templates (never overwrites admin edits).
      */
     public static function ensureDefaultTemplates(): void
     {
-        $templates = self::defaultTemplates();
+        if (self::$defaultsEnsured) {
+            return;
+        }
 
-        foreach ($templates as $key => $item) {
-            EmailTemplate::firstOrCreate(
-                ['key' => $key],
-                [
+        try {
+            $existing = EmailTemplate::pluck('subject', 'key')->toArray();
+        } catch (Throwable $e) {
+            return;
+        }
+
+        foreach (self::defaultTemplates() as $key => $item) {
+            if (! array_key_exists($key, $existing)) {
+                EmailTemplate::create([
+                    'key' => $key,
                     'name' => $item['name'],
                     'category' => $item['category'],
                     'subject' => $item['subject'],
                     'body_html' => $item['body_html'],
                     'body_plain' => $item['body_plain'] ?? null,
-                    'available_placeholders' => $item['placeholders'] ?? array_keys(self::placeholderDefinitions()),
+                    'available_placeholders' => self::extractPlaceholders($item['subject'].' '.$item['body_html']),
                     'is_active' => true,
-                ]
-            );
+                ]);
+
+                continue;
+            }
+
+            // Earlier defaults leaked the OTP into the subject (and therefore the logs).
+            if (in_array('otp_code', self::extractPlaceholders((string) $existing[$key]), true)) {
+                EmailTemplate::where('key', $key)->update(['subject' => $item['subject']]);
+            }
         }
+
+        self::$defaultsEnsured = true;
+    }
+
+    public static function resetDefaultsFlag(): void
+    {
+        self::$defaultsEnsured = false;
+    }
+
+    public static function restoreDefault(EmailTemplate $template): bool
+    {
+        $default = self::defaultTemplates()[$template->key] ?? null;
+        if (! $default) {
+            return false;
+        }
+
+        $template->update([
+            'subject' => $default['subject'],
+            'body_html' => $default['body_html'],
+            'body_plain' => $default['body_plain'] ?? null,
+            'category' => $default['category'],
+        ]);
+
+        return true;
+    }
+
+    public static function categoryFor(string $templateKey): string
+    {
+        $defaults = self::defaultTemplates();
+        if (isset($defaults[$templateKey])) {
+            return $defaults[$templateKey]['category'];
+        }
+
+        return (string) (EmailTemplate::where('key', $templateKey)->value('category') ?? 'notification');
+    }
+
+    public static function isActive(string $templateKey): bool
+    {
+        self::ensureDefaultTemplates();
+        $active = EmailTemplate::where('key', $templateKey)->value('is_active');
+
+        return $active === null ? isset(self::defaultTemplates()[$templateKey]) : (bool) $active;
     }
 
     /**
-     * Render subject, HTML body, and plain-text body with variables.
+     * Render a stored template. Inactive templates fall back to the built-in default.
+     *
+     * @return array{subject: string, html: string, plain: string, category: string}
      */
-    public static function render(string $templateKey, array $data = []): array
+    public static function render(string $templateKey, array $data = [], array $options = []): array
     {
         self::ensureDefaultTemplates();
 
         $template = EmailTemplate::where('key', $templateKey)->where('is_active', true)->first();
+        $defaults = self::defaultTemplates();
 
-        // Fallback to default definition if not found in DB or inactive
-        if (!$template) {
-            $defaults = self::defaultTemplates();
-            if (isset($defaults[$templateKey])) {
-                $rawSubject = $defaults[$templateKey]['subject'];
-                $rawHtml = $defaults[$templateKey]['body_html'];
-                $rawPlain = $defaults[$templateKey]['body_plain'] ?? '';
-            } else {
-                $rawSubject = "Notification from {{business_name}}";
-                $rawHtml = "<p>{{announcement_body}}</p>";
-                $rawPlain = "{{announcement_body}}";
-            }
+        if ($template) {
+            $subject = $template->subject;
+            $html = $template->body_html;
+            $plain = $template->body_plain;
+            $category = $template->category;
+        } elseif (isset($defaults[$templateKey])) {
+            $subject = $defaults[$templateKey]['subject'];
+            $html = $defaults[$templateKey]['body_html'];
+            $plain = $defaults[$templateKey]['body_plain'] ?? null;
+            $category = $defaults[$templateKey]['category'];
         } else {
-            $rawSubject = $template->subject;
-            $rawHtml = $template->body_html;
-            $rawPlain = $template->body_plain ?: strip_tags($template->body_html);
+            $subject = 'Notification from {{business_name}}';
+            $html = '<p>{{announcement_body}}</p>';
+            $plain = null;
+            $category = 'notification';
         }
 
-        // Merge dynamic business settings
-        $business = BusinessSettingService::all();
-        $mergedData = array_merge([
-            'business_name' => $business['business_name'] ?? 'Mama Bazar',
-            'support_email' => $business['support_email'] ?? 'support@mamabazar.com',
-            'support_phone' => $business['primary_phone'] ?? '01700-000000',
-            'support_url' => $business['support_url'] ?? (url('/contact')),
-            'website_url' => $business['website_url'] ?? url('/'),
-            'copyright_rendered' => $business['copyright_rendered'] ?? ('© ' . date('Y') . ' Mama Bazar. All rights reserved.'),
-            'otp_expires_minutes' => '5',
+        $options['marketing'] = $options['marketing'] ?? ($category === 'marketing');
+
+        return array_merge(
+            self::renderContent($subject, $html, $plain, $data, $options),
+            ['category' => $category]
+        );
+    }
+
+    /**
+     * Render raw subject/body content with the allowlisted placeholder system.
+     *
+     * @return array{subject: string, html: string, plain: string}
+     */
+    public static function renderContent(string $subject, string $html, ?string $plain, array $data = [], array $options = []): array
+    {
+        $values = array_merge(self::businessValues(), [
             'customer_name' => 'Valued Customer',
-            'order_status' => 'Confirmed',
-            'cta_text' => 'Visit Mama Bazar',
-            'cta_url' => url('/'),
-        ], $data);
+            'otp_expires_minutes' => (string) config('email_system.otp.expires_minutes', 5),
+            'cta_text' => 'Shop Now',
+            'cta_url' => url('/shop'),
+            'login_url' => route('login'),
+        ], array_filter($data, fn ($v) => is_scalar($v) || $v === null));
 
-        // Build replacement map
-        $replacements = [];
-        foreach ($mergedData as $key => $val) {
-            if (is_scalar($val) || is_null($val)) {
-                $replacements['{{' . $key . '}}'] = (string) ($val ?? '');
-            }
+        $allowed = self::allowedPlaceholders();
+        $values = array_intersect_key($values, $allowed);
+
+        if (isset($values['announcement_body'])) {
+            $values['announcement_body'] = EmailHtmlSanitizer::sanitize((string) $values['announcement_body']);
         }
 
-        $subject = str_replace(array_keys($replacements), array_values($replacements), $rawSubject);
-        $contentHtml = str_replace(array_keys($replacements), array_values($replacements), $rawHtml);
-        $contentPlain = str_replace(array_keys($replacements), array_values($replacements), $rawPlain);
+        $htmlBody = self::replace(EmailHtmlSanitizer::sanitize($html), $values, 'html');
+        $renderedSubject = self::replace($subject, $values, 'text');
+        $renderedSubject = trim(preg_replace('/[\r\n\t]+/', ' ', $renderedSubject) ?? '');
 
-        // Wrap into responsive email container
-        $wrappedHtml = self::wrapInLayout($contentHtml, $mergedData);
+        $plainBody = $plain !== null && trim($plain) !== ''
+            ? self::replace($plain, $values, 'text')
+            : self::htmlToText($htmlBody);
+
+        $marketing = (bool) ($options['marketing'] ?? false);
+        $preheader = (string) ($options['preheader'] ?? '');
+
+        $footerText = self::plainFooter($values, $marketing);
 
         return [
-            'subject' => $subject,
-            'html' => $wrappedHtml,
-            'plain' => $contentPlain,
+            'subject' => $renderedSubject,
+            'html' => self::wrapInLayout($htmlBody, $values, $marketing, $preheader),
+            'plain' => trim($plainBody)."\n\n".$footerText,
         ];
     }
 
     /**
-     * Wrap body HTML inside a universal responsive email layout.
+     * Replace placeholders. HTML mode escapes values except trusted fragments;
+     * text mode converts HTML fragments to text. Unknown placeholders are removed.
      */
-    public static function wrapInLayout(string $bodyHtml, array $data): string
+    protected static function replace(string $content, array $values, string $mode): string
     {
-        $business = BusinessSettingService::all();
-        $businessName = htmlspecialchars($data['business_name'] ?? $business['business_name'] ?? 'Mama Bazar');
-        $logoUrl = $business['logo_url'] ?: url('/brandlogo.png');
-        $primaryColor = '#0F4D2C';
-        $accentColor = '#F97316';
-        $unsubscribeUrl = $data['unsubscribe_url'] ?? null;
-        $copyright = $data['copyright_rendered'] ?? $business['copyright_rendered'] ?? ('© ' . date('Y') . ' ' . $businessName);
+        return preg_replace_callback('/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/', function ($m) use ($values, $mode) {
+            $name = $m[1];
+            if (! array_key_exists($name, $values)) {
+                return '';
+            }
 
-        $unsubscribeHtml = '';
-        if ($unsubscribeUrl) {
-            $unsubscribeHtml = '<p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8;">'
-                . 'You received this email because you opted into marketing updates. '
-                . '<a href="' . htmlspecialchars($unsubscribeUrl) . '" style="color: #64748b; text-decoration: underline;">Unsubscribe safely</a>'
-                . '</p>';
+            $value = (string) ($values[$name] ?? '');
+
+            if (in_array($name, self::RAW_HTML_PLACEHOLDERS, true)) {
+                return $mode === 'html' ? $value : self::htmlToText($value);
+            }
+
+            return $mode === 'html' ? e($value) : $value;
+        }, $content) ?? '';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function businessValues(): array
+    {
+        $b = BusinessSettingService::all();
+        $website = (string) ($b['website_url'] ?: url('/'));
+
+        return [
+            'business_name' => (string) ($b['business_name'] ?? 'Mama Bazar'),
+            'support_email' => (string) (($b['support_email'] ?? '') ?: ($b['primary_email'] ?? '')),
+            'support_phone' => (string) (($b['support_phone'] ?? '') ?: ($b['primary_phone'] ?? '')),
+            'business_address' => (string) ($b['formatted_address'] ?? $b['contact_address'] ?? ''),
+            'website_url' => $website,
+            'support_url' => self::absoluteUrl((string) ($b['support_url'] ?? '/contact')),
+            'logo_url' => self::absoluteUrl((string) ($b['logo_url'] ?? '/brandlogo.png')),
+            'copyright_rendered' => (string) ($b['copyright_rendered'] ?? ('© '.date('Y').' Mama Bazar')),
+        ];
+    }
+
+    public static function absoluteUrl(string $path): string
+    {
+        if ($path === '' || preg_match('#^https?://#i', $path)) {
+            return $path;
         }
+
+        return url($path);
+    }
+
+    public static function htmlToText(string $html): string
+    {
+        $text = preg_replace('/<a\s[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/is', '$2 ($1)', $html) ?? $html;
+        $text = preg_replace('/<(br|\/p|\/div|\/h[1-6]|\/tr|\/li)\s*\/?>/i', "\n", $text) ?? $text;
+        $text = preg_replace('/<\/t[dh]>/i', "\t", $text) ?? $text;
+        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace("/[ \t]+/", ' ', $text) ?? $text;
+        $text = preg_replace("/\n\s*\n\s*\n+/", "\n\n", $text) ?? $text;
+
+        return trim(implode("\n", array_map('trim', explode("\n", $text))));
+    }
+
+    protected static function plainFooter(array $values, bool $marketing): string
+    {
+        $lines = [
+            '—',
+            $values['business_name'].' · '.$values['website_url'],
+            'Support: '.$values['support_phone'].' · '.$values['support_email'],
+        ];
+
+        if ($marketing && ! empty($values['unsubscribe_url'])) {
+            $lines[] = 'Unsubscribe from marketing emails: '.$values['unsubscribe_url'];
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Responsive, table-based layout that renders in common email clients.
+     */
+    public static function wrapInLayout(string $bodyHtml, array $values, bool $marketing = false, string $preheader = ''): string
+    {
+        $b = BusinessSettingService::all();
+        $e = fn ($v) => e((string) $v);
+        $primary = '#0F4D2C';
+
+        $name = $e($values['business_name'] ?? 'Mama Bazar');
+        $website = $e($values['website_url'] ?? url('/'));
+        $logo = $values['logo_url'] ?? '';
+        $header = $logo
+            ? '<img src="'.$e($logo).'" alt="'.$name.'" height="44" style="display:block;margin:0 auto;height:44px;width:auto;max-width:200px;border:0;">'
+            : '<span style="font-size:24px;font-weight:800;color:#ffffff;">'.$name.'</span>';
+
+        $socials = '';
+        foreach (($b['social_links'] ?? []) as $social) {
+            $socials .= '<a href="'.$e($social['url']).'" target="_blank" rel="noopener noreferrer" style="color:#475569;text-decoration:none;margin:0 6px;font-weight:600;">'.$e($social['label']).'</a>';
+        }
+        $socialsRow = $socials ? '<p style="margin:8px 0 0 0;font-size:11px;">'.$socials.'</p>' : '';
+
+        $marketingFooter = '';
+        if ($marketing) {
+            $links = [];
+            if (! empty($values['unsubscribe_url'])) {
+                $links[] = '<a href="'.$e($values['unsubscribe_url']).'" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>';
+            }
+            if (! empty($values['preferences_url'])) {
+                $links[] = '<a href="'.$e($values['preferences_url']).'" style="color:#64748b;text-decoration:underline;">Email preferences</a>';
+            }
+            $marketingFooter = '<p style="margin:10px 0 0 0;font-size:11px;color:#94a3b8;">You are receiving this because you opted in to '.$name.' marketing emails. '
+                .implode(' &middot; ', $links).'</p>';
+        }
+
+        $address = ! empty($values['business_address'])
+            ? '<p style="margin:4px 0 0 0;font-size:11px;color:#94a3b8;">'.$e($values['business_address']).'</p>'
+            : '';
+
+        $preheaderHtml = $preheader !== ''
+            ? '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">'.$e($preheader).'</div>'
+            : '';
+
+        $bornosoftUrl = $e(PdfBranding::URL);
+        $bornosoftName = $e(PdfBranding::MAKER);
 
         return <<<HTML
 <!DOCTYPE html>
@@ -157,53 +474,43 @@ class EmailTemplateService
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{$businessName}</title>
+<meta name="x-apple-disable-message-reformatting">
+<title>{$name}</title>
 <style>
-    body { margin: 0; padding: 0; background-color: #f8faf8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased; }
-    table { border-collapse: collapse; }
-    img { max-width: 100%; height: auto; }
     @media only screen and (max-width: 600px) {
-        .container { width: 100% !important; border-radius: 0 !important; }
-        .content { padding: 24px 20px !important; }
+        .mb-container { width: 100% !important; border-radius: 0 !important; }
+        .mb-content { padding: 24px 18px !important; }
     }
 </style>
 </head>
-<body style="margin:0; padding:24px 0; background-color:#f8faf8;">
-<table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color:#f8faf8;">
+<body style="margin:0;padding:0;background-color:#f4f7f5;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
+{$preheaderHtml}
+<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color:#f4f7f5;">
     <tr>
-        <td align="center">
-            <table class="container" width="600" border="0" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(15,77,44,0.04);">
-                <!-- Header -->
+        <td align="center" style="padding:24px 8px;">
+            <table role="presentation" class="mb-container" width="600" border="0" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;border:1px solid #e2e8f0;">
                 <tr>
-                    <td style="background-color:{$primaryColor}; padding:24px 32px; text-align:center;">
-                        <a href="{$data['website_url']}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
-                            <span style="font-size:24px; font-weight:800; color:#ffffff; letter-spacing:-0.5px;">
-                                {$businessName}
-                            </span>
-                        </a>
+                    <td align="center" style="background-color:{$primary};padding:22px 28px;border-radius:14px 14px 0 0;">
+                        <a href="{$website}" target="_blank" style="text-decoration:none;">{$header}</a>
                     </td>
                 </tr>
-
-                <!-- Main Content Body -->
                 <tr>
-                    <td class="content" style="padding:36px 36px 28px 36px; font-size:14px; line-height:1.6; color:#334155;">
+                    <td class="mb-content" style="padding:32px 34px 26px 34px;font-size:14px;line-height:1.6;color:#334155;">
                         {$bodyHtml}
                     </td>
                 </tr>
-
-                <!-- Footer -->
                 <tr>
-                    <td style="background-color:#f1f5f9; padding:24px 32px; text-align:center; font-size:12px; line-height:1.6; color:#64748b; border-top:1px solid #e2e8f0;">
-                        <p style="margin:0 0 6px 0; font-weight:600; color:#475569;">
-                            Need help? Contact our Helpline: <a href="tel:{$data['support_phone']}" style="color:{$primaryColor}; font-weight:bold; text-decoration:none;">{$data['support_phone']}</a> &middot;
-                            Email: <a href="mailto:{$data['support_email']}" style="color:{$primaryColor}; font-weight:bold; text-decoration:none;">{$data['support_email']}</a>
+                    <td align="center" style="background-color:#f1f5f9;padding:22px 28px;font-size:12px;line-height:1.6;color:#64748b;border-top:1px solid #e2e8f0;border-radius:0 0 14px 14px;">
+                        <p style="margin:0;font-weight:bold;color:#475569;">
+                            Need help? Call <a href="tel:{$e($values['support_phone'] ?? '')}" style="color:{$primary};text-decoration:none;">{$e($values['support_phone'] ?? '')}</a>
+                            &middot; <a href="mailto:{$e($values['support_email'] ?? '')}" style="color:{$primary};text-decoration:none;">{$e($values['support_email'] ?? '')}</a>
                         </p>
-                        <p style="margin:4px 0 0 0; font-size:11px; color:#94a3b8;">
-                            {$copyright}
-                        </p>
-                        {$unsubscribeHtml}
-                        <p style="margin:12px 0 0 0; padding-top:10px; border-top:1px solid #e2e8f0; font-size:10px; color:#94a3b8;">
-                            Crafted by <a href="https://bornosoft.bd/" target="_blank" rel="noopener noreferrer" style="color:#64748b; font-weight:bold; text-decoration:none;">Bornosoft</a> &middot; bornosoft.bd
+                        {$address}
+                        {$socialsRow}
+                        <p style="margin:8px 0 0 0;font-size:11px;color:#94a3b8;">{$e($values['copyright_rendered'] ?? '')}</p>
+                        {$marketingFooter}
+                        <p style="margin:12px 0 0 0;padding-top:10px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;">
+                            Crafted by <a href="{$bornosoftUrl}" target="_blank" rel="noopener noreferrer" style="color:#64748b;font-weight:bold;text-decoration:none;">{$bornosoftName}</a>
                         </p>
                     </td>
                 </tr>
@@ -216,254 +523,281 @@ class EmailTemplateService
 HTML;
     }
 
+    protected static function button(string $url, string $label, string $color = '#0f4d2c'): string
+    {
+        return '<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin:24px auto;"><tr>'
+            .'<td align="center" bgcolor="'.$color.'" style="border-radius:28px;">'
+            .'<a href="'.$url.'" target="_blank" style="display:inline-block;padding:12px 28px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:28px;">'.$label.'</a>'
+            .'</td></tr></table>';
+    }
+
+    protected static function heading(string $text, string $color = '#0f4d2c'): string
+    {
+        return '<h2 style="margin:0 0 14px 0;font-size:20px;font-weight:bold;color:'.$color.';">'.$text.'</h2>';
+    }
+
+    protected static function codeBlock(): string
+    {
+        return '<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin:26px auto 8px auto;"><tr>'
+            .'<td align="center" style="padding:14px 34px;background-color:#f0fdf4;border:2px dashed #16a34a;border-radius:12px;">'
+            .'<span style="font-size:30px;font-weight:bold;letter-spacing:6px;color:#0f4d2c;font-family:Courier New,monospace;">{{otp_code}}</span>'
+            .'</td></tr></table>'
+            .'<p style="margin:0 0 18px 0;text-align:center;font-size:12px;color:#64748b;">This code expires in {{otp_expires_minutes}} minutes. Never share it with anyone — our team will never ask for it.</p>';
+    }
+
+    protected static function orderFacts(array $rows): string
+    {
+        $html = '<table role="presentation" width="100%" cellpadding="8" cellspacing="0" style="margin:16px 0;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">';
+        foreach ($rows as $i => [$label, $value]) {
+            $bg = $i % 2 === 0 ? ' style="background:#f8faf8;"' : '';
+            $html .= '<tr'.$bg.'><td><strong>'.$label.'</strong></td><td align="right">'.$value.'</td></tr>';
+        }
+
+        return $html.'</table>';
+    }
+
     /**
-     * All 16 required default templates.
+     * Built-in default templates. Admin edits are stored in email_templates.
+     *
+     * @return array<string, array{name: string, category: string, subject: string, body_html: string, body_plain?: string}>
      */
     public static function defaultTemplates(): array
     {
+        $muted = 'style="font-size:12px;color:#64748b;"';
+
         return [
-            // 1. Welcome Email
             'welcome_email' => [
                 'name' => 'Welcome Email',
                 'category' => 'auth',
-                'subject' => 'Welcome to {{business_name}} — Your Account is Ready!',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 16px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Welcome, {{customer_name}}! 🎉</h2>
-<p>Thank you for joining <strong>{{business_name}}</strong>. We are thrilled to deliver fresh groceries, authentic essentials, and daily necessities directly to your doorstep.</p>
-<div style="margin:24px 0; text-align:center;">
-    <a href="{{website_url}}" style="display:inline-block; padding:12px 28px; background-color:#0f4d2c; color:#ffffff; font-size:13px; font-weight:700; text-decoration:none; border-radius:30px; box-shadow:0 2px 6px rgba(15,77,44,0.2);">Start Shopping Now &rarr;</a>
-</div>
-<p style="font-size:13px; color:#64748b;">If you have any questions or need assistance, feel free to reply to this email or call our helpline at {{support_phone}}.</p>
-HTML
+                'subject' => 'Welcome to {{business_name}} — your account is ready',
+                'body_html' => self::heading('Welcome, {{customer_name}}!')
+                    .'<p>Thank you for joining <strong>{{business_name}}</strong>. Your email is verified and your account is ready for faster checkout and order tracking.</p>'
+                    .self::button('{{website_url}}', 'Start Shopping')
+                    .'<p '.$muted.'>Questions? Reply to this email or call {{support_phone}}.</p>',
             ],
-
-            // 2. Account Verification OTP
             'account_verification_otp' => [
                 'name' => 'Account Verification OTP',
                 'category' => 'auth',
-                'subject' => '{{otp_code}} is your {{business_name}} verification code',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 16px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Verify Your Email Address</h2>
-<p>Hello {{customer_name}}, please use the verification code below to verify your email address on {{business_name}}.</p>
-<div style="margin:28px 0; text-align:center;">
-    <div style="display:inline-block; padding:16px 36px; background-color:#f0fdf4; border:2px dashed #16a34a; border-radius:12px;">
-        <span style="font-size:32px; font-weight:900; letter-spacing:6px; color:#0f4d2c; font-family:monospace;">{{otp_code}}</span>
-    </div>
-    <p style="margin:8px 0 0 0; font-size:12px; color:#64748b;">This code will expire in {{otp_expires_minutes}} minutes.</p>
-</div>
-<p style="font-size:13px; color:#64748b;">If you did not request this verification code, please ignore this email.</p>
-HTML
+                'subject' => 'Your {{business_name}} verification code',
+                'body_html' => self::heading('Verify your email address')
+                    .'<p>Hello {{customer_name}}, use this code to verify your email address on {{business_name}}.</p>'
+                    .self::codeBlock()
+                    .'<p '.$muted.'>If you did not create an account, you can safely ignore this email.</p>',
             ],
-
-            // 3. Login OTP
             'login_otp' => [
                 'name' => 'Login OTP',
                 'category' => 'auth',
-                'subject' => '{{otp_code}} is your {{business_name}} login code',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 16px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Your Secure Login Code</h2>
-<p>Hello {{customer_name}}, use the 6-digit OTP below to log in to your account.</p>
-<div style="margin:28px 0; text-align:center;">
-    <div style="display:inline-block; padding:16px 36px; background-color:#f0fdf4; border:2px dashed #16a34a; border-radius:12px;">
-        <span style="font-size:32px; font-weight:900; letter-spacing:6px; color:#0f4d2c; font-family:monospace;">{{otp_code}}</span>
-    </div>
-    <p style="margin:8px 0 0 0; font-size:12px; color:#64748b;">Expires in {{otp_expires_minutes}} minutes. Never share this code with anyone.</p>
-</div>
-HTML
+                'subject' => 'Your {{business_name}} sign-in code',
+                'body_html' => self::heading('Your sign-in code')
+                    .'<p>Hello {{customer_name}}, use this code to finish signing in to {{business_name}}.</p>'
+                    .self::codeBlock()
+                    .'<p '.$muted.'>If you did not try to sign in, ignore this email — your account stays secure.</p>',
             ],
-
-            // 4. Password Reset
+            'email_change_otp' => [
+                'name' => 'Email Change Verification',
+                'category' => 'auth',
+                'subject' => 'Confirm your new {{business_name}} email address',
+                'body_html' => self::heading('Confirm your new email')
+                    .'<p>Hello {{customer_name}}, enter this code to confirm this address as your new {{business_name}} account email.</p>'
+                    .self::codeBlock()
+                    .'<p '.$muted.'>If you did not request this change, ignore this email.</p>',
+            ],
             'password_reset' => [
                 'name' => 'Password Reset',
                 'category' => 'auth',
                 'subject' => 'Reset your {{business_name}} password',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 16px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Reset Your Password</h2>
-<p>Hello {{customer_name}}, we received a request to reset the password for your {{business_name}} account.</p>
-<div style="margin:24px 0; text-align:center;">
-    <a href="{{reset_url}}" style="display:inline-block; padding:12px 28px; background-color:#ea580c; color:#ffffff; font-size:13px; font-weight:700; text-decoration:none; border-radius:30px; box-shadow:0 2px 6px rgba(234,88,12,0.2);">Reset My Password &rarr;</a>
-</div>
-<p style="font-size:12px; color:#64748b;">If the button does not work, copy and paste this link into your browser:<br><a href="{{reset_url}}" style="color:#0f4d2c; word-break:break-all;">{{reset_url}}</a></p>
-<p style="font-size:12px; color:#94a3b8;">If you did not request a password reset, no further action is required.</p>
-HTML
+                'body_html' => self::heading('Reset your password')
+                    .'<p>Hello {{customer_name}}, we received a request to reset your {{business_name}} password. This link is valid for {{reset_expires_minutes}} minutes and can be used once.</p>'
+                    .self::button('{{reset_url}}', 'Reset My Password', '#ea580c')
+                    .'<p '.$muted.'>If you did not request a reset, ignore this email — your password will not change.</p>',
             ],
-
-            // 5. Order Confirmation
+            'account_security_notice' => [
+                'name' => 'Account Security Notice',
+                'category' => 'auth',
+                'subject' => 'Security alert for your {{business_name}} account',
+                'body_html' => self::heading('Account security notice')
+                    .'<p>Hello {{customer_name}}, this is a confirmation that the following change was made to your account:</p>'
+                    .'<p style="padding:12px 16px;background:#f8fafc;border-left:4px solid #0f4d2c;"><strong>{{security_event}}</strong><br><span '.$muted.'>{{security_time}}</span></p>'
+                    .'<p>If this was you, no action is needed. If not, reset your password immediately and contact us at {{support_phone}}.</p>',
+            ],
             'order_confirmation' => [
                 'name' => 'Order Confirmation',
                 'category' => 'order',
-                'subject' => 'Order Confirmed — {{order_number}} ({{order_total}})',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 8px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Thank You for Your Order! 🛍️</h2>
-<p style="margin:0 0 20px 0;">Hello {{customer_name}}, your order <strong>{{order_number}}</strong> has been placed successfully and is currently being processed by our team.</p>
-
-<table width="100%" cellpadding="8" cellspacing="0" style="margin:16px 0; border:1px solid #e2e8f0; border-radius:8px; font-size:13px;">
-    <tr style="background:#f8faf8;"><td><strong>Order ID:</strong></td><td align="right">{{order_number}}</td></tr>
-    <tr><td><strong>Order Date:</strong></td><td align="right">{{order_date}}</td></tr>
-    <tr style="background:#f8faf8;"><td><strong>Total Amount:</strong></td><td align="right" style="font-size:16px; font-weight:800; color:#0f4d2c;">{{order_total}}</td></tr>
-    <tr><td><strong>Payment Method:</strong></td><td align="right">{{payment_method}} ({{payment_status}})</td></tr>
-    <tr style="background:#f8faf8;"><td><strong>Delivery Address:</strong></td><td align="right">{{shipping_address}}</td></tr>
-</table>
-
-{{items_table}}
-
-<div style="margin:24px 0; text-align:center;">
-    <a href="{{tracking_url}}" style="display:inline-block; padding:12px 28px; background-color:#0f4d2c; color:#ffffff; font-size:13px; font-weight:700; text-decoration:none; border-radius:30px;">Track Your Order Live &rarr;</a>
-</div>
-HTML
+                'subject' => 'Order confirmed — {{order_number}}',
+                'body_html' => self::heading('Thank you for your order!')
+                    .'<p>Hello {{customer_name}}, we have received your order <strong>{{order_number}}</strong>.</p>'
+                    .self::orderFacts([
+                        ['Order number', '{{order_number}}'],
+                        ['Order date', '{{order_date}}'],
+                        ['Payment', '{{payment_method}} ({{payment_status}})'],
+                        ['Delivery address', '{{shipping_address}}'],
+                    ])
+                    .'{{items_table}}{{order_summary_table}}'
+                    .self::button('{{tracking_url}}', 'Track Your Order'),
             ],
-
-            // 6. Payment Confirmation
             'payment_confirmation' => [
                 'name' => 'Payment Confirmation',
                 'category' => 'order',
-                'subject' => 'Payment Received for Order {{order_number}}',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Payment Verified &amp; Received ✅</h2>
-<p>Hello {{customer_name}}, we have successfully verified your payment of <strong>{{order_total}}</strong> for Order <strong>{{order_number}}</strong>.</p>
-<p>Your items are now moving to our dispatch station. You can view your invoice anytime using the link below.</p>
-<div style="margin:24px 0; text-align:center;">
-    <a href="{{invoice_url}}" style="display:inline-block; padding:12px 28px; background-color:#0f4d2c; color:#ffffff; font-size:13px; font-weight:700; text-decoration:none; border-radius:30px;">Download Official Invoice &rarr;</a>
-</div>
-HTML
+                'subject' => 'Payment received — {{order_number}}',
+                'body_html' => self::heading('Payment verified')
+                    .'<p>Hello {{customer_name}}, we have verified your payment for order <strong>{{order_number}}</strong>.</p>'
+                    .self::orderFacts([
+                        ['Paid amount', '{{paid_amount}}'],
+                        ['Payment method', '{{payment_method}}'],
+                        ['Transaction reference', '{{transaction_reference}}'],
+                        ['Payment date', '{{payment_date}}'],
+                    ])
+                    .self::button('{{invoice_url}}', 'Download Invoice')
+                    .'<p '.$muted.'>Track your order anytime: <a href="{{tracking_url}}" style="color:#0f4d2c;">{{tracking_url}}</a></p>',
             ],
-
-            // 7. Order Processing
+            'order_confirmed' => [
+                'name' => 'Order Confirmed (Status)',
+                'category' => 'order',
+                'subject' => 'Order {{order_number}} is confirmed',
+                'body_html' => self::heading('Your order is confirmed')
+                    .'<p>Hello {{customer_name}}, order <strong>{{order_number}}</strong> has been confirmed and will be prepared for dispatch shortly.</p>'
+                    .self::button('{{tracking_url}}', 'View Order Status'),
+            ],
             'order_processing' => [
                 'name' => 'Order Processing',
                 'category' => 'order',
-                'subject' => 'Order {{order_number}} is Now Being Prepared',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">We are Packaging Your Order 📦</h2>
-<p>Hello {{customer_name}}, your order <strong>{{order_number}}</strong> is currently being inspected, packaged, and prepared for dispatch by our fulfillment specialists.</p>
-<div style="margin:20px 0; text-align:center;">
-    <a href="{{tracking_url}}" style="display:inline-block; padding:10px 24px; background-color:#0f4d2c; color:#ffffff; font-size:12px; font-weight:700; text-decoration:none; border-radius:24px;">View Order Status &rarr;</a>
-</div>
-HTML
+                'subject' => 'Order {{order_number}} is being prepared',
+                'body_html' => self::heading('We are preparing your order')
+                    .'<p>Hello {{customer_name}}, order <strong>{{order_number}}</strong> is being picked and packed by our team.</p>'
+                    .self::button('{{tracking_url}}', 'View Order Status'),
             ],
-
-            // 8. Order Shipped
             'order_shipped' => [
                 'name' => 'Order Shipped',
                 'category' => 'order',
-                'subject' => 'Order {{order_number}} has been Shipped 🚚',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Your Order is On the Way! 🚚</h2>
-<p>Great news, {{customer_name}}! Order <strong>{{order_number}}</strong> has been dispatched with our delivery partner and is en route to your shipping address.</p>
-<p><strong>Delivery Address:</strong> {{shipping_address}}</p>
-<div style="margin:24px 0; text-align:center;">
-    <a href="{{tracking_url}}" style="display:inline-block; padding:12px 28px; background-color:#ea580c; color:#ffffff; font-size:13px; font-weight:700; text-decoration:none; border-radius:30px;">Track Delivery Live &rarr;</a>
-</div>
-HTML
+                'subject' => 'Order {{order_number}} has shipped',
+                'body_html' => self::heading('Your order is on the way')
+                    .'<p>Good news, {{customer_name}}! Order <strong>{{order_number}}</strong> has been handed to our delivery partner.</p>'
+                    .self::orderFacts([
+                        ['Delivery address', '{{shipping_address}}'],
+                        ['Courier tracking', '{{courier_tracking_number}}'],
+                    ])
+                    .self::button('{{tracking_url}}', 'Track Delivery', '#ea580c'),
             ],
-
-            // 9. Out for Delivery
             'out_for_delivery' => [
                 'name' => 'Out for Delivery',
                 'category' => 'order',
-                'subject' => 'Order {{order_number}} is Out for Delivery Today',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Arriving Today! 🛵</h2>
-<p>Hello {{customer_name}}, our delivery courier is in your area and will deliver Order <strong>{{order_number}}</strong> today.</p>
-<p>Please ensure your contact number is reachable. Total payable upon delivery: <strong>{{order_total}}</strong> (if COD).</p>
-HTML
+                'subject' => 'Order {{order_number}} is out for delivery',
+                'body_html' => self::heading('Arriving soon')
+                    .'<p>Hello {{customer_name}}, order <strong>{{order_number}}</strong> is out for delivery. Please keep your phone reachable.</p>'
+                    .'<p>Amount: <strong>{{order_total}}</strong> · Payment: {{payment_method}} ({{payment_status}})</p>'
+                    .self::button('{{tracking_url}}', 'Track Delivery'),
             ],
-
-            // 10. Order Delivered
             'order_delivered' => [
                 'name' => 'Order Delivered',
                 'category' => 'order',
-                'subject' => 'Order {{order_number}} Successfully Delivered 🎉',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Your Order Has Been Delivered! 🎉</h2>
-<p>Hello {{customer_name}}, Order <strong>{{order_number}}</strong> has been successfully handed over. We hope you enjoy your purchase!</p>
-<p>If anything was damaged, defective, or missing, please contact our support team within 7 days for a hassle-free return or replacement.</p>
-HTML
+                'subject' => 'Order {{order_number}} delivered',
+                'body_html' => self::heading('Your order has been delivered')
+                    .'<p>Hello {{customer_name}}, order <strong>{{order_number}}</strong> has been delivered. We hope you enjoy your purchase!</p>'
+                    .'<p '.$muted.'>If anything is damaged, wrong or missing, contact us within 7 days at {{support_phone}}.</p>',
             ],
-
-            // 11. Order Cancelled
             'order_cancelled' => [
                 'name' => 'Order Cancelled',
                 'category' => 'order',
-                'subject' => 'Order {{order_number}} Has Been Cancelled',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#b91c1c;">Order {{order_number}} Cancelled</h2>
-<p>Hello {{customer_name}}, order <strong>{{order_number}}</strong> has been cancelled. If any payment was deducted, a refund will be processed in accordance with our refund policy.</p>
-<p>For questions or assistance, please reach our customer support team at {{support_email}}.</p>
-HTML
+                'subject' => 'Order {{order_number}} has been cancelled',
+                'body_html' => self::heading('Order cancelled', '#b91c1c')
+                    .'<p>Hello {{customer_name}}, order <strong>{{order_number}}</strong> has been cancelled. If you already paid, any refund will be processed according to our refund policy.</p>'
+                    .'<p '.$muted.'>Questions? Contact {{support_email}} or {{support_phone}}.</p>',
             ],
-
-            // 12. Refund Notification
             'refund_notification' => [
                 'name' => 'Refund Notification',
                 'category' => 'order',
-                'subject' => 'Refund Processed for Order {{order_number}}',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Refund Processed Successfully</h2>
-<p>Hello {{customer_name}}, we have processed a refund of <strong>{{order_total}}</strong> for Order <strong>{{order_number}}</strong>.</p>
-<p>Depending on your payment provider (bKash, Nagad, Card), funds typically reflect within 3 to 7 business days.</p>
-HTML
+                'subject' => 'Refund update for order {{order_number}}',
+                'body_html' => self::heading('Refund processed')
+                    .'<p>Hello {{customer_name}}, a refund for order <strong>{{order_number}}</strong> ({{order_total}}) has been processed.</p>'
+                    .'<p>Depending on your payment provider, funds usually appear within 3–7 business days.</p>',
             ],
-
-            // 13. Invoice Email
             'invoice_email' => [
                 'name' => 'Invoice Email',
                 'category' => 'order',
                 'subject' => 'Your {{business_name}} Invoice — {{order_number}}',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Official Invoice for Order {{order_number}}</h2>
-<p>Hello {{customer_name}}, your official purchase invoice for order <strong>{{order_number}}</strong> is attached as a PDF to this email.</p>
-<p><strong>Total Amount:</strong> {{order_total}}<br>
-<strong>Payment Status:</strong> {{payment_status}}</p>
-<div style="margin:20px 0; text-align:center;">
-    <a href="{{invoice_url}}" style="display:inline-block; padding:10px 24px; background-color:#0f4d2c; color:#ffffff; font-size:12px; font-weight:700; text-decoration:none; border-radius:24px;">View &amp; Print Invoice Online &rarr;</a>
-</div>
-HTML
+                'body_html' => self::heading('Your invoice for order {{order_number}}')
+                    .'<p>Hello {{customer_name}}, thank you for shopping with {{business_name}}. Your invoice for order <strong>{{order_number}}</strong> is attached as a PDF.</p>'
+                    .'{{items_table}}{{order_summary_table}}'
+                    .self::button('{{tracking_url}}', 'Track Your Order')
+                    .'<p '.$muted.'>You can also download the invoice here: <a href="{{invoice_url}}" style="color:#0f4d2c;">Download invoice</a></p>',
             ],
-
-            // 14. Review Invitation
             'review_invitation' => [
                 'name' => 'Review Invitation',
-                'category' => 'marketing',
-                'subject' => 'How was your recent order with {{business_name}}?',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">We Value Your Feedback! ⭐</h2>
-<p>Hello {{customer_name}}, thank you for shopping with {{business_name}}. We would love to hear about your experience with Order <strong>{{order_number}}</strong>.</p>
-<p>Your honest review helps our local farmers, suppliers, and fellow shoppers.</p>
-<div style="margin:24px 0; text-align:center;">
-    <a href="{{cta_url}}" style="display:inline-block; padding:12px 28px; background-color:#f97316; color:#ffffff; font-size:13px; font-weight:700; text-decoration:none; border-radius:30px;">Leave a Verified Review &rarr;</a>
-</div>
-HTML
+                'category' => 'engagement',
+                'subject' => 'How was your order {{order_number}}?',
+                'body_html' => self::heading('We would love your feedback')
+                    .'<p>Hello {{customer_name}}, thank you for shopping with {{business_name}}. How were the products from order <strong>{{order_number}}</strong>?</p>'
+                    .self::button('{{review_url}}', 'Write a Review', '#f97316')
+                    .'<p '.$muted.'>Your honest review helps other shoppers choose with confidence.</p>',
             ],
-
-            // 15. Promotional Campaign
-            'promotional_campaign' => [
-                'name' => 'Promotional Campaign',
-                'category' => 'marketing',
-                'subject' => 'Special Deals from {{business_name}} — Limited Time Only!',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">{{announcement_title}}</h2>
-<p>Hello {{customer_name}},</p>
-<div style="margin:16px 0; font-size:14px; line-height:1.7;">
-    {{announcement_body}}
-</div>
-<div style="margin:24px 0; text-align:center;">
-    <a href="{{cta_url}}" style="display:inline-block; padding:12px 30px; background-color:#0f4d2c; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; border-radius:30px; box-shadow:0 3px 8px rgba(15,77,44,0.25);">{{cta_text}} &rarr;</a>
-</div>
-HTML
-            ],
-
-            // 16. Contact Form Notification
             'contact_form_notification' => [
-                'name' => 'Contact Form Notification',
+                'name' => 'Contact Form Auto-Reply',
+                'category' => 'engagement',
+                'subject' => 'We received your message — {{business_name}}',
+                'body_html' => self::heading('Thank you for contacting us')
+                    .'<p>Hello {{customer_name}}, we have received your message. Our customer care team will get back to you within one business day.</p>'
+                    .'<p '.$muted.'>For urgent help call {{support_phone}}.</p>',
+            ],
+            'contact_form_admin' => [
+                'name' => 'Contact Form Admin Alert',
                 'category' => 'notification',
-                'subject' => 'We Received Your Message — {{business_name}}',
-                'body_html' => <<<HTML
-<h2 style="margin:0 0 12px 0; font-size:20px; font-weight:800; color:#0f4d2c;">Thank You for Contacting Us</h2>
-<p>Hello {{customer_name}}, we have received your direct message through the {{business_name}} website.</p>
-<p>A member of our customer care team will review your inquiry and get back to you within 24 business hours.</p>
-<p style="font-size:12px; color:#64748b;">For urgent assistance, call our helpline directly at {{support_phone}}.</p>
-HTML
+                'subject' => 'New contact message from {{contact_name}}',
+                'body_html' => self::heading('New contact form message')
+                    .self::orderFacts([
+                        ['Name', '{{contact_name}}'],
+                        ['Phone', '{{contact_phone}}'],
+                        ['Email', '{{contact_email}}'],
+                    ])
+                    .'<p style="white-space:pre-line;padding:12px 16px;background:#f8fafc;border-radius:8px;">{{contact_message}}</p>',
+            ],
+            'promotional_campaign' => [
+                'name' => 'Promotional Campaign (Basic)',
+                'category' => 'marketing',
+                'subject' => '{{announcement_title}}',
+                'body_html' => self::heading('{{announcement_title}}')
+                    .'<p>Hello {{customer_name}},</p>'
+                    .'<div>{{announcement_body}}</div>'
+                    .self::button('{{cta_url}}', '{{cta_text}}'),
+            ],
+            'campaign_new_arrival' => [
+                'name' => 'Campaign — New Arrival',
+                'category' => 'marketing',
+                'subject' => 'New arrivals at {{business_name}}',
+                'body_html' => '{{hero_image_block}}'
+                    .self::heading('{{announcement_title}}')
+                    .'<p>Hello {{customer_name}},</p><div>{{announcement_body}}</div>'
+                    .'{{product_cards}}'
+                    .self::button('{{cta_url}}', '{{cta_text}}'),
+            ],
+            'campaign_promotional_offer' => [
+                'name' => 'Campaign — Promotional Offer',
+                'category' => 'marketing',
+                'subject' => '{{announcement_title}}',
+                'body_html' => '{{hero_image_block}}'
+                    .self::heading('{{announcement_title}}', '#ea580c')
+                    .'<p>Hello {{customer_name}},</p><div>{{announcement_body}}</div>'
+                    .'{{coupon_block}}'
+                    .'{{product_cards}}'
+                    .self::button('{{cta_url}}', '{{cta_text}}', '#ea580c'),
+            ],
+            'campaign_announcement' => [
+                'name' => 'Campaign — Customer Announcement',
+                'category' => 'marketing',
+                'subject' => '{{announcement_title}}',
+                'body_html' => self::heading('{{announcement_title}}')
+                    .'<p>Dear {{customer_name}},</p><div>{{announcement_body}}</div>'
+                    .self::button('{{cta_url}}', '{{cta_text}}')
+                    .'<p '.$muted.'>Need help? Contact {{support_email}} or {{support_phone}}.</p>',
+            ],
+            'campaign_newsletter' => [
+                'name' => 'Campaign — Newsletter',
+                'category' => 'marketing',
+                'subject' => '{{business_name}} newsletter — {{announcement_title}}',
+                'body_html' => self::heading('{{announcement_title}}')
+                    .'<p>Hello {{customer_name}}, here is what is new at {{business_name}}.</p>'
+                    .'<div>{{announcement_body}}</div>'
+                    .'{{product_cards}}'
+                    .self::button('{{cta_url}}', '{{cta_text}}'),
             ],
         ];
     }

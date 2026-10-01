@@ -20,7 +20,10 @@ class User extends Authenticatable
         'phone',
         'email',
         'email_verified_at',
+        'email_verification_required',
         'marketing_opt_in',
+        'marketing_opt_in_at',
+        'marketing_consent_source',
         'unsubscribe_token',
         'shipping_area',
         'shipping_address',
@@ -41,7 +44,9 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'email_verification_required' => 'boolean',
         'marketing_opt_in' => 'boolean',
+        'marketing_opt_in_at' => 'datetime',
         'last_login_at' => 'datetime',
         'reset_token_expires_at' => 'datetime',
         'created_at' => 'datetime',
@@ -59,6 +64,22 @@ class User extends Authenticatable
     public function isEmailVerified(): bool
     {
         return !is_null($this->email_verified_at);
+    }
+
+    /**
+     * Accounts created before email verification existed are grandfathered
+     * and never blocked; only flagged accounts must verify first.
+     */
+    public function mustVerifyEmail(): bool
+    {
+        return (bool) $this->email_verification_required
+            && !empty($this->email)
+            && !$this->isEmailVerified();
+    }
+
+    public function isStaff(): bool
+    {
+        return \App\Http\Middleware\EnsureAdminAccess::isAdminLike($this);
     }
 
     public function addresses()
