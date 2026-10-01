@@ -6,14 +6,14 @@
 
         <div class="text-center space-y-1">
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Forgot Password</h1>
-            <p class="text-xs text-slate-500">Enter your registered email address to receive a 6-digit password reset code.</p>
+            <p class="text-xs text-slate-500">Enter the email address on your account and we'll send you a secure link to choose a new password.</p>
         </div>
 
-        @if(session('success'))
-            <div class="p-3 rounded-xl bg-brand-green-50 border border-brand-green-200 text-brand-green-800 text-xs">
-                {{ session('success') }}
-            </div>
-        @endif
+        @foreach(['success' => 'bg-brand-green-50 border-brand-green-200 text-brand-green-800', 'error' => 'bg-red-50 border-red-200 text-red-700'] as $flash => $classes)
+            @if(session($flash))
+                <div class="p-3 rounded-xl border text-xs {{ $classes }}" role="status">{{ session($flash) }}</div>
+            @endif
+        @endforeach
 
         @if($errors->any())
             <div class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-1">
@@ -28,14 +28,16 @@
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
-                <input type="email" name="email" required value="{{ old('email') }}" placeholder="you@example.com"
+                <input type="email" name="email" required value="{{ old('email') }}" placeholder="you@example.com" autocomplete="email"
                     class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
             </div>
 
             <button type="submit" class="w-full py-3 px-4 rounded-full bg-brand-green-600 hover:bg-brand-green-700 text-white font-bold text-xs shadow-md transition">
-                Send Reset Code &rarr;
+                Send Reset Link &rarr;
             </button>
         </form>
+
+        <p class="text-[11px] text-slate-400 text-center">No email on your account? Contact our support team with your phone number.</p>
 
         <div class="pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
             Remember your password?

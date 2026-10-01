@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendTemplatedEmailJob;
 use App\Models\PolicyPage;
 use App\Models\ContactMessage;
 use App\Models\SiteSetting;
+use App\Services\EmailSettingService;
+use App\Support\EmailQueue;
 use Illuminate\Http\Request;
 
 class PageWebController extends Controller
@@ -44,8 +47,38 @@ class PageWebController extends Controller
             'message' => 'required|string|max:2000',
         ]);
 
-        ContactMessage::create($data);
+        $message = ContactMessage::create($data);
+        $this->queueContactEmails($message->id, $data);
 
         return back()->with('success', 'Your message has been sent successfully. We will get back to you shortly.');
+    }
+
+    /**
+     * @param  array{name: string, phone: string, email?: string|null, message: string}  $data
+     */
+    private function queueContactEmails(int $messageId, array $data): void
+    {
+        $values = [
+            'customer_name' => $data['name'],
+            'contact_name' => $data['name'],
+            'contact_phone' => $data['phone'],
+            'contact_email' => $data['email'] ?? '',
+            'contact_message' => $data['message'],
+        ];
+
+        if (! empty($data['email']) && EmailSettingService::isAutomationEnabled('contact_form')) {
+            EmailQueue::dispatch(new SendTemplatedEmailJob(
+                'contact_form_notification', $data['email'], $data['name'], $values, 'notification',
+                ['dedupe_key' => "contact:{$messageId}:reply"]
+            ));
+        }
+
+        $admin = EmailSettingService::adminNotificationAddress();
+        if ($admin && EmailSettingService::isAutomationEnabled('contact_admin')) {
+            EmailQueue::dispatch(new SendTemplatedEmailJob(
+                'contact_form_admin', $admin, null, $values, 'notification',
+                ['dedupe_key' => "contact:{$messageId}:admin"]
+            ));
+        }
     }
 }

@@ -3,39 +3,59 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Newsletter;
-use App\Models\User;
+use App\Services\EmailPreferenceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
+/**
+ * Public, signed unsubscribe / preference page. Links are bound to the
+ * APP_KEY signature, so an address can only be changed through a link we
+ * actually emailed to it. Transactional email is never affected.
+ */
 class EmailUnsubscribeController extends Controller
 {
-    public function showUnsubscribe(Request $request)
+    public function show(Request $request)
     {
-        $email = $request->query('email');
-        $token = $request->query('token');
+        $email = EmailPreferenceService::decodeEmail($request->query('e'));
+        abort_unless($email, 404);
 
-        if (empty($email)) {
-            return redirect()->route('home');
-        }
-
-        return view('web.unsubscribe', compact('email', 'token'));
+        return view('web.unsubscribe', [
+            'maskedEmail' => AuthWebController::maskEmail($email),
+            'subscribed' => EmailPreferenceService::isMarketingSubscribed($email),
+            'actionUrl' => URL::signedRoute('email.unsubscribe.submit', ['e' => EmailPreferenceService::encodeEmail($email)]),
+        ]);
     }
 
-    public function processUnsubscribe(Request $request)
+    public function update(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'token' => 'nullable|string',
-        ]);
+        $email = EmailPreferenceService::decodeEmail($request->query('e'));
+        abort_unless($email, 404);
 
-        $email = strtolower(trim($request->input('email')));
+        $request->validate(['action' => 'required|in:unsubscribe,resubscribe']);
 
-        // Update User marketing preference
-        User::where('email', $email)->update(['marketing_opt_in' => false]);
+        if ($request->input('action') === 'resubscribe') {
+            $ok = EmailPreferenceService::resubscribe($email, 'preferences_page');
 
-        // Update Newsletter subscriber status
-        Newsletter::where('email', $email)->update(['status' => 'unsubscribed']);
+            return redirect(URL::signedRoute('email.unsubscribe', ['e' => EmailPreferenceService::encodeEmail($email)]))
+                ->with($ok ? 'success' : 'error', $ok
+                    ? 'You are subscribed again. Thanks for staying with us!'
+                    : 'This address cannot be re-subscribed automatically. Please contact our support team.');
+        }
 
-        return back()->with('success', "You have been successfully unsubscribed from Mama Bazar promotional emails. You will continue to receive critical order notifications.");
+        EmailPreferenceService::unsubscribe($email, 'unsubscribe_link');
+
+        return redirect(URL::signedRoute('email.unsubscribe', ['e' => EmailPreferenceService::encodeEmail($email)]))
+            ->with('success', 'You have been unsubscribed from promotional emails. You will still receive order and account notifications.');
+    }
+
+    /** RFC 8058 one-click endpoint used by mail clients (no CSRF token available). */
+    public function oneClick(Request $request)
+    {
+        $email = EmailPreferenceService::decodeEmail($request->query('e'));
+        if ($email) {
+            EmailPreferenceService::unsubscribe($email, 'one_click');
+        }
+
+        return response('Unsubscribed', 200)->header('Content-Type', 'text/plain');
     }
 }

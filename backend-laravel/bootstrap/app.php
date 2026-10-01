@@ -25,7 +25,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'require.permission' => RequirePermissionMiddleware::class,
             'admin.only' => AdminOnlyMiddleware::class,
             'admin.access' => EnsureAdminAccess::class,
+            'admin.can' => \App\Http\Middleware\EnsureAdminPermission::class,
+            'email.verified' => \App\Http\Middleware\EnsureEmailVerified::class,
         ]);
+
+        // RFC 8058 one-click unsubscribe is POSTed by mail clients without a CSRF token (route is signed).
+        $middleware->validateCsrfTokens(except: ['email/unsubscribe/one-click']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

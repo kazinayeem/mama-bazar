@@ -134,6 +134,14 @@ class RbacService
         ['code' => 'settings.view', 'module' => 'system', 'label' => 'View Settings', 'description' => 'View site settings'],
         ['code' => 'settings.manage', 'module' => 'system', 'label' => 'Manage Settings', 'description' => 'Update site settings and SEO'],
 
+        // Email Management
+        ['code' => 'email.view', 'module' => 'email', 'label' => 'View Email Dashboard', 'description' => 'View email statistics, automation status and campaign progress'],
+        ['code' => 'email.settings.manage', 'module' => 'email', 'label' => 'Manage SMTP Settings', 'description' => 'Configure SMTP credentials, sender identity and automation rules'],
+        ['code' => 'email.templates.manage', 'module' => 'email', 'label' => 'Manage Email Templates', 'description' => 'Edit, preview and test email templates'],
+        ['code' => 'email.campaigns.manage', 'module' => 'email', 'label' => 'Manage Campaigns', 'description' => 'Create, edit and test email campaigns'],
+        ['code' => 'email.campaigns.send', 'module' => 'email', 'label' => 'Send Campaigns', 'description' => 'Launch, schedule, pause and cancel bulk campaigns'],
+        ['code' => 'email.logs.view', 'module' => 'email', 'label' => 'View Email Logs', 'description' => 'View delivery logs, retry failed emails and manage suppressions'],
+
         // Administration
         ['code' => 'members.view', 'module' => 'administration', 'label' => 'View Team Members', 'description' => 'View admin members and roles'],
         ['code' => 'members.create', 'module' => 'administration', 'label' => 'Create Members', 'description' => 'Add new admin/team members'],
@@ -190,6 +198,7 @@ class RbacService
                     'media.view', 'media.upload',
                     'banners.view', 'banners.create', 'banners.update',
                     'analytics.view',
+                    'email.view', 'email.logs.view',
                 ],
             ],
             'EDITOR' => [

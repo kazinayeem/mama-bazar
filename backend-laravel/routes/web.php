@@ -8,6 +8,9 @@ use App\Http\Controllers\Web\CartController;
 use App\Http\Controllers\Web\CheckoutController;
 use App\Http\Controllers\Web\OrderTrackingController;
 use App\Http\Controllers\Web\AuthWebController;
+use App\Http\Controllers\Web\AccountEmailController;
+use App\Http\Controllers\Web\CustomerInvoiceController;
+use App\Http\Controllers\Web\EmailUnsubscribeController;
 use App\Http\Controllers\Web\PageWebController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -43,10 +46,10 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/shop/suggest', [ShopController::class, 'suggest'])->name('shop.suggest');
 Route::get('/products/{slug}', [ProductWebController::class, 'show'])->name('products.show');
 Route::post('/products/{slug}/reviews', [ProductWebController::class, 'storeReview'])
-    ->middleware('auth')
+    ->middleware(['auth', 'email.verified'])
     ->name('products.review');
 Route::put('/products/{slug}/reviews/{id}', [ProductWebController::class, 'updateReview'])
-    ->middleware('auth')
+    ->middleware(['auth', 'email.verified'])
     ->name('products.review.update');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
@@ -58,16 +61,42 @@ Route::post('/newsletter/subscribe', [HomeController::class, 'subscribeNewslette
 
 Route::get('/login', [AuthWebController::class, 'showLogin'])->name('login');
 Route::get('/auth/login', [AuthWebController::class, 'showLogin']);
-Route::post('/login', [AuthWebController::class, 'login'])->name('login.submit');
+Route::post('/login', [AuthWebController::class, 'login'])->middleware('throttle:10,1')->name('login.submit');
 Route::get('/register', [AuthWebController::class, 'showRegister'])->name('register');
 Route::get('/auth/register', [AuthWebController::class, 'showRegister']);
-Route::post('/register', [AuthWebController::class, 'register'])->name('register.submit');
+Route::post('/register', [AuthWebController::class, 'register'])->middleware('throttle:6,1')->name('register.submit');
 Route::post('/logout', [AuthWebController::class, 'logout'])->name('logout');
+
+// Email verification, password reset and email-code sign-in
+Route::middleware('auth')->group(function () {
+    Route::get('/verify-email', [AuthWebController::class, 'showVerifyOtp'])->name('auth.verify-otp');
+    Route::post('/verify-email', [AuthWebController::class, 'verifyOtp'])->middleware('throttle:10,1')->name('auth.verify-otp.submit');
+    Route::post('/verify-email/resend', [AuthWebController::class, 'resendOtp'])->middleware('throttle:5,1')->name('auth.resend-otp');
+
+    Route::get('/account/email', [AccountEmailController::class, 'show'])->name('account.email');
+    Route::post('/account/email/preferences', [AccountEmailController::class, 'updatePreferences'])->middleware('throttle:10,1')->name('account.email.preferences');
+    Route::post('/account/email/change', [AccountEmailController::class, 'requestChange'])->middleware('throttle:5,1')->name('account.email.change');
+    Route::post('/account/email/confirm', [AccountEmailController::class, 'confirmChange'])->middleware('throttle:10,1')->name('account.email.confirm');
+});
+Route::get('/forgot-password', [AuthWebController::class, 'showForgotPassword'])->name('auth.forgot-password');
+Route::post('/forgot-password', [AuthWebController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('auth.forgot-password.submit');
+Route::get('/reset-password/{token}', [AuthWebController::class, 'showResetPassword'])->name('auth.reset-password');
+Route::post('/reset-password', [AuthWebController::class, 'resetPassword'])->middleware('throttle:10,1')->name('auth.reset-password.submit');
+Route::get('/login/email-code', [AuthWebController::class, 'showLoginOtp'])->name('auth.login-otp');
+Route::post('/login/email-code', [AuthWebController::class, 'sendLoginOtp'])->middleware('throttle:5,1')->name('auth.login-otp.send');
+Route::post('/login/email-code/verify', [AuthWebController::class, 'verifyLoginOtp'])->middleware('throttle:10,1')->name('auth.login-otp.verify');
+
+// Signed marketing preference links (transactional email is never affected)
+Route::get('/email/unsubscribe', [EmailUnsubscribeController::class, 'show'])->middleware('signed')->name('email.unsubscribe');
+Route::post('/email/unsubscribe', [EmailUnsubscribeController::class, 'update'])->middleware(['signed', 'throttle:20,1'])->name('email.unsubscribe.submit');
+Route::post('/email/unsubscribe/one-click', [EmailUnsubscribeController::class, 'oneClick'])->middleware(['signed', 'throttle:20,1'])->name('email.unsubscribe.one-click');
+
+Route::get('/invoice/{orderId}', [CustomerInvoiceController::class, 'download'])->middleware('throttle:30,1')->name('order.invoice');
 
 Route::get('/about', [PageWebController::class, 'about'])->name('about');
 Route::get('/faq', [PageWebController::class, 'faq'])->name('faq');
 Route::get('/contact', [PageWebController::class, 'contact'])->name('contact');
-Route::post('/contact', [PageWebController::class, 'submitContact'])->name('contact.submit');
+Route::post('/contact', [PageWebController::class, 'submitContact'])->middleware('throttle:5,1')->name('contact.submit');
 Route::get('/pages/{slug}', [PageWebController::class, 'show'])->name('page.show');
 
 Route::get('/refund-policy', fn () => app(PageWebController::class)->show('return-refund'));
