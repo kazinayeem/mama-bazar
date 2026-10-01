@@ -218,7 +218,7 @@
                         <div class="sm:col-span-2">
                             <label class="flex items-start gap-2 text-xs text-slate-600">
                                 <input type="checkbox" name="marketing_consent" value="1" class="mt-0.5 h-4 w-4 accent-green-700">
-                                <span>Send me order updates and occasional offers via SMS / email. You can opt out anytime.</span>
+                                <span>Send me occasional offers and new arrivals via SMS / email. You can opt out anytime. (Order updates are always sent.)</span>
                             </label>
                         </div>
                     </div>

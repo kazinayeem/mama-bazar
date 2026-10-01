@@ -88,6 +88,10 @@
                                 <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-xs font-semibold text-brand-green-600 hover:bg-brand-green-50">Admin Panel</a>
                                 <div class="my-1 border-t border-slate-100"></div>
                             @endif
+                            <a href="{{ route('account.email') }}" class="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-brand-green-50">Email Settings</a>
+                            @if(auth()->user()->mustVerifyEmail())
+                                <a href="{{ route('auth.verify-otp') }}" class="block px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50">Verify Email</a>
+                            @endif
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full px-4 py-2 text-left text-xs font-semibold text-red-600 hover:bg-red-50">Logout</button>

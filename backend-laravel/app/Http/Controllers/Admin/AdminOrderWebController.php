@@ -57,9 +57,7 @@ class AdminOrderWebController extends Controller
     {
         $order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
 
-        $filename = ($order->invoice_number ?: $order->order_id) . '.pdf';
-
-        return InvoicePdfService::make($order)->download($filename);
+        return InvoicePdfService::make($order)->download(InvoicePdfService::filename($order));
     }
 
     /**

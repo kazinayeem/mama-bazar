@@ -160,6 +160,36 @@
                 @if($order->sender_number)<p><span class="text-slate-400 font-semibold">Sender:</span> {{ $order->sender_number }}</p>@endif
             </div>
 
+            <div class="admin-surface p-4 space-y-3 text-xs">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-slate-900 uppercase tracking-wider text-xs">Customer Emails</h3>
+                    @if(\App\Http\Middleware\EnsureAdminPermission::allows(auth()->user(), ['email.logs.view']))
+                        <a href="{{ route('admin.email.logs.index', ['order' => $order->order_id]) }}" class="text-[11px] font-semibold text-brand-green-700 hover:underline">All logs</a>
+                    @endif
+                </div>
+                @if($order->email && $invoiceReady)
+                    <form action="{{ route('admin.orders.email-invoice', $order->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white text-xs font-bold">Email Invoice PDF to Customer</button>
+                    </form>
+                @elseif(! $order->email)
+                    <p class="text-slate-400">No email address on this order — emails cannot be sent.</p>
+                @else
+                    <p class="text-slate-400">Invoice email is available once payment is verified (or for Cash on Delivery orders).</p>
+                @endif
+                @forelse($emailLogs as $log)
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold text-slate-700">{{ $log->subject }}</p>
+                            <p class="text-[11px] text-slate-400">{{ $log->created_at?->format('M d, h:i A') }}@if(! empty($log->metadata['invoice_attachment_failed'])) · PDF failed @endif</p>
+                        </div>
+                        @include('admin.email.partials.status-badge', ['status' => $log->status])
+                    </div>
+                @empty
+                    <p class="text-slate-400">No emails sent for this order yet.</p>
+                @endforelse
+            </div>
+
             <div class="admin-surface p-4">
                 <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Internal Notes</h3>
                 @if($order->admin_notes)<pre class="text-[11px] text-slate-600 whitespace-pre-wrap bg-slate-50 rounded-lg p-3 mb-3">{{ $order->admin_notes }}</pre>@endif
