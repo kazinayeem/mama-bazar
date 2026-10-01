@@ -23,6 +23,9 @@ use App\Http\Controllers\Admin\AdminSettingWebController;
 use App\Http\Controllers\Admin\AdminCatalogWebController;
 use App\Http\Controllers\Admin\AdminModuleWebController;
 use App\Http\Controllers\Admin\AdminReviewWebController;
+use App\Http\Controllers\Admin\AdminEmailController;
+use App\Http\Controllers\Admin\AdminEmailTemplateController;
+use App\Http\Controllers\Admin\AdminEmailCampaignController;
 
 /*
 |--------------------------------------------------------------------------
@@ -151,6 +154,67 @@ Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () 
     Route::post('/orders/{id}/status', [AdminOrderWebController::class, 'updateStatus'])->name('admin.orders.status');
     Route::post('/orders/{id}/payment', [AdminOrderWebController::class, 'updatePayment'])->name('admin.orders.payment');
     Route::post('/orders/{id}/notes', [AdminOrderWebController::class, 'addNote'])->name('admin.orders.notes');
+    Route::post('/orders/{id}/email-invoice', [AdminOrderWebController::class, 'emailInvoice'])
+        ->middleware(['admin.can:orders.update', 'throttle:10,1'])->name('admin.orders.email-invoice');
+
+    // Email Management
+    Route::prefix('email')->name('admin.email.')->group(function () {
+        Route::get('/', [AdminEmailController::class, 'dashboard'])->middleware('admin.can:email.view')->name('dashboard');
+
+        Route::middleware('admin.can:email.settings.manage')->group(function () {
+            Route::get('/settings', [AdminEmailController::class, 'settings'])->name('settings');
+            Route::post('/settings', [AdminEmailController::class, 'updateSettings'])->name('settings.update');
+            Route::post('/settings/test-connection', [AdminEmailController::class, 'testConnection'])->middleware('throttle:6,1')->name('settings.test-connection');
+            Route::post('/settings/send-test', [AdminEmailController::class, 'sendTestEmail'])->middleware('throttle:6,1')->name('settings.send-test');
+            Route::post('/settings/check-dns', [AdminEmailController::class, 'checkDns'])->middleware('throttle:6,1')->name('settings.check-dns');
+            Route::get('/automation', [AdminEmailController::class, 'automation'])->name('automation');
+            Route::post('/automation', [AdminEmailController::class, 'updateAutomation'])->name('automation.update');
+        });
+
+        Route::middleware('admin.can:email.templates.manage')->prefix('templates')->name('templates.')->group(function () {
+            Route::get('/', [AdminEmailTemplateController::class, 'index'])->name('index');
+            Route::get('/{id}/edit', [AdminEmailTemplateController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [AdminEmailTemplateController::class, 'update'])->name('update');
+            Route::match(['get', 'post'], '/{id}/preview', [AdminEmailTemplateController::class, 'preview'])->name('preview');
+            Route::post('/{id}/test', [AdminEmailTemplateController::class, 'sendTest'])->middleware('throttle:10,1')->name('test');
+            Route::post('/{id}/restore', [AdminEmailTemplateController::class, 'restore'])->name('restore');
+        });
+
+        Route::prefix('campaigns')->name('campaigns.')->group(function () {
+            Route::middleware('admin.can:email.campaigns.manage|email.campaigns.send')->group(function () {
+                Route::get('/', [AdminEmailCampaignController::class, 'index'])->name('index');
+                Route::get('/{id}', [AdminEmailCampaignController::class, 'show'])->whereNumber('id')->name('show');
+                Route::get('/{id}/preview', [AdminEmailCampaignController::class, 'preview'])->name('preview');
+            });
+            Route::middleware('admin.can:email.campaigns.manage')->group(function () {
+                Route::get('/create', [AdminEmailCampaignController::class, 'create'])->name('create');
+                Route::post('/', [AdminEmailCampaignController::class, 'store'])->name('store');
+                Route::post('/audience-count', [AdminEmailCampaignController::class, 'audienceCount'])->middleware('throttle:30,1')->name('audience-count');
+                Route::get('/{id}/edit', [AdminEmailCampaignController::class, 'edit'])->name('edit');
+                Route::put('/{id}', [AdminEmailCampaignController::class, 'update'])->name('update');
+                Route::post('/{id}/test', [AdminEmailCampaignController::class, 'sendTest'])->middleware('throttle:10,1')->name('test');
+                Route::post('/{id}/duplicate', [AdminEmailCampaignController::class, 'duplicate'])->name('duplicate');
+                Route::delete('/{id}', [AdminEmailCampaignController::class, 'destroy'])->name('destroy');
+            });
+            Route::middleware('admin.can:email.campaigns.send')->group(function () {
+                Route::post('/{id}/confirm', [AdminEmailCampaignController::class, 'confirm'])->middleware('throttle:10,1')->name('confirm');
+                Route::post('/{id}/unschedule', [AdminEmailCampaignController::class, 'unschedule'])->name('unschedule');
+                Route::post('/{id}/pause', [AdminEmailCampaignController::class, 'pause'])->name('pause');
+                Route::post('/{id}/resume', [AdminEmailCampaignController::class, 'resume'])->name('resume');
+                Route::post('/{id}/cancel', [AdminEmailCampaignController::class, 'cancel'])->name('cancel');
+                Route::post('/{id}/retry-failed', [AdminEmailCampaignController::class, 'retryFailed'])->name('retry-failed');
+            });
+        });
+
+        Route::middleware('admin.can:email.logs.view')->group(function () {
+            Route::get('/logs', [AdminEmailController::class, 'logs'])->name('logs.index');
+            Route::get('/logs/{id}', [AdminEmailController::class, 'showLog'])->name('logs.show');
+            Route::post('/logs/{id}/retry', [AdminEmailController::class, 'retryLog'])->middleware('throttle:20,1')->name('logs.retry');
+            Route::get('/suppressions', [AdminEmailController::class, 'suppressions'])->name('logs.suppressions');
+            Route::post('/suppressions', [AdminEmailController::class, 'storeSuppression'])->name('logs.suppressions.store');
+            Route::delete('/suppressions/{id}', [AdminEmailController::class, 'destroySuppression'])->name('logs.suppressions.destroy');
+        });
+    });
 
     // Reviews
     Route::get('/reviews', [AdminReviewWebController::class, 'index'])->name('admin.reviews.index');

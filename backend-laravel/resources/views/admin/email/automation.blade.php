@@ -1,146 +1,54 @@
-@extends('layouts.admin')
+@extends('layouts.admin', ['headerTitle' => 'Email Automation'])
 
 @section('content')
-<div class="space-y-6 max-w-4xl">
+<div class="admin-page max-w-5xl">
+    <x-admin.page-header title="Email Automation" subtitle="Choose which events send emails automatically. Every email is queued after the database commit, so checkout never waits on SMTP." />
+    @include('admin.email.partials.tabs')
 
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Email Automation Triggers</h1>
-            <p class="text-xs text-slate-500">Enable or disable individual automated transactional emails and PDF invoice attachments.</p>
-        </div>
-        <div>
-            <a href="{{ route('admin.email.dashboard') }}" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                &larr; Back to Dashboard
-            </a>
-        </div>
-    </div>
+    @unless($settings['mail_enabled'])
+        <div class="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">Outgoing email is disabled in SMTP Settings — these rules have no effect until it is enabled.</div>
+    @endunless
 
-    @if(session('success'))
-        <div class="p-3.5 rounded-xl bg-brand-green-50 border border-brand-green-200 text-brand-green-800 text-xs">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <form action="{{ route('admin.email.automation.update') }}" method="POST" class="space-y-6">
+    <form action="{{ route('admin.email.automation.update') }}" method="POST" class="space-y-4">
         @csrf
-
-        {{-- Authentication Automations --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-4">
-            <div class="border-b border-slate-100 pb-3">
-                <h2 class="text-sm font-bold text-slate-900">Authentication &amp; Account Security</h2>
-                <p class="text-xs text-slate-500">Automated emails triggered during registration and password recovery.</p>
-            </div>
-
-            <div class="space-y-3">
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Account Verification OTP</span>
-                        <span class="text-[11px] text-slate-400">Sends 6-digit verification code when customer registers a new account.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_account_otp" value="1" {{ !empty($settings['email_auto_account_otp']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Welcome Email</span>
-                        <span class="text-[11px] text-slate-400">Sends branded welcome email upon successful registration / verification.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_welcome" value="1" {{ !empty($settings['email_auto_welcome']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Password Reset Email</span>
-                        <span class="text-[11px] text-slate-400">Sends reset link and verification code when customer clicks "Forgot Password".</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_password_reset" value="1" {{ !empty($settings['email_auto_password_reset']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Login OTP</span>
-                        <span class="text-[11px] text-slate-400">Sends 6-digit code for passwordless or two-factor login requests.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_login_otp" value="1" {{ !empty($settings['email_auto_login_otp']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-            </div>
+        <div class="grid gap-4 md:grid-cols-2">
+            @foreach($groups as $group => $items)
+                <div class="admin-surface p-5 space-y-3">
+                    <h2 class="text-sm font-bold text-slate-900">{{ $group }}</h2>
+                    @foreach($items as $item)
+                        <label class="flex items-start gap-3 rounded-[6px] p-2 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" name="{{ $item['key'] }}" value="1" @checked($item['enabled']) class="mt-0.5 rounded border-slate-300 text-brand-green-600">
+                            <span class="text-xs">
+                                <span class="block font-semibold text-slate-800">{{ $item['label'] }}</span>
+                                <span class="text-slate-500">{{ $item['description'] }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+            @endforeach
         </div>
 
-        {{-- Order & Transaction Automations --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-4">
-            <div class="border-b border-slate-100 pb-3">
-                <h2 class="text-sm font-bold text-slate-900">Orders, Invoices &amp; Payments</h2>
-                <p class="text-xs text-slate-500">Transactional emails dispatched during customer order and payment lifecycles.</p>
+        <div class="admin-surface p-5 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900">Account policies</h2>
+            <label class="flex items-start gap-3 text-xs cursor-pointer">
+                <input type="checkbox" name="email_require_registration_email" value="1" @checked($settings['email_require_registration_email']) class="mt-0.5 rounded border-slate-300 text-brand-green-600">
+                <span><span class="block font-semibold text-slate-800">Require an email address at registration</span><span class="text-slate-500">New accounts must provide an email (existing accounts are not affected).</span></span>
+            </label>
+            <label class="flex items-start gap-3 text-xs cursor-pointer">
+                <input type="checkbox" name="email_verification_enforced" value="1" @checked($settings['email_verification_enforced']) class="mt-0.5 rounded border-slate-300 text-brand-green-600">
+                <span><span class="block font-semibold text-slate-800">Require verified email to write reviews</span><span class="text-slate-500">Applies only to accounts created after email verification launched. Older accounts and guest checkout are never blocked.</span></span>
+            </label>
+            <div class="max-w-md">
+                <label class="mb-1 block text-xs font-semibold text-slate-700">Internal notification inbox</label>
+                <input type="email" name="email_admin_notification_address" value="{{ old('email_admin_notification_address', $settings['email_admin_notification_address']) }}" class="admin-control w-full" placeholder="Defaults to the support email in Business Information">
+                <p class="mt-1 text-[11px] text-slate-400">Receives contact form alerts.</p>
             </div>
-
-            <div class="space-y-3">
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Order Confirmation Email</span>
-                        <span class="text-[11px] text-slate-400">Immediately sends order receipt with item breakdown and tracking link.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_order_created" value="1" {{ !empty($settings['email_auto_order_created']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Payment Verified Confirmation</span>
-                        <span class="text-[11px] text-slate-400">Sends receipt notification when admin verifies bKash, Nagad, or Bank payment.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_payment_confirmed" value="1" {{ !empty($settings['email_auto_payment_confirmed']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Order Lifecycle Status Updates</span>
-                        <span class="text-[11px] text-slate-400">Sends emails when status changes: Confirmed, Processing, Shipped, Delivered, Cancelled.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_order_status" value="1" {{ !empty($settings['email_auto_order_status']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/40 hover:border-emerald-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-emerald-900 block">Automatically Attach PDF Invoice 📎</span>
-                        <span class="text-[11px] text-slate-500">Generates and attaches the official PDF invoice (with Bornosoft attribution) to confirmation emails.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_invoice_pdf" value="1" {{ !empty($settings['email_auto_invoice_pdf']) ? 'checked' : '' }} class="h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500">
-                </label>
-            </div>
+            <p class="text-[11px] text-slate-500">OTP: {{ config('email_system.otp.length') }} digits, valid {{ config('email_system.otp.expires_minutes') }} min, {{ config('email_system.otp.max_attempts') }} attempts, {{ config('email_system.otp.resend_cooldown_seconds') }}s resend cooldown, max {{ config('email_system.otp.max_per_hour') }} codes/hour. Review invitations are sent {{ config('email_system.review_invitation_delay_days') }} days after delivery. (Configured in <code>config/email_system.php</code>.)</p>
         </div>
 
-        {{-- Engagement & Support Automations --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-4">
-            <div class="border-b border-slate-100 pb-3">
-                <h2 class="text-sm font-bold text-slate-900">Engagement &amp; Support</h2>
-                <p class="text-xs text-slate-500">Automated post-purchase followups and customer service responses.</p>
-            </div>
-
-            <div class="space-y-3">
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Product Review Invitation</span>
-                        <span class="text-[11px] text-slate-400">Invites verified customers to review their purchased goods.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_review_invitation" value="1" {{ !empty($settings['email_auto_review_invitation']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-
-                <label class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 hover:border-brand-green-500 transition cursor-pointer">
-                    <div>
-                        <span class="text-xs font-bold text-slate-800 block">Contact Form Auto-Acknowledgment</span>
-                        <span class="text-[11px] text-slate-400">Sends confirmation when a visitor submits a contact message.</span>
-                    </div>
-                    <input type="checkbox" name="email_auto_contact_form" value="1" {{ !empty($settings['email_auto_contact_form']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </label>
-            </div>
+        <div class="flex justify-end">
+            <x-admin.button type="submit">Save automation rules</x-admin.button>
         </div>
-
-        <div class="flex items-center justify-end">
-            <button type="submit" class="rounded-xl bg-brand-green-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-brand-green-700 transition">
-                Save Automation Settings
-            </button>
-        </div>
-
     </form>
-
 </div>
 @endsection

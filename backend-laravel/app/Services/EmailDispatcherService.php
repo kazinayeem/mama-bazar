@@ -227,6 +227,23 @@ class EmailDispatcherService
         string $emailType,
         array $options = []
     ): array {
+        if (! in_array($templateKey, EmailTemplateService::ALWAYS_ACTIVE, true) && ! EmailTemplateService::isActive($templateKey)) {
+            $log = EmailLog::create([
+                'recipient_email' => strtolower(trim($to)),
+                'recipient_name' => $name,
+                'subject' => '['.$templateKey.']',
+                'email_type' => $emailType,
+                'template_key' => $templateKey,
+                'order_id' => $options['order_id'] ?? null,
+                'campaign_id' => $options['campaign_id'] ?? null,
+                'user_id' => $options['user_id'] ?? null,
+                'status' => 'skipped',
+                'error_message' => 'Template is inactive.',
+            ]);
+
+            return ['success' => false, 'skipped' => true, 'log_id' => $log->id, 'error' => 'Template is inactive.'];
+        }
+
         $rendered = EmailTemplateService::render($templateKey, array_merge([
             'customer_name' => $name ?: 'Valued Customer',
             'customer_email' => $to,

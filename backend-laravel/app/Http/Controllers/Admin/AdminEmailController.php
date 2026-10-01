@@ -5,532 +5,297 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EmailCampaign;
 use App\Models\EmailLog;
-use App\Models\EmailTemplate;
+use App\Models\EmailSuppression;
 use App\Models\Order;
-use App\Services\BusinessSettingService;
-use App\Services\EmailCampaignService;
 use App\Services\EmailDispatcherService;
+use App\Services\EmailRetryService;
 use App\Services\EmailSettingService;
 use App\Services\EmailTemplateService;
+use App\Support\EmailQueue;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class AdminEmailController extends Controller
 {
-    protected function authorizeAdmin(): void
-    {
-        $role = Auth::user()?->role;
-        if (!in_array($role, ['admin', 'manager', 'superadmin'], true)) {
-            abort(403, 'Unauthorized. Administrator access required.');
-        }
-    }
-
-    /**
-     * Email Management Dashboard.
-     */
     public function dashboard()
     {
-        $this->authorizeAdmin();
+        $today = now()->startOfDay();
+        $countWhere = fn (array $where) => EmailLog::where($where)->count();
 
         $stats = [
-            'sent_today' => EmailLog::where('status', 'sent')->whereDate('created_at', today())->count(),
-            'total_sent' => EmailLog::where('status', 'sent')->count(),
-            'total_failed' => EmailLog::where('status', 'failed')->count(),
-            'total_queued' => EmailLog::where('status', 'queued')->count(),
+            'sent_today' => EmailLog::where('status', 'sent')->where('sent_at', '>=', $today)->count(),
+            'failed_today' => EmailLog::where('status', 'failed')->where('updated_at', '>=', $today)->count(),
+            'queued' => $countWhere([['status', '=', 'queued']]),
+            'total_sent' => $countWhere([['status', '=', 'sent']]),
+            'total_failed' => $countWhere([['status', '=', 'failed']]),
+            'otp_today' => EmailLog::where('email_type', 'otp')->where('created_at', '>=', $today)->count(),
+            'order_today' => EmailLog::whereIn('email_type', ['order', 'invoice'])->where('created_at', '>=', $today)->count(),
             'active_campaigns' => EmailCampaign::whereIn('status', ['queued', 'sending'])->count(),
-            'total_campaigns' => EmailCampaign::count(),
-            'mail_enabled' => EmailSettingService::isSendingEnabled(),
-            'last_status' => EmailSettingService::get('mail_last_status'),
-            'last_tested' => EmailSettingService::get('mail_last_tested_at'),
-            'last_latency' => EmailSettingService::get('mail_last_latency_ms'),
-            'last_error' => EmailSettingService::get('mail_last_error'),
+            'scheduled_campaigns' => EmailCampaign::where('status', 'scheduled')->count(),
+            'paused_campaigns' => EmailCampaign::where('status', 'paused')->count(),
+            'suppressed' => EmailSuppression::count(),
+            'unsubscribed_30d' => EmailSuppression::where('reason', 'unsubscribed')->where('updated_at', '>=', now()->subDays(30))->count(),
         ];
 
-        $recentLogs = EmailLog::latest()->take(10)->get();
-        $recentCampaigns = EmailCampaign::latest()->take(5)->get();
+        $sentLast7 = EmailLog::where('status', 'sent')->where('sent_at', '>=', now()->subDays(6)->startOfDay())
+            ->get(['sent_at'])->groupBy(fn ($l) => $l->sent_at->format('Y-m-d'))->map->count();
+        $chart = collect(range(6, 0))->map(fn ($d) => [
+            'label' => now()->subDays($d)->format('D'),
+            'count' => (int) ($sentLast7[now()->subDays($d)->format('Y-m-d')] ?? 0),
+        ]);
 
-        return view('admin.email.dashboard', compact('stats', 'recentLogs', 'recentCampaigns'));
+        return view('admin.email.dashboard', [
+            'stats' => $stats,
+            'chart' => $chart,
+            'smtp' => EmailSettingService::forDisplay(),
+            'queue' => $this->queueHealth(),
+            'recentLogs' => EmailLog::latest('id')->take(10)->get(),
+            'activeCampaigns' => EmailCampaign::whereIn('status', ['queued', 'sending', 'paused', 'scheduled'])->latest('id')->take(5)->get(),
+        ]);
     }
 
-    /**
-     * SMTP Configuration Settings Page.
-     */
     public function settings()
     {
-        $this->authorizeAdmin();
-
-        $settings = EmailSettingService::all();
-        $business = BusinessSettingService::all();
-
-        return view('admin.email.settings', compact('settings', 'business'));
+        return view('admin.email.settings', [
+            'settings' => EmailSettingService::forDisplay(),
+            'senderChecks' => EmailSettingService::senderChecks(),
+            'dnsChecks' => Cache::get('mamabazar:email_dns_checks'),
+            'appUrl' => config('app.url'),
+        ]);
     }
 
-    /**
-     * Save SMTP Settings.
-     */
     public function updateSettings(Request $request)
     {
-        $this->authorizeAdmin();
-
         $data = $request->validate([
             'mail_mailer' => 'required|string|in:smtp,log,sendmail',
-            'mail_host' => 'required|string|max:255',
-            'mail_port' => 'required|integer|min:1|max:65535',
-            'mail_encryption' => 'nullable|string|in:ssl,tls,starttls,none',
+            'mail_host' => 'required_if:mail_mailer,smtp|nullable|string|max:255',
+            'mail_port' => 'required_if:mail_mailer,smtp|nullable|integer|min:1|max:65535',
+            'mail_encryption' => 'required|string|in:ssl,tls,none',
             'mail_username' => 'nullable|string|max:255',
             'mail_password' => 'nullable|string|max:255',
-            'mail_from_address' => 'required|email|max:255',
-            'mail_from_name' => 'required|string|max:255',
-            'mail_reply_to' => 'nullable|email|max:255',
+            'mail_from_address' => 'required|email:rfc|max:191',
+            'mail_from_name' => ['required', 'string', 'max:120', 'regex:/^[^\r\n<>"]+$/'],
+            'mail_reply_to' => 'nullable|email:rfc|max:191',
             'mail_timeout' => 'required|integer|min:5|max:120',
-            'mail_enabled' => 'nullable|boolean',
+        ], [
+            'mail_from_name.regex' => 'Sender name cannot contain line breaks, quotes or angle brackets.',
         ]);
 
-        $data['mail_enabled'] = $request->boolean('mail_enabled', false) ? 1 : 0;
-        if (($data['mail_encryption'] ?? '') === 'none') {
-            $data['mail_encryption'] = '';
+        $data['mail_enabled'] = $request->boolean('mail_enabled') ? 1 : 0;
+        if (! $request->filled('mail_password')) {
+            unset($data['mail_password']);
         }
 
         EmailSettingService::updateSettings($data);
 
-        return back()->with('success', 'SMTP settings updated successfully.');
+        if ($request->boolean('clear_password')) {
+            EmailSettingService::clearPassword();
+        }
+
+        return redirect()->route('admin.email.settings')->with('success', 'Email settings saved.');
     }
 
-    /**
-     * Test SMTP Connection.
-     */
     public function testConnection()
     {
-        $this->authorizeAdmin();
-
         $result = EmailSettingService::testConnection();
 
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        }
-
-        return back()->with('error', $result['message']);
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
-    /**
-     * Send Test Email.
-     */
     public function sendTestEmail(Request $request)
     {
-        $this->authorizeAdmin();
-
-        $request->validate(['test_email' => 'required|email']);
-        $recipient = strtolower(trim($request->input('test_email')));
-
-        $business = BusinessSettingService::all();
-        $rendered = EmailTemplateService::render('welcome_email', [
-            'customer_name' => 'Admin Tester',
-            'customer_email' => $recipient,
-        ]);
-
-        $subject = "[SMTP Test] Verification from " . ($business['business_name'] ?? 'Mama Bazar');
-
-        $result = EmailDispatcherService::send(
-            $recipient,
-            'Mama Bazar Admin',
-            $subject,
-            $rendered['html'],
-            $rendered['plain'],
-            'test'
-        );
-
-        if ($result['success']) {
-            return back()->with('success', "Test email delivered successfully to {$recipient}!");
-        }
-
-        return back()->with('error', "Failed to send test email: " . ($result['error'] ?? 'Unknown error'));
-    }
-
-    /**
-     * Email Templates Listing.
-     */
-    public function templates()
-    {
-        $this->authorizeAdmin();
-
-        EmailTemplateService::ensureDefaultTemplates();
-        $templates = EmailTemplate::orderBy('category')->orderBy('name')->get();
-
-        return view('admin.email.templates.index', compact('templates'));
-    }
-
-    /**
-     * Edit Email Template.
-     */
-    public function editTemplate($id)
-    {
-        $this->authorizeAdmin();
-
-        $template = EmailTemplate::findOrFail($id);
-        $placeholders = EmailTemplateService::placeholderDefinitions();
-
-        return view('admin.email.templates.edit', compact('template', 'placeholders'));
-    }
-
-    /**
-     * Update Email Template.
-     */
-    public function updateTemplate(Request $request, $id)
-    {
-        $this->authorizeAdmin();
-
-        $template = EmailTemplate::findOrFail($id);
-
-        $data = $request->validate([
-            'subject' => 'required|string|max:255',
-            'body_html' => 'required|string',
-            'body_plain' => 'nullable|string',
-            'is_active' => 'nullable|boolean',
-        ]);
-
-        $data['is_active'] = $request->boolean('is_active', true);
-
-        $template->update($data);
-
-        return redirect()->route('admin.email.templates')->with('success', "Template '{$template->name}' updated successfully.");
-    }
-
-    /**
-     * Preview Email Template with Sample Data.
-     */
-    public function previewTemplate(Request $request, $id)
-    {
-        $this->authorizeAdmin();
-
-        $template = EmailTemplate::findOrFail($id);
-
-        $sampleData = [
-            'customer_name' => 'Karim Uddin',
-            'customer_email' => 'karim@example.com',
-            'order_number' => 'BS-982341',
-            'order_total' => '৳1,850',
-            'order_date' => now()->format('M d, Y · h:i A'),
-            'payment_method' => 'CASH ON DELIVERY',
-            'payment_status' => 'Pending',
-            'shipping_address' => 'House 14, Road 5, Sector 3, Uttara, Dhaka',
-            'otp_code' => '582914',
-            'otp_expires_minutes' => '5',
-            'reset_url' => url('/reset-password?token=sample'),
-            'tracking_url' => url('/track?order_id=BS-982341'),
-            'invoice_url' => url('/admin/orders/1/invoice'),
-            'announcement_title' => 'Fresh Organic Mangoes Just Arrived!',
-            'announcement_body' => '<p>Directly harvested from Rajshahi orchards and delivered to your doorstep within 24 hours.</p>',
-            'unsubscribe_url' => url('/unsubscribe?sample=true'),
-            'items_table' => '<table width="100%" cellpadding="6" cellspacing="0" style="border:1px solid #e2e8f0; font-size:12px;"><tr style="background:#f8faf8;"><th>Item</th><th>Qty</th><th>Price</th></tr><tr><td>Organic Mango (1kg)</td><td>2</td><td>৳360</td></tr></table>',
-        ];
-
-        $rendered = EmailTemplateService::render($template->key, $sampleData);
-
-        return response($rendered['html'])->header('Content-Type', 'text/html');
-    }
-
-    /**
-     * Send Template Test Email to Admin.
-     */
-    public function sendTemplateTest(Request $request, $id)
-    {
-        $this->authorizeAdmin();
-
-        $template = EmailTemplate::findOrFail($id);
-        $request->validate(['test_email' => 'required|email']);
-        $recipient = strtolower(trim($request->input('test_email')));
-
-        $rendered = EmailTemplateService::render($template->key, [
-            'customer_name' => 'Admin Preview',
-            'customer_email' => $recipient,
-            'order_number' => 'BS-SAMPLE',
-            'order_total' => '৳1,250',
-            'otp_code' => '123456',
-            'reset_url' => url('/reset-password'),
-            'tracking_url' => url('/track'),
-            'invoice_url' => url('/'),
-            'unsubscribe_url' => url('/unsubscribe'),
-        ]);
-
-        $res = EmailDispatcherService::send(
-            $recipient,
-            'Admin Tester',
-            '[Preview] ' . $rendered['subject'],
-            $rendered['html'],
-            $rendered['plain'],
-            'test'
-        );
-
-        if ($res['success']) {
-            return back()->with('success', "Preview of '{$template->name}' sent to {$recipient}.");
-        }
-
-        return back()->with('error', "Failed to send preview: " . ($res['error'] ?? 'Unknown error'));
-    }
-
-    /**
-     * Email Campaigns Listing.
-     */
-    public function campaigns()
-    {
-        $this->authorizeAdmin();
-
-        $campaigns = EmailCampaign::with('creator')->latest()->paginate(15);
-        $audiences = EmailCampaignService::audienceOptions();
-
-        return view('admin.email.campaigns.index', compact('campaigns', 'audiences'));
-    }
-
-    /**
-     * Create Campaign Form.
-     */
-    public function createCampaign()
-    {
-        $this->authorizeAdmin();
-
-        EmailTemplateService::ensureDefaultTemplates();
-        $templates = EmailTemplate::where('category', 'marketing')->orWhere('key', 'promotional_campaign')->get();
-        $audiences = EmailCampaignService::audienceOptions();
-
-        // Calculate counts for audience options
-        $counts = [];
-        foreach (array_keys($audiences) as $key) {
-            $counts[$key] = EmailCampaignService::countAudience($key);
-        }
-
-        return view('admin.email.campaigns.create', compact('templates', 'audiences', 'counts'));
-    }
-
-    /**
-     * Store New Campaign.
-     */
-    public function storeCampaign(Request $request)
-    {
-        $this->authorizeAdmin();
-
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'subject' => 'required|string|max:255',
-            'sender_name' => 'nullable|string|max:255',
-            'sender_email' => 'nullable|email|max:255',
-            'audience_filter' => 'required|string|in:' . implode(',', array_keys(EmailCampaignService::audienceOptions())),
-            'body_html' => 'required|string',
-            'body_plain' => 'nullable|string',
-            'action' => 'required|in:save_draft,send_now',
-        ]);
-
-        $campaign = EmailCampaign::create([
-            'name' => $data['name'],
-            'subject' => $data['subject'],
-            'sender_name' => $data['sender_name'] ?: EmailSettingService::get('mail_from_name'),
-            'sender_email' => $data['sender_email'] ?: EmailSettingService::get('mail_from_address'),
-            'audience_filter' => $data['audience_filter'],
-            'body_html' => $data['body_html'],
-            'body_plain' => $data['body_plain'] ?? strip_tags($data['body_html']),
-            'status' => 'draft',
-            'created_by' => Auth::id(),
-        ]);
-
-        if ($data['action'] === 'send_now') {
-            EmailCampaignService::queueCampaign($campaign);
-            return redirect()->route('admin.email.campaigns.show', $campaign->id)->with('success', 'Campaign has been queued for background sending.');
-        }
-
-        return redirect()->route('admin.email.campaigns.show', $campaign->id)->with('success', 'Campaign draft saved.');
-    }
-
-    /**
-     * View Campaign Details & Real-Time Delivery Progress.
-     */
-    public function showCampaign($id)
-    {
-        $this->authorizeAdmin();
-
-        $campaign = EmailCampaign::with(['creator', 'template'])->findOrFail($id);
-        $logs = EmailLog::where('campaign_id', $campaign->id)->latest()->paginate(20);
-
-        return view('admin.email.campaigns.show', compact('campaign', 'logs'));
-    }
-
-    /**
-     * Trigger Campaign Sending.
-     */
-    public function sendCampaign($id)
-    {
-        $this->authorizeAdmin();
-
-        $campaign = EmailCampaign::findOrFail($id);
-        EmailCampaignService::queueCampaign($campaign);
-
-        return back()->with('success', "Campaign '{$campaign->name}' is now queued and sending.");
-    }
-
-    /**
-     * Pause Campaign.
-     */
-    public function pauseCampaign($id)
-    {
-        $this->authorizeAdmin();
-
-        $campaign = EmailCampaign::findOrFail($id);
-        $campaign->update(['status' => 'paused']);
-
-        return back()->with('success', "Campaign paused.");
-    }
-
-    /**
-     * Cancel Campaign.
-     */
-    public function cancelCampaign($id)
-    {
-        $this->authorizeAdmin();
-
-        $campaign = EmailCampaign::findOrFail($id);
-        $campaign->update(['status' => 'cancelled']);
-
-        return back()->with('success', "Campaign cancelled.");
-    }
-
-    /**
-     * Send Campaign Test Email to Admin.
-     */
-    public function sendCampaignTest(Request $request, $id)
-    {
-        $this->authorizeAdmin();
-
-        $campaign = EmailCampaign::findOrFail($id);
-        $request->validate(['test_email' => 'required|email']);
-        $recipient = strtolower(trim($request->input('test_email')));
-
-        $rendered = EmailTemplateService::render('promotional_campaign', [
-            'customer_name' => 'Admin Tester',
-            'customer_email' => $recipient,
-            'announcement_title' => $campaign->subject,
-            'announcement_body' => $campaign->body_html,
-            'unsubscribe_url' => url('/unsubscribe?sample=true'),
-            'cta_url' => url('/'),
-            'cta_text' => 'Shop Now',
-        ]);
-
-        $res = EmailDispatcherService::send(
-            $recipient,
-            'Admin Tester',
-            '[Campaign Test] ' . $campaign->subject,
-            $rendered['html'],
-            $rendered['plain'],
-            'test'
-        );
-
-        if ($res['success']) {
-            return back()->with('success', "Test campaign email sent to {$recipient}.");
-        }
-
-        return back()->with('error', "Failed to send test: " . ($res['error'] ?? 'Unknown error'));
-    }
-
-    /**
-     * Automation Toggles Page.
-     */
-    public function automation()
-    {
-        $this->authorizeAdmin();
+        $request->validate(['test_email' => 'required|email:rfc|max:191']);
+        $to = strtolower(trim((string) $request->input('test_email')));
 
         $settings = EmailSettingService::all();
+        $rendered = EmailTemplateService::renderContent(
+            'SMTP test from {{business_name}}',
+            '<h1 style="margin:0 0 12px 0;font-size:20px;color:#0f4d2c;">SMTP test successful</h1>'
+                .'<p>This message was sent from the {{business_name}} admin panel to confirm that outgoing email works.</p>'
+                .'<p style="font-size:12px;color:#64748b;">Server: '.e($settings['mail_host']).':'.e((string) $settings['mail_port'])
+                .' · Sent at '.e(now()->format('d M Y, h:i A')).'</p>'
+                .'<p style="font-size:12px;color:#64748b;">Acceptance by the SMTP server does not guarantee inbox placement. Check the spam folder and SPF/DKIM/DMARC status if this message is missing.</p>',
+            null
+        );
 
-        return view('admin.email.automation', compact('settings'));
+        $result = EmailDispatcherService::send($to, null, $rendered['subject'], $rendered['html'], $rendered['plain'], 'test', null, null, [], [
+            'user_id' => $request->user()?->id,
+        ]);
+
+        return back()->with(
+            $result['success'] ? 'success' : 'error',
+            $result['success']
+                ? "Test email accepted by the SMTP server for {$to}. Check the inbox (and spam folder)."
+                : 'Test email failed: '.($result['error'] ?? 'Unknown error')
+        );
     }
 
-    /**
-     * Update Automation Toggles.
-     */
+    public function checkDns()
+    {
+        $checks = EmailSettingService::deliverabilityChecks();
+        Cache::put('mamabazar:email_dns_checks', ['checked_at' => now()->toIso8601String(), 'items' => $checks], now()->addHour());
+
+        return back()->with('success', 'DNS records checked.');
+    }
+
+    public function automation()
+    {
+        $settings = EmailSettingService::all();
+        $groups = collect(EmailSettingService::AUTOMATIONS)
+            ->map(fn ($meta, $key) => $meta + ['key' => $key, 'enabled' => (bool) ($settings[$key] ?? 0)])
+            ->groupBy('group');
+
+        return view('admin.email.automation', [
+            'groups' => $groups,
+            'settings' => $settings,
+            'queueBackground' => EmailQueue::isBackground(),
+        ]);
+    }
+
     public function updateAutomation(Request $request)
     {
-        $this->authorizeAdmin();
-
-        $toggles = [
-            'email_auto_welcome',
-            'email_auto_account_otp',
-            'email_auto_login_otp',
-            'email_auto_password_reset',
-            'email_auto_order_created',
-            'email_auto_payment_confirmed',
-            'email_auto_order_status',
-            'email_auto_invoice_pdf',
-            'email_auto_review_invitation',
-            'email_auto_contact_form',
-        ];
+        $request->validate(['email_admin_notification_address' => 'nullable|email:rfc|max:191']);
 
         $data = [];
-        foreach ($toggles as $key) {
+        foreach (array_keys(EmailSettingService::AUTOMATIONS) as $key) {
             $data[$key] = $request->boolean($key) ? 1 : 0;
         }
+        $data['email_require_registration_email'] = $request->boolean('email_require_registration_email') ? 1 : 0;
+        $data['email_verification_enforced'] = $request->boolean('email_verification_enforced') ? 1 : 0;
+        $data['email_admin_notification_address'] = (string) $request->input('email_admin_notification_address', '');
 
         EmailSettingService::updateSettings($data);
 
-        return back()->with('success', 'Automation triggers updated successfully.');
+        return back()->with('success', 'Automation rules updated.');
     }
 
-    /**
-     * Email Logs and Monitoring.
-     */
     public function logs(Request $request)
     {
-        $this->authorizeAdmin();
+        $filters = $request->validate([
+            'status' => 'nullable|in:'.implode(',', array_keys(EmailLog::STATUSES)),
+            'type' => 'nullable|in:'.implode(',', array_keys(EmailLog::TYPES)),
+            'search' => 'nullable|string|max:191',
+            'campaign_id' => 'nullable|integer',
+            'order' => 'nullable|string|max:50',
+            'from' => 'nullable|date',
+            'to' => 'nullable|date',
+        ]);
 
-        $query = EmailLog::with(['order', 'campaign'])->latest();
+        $query = EmailLog::query()->latest('id');
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        if (! empty($filters['type'])) {
+            $query->where('email_type', $filters['type']);
+        }
+        if (! empty($filters['search'])) {
+            $s = '%'.addcslashes($filters['search'], '%_\\').'%';
+            $query->where(fn ($q) => $q->where('recipient_email', 'like', $s)->orWhere('subject', 'like', $s));
+        }
+        if (! empty($filters['campaign_id'])) {
+            $query->where('campaign_id', $filters['campaign_id']);
+        }
+        if (! empty($filters['order'])) {
+            $orderId = Order::where('order_id', $filters['order'])->value('id') ?? (ctype_digit($filters['order']) ? (int) $filters['order'] : 0);
+            $query->where('order_id', $orderId);
+        }
+        if (! empty($filters['from'])) {
+            $query->where('created_at', '>=', \Carbon\Carbon::parse($filters['from'])->startOfDay());
+        }
+        if (! empty($filters['to'])) {
+            $query->where('created_at', '<=', \Carbon\Carbon::parse($filters['to'])->endOfDay());
+        }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-        if ($request->filled('type')) {
-            $query->where('email_type', $request->input('type'));
-        }
-        if ($request->filled('search')) {
-            $s = trim($request->input('search'));
-            $query->where(function ($q) use ($s) {
-                $q->where('recipient_email', 'like', "%{$s}%")
-                    ->orWhere('subject', 'like', "%{$s}%");
-            });
-        }
-        if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->input('date'));
+        return view('admin.email.logs', [
+            'logs' => $query->with(['order:id,order_id', 'campaign:id,name'])->paginate(25)->withQueryString(),
+            'filters' => $filters,
+            'retentionDays' => (int) config('email_system.log_retention_days', 180),
+        ]);
+    }
+
+    public function showLog(int $id)
+    {
+        $log = EmailLog::with(['order:id,order_id', 'campaign:id,name'])->findOrFail($id);
+
+        return view('admin.email.log-show', ['log' => $log]);
+    }
+
+    public function retryLog(int $id)
+    {
+        $result = EmailRetryService::retry(EmailLog::findOrFail($id));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function suppressions(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+        $query = EmailSuppression::query()->latest('id');
+        if ($search !== '') {
+            $query->where('email', 'like', '%'.addcslashes(strtolower($search), '%_\\').'%');
         }
 
-        $logs = $query->paginate(25)->withQueryString();
+        return view('admin.email.suppressions', [
+            'suppressions' => $query->paginate(30)->withQueryString(),
+            'search' => $search,
+        ]);
+    }
 
-        return view('admin.email.logs', compact('logs'));
+    public function storeSuppression(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email:rfc|max:191',
+            'reason' => 'required|in:'.implode(',', array_keys(EmailSuppression::REASONS)),
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        EmailSuppression::updateOrCreate(
+            ['email' => strtolower(trim($data['email']))],
+            ['reason' => $data['reason'], 'source' => 'admin', 'note' => $data['note'] ?? null]
+        );
+
+        return back()->with('success', 'Address added to the suppression list. It will not receive marketing email.');
+    }
+
+    public function destroySuppression(int $id)
+    {
+        EmailSuppression::whereKey($id)->delete();
+
+        return back()->with('success', 'Suppression removed. The address will only receive marketing email if it has opted in.');
     }
 
     /**
-     * Retry sending a failed email log.
+     * @return array{connection: string, background: bool, pending: int|null, oldest_minutes: int|null, failed_24h: int|null, last_activity: string|null}
      */
-    public function retryLog($id)
+    protected function queueHealth(): array
     {
-        $this->authorizeAdmin();
+        $connection = EmailQueue::connection();
+        $health = [
+            'connection' => $connection,
+            'background' => EmailQueue::isBackground(),
+            'pending' => null,
+            'oldest_minutes' => null,
+            'failed_24h' => null,
+            'last_activity' => EmailLog::whereNotNull('last_attempt_at')->max('last_attempt_at'),
+        ];
 
-        $log = EmailLog::findOrFail($id);
-        $log->increment('attempts');
-
-        $rendered = EmailTemplateService::render('welcome_email', [
-            'customer_email' => $log->recipient_email,
-            'customer_name' => $log->recipient_name ?: 'Customer',
-        ]);
-
-        $res = EmailDispatcherService::send(
-            $log->recipient_email,
-            $log->recipient_name,
-            $log->subject,
-            $rendered['html'],
-            $rendered['plain'],
-            $log->email_type,
-            $log->order_id,
-            $log->campaign_id
-        );
-
-        if ($res['success']) {
-            return back()->with('success', "Email to {$log->recipient_email} resent successfully.");
+        try {
+            if ($connection === 'database' && Schema::hasTable('jobs')) {
+                $jobs = DB::table('jobs')->whereIn('queue', [(string) config('email_system.queue_name', 'emails'), 'default']);
+                $health['pending'] = (clone $jobs)->count();
+                $oldest = (clone $jobs)->min('created_at');
+                $health['oldest_minutes'] = $oldest ? (int) floor((time() - (int) $oldest) / 60) : 0;
+            }
+            if (Schema::hasTable('failed_jobs')) {
+                $health['failed_24h'] = DB::table('failed_jobs')->where('failed_at', '>=', now()->subDay())->count();
+            }
+        } catch (Throwable $e) {
+            // Health panel is informational only.
         }
 
-        return back()->with('error', "Retry failed: " . ($res['error'] ?? 'Unknown error'));
+        return $health;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Jobs\SendTransactionalEmailJob;
+use App\Models\EmailLog;
 use App\Models\Order;
 use App\Support\EmailQueue;
 use Illuminate\Support\Facades\DB;
@@ -160,6 +161,10 @@ class OrderEmailService
 
         $dedupeKey = self::dedupeKey($order, $trigger, $manual);
         if (EmailDispatcherService::alreadySent($dedupeKey)) {
+            return false;
+        }
+
+        if ($trigger === self::TRIGGER_REVIEW && EmailLog::where('dedupe_key', $dedupeKey)->exists()) {
             return false;
         }
 

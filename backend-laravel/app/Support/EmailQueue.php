@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -23,28 +24,36 @@ class EmailQueue
         return self::connection() !== 'sync';
     }
 
-    public static function dispatch(ShouldQueue $job, ?\DateTimeInterface $delay = null): void
+    public static function dispatch(ShouldQueue $job, ?\DateTimeInterface $delay = null): bool
     {
+        $bus = app(Dispatcher::class);
+
         try {
             if (! self::isBackground()) {
                 if (app()->runningInConsole()) {
-                    dispatch_sync($job);
+                    $bus->dispatchSync($job);
                 } else {
-                    dispatch($job)->afterResponse();
+                    $bus->dispatchAfterResponse($job);
                 }
 
-                return;
+                return true;
             }
 
-            $pending = dispatch($job)
-                ->onConnection(self::connection())
-                ->onQueue((string) config('email_system.queue_name', 'emails'));
-
-            if ($delay) {
-                $pending->delay($delay);
+            if (method_exists($job, 'onConnection')) {
+                $job->onConnection(self::connection());
+                $job->onQueue((string) config('email_system.queue_name', 'emails'));
+                if ($delay) {
+                    $job->delay($delay);
+                }
             }
+
+            $bus->dispatch($job);
+
+            return true;
         } catch (Throwable $e) {
             Log::error('Email job dispatch failed: '.get_class($job).' — '.$e->getMessage());
+
+            return false;
         }
     }
 }

@@ -1,163 +1,180 @@
-@extends('layouts.admin')
+@extends('layouts.admin', ['headerTitle' => 'Campaign'])
 
 @section('content')
-<div class="space-y-6 max-w-5xl">
-
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-xl font-bold text-slate-900 tracking-tight">{{ $campaign->name }}</h1>
-                @if($campaign->status === 'completed')
-                    <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">Completed</span>
-                @elseif($campaign->status === 'sending' || $campaign->status === 'queued')
-                    <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-800 animate-pulse">Sending in Background</span>
-                @elseif($campaign->status === 'paused')
-                    <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">Paused</span>
-                @elseif($campaign->status === 'cancelled')
-                    <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-800">Cancelled</span>
-                @else
-                    <span class="rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-bold text-slate-600">Draft</span>
-                @endif
+@php
+    $isDraft = $campaign->status === 'draft';
+    $isScheduled = $campaign->status === 'scheduled';
+    $isActive = in_array($campaign->status, ['queued', 'sending'], true);
+    $canManage = \App\Http\Middleware\EnsureAdminPermission::allows(auth()->user(), ['email.campaigns.manage']);
+@endphp
+<div class="admin-page" @if($isActive) x-data x-init="setTimeout(() => window.location.reload(), 15000)" @endif>
+    <x-admin.page-header :title="$campaign->name" :subtitle="$campaign->subject">
+        <x-slot:meta>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                @include('admin.email.partials.status-badge', ['status' => $campaign->status])
+                <span>{{ $templateLabel }}</span> · <span>{{ $audienceLabel }}</span>
+                @if($campaign->creator) · <span>by {{ $campaign->creator->name }}</span>@endif
             </div>
-            <p class="text-xs text-slate-500 mt-1">Subject: <span class="font-semibold text-slate-800">{{ $campaign->subject }}</span> &middot; Audience: {{ $campaign->audience_filter }}</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('admin.email.campaigns') }}" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                &larr; Back to Campaigns
-            </a>
-        </div>
-    </div>
+        </x-slot:meta>
+        <x-slot:actions>
+            <x-admin.button :href="route('admin.email.campaigns.index')" variant="outline" size="sm">← Campaigns</x-admin.button>
+            <x-admin.button :href="route('admin.email.campaigns.preview', $campaign->id)" variant="outline" size="sm" target="_blank" rel="noopener">Preview ↗</x-admin.button>
+            @if($canManage && $campaign->isEditable())
+                <x-admin.button :href="route('admin.email.campaigns.edit', $campaign->id)" variant="outline" size="sm">Edit</x-admin.button>
+            @endif
+            @if($canManage)
+                <form action="{{ route('admin.email.campaigns.duplicate', $campaign->id) }}" method="POST">@csrf<x-admin.button type="submit" variant="ghost" size="sm">Duplicate</x-admin.button></form>
+            @endif
+        </x-slot:actions>
+    </x-admin.page-header>
+    @include('admin.email.partials.tabs')
 
-    @if(session('success'))
-        <div class="p-3.5 rounded-xl bg-brand-green-50 border border-brand-green-200 text-brand-green-800 text-xs">
-            {{ session('success') }}
+    @if($campaign->last_error)
+        <div class="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 break-words">{{ $campaign->last_error }}</div>
+    @endif
+
+    @if($campaign->total_recipients > 0)
+        <div class="admin-metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+            <x-admin.metric-card label="Recipients" :value="number_format($campaign->total_recipients)" />
+            <x-admin.metric-card label="Pending" :value="number_format($campaign->queued_count)" tone="warning" />
+            <x-admin.metric-card label="Accepted by SMTP" :value="number_format($campaign->sent_count)" tone="success" />
+            <x-admin.metric-card label="Failed" :value="number_format($campaign->failed_count)" :tone="$campaign->failed_count ? 'danger' : 'default'" />
+            <x-admin.metric-card label="Skipped" :value="number_format($campaign->skipped_count)" hint="Unsubscribed / cancelled" />
+        </div>
+        <div class="admin-surface p-4">
+            <div class="mb-1 flex justify-between text-xs text-slate-500"><span>Progress</span><span>{{ $campaign->progressPercent() }}%</span></div>
+            <div class="h-2 rounded bg-slate-100"><div class="h-2 rounded bg-brand-green-500 transition-all" style="width: {{ $campaign->progressPercent() }}%"></div></div>
+            <p class="mt-2 text-[11px] text-slate-400">
+                Started {{ $campaign->started_at?->format('d M Y, h:i A') ?? '—' }}
+                @if($campaign->completed_at) · Finished {{ $campaign->completed_at->format('d M Y, h:i A') }} @endif
+                @if($isActive) · Refreshes every 15 seconds @endif
+            </p>
         </div>
     @endif
 
-    {{-- Progress Card --}}
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-4">
-        <div class="flex items-center justify-between">
-            <h2 class="text-sm font-bold text-slate-900">Delivery Progress</h2>
-            <div class="flex items-center gap-2">
-                @if($campaign->status === 'draft')
-                    <form action="{{ route('admin.email.campaigns.send', $campaign->id) }}" method="POST">
+    @if($canSend && ($isActive || in_array($campaign->status, ['paused', 'completed', 'failed'], true)))
+        <div class="admin-surface flex flex-wrap items-center gap-2 p-4">
+            @if($isActive)
+                <form action="{{ route('admin.email.campaigns.pause', $campaign->id) }}" method="POST">@csrf<x-admin.button type="submit" variant="outline" size="sm">Pause</x-admin.button></form>
+            @endif
+            @if($campaign->status === 'paused')
+                <form action="{{ route('admin.email.campaigns.resume', $campaign->id) }}" method="POST">@csrf<x-admin.button type="submit" size="sm">Resume</x-admin.button></form>
+            @endif
+            @if($campaign->failed_count > 0)
+                <form action="{{ route('admin.email.campaigns.retry-failed', $campaign->id) }}" method="POST">@csrf<x-admin.button type="submit" variant="outline" size="sm">Retry failed recipients</x-admin.button></form>
+            @endif
+            @if($isActive || $campaign->status === 'paused')
+                <form action="{{ route('admin.email.campaigns.cancel', $campaign->id) }}" method="POST" onsubmit="return confirm('Cancel this campaign? Pending recipients will not be emailed. This cannot be undone.')">@csrf<x-admin.button type="submit" variant="destructive" size="sm">Cancel campaign</x-admin.button></form>
+            @endif
+        </div>
+    @endif
+
+    @if($isDraft || $isScheduled)
+        <div class="grid gap-4 lg:grid-cols-2">
+            <div class="space-y-4">
+                <div class="admin-surface p-5 space-y-3">
+                    <h2 class="text-sm font-bold text-slate-900">Step 1 · Send yourself a test</h2>
+                    <form action="{{ route('admin.email.campaigns.test', $campaign->id) }}" method="POST" class="flex gap-2">
                         @csrf
-                        <button type="submit" onclick="return confirm('Launch this campaign?');" class="rounded-lg bg-brand-green-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-brand-green-700">
-                            Launch Campaign
-                        </button>
+                        <input type="email" name="test_email" required value="{{ auth()->user()->email }}" class="admin-control flex-1" placeholder="you@example.com">
+                        <x-admin.button type="submit" variant="outline" size="sm" :disabled="! $canManage">Send test</x-admin.button>
                     </form>
-                @elseif($campaign->status === 'sending')
-                    <form action="{{ route('admin.email.campaigns.pause', $campaign->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-amber-600">
-                            Pause Campaign
-                        </button>
-                    </form>
-                    <form action="{{ route('admin.email.campaigns.cancel', $campaign->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" onclick="return confirm('Are you sure you want to cancel this campaign?');" class="rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-red-700">
-                            Cancel
-                        </button>
-                    </form>
-                @elseif($campaign->status === 'paused')
-                    <form action="{{ route('admin.email.campaigns.send', $campaign->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="rounded-lg bg-brand-green-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-brand-green-700">
-                            Resume Campaign
-                        </button>
+                </div>
+
+                <div class="admin-surface p-5 space-y-3">
+                    <h2 class="text-sm font-bold text-slate-900">Step 2 · Review &amp; confirm</h2>
+                    <dl class="grid grid-cols-3 gap-1 text-xs">
+                        <dt class="text-slate-500">Audience</dt><dd class="col-span-2">{{ $audienceLabel }}</dd>
+                        <dt class="text-slate-500">Eligible now</dt><dd class="col-span-2 font-bold text-slate-900">{{ number_format($audienceCount) }} recipients</dd>
+                        <dt class="text-slate-500">Subject</dt><dd class="col-span-2">{{ $campaign->subject }}</dd>
+                    </dl>
+                    <p class="text-[11px] text-slate-400">Consent and the suppression list are re-checked when sending starts and again for every recipient.</p>
+
+                    @if($problems)
+                        <ul class="list-disc space-y-1 rounded bg-red-50 p-3 pl-6 text-xs text-red-700">
+                            @foreach($problems as $problem)<li>{{ $problem }}</li>@endforeach
+                        </ul>
+                    @endif
+
+                    @if($isScheduled)
+                        <div class="rounded bg-sky-50 p-3 text-xs text-sky-800">
+                            Scheduled for <strong>{{ $campaign->scheduled_at?->format('d M Y, h:i A') }}</strong> ({{ config('app.timezone') }}).
+                        </div>
+                        @if($canSend)
+                            <form action="{{ route('admin.email.campaigns.unschedule', $campaign->id) }}" method="POST">@csrf<x-admin.button type="submit" variant="outline" size="sm">Unschedule (back to draft)</x-admin.button></form>
+                        @endif
+                    @elseif(! $canSend)
+                        <p class="text-xs text-slate-500">You can prepare this campaign; a team member with “Send Campaigns” permission must confirm it.</p>
+                    @elseif(! $problems && $audienceCount > 0)
+                        <form action="{{ route('admin.email.campaigns.confirm', $campaign->id) }}" method="POST" class="space-y-3" x-data="{ mode: 'now' }">
+                            @csrf
+                            <div class="flex gap-4 text-xs">
+                                <label class="inline-flex items-center gap-1.5"><input type="radio" name="send_mode" value="now" x-model="mode"> Send now</label>
+                                <label class="inline-flex items-center gap-1.5"><input type="radio" name="send_mode" value="schedule" x-model="mode"> Schedule</label>
+                            </div>
+                            <div x-show="mode === 'schedule'">
+                                <input type="datetime-local" name="scheduled_at" class="admin-control w-full" min="{{ now()->addMinutes(5)->format('Y-m-d\TH:i') }}">
+                                <p class="mt-1 text-[11px] text-slate-400">Timezone: {{ config('app.timezone') }}</p>
+                            </div>
+                            @if($audienceCount >= $largeThreshold)
+                                <div>
+                                    <label class="mb-1 block text-xs font-semibold text-slate-700">Type the recipient count ({{ $audienceCount }}) to confirm</label>
+                                    <input type="number" name="confirm_count" required class="admin-control w-40" autocomplete="off">
+                                </div>
+                            @endif
+                            <label class="flex items-start gap-2 text-xs">
+                                <input type="checkbox" name="acknowledge" value="1" required class="mt-0.5 rounded border-slate-300">
+                                <span>I have sent a test, reviewed the content and confirm sending to {{ number_format($audienceCount) }} consented recipients.</span>
+                            </label>
+                            <x-admin.button type="submit" size="sm" onclick="return confirm('Final confirmation: start this campaign?')">Confirm campaign</x-admin.button>
+                        </form>
+                    @endif
+                </div>
+
+                @if($canManage && $isDraft)
+                    <form action="{{ route('admin.email.campaigns.destroy', $campaign->id) }}" method="POST" onsubmit="return confirm('Delete this draft?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="text-xs font-semibold text-red-600 hover:underline">Delete draft</button>
                     </form>
                 @endif
             </div>
-        </div>
 
-        @php
-            $total = max(1, $campaign->total_recipients);
-            $pct = min(100, round(($campaign->sent_count / $total) * 100));
-        @endphp
-
-        <div>
-            <div class="flex justify-between text-xs font-bold mb-1">
-                <span>{{ $pct }}% Completed</span>
-                <span class="font-mono text-slate-500">{{ $campaign->sent_count }} / {{ $campaign->total_recipients }} Sent</span>
-            </div>
-            <div class="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
-                <div class="h-full bg-brand-green-600 transition-all duration-500" style="width: {{ $pct }}%"></div>
+            <div class="admin-surface overflow-hidden">
+                <div class="border-b border-slate-100 px-4 py-2 text-xs font-bold text-slate-700">Preview</div>
+                <iframe sandbox="" title="Campaign preview" class="h-[620px] w-full bg-slate-50" src="{{ route('admin.email.campaigns.preview', $campaign->id) }}"></iframe>
             </div>
         </div>
+    @endif
 
-        <div class="grid grid-cols-4 gap-3 pt-2 text-center">
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <span class="text-[10px] uppercase font-bold text-slate-400">Total</span>
-                <p class="text-base font-extrabold text-slate-800">{{ number_format($campaign->total_recipients) }}</p>
+    @if($campaign->total_recipients > 0)
+        <div class="admin-table-wrap">
+            <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                <h2 class="text-sm font-bold text-slate-900">Recipients</h2>
+                <form method="GET" class="flex gap-2">
+                    <select name="recipient_status" class="admin-control w-40" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        @foreach(['pending', 'processing', 'sent', 'failed', 'skipped'] as $s)
+                            <option value="{{ $s }}" @selected(request('recipient_status') === $s)>{{ ucfirst($s) }}</option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
-            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                <span class="text-[10px] uppercase font-bold text-emerald-600">Sent</span>
-                <p class="text-base font-extrabold text-emerald-700">{{ number_format($campaign->sent_count) }}</p>
-            </div>
-            <div class="p-3 rounded-xl bg-red-50 border border-red-200">
-                <span class="text-[10px] uppercase font-bold text-red-600">Failed</span>
-                <p class="text-base font-extrabold text-red-700">{{ number_format($campaign->failed_count) }}</p>
-            </div>
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <span class="text-[10px] uppercase font-bold text-slate-400">Started</span>
-                <p class="text-[11px] font-semibold text-slate-600 mt-1">{{ $campaign->started_at ? $campaign->started_at->diffForHumans() : 'Not started' }}</p>
-            </div>
-        </div>
-    </div>
-
-    {{-- Send Test Email Card --}}
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Send Test Email for this Campaign</h3>
-        <form action="{{ route('admin.email.campaigns.send-test', $campaign->id) }}" method="POST" class="flex gap-2">
-            @csrf
-            <input type="email" name="test_email" required value="{{ auth()->user()->email }}" placeholder="admin@example.com" class="admin-control flex-1 text-xs">
-            <button type="submit" class="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-900 shadow-xs transition">
-                Send Test
-            </button>
-        </form>
-    </div>
-
-    {{-- Logs for this Campaign --}}
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-soft overflow-hidden">
-        <div class="p-4 border-b border-slate-100">
-            <h3 class="text-sm font-bold text-slate-900">Campaign Delivery Logs</h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-600">
-                <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    <tr>
-                        <th class="p-3">Recipient</th>
-                        <th class="p-3">Status</th>
-                        <th class="p-3">Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($logs as $log)
+            <table class="admin-table">
+                <thead><tr><th>Email</th><th>Status</th><th>Attempts</th><th>Sent</th><th>Error</th></tr></thead>
+                <tbody>
+                    @foreach($recipients as $r)
                         <tr>
-                            <td class="p-3 font-semibold text-slate-900">{{ $log->recipient_email }}</td>
-                            <td class="p-3">
-                                @if($log->status === 'sent')
-                                    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">Sent</span>
-                                @else
-                                    <span class="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">Failed</span>
-                                @endif
-                            </td>
-                            <td class="p-3 text-slate-400">{{ $log->created_at->format('h:i:s A') }}</td>
+                            <td class="text-xs">{{ $r->email }}<span class="block text-[11px] text-slate-400">{{ $r->name }}</span></td>
+                            <td>@include('admin.email.partials.status-badge', ['status' => $r->status])</td>
+                            <td class="text-xs text-slate-500">{{ $r->attempts }}</td>
+                            <td class="text-xs text-slate-500 whitespace-nowrap">{{ $r->sent_at?->format('d M, h:i A') ?? '—' }}</td>
+                            <td class="max-w-xs truncate text-[11px] text-red-600" title="{{ $r->error_message }}">{{ $r->error_message }}</td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="p-6 text-center text-slate-400">No messages dispatched yet.</td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
+            <x-admin.pagination :paginator="$recipients" />
         </div>
-        @if($logs->hasPages())
-            <div class="p-4 border-t border-slate-100">
-                {{ $logs->links() }}
-            </div>
-        @endif
-    </div>
-
+    @endif
 </div>
 @endsection

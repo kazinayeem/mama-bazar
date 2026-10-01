@@ -38,6 +38,9 @@ class EmailTemplateService
     /** Placeholders never allowed in a subject line (subjects are stored in logs). */
     public const SUBJECT_FORBIDDEN = ['otp_code', 'reset_url'];
 
+    /** Security-critical templates that are always sent (built-in default used if the stored one is inactive). */
+    public const ALWAYS_ACTIVE = ['account_verification_otp', 'login_otp', 'email_change_otp', 'password_reset'];
+
     protected static bool $defaultsEnsured = false;
 
     /**

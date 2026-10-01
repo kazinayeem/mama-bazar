@@ -37,6 +37,12 @@ class AdminNav
             'boxes' => '<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/>',
             'settings' => '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
             'star' => '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+            'mail' => '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+            'server' => '<rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>',
+            'layout-template' => '<rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/>',
+            'send' => '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+            'zap' => '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+            'scroll-text' => '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
         ];
     }
 
@@ -50,7 +56,14 @@ class AdminNav
             $pendingReviews = 0;
         }
 
-        return [
+        $failedEmails = 0;
+        try {
+            $failedEmails = (int) \App\Models\EmailLog::where('status', 'failed')->where('created_at', '>=', now()->subDay())->count();
+        } catch (\Throwable $e) {
+            $failedEmails = 0;
+        }
+
+        $sections = [
             ['label' => 'Overview', 'items' => [
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'icon' => 'layout-dashboard'],
             ]],
@@ -98,6 +111,14 @@ class AdminNav
                 ['label' => 'Campaigns', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'ticket-percent', 'fragment' => 'campaigns'],
                 ['label' => 'Conversion Events', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'chart-pie', 'fragment' => 'events'],
             ]],
+            ['label' => 'Email Management', 'items' => [
+                ['label' => 'Email Dashboard', 'route' => 'admin.email.dashboard', 'match' => 'admin.email.dashboard', 'icon' => 'mail', 'permission' => 'email.view'],
+                ['label' => 'SMTP Settings', 'route' => 'admin.email.settings', 'match' => 'admin.email.settings*', 'icon' => 'server', 'permission' => 'email.settings.manage'],
+                ['label' => 'Email Templates', 'route' => 'admin.email.templates.index', 'match' => 'admin.email.templates.*', 'icon' => 'layout-template', 'permission' => 'email.templates.manage'],
+                ['label' => 'Email Campaigns', 'route' => 'admin.email.campaigns.index', 'match' => 'admin.email.campaigns.*', 'icon' => 'send', 'permission' => 'email.campaigns.manage|email.campaigns.send'],
+                ['label' => 'Automation', 'route' => 'admin.email.automation', 'match' => 'admin.email.automation*', 'icon' => 'zap', 'permission' => 'email.settings.manage'],
+                ['label' => 'Email Logs', 'route' => 'admin.email.logs.index', 'match' => 'admin.email.logs.*', 'icon' => 'scroll-text', 'permission' => 'email.logs.view', 'badge' => $failedEmails],
+            ]],
             ['label' => 'Security & Access', 'items' => [
                 ['label' => 'Team Members', 'route' => 'admin.members.index', 'match' => 'admin.members.*', 'icon' => 'user-check'],
                 ['label' => 'Backup & Restore', 'route' => 'admin.backup.index', 'match' => 'admin.backup.*', 'icon' => 'database-backup'],
@@ -108,6 +129,17 @@ class AdminNav
                 ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => 'admin.settings.index', 'icon' => 'settings'],
             ]],
         ];
+
+        $user = auth()->user();
+        foreach ($sections as $i => $section) {
+            $sections[$i]['items'] = array_values(array_filter(
+                $section['items'],
+                fn ($item) => empty($item['permission'])
+                    || \App\Http\Middleware\EnsureAdminPermission::allows($user, explode('|', $item['permission']))
+            ));
+        }
+
+        return array_values(array_filter($sections, fn ($section) => $section['items'] !== []));
     }
 
     public static function allItems(): array

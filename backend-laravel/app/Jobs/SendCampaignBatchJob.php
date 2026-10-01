@@ -3,99 +3,152 @@
 namespace App\Jobs;
 
 use App\Models\EmailCampaign;
+use App\Models\EmailCampaignRecipient;
+use App\Models\EmailSuppression;
 use App\Services\EmailCampaignService;
 use App\Services\EmailDispatcherService;
-use App\Services\EmailTemplateService;
+use App\Support\EmailQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * Sends one batch of campaign recipients. Each recipient is claimed
+ * atomically (pending → processing) and every send carries a per-campaign
+ * dedupe key, so overlapping or re-dispatched batches never double-send.
+ */
 class SendCampaignBatchJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 2;
+    public int $tries = 1;
 
+    public int $timeout = 600;
+
+    /** Consecutive SMTP failures that auto-pause the campaign. */
+    private const FAILURE_PAUSE_THRESHOLD = 5;
+
+    /**
+     * @param  array<int, int>  $recipientIds
+     */
     public function __construct(
         public int $campaignId,
-        public array $recipients
+        public array $recipientIds
     ) {}
 
     public function handle(): void
     {
         $campaign = EmailCampaign::find($this->campaignId);
-        if (!$campaign) {
+        if (! $campaign || ! in_array($campaign->status, ['queued', 'sending'], true)) {
             return;
         }
 
-        // Honor paused or cancelled state immediately
-        if (in_array($campaign->status, ['paused', 'cancelled'], true)) {
-            return;
-        }
+        $maxAttempts = max(1, (int) config('email_system.campaigns.max_attempts_per_recipient', 3));
+        $retryIds = [];
+        $consecutiveFailures = 0;
 
-        $sentInBatch = 0;
-        $failedInBatch = 0;
-
-        foreach ($this->recipients as $recipient) {
-            // Re-check campaign status before sending each item in case admin clicked pause
-            $campaign->refresh();
-            if (in_array($campaign->status, ['paused', 'cancelled'], true)) {
-                break;
+        foreach ($this->recipientIds as $index => $recipientId) {
+            if ($index > 0 && $index % 5 === 0) {
+                $status = EmailCampaign::whereKey($this->campaignId)->value('status');
+                if (! in_array($status, ['queued', 'sending'], true)) {
+                    break;
+                }
             }
 
-            $email = $recipient['email'];
-            $name = $recipient['name'] ?? 'Customer';
-            $token = $recipient['token'] ?? null;
-            $unsubscribeUrl = EmailCampaignService::generateUnsubscribeUrl($email, $token);
+            $claimed = EmailCampaignRecipient::whereKey($recipientId)
+                ->where('campaign_id', $this->campaignId)
+                ->where('status', EmailCampaignRecipient::STATUS_PENDING)
+                ->update(['status' => EmailCampaignRecipient::STATUS_PROCESSING, 'updated_at' => now()]);
+            if ($claimed === 0) {
+                continue;
+            }
 
-            // Dynamic placeholder replacement for this recipient
-            $data = [
-                'customer_name' => $name,
-                'customer_email' => $email,
-                'announcement_title' => $campaign->subject,
-                'announcement_body' => $campaign->body_html,
-                'unsubscribe_url' => $unsubscribeUrl,
-                'cta_url' => url('/'),
-                'cta_text' => 'Shop Now',
-            ];
+            $recipient = EmailCampaignRecipient::find($recipientId);
 
-            $rendered = EmailTemplateService::render('promotional_campaign', $data);
+            if (EmailSuppression::isSuppressed($recipient->email)) {
+                $recipient->update(['status' => EmailCampaignRecipient::STATUS_SKIPPED, 'error_message' => 'Unsubscribed or suppressed']);
 
+                continue;
+            }
+
+            $rendered = EmailCampaignService::render($campaign, $recipient->email, $recipient->name);
             $result = EmailDispatcherService::send(
-                $email,
-                $name,
-                $campaign->subject,
+                $recipient->email,
+                $recipient->name,
+                $rendered['subject'],
                 $rendered['html'],
                 $rendered['plain'],
                 'campaign',
                 null,
-                $campaign->id
+                $campaign->id,
+                [],
+                [
+                    'dedupe_key' => "campaign:{$campaign->id}:".sha1($recipient->email),
+                    'template_key' => $campaign->template_key,
+                    'user_id' => $recipient->user_id,
+                    'marketing' => true,
+                    'unsubscribe_email' => $recipient->email,
+                    'from_name' => $campaign->sender_name ?: null,
+                    'replay' => ['kind' => 'campaign', 'campaign_id' => $campaign->id, 'recipient_id' => $recipient->id],
+                ]
             );
 
-            if ($result['success']) {
-                $sentInBatch++;
-            } else {
-                $failedInBatch++;
+            $attempts = $recipient->attempts + 1;
+
+            if ($result['success'] || ($result['duplicate'] ?? false)) {
+                $consecutiveFailures = 0;
+                $recipient->update([
+                    'status' => EmailCampaignRecipient::STATUS_SENT,
+                    'attempts' => $attempts,
+                    'email_log_id' => $result['log_id'],
+                    'sent_at' => now(),
+                    'error_message' => null,
+                ]);
+
+                continue;
             }
 
-            // Brief throttle (50ms) to prevent SMTP flooding
-            usleep(50000);
-        }
+            if ($result['skipped'] ?? false) {
+                $recipient->update([
+                    'status' => EmailCampaignRecipient::STATUS_SKIPPED,
+                    'attempts' => $attempts,
+                    'email_log_id' => $result['log_id'],
+                    'error_message' => $result['error'],
+                ]);
 
-        // Atomically update counts
-        $campaign->increment('sent_count', $sentInBatch);
-        $campaign->increment('failed_count', $failedInBatch);
+                continue;
+            }
 
-        // Check if finished
-        $campaign->refresh();
-        $processedTotal = $campaign->sent_count + $campaign->failed_count + $campaign->skipped_count;
-        if ($processedTotal >= $campaign->total_recipients && $campaign->status === 'sending') {
-            $campaign->update([
-                'status' => 'completed',
-                'completed_at' => now(),
+            $consecutiveFailures++;
+            $retryable = $attempts < $maxAttempts;
+            $recipient->update([
+                'status' => $retryable ? EmailCampaignRecipient::STATUS_PENDING : EmailCampaignRecipient::STATUS_FAILED,
+                'attempts' => $attempts,
+                'email_log_id' => $result['log_id'],
+                'error_message' => $result['error'],
             ]);
+            if ($retryable) {
+                $retryIds[] = $recipient->id;
+            }
+
+            if ($consecutiveFailures >= self::FAILURE_PAUSE_THRESHOLD) {
+                $campaign->update([
+                    'status' => 'paused',
+                    'paused_at' => now(),
+                    'last_error' => 'Paused automatically after repeated SMTP failures: '.$result['error'],
+                ]);
+                EmailCampaignService::syncCounts($campaign->fresh());
+
+                return;
+            }
         }
+
+        if ($retryIds !== []) {
+            EmailQueue::dispatch(new self($this->campaignId, $retryIds), now()->addMinutes(5));
+        }
+
+        EmailCampaignService::syncCounts($campaign->fresh());
     }
 }

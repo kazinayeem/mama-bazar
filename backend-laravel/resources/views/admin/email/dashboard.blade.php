@@ -1,169 +1,133 @@
-@extends('layouts.admin')
+@extends('layouts.admin', ['headerTitle' => 'Email Dashboard'])
 
 @section('content')
-<div class="space-y-6">
+<div class="admin-page">
+    <x-admin.page-header title="Email Dashboard" subtitle="Outgoing email health, automation activity and campaign progress." />
+    @include('admin.email.partials.tabs')
 
-    {{-- Header --}}
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Email Marketing &amp; Automation</h1>
-            <p class="text-xs text-slate-500">Monitor email deliverability, outbound queues, marketing campaigns, and SMTP health.</p>
+    @if(! $smtp['mail_enabled'])
+        <div class="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">Outgoing email is <strong>disabled</strong>. No customer emails are being sent.</div>
+    @endif
+    @if($smtp['password_source'] === 'none' && $smtp['mail_mailer'] === 'smtp')
+        <div class="rounded-[8px] border border-red-200 bg-red-50 p-3 text-xs text-red-700">The SMTP password has not been configured. Enter it in SMTP Settings (or set <code>MAIL_PASSWORD</code> on the server).</div>
+    @endif
+    @if(! $queue['background'])
+        <div class="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">Email queue runs in <strong>sync</strong> mode: transactional emails send after the page response, and bulk campaigns are disabled. Set <code>EMAIL_QUEUE_CONNECTION=database</code> and the cron worker for production.</div>
+    @endif
+
+    <div class="admin-metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+        <x-admin.metric-card label="Accepted by SMTP today" :value="number_format($stats['sent_today'])" tone="success" />
+        <x-admin.metric-card label="Failed today" :value="number_format($stats['failed_today'])" :tone="$stats['failed_today'] ? 'danger' : 'default'" />
+        <x-admin.metric-card label="Queued now" :value="number_format($stats['queued'])" tone="warning" />
+        <x-admin.metric-card label="OTP emails today" :value="number_format($stats['otp_today'])" />
+        <x-admin.metric-card label="Order emails today" :value="number_format($stats['order_today'])" />
+        <x-admin.metric-card label="Active campaigns" :value="number_format($stats['active_campaigns'])" :hint="$stats['scheduled_campaigns'].' scheduled · '.$stats['paused_campaigns'].' paused'" />
+        <x-admin.metric-card label="Total accepted" :value="number_format($stats['total_sent'])" :hint="number_format($stats['total_failed']).' failed all-time'" />
+        <x-admin.metric-card label="Suppressed addresses" :value="number_format($stats['suppressed'])" :hint="$stats['unsubscribed_30d'].' unsubscribed in 30 days'" />
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-3">
+        <div class="admin-surface p-4 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900">SMTP Status</h2>
+            @php $status = $smtp['mail_last_status'] ?? null; @endphp
+            <div class="flex items-center gap-2 text-sm">
+                <span class="h-2.5 w-2.5 rounded-full {{ $status === 'connected' ? 'bg-emerald-500' : ($status === 'failed' ? 'bg-red-500' : 'bg-slate-300') }}"></span>
+                <span class="font-semibold">{{ $status === 'connected' ? 'Connected' : ($status === 'failed' ? 'Last attempt failed' : 'Not tested yet') }}</span>
+            </div>
+            <dl class="grid grid-cols-3 gap-1 text-xs">
+                <dt class="text-slate-500">Server</dt><dd class="col-span-2 font-mono">{{ $smtp['mail_host'] }}:{{ $smtp['mail_port'] }}</dd>
+                <dt class="text-slate-500">Sender</dt><dd class="col-span-2">{{ $smtp['mail_from_name'] }} &lt;{{ $smtp['mail_from_address'] }}&gt;</dd>
+                <dt class="text-slate-500">Last check</dt><dd class="col-span-2">{{ $smtp['mail_last_tested_at'] ? \Carbon\Carbon::parse($smtp['mail_last_tested_at'])->diffForHumans() : '—' }}</dd>
+            </dl>
+            @if($status === 'failed' && ! empty($smtp['mail_last_error']))
+                <p class="rounded bg-red-50 p-2 text-[11px] text-red-700 break-words">{{ $smtp['mail_last_error'] }}</p>
+            @endif
+            <p class="text-[11px] text-slate-400">"Accepted by SMTP" confirms the server took the message; it does not guarantee inbox delivery.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <a href="{{ route('admin.email.settings') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                <span>⚙️</span> SMTP Settings
-            </a>
-            <a href="{{ route('admin.email.campaigns.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-green-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-brand-green-700">
-                <span>➕</span> New Campaign
-            </a>
+
+        <div class="admin-surface p-4 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900">Queue Health</h2>
+            <dl class="grid grid-cols-2 gap-1 text-xs">
+                <dt class="text-slate-500">Connection</dt><dd class="font-mono">{{ $queue['connection'] }}</dd>
+                <dt class="text-slate-500">Pending jobs</dt><dd>{{ $queue['pending'] ?? '—' }}</dd>
+                <dt class="text-slate-500">Oldest job</dt><dd class="{{ ($queue['oldest_minutes'] ?? 0) > 5 ? 'font-bold text-red-600' : '' }}">{{ $queue['oldest_minutes'] !== null ? $queue['oldest_minutes'].' min' : '—' }}</dd>
+                <dt class="text-slate-500">Failed jobs (24h)</dt><dd class="{{ ($queue['failed_24h'] ?? 0) > 0 ? 'font-bold text-red-600' : '' }}">{{ $queue['failed_24h'] ?? '—' }}</dd>
+                <dt class="text-slate-500">Last send attempt</dt><dd>{{ $queue['last_activity'] ? \Carbon\Carbon::parse($queue['last_activity'])->diffForHumans() : '—' }}</dd>
+            </dl>
+            @if(($queue['oldest_minutes'] ?? 0) > 5)
+                <p class="rounded bg-red-50 p-2 text-[11px] text-red-700">Jobs are waiting longer than 5 minutes — check that the cron entry <code>* * * * * php artisan schedule:run</code> is active.</p>
+            @endif
+        </div>
+
+        <div class="admin-surface p-4 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900">Accepted emails · last 7 days</h2>
+            @php $max = max(1, $chart->max('count')); @endphp
+            <div class="flex h-28 items-end gap-2">
+                @foreach($chart as $day)
+                    <div class="flex flex-1 flex-col items-center gap-1">
+                        <span class="text-[10px] text-slate-500">{{ $day['count'] }}</span>
+                        <div class="w-full rounded-t bg-brand-green-500" style="height: {{ max(2, round($day['count'] / $max * 80)) }}px"></div>
+                        <span class="text-[10px] text-slate-400">{{ $day['label'] }}</span>
+                    </div>
+                @endforeach
+            </div>
         </div>
     </div>
 
-    {{-- SMTP Status Card --}}
-    <div class="rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 {{ $stats['last_status'] === 'connected' ? 'bg-emerald-50/50 border-emerald-200' : ($stats['last_status'] === 'failed' ? 'bg-red-50/50 border-red-200' : 'bg-slate-50/60 border-slate-200') }}">
-        <div class="flex items-center gap-3">
-            <div class="h-10 w-10 rounded-xl flex items-center justify-center text-lg {{ $stats['last_status'] === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700' }}">
-                {{ $stats['last_status'] === 'connected' ? '⚡' : '📡' }}
+    <div class="grid gap-4 lg:grid-cols-2">
+        <div class="admin-table-wrap">
+            <div class="flex items-center justify-between px-4 py-3">
+                <h2 class="text-sm font-bold text-slate-900">Recent Activity</h2>
+                <a href="{{ route('admin.email.logs.index') }}" class="text-xs font-semibold text-brand-green-700 hover:underline">All logs →</a>
             </div>
-            <div>
-                <div class="flex items-center gap-2">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">SMTP Connection Status:</h3>
-                    @if($stats['last_status'] === 'connected')
-                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Connected ({{ $stats['last_latency'] }}ms)
-                        </span>
-                    @elseif($stats['last_status'] === 'failed')
-                        <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">
-                            <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span> Error
-                        </span>
-                    @else
-                        <span class="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">Untested</span>
-                    @endif
-                    @if(!$stats['mail_enabled'])
-                        <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">Sending Disabled</span>
-                    @endif
-                </div>
-                @if($stats['last_error'])
-                    <p class="text-[11px] text-red-600 font-mono mt-0.5 truncate max-w-lg">{{ $stats['last_error'] }}</p>
-                @elseif($stats['last_tested'])
-                    <p class="text-[11px] text-slate-500 mt-0.5">Last tested {{ \Carbon\Carbon::parse($stats['last_tested'])->diffForHumans() }}</p>
-                @endif
-            </div>
+            @if($recentLogs->isEmpty())
+                <x-admin.empty-state title="No emails yet" />
+            @else
+                <table class="admin-table">
+                    <tbody>
+                        @foreach($recentLogs as $log)
+                            <tr>
+                                <td>
+                                    <span class="block max-w-[16rem] truncate font-medium text-slate-800">{{ $log->subject }}</span>
+                                    <span class="text-[11px] text-slate-400">{{ $log->recipient_email }} · {{ \App\Models\EmailLog::TYPES[$log->email_type] ?? $log->email_type }}</span>
+                                </td>
+                                <td class="text-right whitespace-nowrap">
+                                    @include('admin.email.partials.status-badge', ['status' => $log->status])
+                                    <span class="block text-[10px] text-slate-400">{{ $log->created_at?->diffForHumans() }}</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         </div>
-        <div class="flex items-center gap-2">
-            <form action="{{ route('admin.email.settings.test-connection') }}" method="POST">
-                @csrf
-                <button type="submit" class="rounded-lg bg-white border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 shadow-xs">
-                    Test Connection
-                </button>
-            </form>
+
+        <div class="admin-table-wrap">
+            <div class="flex items-center justify-between px-4 py-3">
+                <h2 class="text-sm font-bold text-slate-900">Campaigns in progress</h2>
+                <a href="{{ route('admin.email.campaigns.index') }}" class="text-xs font-semibold text-brand-green-700 hover:underline">All campaigns →</a>
+            </div>
+            @if($activeCampaigns->isEmpty())
+                <x-admin.empty-state title="No active campaigns" />
+            @else
+                <table class="admin-table">
+                    <tbody>
+                        @foreach($activeCampaigns as $c)
+                            <tr>
+                                <td>
+                                    <a href="{{ route('admin.email.campaigns.show', $c->id) }}" class="font-medium text-slate-800 hover:underline">{{ $c->name }}</a>
+                                    <div class="mt-1 h-1.5 w-40 rounded bg-slate-100"><div class="h-1.5 rounded bg-brand-green-500" style="width: {{ $c->progressPercent() }}%"></div></div>
+                                </td>
+                                <td class="text-right whitespace-nowrap">
+                                    @include('admin.email.partials.status-badge', ['status' => $c->status])
+                                    <span class="block text-[10px] text-slate-400">{{ $c->sent_count }}/{{ $c->total_recipients }}</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         </div>
     </div>
-
-    {{-- Metrics Grid --}}
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Sent Today</span>
-            <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($stats['sent_today']) }}</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Sent</span>
-            <p class="mt-1 text-2xl font-black text-emerald-700">{{ number_format($stats['total_sent']) }}</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Failed</span>
-            <p class="mt-1 text-2xl font-black text-red-600">{{ number_format($stats['total_failed']) }}</p>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Active Campaigns</span>
-            <p class="mt-1 text-2xl font-black text-brand-green-700">{{ number_format($stats['active_campaigns']) }}</p>
-        </div>
-    </div>
-
-    {{-- Navigation Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <a href="{{ route('admin.email.settings') }}" class="group block p-4 rounded-2xl bg-white border border-slate-200 hover:border-brand-green-500 transition shadow-soft">
-            <div class="flex items-center gap-2 text-brand-green-700 font-bold text-sm">
-                <span>⚙️</span> SMTP Configuration
-            </div>
-            <p class="mt-1 text-xs text-slate-500">Host, ports, sender identity, credentials, and test connection tools.</p>
-        </a>
-
-        <a href="{{ route('admin.email.templates') }}" class="group block p-4 rounded-2xl bg-white border border-slate-200 hover:border-brand-green-500 transition shadow-soft">
-            <div class="flex items-center gap-2 text-brand-green-700 font-bold text-sm">
-                <span>📄</span> Email Templates
-            </div>
-            <p class="mt-1 text-xs text-slate-500">16 editable system templates with dynamic placeholders and live preview.</p>
-        </a>
-
-        <a href="{{ route('admin.email.campaigns') }}" class="group block p-4 rounded-2xl bg-white border border-slate-200 hover:border-brand-green-500 transition shadow-soft">
-            <div class="flex items-center gap-2 text-brand-green-700 font-bold text-sm">
-                <span>📣</span> Email Campaigns
-            </div>
-            <p class="mt-1 text-xs text-slate-500">Create, schedule, audience filter, and queue marketing announcements.</p>
-        </a>
-
-        <a href="{{ route('admin.email.automation') }}" class="group block p-4 rounded-2xl bg-white border border-slate-200 hover:border-brand-green-500 transition shadow-soft">
-            <div class="flex items-center gap-2 text-brand-green-700 font-bold text-sm">
-                <span>⚡</span> Automation Rules
-            </div>
-            <p class="mt-1 text-xs text-slate-500">Enable/disable transactional triggers and automated PDF attachments.</p>
-        </a>
-    </div>
-
-    {{-- Recent Outbound Email Logs Table --}}
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-soft overflow-hidden">
-        <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
-            <div>
-                <h2 class="text-sm font-bold text-slate-900">Recent Outbound Email Logs</h2>
-                <p class="text-xs text-slate-500">Live delivery records across transactional, order, and marketing messages.</p>
-            </div>
-            <a href="{{ route('admin.email.logs') }}" class="text-xs font-bold text-brand-green-700 hover:underline">View All Logs &rarr;</a>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-600">
-                <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    <tr>
-                        <th class="p-3">Recipient</th>
-                        <th class="p-3">Subject</th>
-                        <th class="p-3">Type</th>
-                        <th class="p-3">Status</th>
-                        <th class="p-3">Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($recentLogs as $log)
-                        <tr class="hover:bg-slate-50/60">
-                            <td class="p-3 font-semibold text-slate-900">{{ $log->recipient_email }}</td>
-                            <td class="p-3 text-slate-700 max-w-xs truncate">{{ $log->subject }}</td>
-                            <td class="p-3">
-                                <span class="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase bg-slate-100 text-slate-600">
-                                    {{ $log->email_type }}
-                                </span>
-                            </td>
-                            <td class="p-3">
-                                @if($log->status === 'sent')
-                                    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">Sent</span>
-                                @elseif($log->status === 'failed')
-                                    <span class="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">Failed</span>
-                                @elseif($log->status === 'skipped')
-                                    <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">Skipped</span>
-                                @else
-                                    <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">Queued</span>
-                                @endif
-                            </td>
-                            <td class="p-3 text-slate-400">{{ $log->created_at->diffForHumans() }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="p-8 text-center text-slate-400">No outbound email logs recorded yet.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
 </div>
 @endsection

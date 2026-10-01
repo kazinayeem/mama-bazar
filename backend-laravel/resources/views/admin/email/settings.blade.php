@@ -1,197 +1,181 @@
-@extends('layouts.admin')
+@extends('layouts.admin', ['headerTitle' => 'SMTP Settings'])
 
 @section('content')
-<div class="space-y-6 max-w-4xl">
+<div class="admin-page max-w-5xl">
+    <x-admin.page-header title="SMTP Settings" subtitle="Outgoing mail server, sender identity and connection diagnostics." />
+    @include('admin.email.partials.tabs')
 
-    {{-- Header --}}
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight">SMTP Email Configuration</h1>
-            <p class="text-xs text-slate-500">Configure outbound SMTP credentials, sender identity, and test mail server connectivity.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('admin.email.dashboard') }}" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                &larr; Back to Dashboard
-            </a>
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="p-3.5 rounded-xl bg-brand-green-50 border border-brand-green-200 text-brand-green-800 text-xs flex items-center gap-2">
-            <span>✓</span> {{ session('success') }}
-        </div>
+    @if($settings['mail_mailer'] === 'log')
+        <div class="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">The <strong>Log</strong> driver is active — emails are written to the application log instead of being sent. Switch to SMTP for production.</div>
+    @endif
+    @if(! str_starts_with((string) $appUrl, 'https://'))
+        <div class="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"><code>APP_URL</code> is <code>{{ $appUrl }}</code>. Links and logos in emails use this address — set it to the public HTTPS storefront URL in production.</div>
     @endif
 
-    @if(session('error'))
-        <div class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-            <span>⚠️</span> {{ session('error') }}
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-1">
-            @foreach($errors->all() as $error)
-                <p>• {{ $error }}</p>
-            @endforeach
-        </div>
-    @endif
-
-    {{-- Main Settings Form --}}
-    <form action="{{ route('admin.email.settings.update') }}" method="POST" class="space-y-6">
+    <form action="{{ route('admin.email.settings.update') }}" method="POST" class="space-y-4" autocomplete="off">
         @csrf
-
-        {{-- SMTP Server Details Card --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-4">
-            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+        <div class="admin-surface p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div>
                     <h2 class="text-sm font-bold text-slate-900">Outgoing Mail Server (SMTP)</h2>
-                    <p class="text-xs text-slate-500">Connect to your domain's mail server or transactional email provider.</p>
+                    <p class="text-xs text-slate-500">IMAP/POP3 are not required — the store only sends email.</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <label for="mail_enabled" class="text-xs font-bold text-slate-700">Enable Outgoing Emails</label>
-                    <input type="checkbox" name="mail_enabled" id="mail_enabled" value="1" {{ old('mail_enabled', $settings['mail_enabled']) ? 'checked' : '' }} class="h-4 w-4 rounded text-brand-green-600 focus:ring-brand-green-500">
-                </div>
+                <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
+                    <input type="hidden" name="mail_enabled" value="0">
+                    <input type="checkbox" name="mail_enabled" value="1" @checked(old('mail_enabled', $settings['mail_enabled'])) class="rounded border-slate-300 text-brand-green-600">
+                    Enable outgoing email
+                </label>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">Mail Driver</label>
-                    <select name="mail_mailer" class="admin-control w-full text-xs">
-                        <option value="smtp" {{ old('mail_mailer', $settings['mail_mailer']) === 'smtp' ? 'selected' : '' }}>SMTP (Recommended)</option>
-                        <option value="log" {{ old('mail_mailer', $settings['mail_mailer']) === 'log' ? 'selected' : '' }}>Log (Debug / Local Development)</option>
-                        <option value="sendmail" {{ old('mail_mailer', $settings['mail_mailer']) === 'sendmail' ? 'selected' : '' }}>Sendmail</option>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Mail driver</label>
+                    <select name="mail_mailer" class="admin-control w-full">
+                        <option value="smtp" @selected(old('mail_mailer', $settings['mail_mailer']) === 'smtp')>SMTP (recommended)</option>
+                        <option value="sendmail" @selected(old('mail_mailer', $settings['mail_mailer']) === 'sendmail')>Sendmail (server binary)</option>
+                        <option value="log" @selected(old('mail_mailer', $settings['mail_mailer']) === 'log')>Log only (testing — nothing is sent)</option>
                     </select>
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">SMTP Host</label>
-                    <input type="text" name="mail_host" required value="{{ old('mail_host', $settings['mail_host']) }}" class="admin-control w-full text-xs" placeholder="mail.mama-bazar.com">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">SMTP host</label>
+                    <input type="text" name="mail_host" value="{{ old('mail_host', $settings['mail_host']) }}" class="admin-control w-full" placeholder="mail.example.com">
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">SMTP Port</label>
-                    <input type="number" name="mail_port" required value="{{ old('mail_port', $settings['mail_port']) }}" class="admin-control w-full text-xs" placeholder="465">
-                    <p class="mt-1 text-[11px] text-slate-400">Common: 465 (SSL/TLS) or 587 (STARTTLS)</p>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Port</label>
+                    <input type="number" name="mail_port" value="{{ old('mail_port', $settings['mail_port']) }}" class="admin-control w-full" min="1" max="65535">
+                    <p class="mt-1 text-[11px] text-slate-400">465 = implicit SSL/TLS · 587 = STARTTLS</p>
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">Encryption Protocol</label>
-                    <select name="mail_encryption" class="admin-control w-full text-xs">
-                        <option value="ssl" {{ old('mail_encryption', $settings['mail_encryption']) === 'ssl' ? 'selected' : '' }}>SSL / TLS (Port 465)</option>
-                        <option value="tls" {{ old('mail_encryption', $settings['mail_encryption']) === 'tls' ? 'selected' : '' }}>STARTTLS (Port 587)</option>
-                        <option value="none" {{ empty($settings['mail_encryption']) ? 'selected' : '' }}>None (Unencrypted)</option>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Encryption</label>
+                    @php $enc = old('mail_encryption', \App\Services\EmailSettingService::normalizeEncryption($settings['mail_encryption'], (int) $settings['mail_port'])); @endphp
+                    <select name="mail_encryption" class="admin-control w-full">
+                        <option value="ssl" @selected($enc === 'ssl')>SSL/TLS (implicit, port 465)</option>
+                        <option value="tls" @selected($enc === 'tls')>STARTTLS (port 587)</option>
+                        <option value="none" @selected($enc === 'none')>None (not recommended)</option>
                     </select>
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">SMTP Username</label>
-                    <input type="text" name="mail_username" value="{{ old('mail_username', $settings['mail_username']) }}" class="admin-control w-full text-xs" placeholder="contact@mama-bazar.com">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Username</label>
+                    <input type="text" name="mail_username" value="{{ old('mail_username', $settings['mail_username']) }}" class="admin-control w-full" autocomplete="off">
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">SMTP Password</label>
-                    <input type="password" name="mail_password" autocomplete="new-password" class="admin-control w-full text-xs" placeholder="•••••••••••••••• (Leave blank to keep existing)">
-                    <p class="mt-1 text-[11px] text-slate-400">Encrypted securely at rest. Never shown in plain text.</p>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Password</label>
+                    <input type="password" name="mail_password" value="" class="admin-control w-full" autocomplete="new-password"
+                        placeholder="{{ $settings['password_source'] === 'none' ? 'Enter SMTP password' : '•••••••• (leave blank to keep current)' }}">
+                    <p class="mt-1 text-[11px] text-slate-500">
+                        @switch($settings['password_source'])
+                            @case('database') Saved (encrypted with APP_KEY). Never displayed. @break
+                            @case('environment') Using the <code>MAIL_PASSWORD</code> server environment variable. @break
+                            @default <span class="font-semibold text-red-600">Not configured.</span>
+                        @endswitch
+                    </p>
+                    @if($settings['password_source'] === 'database')
+                        <label class="mt-1 inline-flex items-center gap-1.5 text-[11px] text-slate-600">
+                            <input type="checkbox" name="clear_password" value="1" class="rounded border-slate-300"> Remove saved password
+                        </label>
+                    @endif
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">Connection Timeout (seconds)</label>
-                    <input type="number" name="mail_timeout" value="{{ old('mail_timeout', $settings['mail_timeout']) }}" class="admin-control w-full text-xs" min="5" max="120">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Timeout (seconds)</label>
+                    <input type="number" name="mail_timeout" value="{{ old('mail_timeout', $settings['mail_timeout']) }}" class="admin-control w-full" min="5" max="120">
                 </div>
             </div>
         </div>
 
-        {{-- Sender Identity Card --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-4">
+        <div class="admin-surface p-5 space-y-4">
             <div class="border-b border-slate-100 pb-3">
-                <h2 class="text-sm font-bold text-slate-900">Default Sender &amp; Reply-To Identity</h2>
-                <p class="text-xs text-slate-500">Official email address and brand name displayed in customer inboxes.</p>
+                <h2 class="text-sm font-bold text-slate-900">Sender Identity</h2>
+                <p class="text-xs text-slate-500">The sender mailbox is separate from the public support email in Business Information — changing one never changes the other.</p>
             </div>
-
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">From Name</label>
-                    <input type="text" name="mail_from_name" required value="{{ old('mail_from_name', $settings['mail_from_name']) }}" class="admin-control w-full text-xs">
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Sender name</label>
+                    <input type="text" name="mail_from_name" required value="{{ old('mail_from_name', $settings['mail_from_name']) }}" class="admin-control w-full" maxlength="120">
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">From Email Address</label>
-                    <input type="email" name="mail_from_address" required value="{{ old('mail_from_address', $settings['mail_from_address']) }}" class="admin-control w-full text-xs">
-                    <p class="mt-1 text-[11px] text-slate-400">Should match a verified mailbox on your domain to prevent spam flags.</p>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Sender email</label>
+                    <input type="email" name="mail_from_address" required value="{{ old('mail_from_address', $settings['mail_from_address']) }}" class="admin-control w-full">
+                    <p class="mt-1 text-[11px] text-slate-400">Use the authenticated SMTP mailbox (or an alias it is allowed to send as).</p>
                 </div>
-
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-xs font-bold text-slate-700">Reply-To Email Address</label>
-                    <input type="email" name="mail_reply_to" value="{{ old('mail_reply_to', $settings['mail_reply_to']) }}" class="admin-control w-full text-xs" placeholder="support@mamabazar.com">
-                    <p class="mt-1 text-[11px] text-slate-400">Customer replies will be directed here.</p>
+                    <label class="mb-1 block text-xs font-semibold text-slate-700">Reply-to address (optional)</label>
+                    <input type="email" name="mail_reply_to" value="{{ old('mail_reply_to', $settings['mail_reply_to']) }}" class="admin-control w-full" placeholder="Defaults to the sender email">
                 </div>
             </div>
         </div>
 
-        <div class="flex items-center justify-end gap-3">
-            <button type="submit" class="rounded-xl bg-brand-green-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-brand-green-700 transition">
-                Save SMTP Settings
-            </button>
+        <div class="flex justify-end">
+            <x-admin.button type="submit">Save settings</x-admin.button>
         </div>
     </form>
 
-    {{-- Testing & Diagnostics Card --}}
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-5">
-        <div>
-            <h2 class="text-sm font-bold text-slate-900">Test SMTP &amp; Send Verification Email</h2>
-            <p class="text-xs text-slate-500">Test server handshakes and send a real verification email to any test inbox.</p>
+    <div class="grid gap-4 md:grid-cols-2">
+        <div class="admin-surface p-5 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900">Connection status</h2>
+            @php $status = $settings['mail_last_status'] ?? null; @endphp
+            <div class="flex items-center gap-2 text-sm">
+                <span class="h-2.5 w-2.5 rounded-full {{ $status === 'connected' ? 'bg-emerald-500' : ($status === 'failed' ? 'bg-red-500' : 'bg-slate-300') }}"></span>
+                <span class="font-semibold">{{ $status === 'connected' ? 'Connected' : ($status === 'failed' ? 'Failed' : 'Not tested') }}</span>
+                @if(! empty($settings['mail_last_latency_ms']) && $status === 'connected')<span class="text-xs text-slate-400">{{ $settings['mail_last_latency_ms'] }} ms</span>@endif
+            </div>
+            <p class="text-xs text-slate-500">Last checked: {{ $settings['mail_last_tested_at'] ? \Carbon\Carbon::parse($settings['mail_last_tested_at'])->format('d M Y, h:i A') : 'never' }}</p>
+            @if($status === 'failed' && ! empty($settings['mail_last_error']))
+                <p class="rounded bg-red-50 p-2 text-[11px] text-red-700 break-words">Last error: {{ $settings['mail_last_error'] }}</p>
+            @endif
+            <form action="{{ route('admin.email.settings.test-connection') }}" method="POST">
+                @csrf
+                <x-admin.button type="submit" variant="outline" size="sm">Test connection (no email sent)</x-admin.button>
+            </form>
+            <form action="{{ route('admin.email.settings.send-test') }}" method="POST" class="flex gap-2 pt-2 border-t border-slate-100">
+                @csrf
+                <input type="email" name="test_email" required value="{{ old('test_email', auth()->user()->email) }}" placeholder="you@example.com" class="admin-control flex-1">
+                <x-admin.button type="submit" size="sm">Send test email</x-admin.button>
+            </form>
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-2 pt-2">
-            {{-- Probe connection --}}
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between">
-                <div>
-                    <h3 class="text-xs font-bold text-slate-900">Probe Server Connection</h3>
-                    <p class="text-xs text-slate-500 mt-1">Tests TCP handshake and ESMTP authentication without sending an email.</p>
-                </div>
-                <form action="{{ route('admin.email.settings.test-connection') }}" method="POST" class="mt-4">
-                    @csrf
-                    <button type="submit" class="w-full py-2 px-4 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-xs font-bold text-slate-700 shadow-xs transition">
-                        Run Connection Probe &rarr;
-                    </button>
-                </form>
-            </div>
-
-            {{-- Send real test email --}}
-            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between">
-                <div>
-                    <h3 class="text-xs font-bold text-slate-900">Send Test Email Message</h3>
-                    <p class="text-xs text-slate-500 mt-1">Sends a rendered test email with branding and HTML templates.</p>
-                </div>
-                <form action="{{ route('admin.email.settings.send-test') }}" method="POST" class="mt-3 flex gap-2">
-                    @csrf
-                    <input type="email" name="test_email" required value="{{ auth()->user()->email ?: 'contact@mama-bazar.com' }}" placeholder="test@example.com" class="admin-control flex-1 text-xs">
-                    <button type="submit" class="py-2 px-3 rounded-lg bg-brand-green-600 hover:bg-brand-green-700 text-white text-xs font-bold transition">
-                        Send Test
-                    </button>
-                </form>
-            </div>
+        <div class="admin-surface p-5 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900">Sender verification</h2>
+            <ul class="space-y-2 text-xs">
+                @foreach($senderChecks as $check)
+                    <li class="flex gap-2">
+                        <span class="{{ $check['ok'] ? 'text-emerald-600' : 'text-amber-600' }}">{{ $check['ok'] ? '✓' : '!' }}</span>
+                        <span><strong class="text-slate-800">{{ $check['label'] }}</strong><br><span class="text-slate-500 break-words">{{ $check['detail'] }}</span></span>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </div>
 
-    {{-- Deliverability & DNS Checklist --}}
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft space-y-3">
-        <h2 class="text-sm font-bold text-slate-900">Domain Deliverability Checklist (SPF, DKIM, DMARC)</h2>
-        <p class="text-xs text-slate-500 leading-relaxed">
-            To ensure high inbox placement across Gmail, Yahoo, and Outlook, configure the following TXT DNS records with your domain registrar:
-        </p>
-        <div class="space-y-2 text-xs text-slate-600 pt-1">
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[11px]">
-                <strong class="text-slate-800">SPF (TXT @):</strong> v=spf1 +a +mx +ip4:SERVER_IP ~all
+    <div class="admin-surface p-5 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900">Deliverability checklist (DNS)</h2>
+                <p class="text-xs text-slate-500">Live lookups for the sender domain. Passing checks improve inbox placement but never guarantee it.</p>
             </div>
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[11px]">
-                <strong class="text-slate-800">DKIM (TXT default._domainkey):</strong> Generated via cPanel Email Deliverability interface.
-            </div>
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[11px]">
-                <strong class="text-slate-800">DMARC (TXT _dmarc):</strong> v=DMARC1; p=quarantine; sp=quarantine; rua=mailto:dmarc@mama-bazar.com
-            </div>
+            <form action="{{ route('admin.email.settings.check-dns') }}" method="POST">
+                @csrf
+                <x-admin.button type="submit" variant="outline" size="sm">Check DNS records</x-admin.button>
+            </form>
         </div>
+        @if($dnsChecks && ! empty($dnsChecks['items']))
+            <p class="text-[11px] text-slate-400">Checked {{ \Carbon\Carbon::parse($dnsChecks['checked_at'])->diffForHumans() }}</p>
+            <ul class="space-y-2 text-xs">
+                @foreach($dnsChecks['items'] as $item)
+                    <li class="flex gap-2">
+                        <span class="{{ $item['status'] === 'pass' ? 'text-emerald-600' : ($item['status'] === 'missing' ? 'text-red-600' : 'text-amber-600') }}">{{ $item['status'] === 'pass' ? '✓' : '!' }}</span>
+                        <span><strong class="text-slate-800">{{ $item['label'] }}</strong><br><span class="font-mono text-[11px] text-slate-500 break-all">{{ \Illuminate\Support\Str::limit($item['detail'], 220) }}</span></span>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+        <ul class="list-disc space-y-1 pl-5 text-xs text-slate-600">
+            <li><strong>SPF</strong> (TXT on the domain) must authorize the mail server, e.g. <code>v=spf1 +a +mx include:&lt;host&gt; ~all</code>.</li>
+            <li><strong>DKIM</strong>: enable in cPanel › Email Deliverability and publish the generated <code>default._domainkey</code> record.</li>
+            <li><strong>DMARC</strong>: start with <code>v=DMARC1; p=none; rua=mailto:&lt;reports mailbox&gt;</code>, tighten to quarantine once SPF/DKIM pass.</li>
+            <li><strong>Reverse DNS (PTR)</strong> of the sending IP should match the mail host — ask the hosting provider.</li>
+            <li><strong>TLS</strong> certificate must be valid for the SMTP host name.</li>
+            <li>Monitor bounces in the sender mailbox; add hard-bouncing addresses to the suppression list.</li>
+        </ul>
     </div>
-
 </div>
 @endsection
