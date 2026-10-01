@@ -158,7 +158,7 @@ Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () 
         ->middleware(['admin.can:orders.update', 'throttle:10,1'])->name('admin.orders.email-invoice');
 
     // Email Management
-    Route::prefix('email')->name('admin.email.')->group(function () {
+    Route::prefix('email')->name('admin.email.')->middleware('email.schema')->group(function () {
         Route::get('/', [AdminEmailController::class, 'dashboard'])->middleware('admin.can:email.view')->name('dashboard');
 
         Route::middleware('admin.can:email.settings.manage')->group(function () {

@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.access' => EnsureAdminAccess::class,
             'admin.can' => \App\Http\Middleware\EnsureAdminPermission::class,
             'email.verified' => \App\Http\Middleware\EnsureEmailVerified::class,
+            'email.schema' => \App\Http\Middleware\EnsureEmailSchemaReady::class,
         ]);
 
         // RFC 8058 one-click unsubscribe is POSTed by mail clients without a CSRF token (route is signed).
