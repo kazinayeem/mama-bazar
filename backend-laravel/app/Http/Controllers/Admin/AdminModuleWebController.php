@@ -190,19 +190,32 @@ class AdminModuleWebController extends Controller
     {
         $tab = $request->get('tab', 'overview');
 
-        $monthly = Expense::selectRaw("strftime('%Y-%m', expense_date) as month, SUM(amount) as total, COUNT(*) as count")
+        $driver = DB::connection()->getDriverName();
+        $expenseMonthExpr = match ($driver) {
+            'sqlite' => "strftime('%Y-%m', expense_date)",
+            'pgsql' => "to_char(expense_date, 'YYYY-MM')",
+            default => "DATE_FORMAT(expense_date, '%Y-%m')",
+        };
+
+        $orderMonthExpr = match ($driver) {
+            'sqlite' => "strftime('%Y-%m', created_at)",
+            'pgsql' => "to_char(created_at, 'YYYY-MM')",
+            default => "DATE_FORMAT(created_at, '%Y-%m')",
+        };
+
+        $monthly = Expense::selectRaw("{$expenseMonthExpr} as month, SUM(amount) as total, COUNT(*) as count")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
         $byCategory = Expense::query()
             ->leftJoin('expense_categories', 'expenses.category_id', '=', 'expense_categories.id')
-            ->selectRaw('COALESCE(expense_categories.name, "Uncategorized") as name, SUM(expenses.amount) as total')
+            ->selectRaw("COALESCE(expense_categories.name, 'Uncategorized') as name, SUM(expenses.amount) as total")
             ->groupBy('name')
             ->orderByDesc('total')
             ->get();
 
-        $byMember = Expense::selectRaw('COALESCE(member_name, "Unassigned") as name, SUM(amount) as total')
+        $byMember = Expense::selectRaw("COALESCE(member_name, 'Unassigned') as name, SUM(amount) as total")
             ->groupBy('name')
             ->orderByDesc('total')
             ->get();
@@ -210,7 +223,7 @@ class AdminModuleWebController extends Controller
         $revenue = Order::whereNotIn('status', ['cancelled', 'refunded'])->sum('total_price');
         $expenseTotal = Expense::where('status', '!=', 'rejected')->sum('amount');
 
-        $profitMonthly = Order::selectRaw("strftime('%Y-%m', created_at) as month, SUM(total_price) as revenue")
+        $profitMonthly = Order::selectRaw("{$orderMonthExpr} as month, SUM(total_price) as revenue")
             ->whereNotIn('status', ['cancelled', 'refunded'])
             ->groupBy('month')
             ->orderBy('month')
