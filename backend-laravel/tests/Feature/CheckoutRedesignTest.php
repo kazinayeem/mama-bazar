@@ -112,6 +112,60 @@ class CheckoutRedesignTest extends TestCase
         $this->post('/checkout', $badPhone)->assertSessionHasErrors('phone');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    protected function prepaidPayload(string $paymentCode, string $senderNumber): array
+    {
+        ['product' => $p, 'shipInside' => $ship] = $this->seedCheckoutBasics();
+        PaymentMethod::create([
+            'code' => 'bkash', 'name' => 'bKash', 'type' => 'mobile_banking',
+            'enabled' => true, 'sort_order' => 2, 'maintenance_mode' => false, 'config' => [],
+        ]);
+        PaymentMethod::create([
+            'code' => 'bank', 'name' => 'Bank Transfer', 'type' => 'bank',
+            'enabled' => true, 'sort_order' => 5, 'maintenance_mode' => false, 'config' => [],
+        ]);
+
+        return [
+            'customer_name' => 'Prepaid User',
+            'phone' => '01912345678',
+            'district' => 'Dhaka',
+            'address' => 'House 5, Road 7, Dhaka',
+            'items' => [['product_id' => $p->id, 'quantity' => 1]],
+            'payment_method' => $paymentCode,
+            'shipping_method_id' => $ship->id,
+            'sender_number' => $senderNumber,
+            'transaction_id' => 'TRX123ABC',
+        ];
+    }
+
+    public function test_mobile_banking_sender_number_accepts_spaces_dashes_and_bangla_digits(): void
+    {
+        $this->post('/checkout', $this->prepaidPayload('bkash', '০১৭১২-৩৪৫ ৬৭৮'))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('orders', ['phone' => '01912345678', 'sender_number' => '01712345678']);
+    }
+
+    public function test_mobile_banking_rejects_invalid_sender_number(): void
+    {
+        $this->post('/checkout', $this->prepaidPayload('bkash', '12345'))
+            ->assertSessionHasErrors('sender_number');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_bank_transfer_accepts_account_number_as_sender(): void
+    {
+        $this->post('/checkout', $this->prepaidPayload('bank', '1234-5678-9012'))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('orders', ['phone' => '01912345678', 'sender_number' => '123456789012']);
+    }
+
     public function test_duplicate_order_key_does_not_double_create(): void
     {
         ['product' => $p, 'shipInside' => $ship] = $this->seedCheckoutBasics();

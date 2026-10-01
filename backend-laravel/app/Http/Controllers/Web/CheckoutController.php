@@ -74,9 +74,33 @@ class CheckoutController extends Controller
         ]);
     }
 
+    /**
+     * Converts Bangla digits and strips spaces, dashes, dots and brackets
+     * so "০১৭১২-৩৪৫ ৬৭৮" and "01712345678" validate and store identically.
+     */
+    public static function normalizePhoneInput(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = strtr($value, array_combine(
+            ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'],
+            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        ));
+
+        return preg_replace('/[\s\-().]+/u', '', $value);
+    }
+
     public function process(Request $request)
     {
         PaymentMethod::ensureDefaults();
+
+        foreach (['phone', 'alternative_phone', 'sender_number'] as $phoneField) {
+            if (is_string($request->input($phoneField))) {
+                $request->merge([$phoneField => self::normalizePhoneInput($request->input($phoneField))]);
+            }
+        }
 
         $validated = $request->validate([
             'customer_name' => 'required|string|max:100',
@@ -137,12 +161,18 @@ class CheckoutController extends Controller
         }
 
         if (! $isCod) {
+            $isMobileBanking = $activeMethod->type === 'mobile_banking';
+
             $request->validate([
-                'sender_number' => ['required', 'string', 'max:30', self::BD_PHONE_RULE],
+                'sender_number' => ['required', 'string', 'max:30', $isMobileBanking ? self::BD_PHONE_RULE : 'regex:/^[A-Za-z0-9+]{4,30}$/'],
                 'transaction_id' => 'required|string|max:100',
             ], [
-                'sender_number.required' => 'Sender account number is required for this payment method.',
-                'sender_number.regex' => 'Sender number must be a valid Bangladesh mobile number.',
+                'sender_number.required' => $isMobileBanking
+                    ? 'Sender number is required for this payment method.'
+                    : 'Sender account number is required for this payment method.',
+                'sender_number.regex' => $isMobileBanking
+                    ? "Sender number must be the {$activeMethod->name} mobile number you paid from (e.g. 01712345678)."
+                    : 'Sender account number may only contain letters and digits.',
                 'transaction_id.required' => 'Transaction ID is required for this payment method.',
             ]);
         }

@@ -82,7 +82,7 @@
     @if($errors->any())
         <div role="alert" class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
             <p class="font-bold">Please fix the following:</p>
-            <ul class="mt-1 list-disc pl-5"><@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+            <ul class="mt-1 list-disc pl-5">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
         </div>
     @endif
 
@@ -331,9 +331,10 @@
                         <div class="mt-3 space-y-3 rounded-xl border border-brand-green-200 bg-brand-green-50/60 p-4">
                             <p class="text-[13px] font-bold text-brand-green-800">Payment Verification <span class="font-normal text-slate-500">— after paying, enter details below</span></p>
                             <div>
-                                <label class="mb-1 block text-xs font-semibold text-slate-600">Sender Account Number <span class="text-red-500">*</span></label>
-                                <input type="tel" name="sender_number" x-model="senderNumber" inputmode="numeric" placeholder="01XXXXXXXXX"
-                                    class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm focus:border-brand-green-500 focus:outline-none">
+                                <label class="mb-1 block text-xs font-semibold text-slate-600"><span x-text="isMobileBanking ? 'Sender Mobile Number' : 'Sender Account Number'"></span> <span class="text-red-500">*</span></label>
+                                <input type="tel" name="sender_number" x-model="senderNumber" inputmode="numeric" :placeholder="isMobileBanking ? '01XXXXXXXXX' : 'Account number you paid from'"
+                                    class="w-full rounded-xl border bg-white p-2.5 text-sm focus:border-brand-green-500 focus:outline-none @error('sender_number') border-red-400 @else border-slate-200 @enderror">
+                                @error('sender_number')<p class="mt-1 text-[11px] font-medium text-red-600">{{ $message }}</p>@enderror
                             </div>
                             <div>
                                 <label class="mb-1 block text-xs font-semibold text-slate-600">Transaction ID <span class="text-red-500">*</span></label>
@@ -479,7 +480,10 @@ function checkoutPage(opts) {
             this.$watch('selectedPaymentCode', () => { this.senderNumber = ''; this.transactionId = ''; });
         },
 
-        validBD(v) { return BD_RE.test((v || '').replace(/[\s-]/g, '')); },
+        normalizePhone(v) {
+            return (v || '').replace(/[০-৯]/g, (d) => String('০১২৩৪৫৬৭৮৯'.indexOf(d))).replace(/[\s\-().]+/g, '');
+        },
+        validBD(v) { return BD_RE.test(this.normalizePhone(v)); },
 
         captureAttribution() {
             try {
@@ -526,6 +530,7 @@ function checkoutPage(opts) {
         },
         get isCOD() { return (this.selectedMethod?.code || '').toLowerCase() === 'cod'; },
         get requiresVerification() { return Boolean(this.selectedMethod && !this.isCOD); },
+        get isMobileBanking() { return this.selectedMethod?.type === 'mobile_banking'; },
 
         get subtotal() { return this.$store.cart.subtotal || 0; },
 
@@ -636,6 +641,10 @@ function checkoutPage(opts) {
             if (!this.selectedPaymentCode) { this.formError = 'Please select a payment method.'; return; }
             if (this.requiresVerification && (!this.senderNumber.trim() || !this.transactionId.trim())) {
                 this.formError = 'Please enter sender number and Transaction ID for this payment method.';
+                return;
+            }
+            if (this.requiresVerification && this.isMobileBanking && !this.validBD(this.senderNumber)) {
+                this.formError = 'Sender number must be the ' + (this.selectedMethod.name || 'mobile banking') + ' number you paid from (e.g. 01712345678).';
                 return;
             }
             if (this.minOrder && this.subtotal < this.minOrder) {
