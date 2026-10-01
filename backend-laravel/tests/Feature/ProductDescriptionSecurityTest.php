@@ -80,8 +80,10 @@ class ProductDescriptionSecurityTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Features', false);
         $response->assertSee('Battery life', false);
-        $response->assertDontSee('<script>', false);
-        $response->assertDontSee('document.cookie', false);
+        // NOTE: the storefront layout legitimately contains its own <script> tags
+        // (consent banner, vite), so XSS assertions target the malicious payload.
+        $response->assertDontSee('<script>alert', false);
+        $response->assertDontSee('alert(document.cookie)', false);
     }
 
     public function test_plain_text_description_is_wrapped_not_executed_as_html(): void

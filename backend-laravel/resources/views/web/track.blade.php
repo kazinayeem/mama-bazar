@@ -5,7 +5,7 @@
 
     <div class="text-center space-y-2">
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Track Your Order</h1>
-        <p class="text-xs text-slate-500">Enter your Order ID (e.g. MB-123456) and phone number to check delivery status.</p>
+        <p class="text-xs text-slate-500">Enter your Order ID (e.g. GHB-XXXXXX) and the phone number used at checkout to check delivery status.</p>
     </div>
 
     {{-- Search Form --}}
@@ -18,8 +18,8 @@
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Phone Number (optional)</label>
-                <input type="text" name="phone" value="{{ request('phone') }}" placeholder="017XXXXXXXX"
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Phone Number *</label>
+                <input type="tel" name="phone" required value="{{ request('phone') }}" placeholder="017XXXXXXXX" inputmode="numeric"
                     class="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:border-brand-green-500 focus:outline-none">
             </div>
 

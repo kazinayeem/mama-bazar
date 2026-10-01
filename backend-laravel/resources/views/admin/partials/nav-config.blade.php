@@ -60,6 +60,7 @@ $adminNavSections = [
         ['label' => 'Shipping Methods', 'route' => 'admin.shipping.index', 'match' => 'admin.shipping.*', 'icon' => 'map-pin'],
         ['label' => 'Payment Methods', 'route' => 'admin.payment-methods.index', 'match' => 'admin.payment-methods.*', 'icon' => 'credit-card'],
         ['label' => 'Checkout Notices', 'route' => 'admin.checkout-notices.index', 'match' => 'admin.checkout-notices.*', 'icon' => 'bell-ring'],
+        ['label' => 'Checkout Settings', 'route' => 'admin.checkout-settings.index', 'match' => 'admin.checkout-settings.*', 'icon' => 'settings'],
     ]],
     ['label' => 'Customers', 'items' => [
         ['label' => 'Customers', 'route' => 'admin.customers.index', 'match' => 'admin.customers.*', 'icon' => 'users'],

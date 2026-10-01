@@ -10,34 +10,63 @@ use Illuminate\Http\Request;
 
 class AdminCategoryWebController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::with('parent')
-            ->orderBy('sort_order', 'asc')
-            ->orderBy('name', 'asc')
-            ->get();
+        $q = Category::with('parent')->orderBy('sort_order', 'asc')->orderBy('name', 'asc');
 
-        $parents = Category::whereNull('parent_id')->get();
+        if ($search = trim((string) $request->get('q', ''))) {
+            $q->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
+        if ($status = $request->get('status')) {
+            if (in_array($status, ['active', 'inactive'], true)) {
+                $q->where('status', $status);
+            }
+        }
+
+        $categories = $q->paginate(20)->withQueryString();
+
+        $parents = Category::whereNull('parent_id')->orderBy('name')->get();
 
         return view('admin.categories.index', compact('categories', 'parents'));
     }
 
+    protected function categoryRules(?int $ignoreId = null): array
+    {
+        return [
+            'name' => 'required|string|max:100',
+            'slug' => 'nullable|string|max:100|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+            'parent_id' => 'nullable|integer|exists:categories,id',
+            'description' => 'nullable|string|max:2000',
+            'status' => 'nullable|in:active,inactive',
+            'sort_order' => 'nullable|integer|min:0|max:100000',
+            'featured' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ];
+    }
+
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:100',
-        ]);
+        $validated = $request->validate($this->categoryRules());
 
-        $data = $request->except(['image']);
+        $data = [
+            'name' => trim($validated['name']),
+            'slug' => $request->filled('slug')
+                ? trim(strtolower($request->input('slug')))
+                : SlugService::toAsciiSlug($validated['name']),
+            'parent_id' => $validated['parent_id'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'status' => $validated['status'] ?? 'active',
+            'sort_order' => $validated['sort_order'] ?? 0,
+            'featured' => $request->boolean('featured', false),
+        ];
 
         if ($request->hasFile('image')) {
             $upload = MediaStorageService::uploadFile($request->file('image'), 'categories');
             $data['image'] = $upload['url'];
         }
-
-        $data['slug'] = $request->filled('slug')
-            ? trim(strtolower($request->input('slug')))
-            : SlugService::toAsciiSlug($data['name']);
 
         Category::create($data);
 
@@ -48,7 +77,23 @@ class AdminCategoryWebController extends Controller
     {
         $category = Category::findOrFail($id);
 
-        $data = $request->except(['image', '_token', '_method']);
+        $validated = $request->validate($this->categoryRules((int) $id));
+
+        if (!empty($validated['parent_id']) && (int) $validated['parent_id'] === (int) $category->id) {
+            return back()->withErrors(['parent_id' => 'A category cannot be its own parent.'])->withInput();
+        }
+
+        $data = [
+            'name' => trim($validated['name']),
+            'parent_id' => $validated['parent_id'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'status' => $validated['status'] ?? $category->status,
+            'sort_order' => $validated['sort_order'] ?? 0,
+            'featured' => $request->boolean('featured', (bool) $category->featured),
+        ];
+        if ($request->filled('slug')) {
+            $data['slug'] = trim(strtolower($request->input('slug')));
+        }
 
         if ($request->hasFile('image')) {
             if ($category->image) {

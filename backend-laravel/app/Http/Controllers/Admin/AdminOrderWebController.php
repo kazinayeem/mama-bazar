@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
-use App\Services\OrderService;
+use App\Models\SiteSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,6 +24,7 @@ class AdminOrderWebController extends Controller
             $s = $request->input('search');
             $query->where(function ($q) use ($s) {
                 $q->where('order_id', 'like', "%{$s}%")
+                  ->orWhere('invoice_number', 'like', "%{$s}%")
                   ->orWhere('customer_name', 'like', "%{$s}%")
                   ->orWhere('phone', 'like', "%{$s}%");
             });
@@ -35,14 +37,40 @@ class AdminOrderWebController extends Controller
 
     public function show($id)
     {
-        $order = Order::with(['items.product', 'statusHistory.user'])->findOrFail($id);
-        return view('admin.orders.show', compact('order'));
+        $order = Order::with(['items.product', 'items.variant', 'statusHistory.user', 'user'])->findOrFail($id);
+        $store = self::storeInfo();
+        return view('admin.orders.show', compact('order', 'store'));
     }
 
     public function invoice($id)
     {
-        $order = Order::with(['items.product'])->findOrFail($id);
-        return view('admin.orders.invoice', compact('order'));
+        $order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
+        $store = self::storeInfo();
+        return view('admin.orders.invoice', compact('order', 'store'));
+    }
+
+    public function downloadInvoice($id)
+    {
+        $order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
+        $store = self::storeInfo();
+        $store['logo_base64'] = self::logoBase64();
+
+        $pdf = Pdf::loadView('admin.orders.invoice-pdf', compact('order', 'store'))
+            ->setPaper('a4', 'portrait')
+            ->setOptions(['isRemoteEnabled' => false, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+
+        self::registerBengaliFont($pdf->getDomPDF());
+
+        $filename = ($order->invoice_number ?: $order->order_id) . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    public function packingSlip($id)
+    {
+        $order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
+        $store = self::storeInfo();
+        return view('admin.orders.packing-slip', compact('order', 'store'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -50,7 +78,7 @@ class AdminOrderWebController extends Controller
         $order = Order::findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled,refunded',
+            'status' => 'required|in:pending,payment_pending,payment_verification,confirmed,processing,packed,shipped,out_for_delivery,delivered,cancelled,returned,refunded',
             'note' => 'nullable|string|max:500',
         ]);
 
@@ -59,7 +87,10 @@ class AdminOrderWebController extends Controller
 
         $order->status = $newStatus;
         if ($newStatus === 'delivered') {
-            $order->payment_status = 'paid';
+            $order->payment_status = 'success';
+        }
+        if (in_array($newStatus, ['cancelled', 'refunded'], true)) {
+            // Keep payment_status truthful; admin adjusts separately below.
         }
         $order->save();
 
@@ -71,5 +102,131 @@ class AdminOrderWebController extends Controller
         ]);
 
         return back()->with('success', "Order #{$order->order_id} status updated to {$newStatus}.");
+    }
+
+    public function updatePayment(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $request->validate([
+            'payment_status' => 'required|in:pending,payment_pending,payment_verification,verified,success,failed,rejected,refunded',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        $order->payment_status = $request->input('payment_status');
+        $order->save();
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => $order->status,
+            'note' => 'Payment: ' . $request->input('payment_status') . ($request->input('note') ? ' — ' . $request->input('note') : ''),
+            'created_by_user_id' => Auth::id(),
+        ]);
+
+        return back()->with('success', "Payment status updated to {$order->payment_status}.");
+    }
+
+    public function addNote(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $request->validate(['admin_notes' => 'required|string|max:2000']);
+
+        $order->admin_notes = trim(($order->admin_notes ? $order->admin_notes . "\n" : '') . '[' . now()->format('Y-m-d H:i') . ' | ' . (Auth::user()->name ?? 'Admin') . '] ' . $request->input('admin_notes'));
+        $order->save();
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => $order->status,
+            'note' => 'Internal note added',
+            'created_by_user_id' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Internal note added.');
+    }
+
+    public static function storeInfo(): array
+    {
+        $all = SiteSetting::all()->pluck('value', 'key')->toArray();
+        $get = function (array $keys, $default) use ($all) {
+            foreach ($keys as $k) {
+                if (!empty($all[$k])) return $all[$k];
+            }
+            return $default;
+        };
+
+        return [
+            'name' => $get(['store_name', 'site_name'], 'Mama Bazar'),
+            'tagline' => $get(['store_tagline'], 'Online Grocery & Essentials'),
+            'address' => $get(['store_address', 'business_address'], 'Dhaka, Bangladesh'),
+            'phone' => $get(['store_phone', 'contact_number', 'helpline'], '01700-000000'),
+            'email' => $get(['support_email', 'store_email'], 'support@mamabazar.com'),
+            'website' => $get(['website', 'store_website'], 'www.mamabazar.com'),
+            'tax_id' => $get(['business_registration', 'tax_id', 'trade_license'], null),
+            'return_policy' => $get(['return_policy_short'], 'Easy 7-day return for damaged or wrong items. Please keep the invoice.'),
+        ];
+    }
+
+    protected static function logoBase64(): ?string
+    {
+        foreach ([public_path('brandlogo.png'), public_path('brand-logo.png'), public_path('logo.png')] as $p) {
+            if (is_file($p)) {
+                $mime = 'image/png';
+                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($p));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Register Hind Siliguri (OFL Bengali font) with dompdf.
+     * registerFont() generates metrics but its URL-based resolution breaks
+     * on special chars in the project path, so entries are then pinned to
+     * the generated extension-less cache paths (the format dompdf resolves).
+     * Falls back silently to DejaVu Sans.
+     */
+    protected static function registerBengaliFont($dompdf): void
+    {
+        try {
+            $regular = public_path('fonts/HindSiliguri-Regular.ttf');
+            $bold = public_path('fonts/HindSiliguri-Bold.ttf');
+            if (!is_file($regular) || !is_readable($regular)) {
+                return;
+            }
+            if (!is_file($bold) || !is_readable($bold)) {
+                $bold = $regular;
+            }
+            // dompdf needs a writable dir for font metrics (absent on fresh deploys).
+            $fontDir = rtrim($dompdf->getOptions()->getFontDir(), '/');
+            if (!is_dir($fontDir)) {
+                @mkdir($fontDir, 0775, true);
+            }
+            if (!is_dir($fontDir) || !is_writable($fontDir)) {
+                return;
+            }
+            $metrics = $dompdf->getFontMetrics();
+            $weights = ['normal' => $regular, 'bold' => $bold, 'italic' => $regular, 'bold_italic' => $bold];
+            foreach (['normal' => $regular, 'bold' => $bold] as $weight => $file) {
+                $metrics->registerFont(
+                    ['family' => 'Hind Siliguri', 'style' => 'normal', 'weight' => $weight],
+                    $file
+                );
+            }
+            // Pin entries to deterministic cache paths (prefix + md5 of source path).
+            $dir = $fontDir;
+            $pinned = [];
+            foreach ($weights as $subtype => $file) {
+                $style = $subtype === 'bold_italic' ? 'bold_italic' : ($subtype === 'italic' ? 'italic' : $subtype);
+                $prefix = 'hind_siliguri_' . $style . '_' . md5($file);
+                if (is_file($dir . '/' . $prefix . '.ufm') || is_file($dir . '/' . $prefix . '.ttf')) {
+                    $pinned[$subtype] = $dir . '/' . $prefix;
+                }
+            }
+            if (isset($pinned['normal'])) {
+                $metrics->setFontFamily('hind siliguri', $pinned);
+            }
+        } catch (\Throwable $e) {
+            // Non-fatal: invoice still renders with the default font.
+        }
     }
 }

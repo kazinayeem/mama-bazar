@@ -526,3 +526,23 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+// GA4 view_item — no PII, fires once per page view.
+(function () {
+    try {
+        if (sessionStorage.getItem('mb_view_{{ (int) ($product['id'] ?? 0) }}')) return;
+        sessionStorage.setItem('mb_view_{{ (int) ($product['id'] ?? 0) }}', '1');
+        if (window.mbTrack) {
+            window.mbTrack('view_item', {
+                value: {{ (float) ($product['salePrice'] ?? $product['price'] ?? 0) }},
+                currency: 'BDT',
+                content_ids: [@js((string) ($product['id'] ?? ''))],
+                content_type: 'product',
+            });
+        }
+    } catch (e) {}
+})();
+</script>
+@endpush

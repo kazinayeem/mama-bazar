@@ -36,6 +36,11 @@ class OrderController extends Controller
 
         $input = $request->all();
         $input['userId'] = $this->extractUserId($request) ?: ($request->input('userId') ? (int) $request->input('userId') : null);
+        $input['idempotency_key'] = $request->input('idempotency_key') ?? $request->input('idempotencyKey');
+        $input['_client_ip'] = $request->ip();
+        $input['_user_agent'] = mb_substr((string) $request->userAgent(), 0, 1000);
+        $input['_referrer'] = $request->headers->get('referer');
+        $input['order_source'] = $request->input('order_source', 'api');
 
         $result = OrderService::createOrder($input);
 
@@ -84,23 +89,16 @@ class OrderController extends Controller
 
     public function trackOrder(Request $request)
     {
-        $orderId = $request->input('orderId');
-        $phone = $request->input('phone');
-
-        $query = Order::query();
-        if ($orderId) {
-            $query->where('order_id', trim($orderId));
-        }
-        if ($phone) {
-            $query->where('phone', trim($phone));
-        }
-
-        $orders = $query->orderBy('created_at', 'desc')->take(10)->get();
-        $formatted = $orders->map(fn($o) => OrderService::formatOrder($o))->toArray();
+        // Require both reference + phone (or token) — never list orders by a single field.
+        $order = OrderService::trackOrder(
+            $request->input('orderId') ?? $request->input('order_id'),
+            $request->input('phone'),
+            $request->input('token')
+        );
 
         return response()->json([
             'success' => true,
-            'data' => ['orders' => $formatted],
+            'data' => ['orders' => $order ? [$order] : []],
         ]);
     }
 

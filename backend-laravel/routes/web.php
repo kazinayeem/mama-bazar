@@ -45,8 +45,9 @@ Route::post('/products/{slug}/reviews', [ProductWebController::class, 'storeRevi
     ->middleware('auth')
     ->name('products.review');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.coupon');
 Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
 Route::get('/track', [OrderTrackingController::class, 'index'])->name('track');
 Route::post('/newsletter/subscribe', [HomeController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
@@ -112,7 +113,11 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/orders', [AdminOrderWebController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{id}', [AdminOrderWebController::class, 'show'])->name('admin.orders.show');
     Route::get('/orders/{id}/invoice', [AdminOrderWebController::class, 'invoice'])->name('admin.orders.invoice');
+    Route::get('/orders/{id}/invoice/download', [AdminOrderWebController::class, 'downloadInvoice'])->name('admin.orders.invoice.download');
+    Route::get('/orders/{id}/packing-slip', [AdminOrderWebController::class, 'packingSlip'])->name('admin.orders.packing-slip');
     Route::post('/orders/{id}/status', [AdminOrderWebController::class, 'updateStatus'])->name('admin.orders.status');
+    Route::post('/orders/{id}/payment', [AdminOrderWebController::class, 'updatePayment'])->name('admin.orders.payment');
+    Route::post('/orders/{id}/notes', [AdminOrderWebController::class, 'addNote'])->name('admin.orders.notes');
 
     // Categories
     Route::get('/categories', [AdminCategoryWebController::class, 'index'])->name('admin.categories.index');
@@ -136,6 +141,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     // Coupons
     Route::get('/coupons', [AdminCouponWebController::class, 'index'])->name('admin.coupons.index');
     Route::post('/coupons', [AdminCouponWebController::class, 'store'])->name('admin.coupons.store');
+    Route::put('/coupons/{id}', [AdminCouponWebController::class, 'update'])->name('admin.coupons.update');
     Route::delete('/coupons/{id}', [AdminCouponWebController::class, 'destroy'])->name('admin.coupons.destroy');
 
     // Customers
@@ -159,6 +165,16 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     // Checkout
     Route::get('/shipping', [AdminSettingWebController::class, 'shipping'])->name('admin.shipping.index');
     Route::post('/shipping', [AdminSettingWebController::class, 'storeShipping'])->name('admin.shipping.store');
+    Route::put('/shipping/{id}', [AdminSettingWebController::class, 'updateShipping'])->name('admin.shipping.update');
+    Route::post('/shipping/{id}/toggle', [AdminSettingWebController::class, 'toggleShipping'])->name('admin.shipping.toggle');
+    Route::post('/shipping/reorder', [AdminSettingWebController::class, 'reorderShipping'])->name('admin.shipping.reorder');
+    Route::delete('/shipping/{id}', [AdminSettingWebController::class, 'destroyShipping'])->name('admin.shipping.destroy');
+    Route::put('/shipping/{id}', [AdminSettingWebController::class, 'updateShipping'])->name('admin.shipping.update');
+    Route::post('/shipping/{id}/toggle', [AdminSettingWebController::class, 'toggleShipping'])->name('admin.shipping.toggle');
+    Route::post('/shipping/reorder', [AdminSettingWebController::class, 'reorderShipping'])->name('admin.shipping.reorder');
+    Route::delete('/shipping/{id}', [AdminSettingWebController::class, 'destroyShipping'])->name('admin.shipping.destroy');
+    Route::get('/checkout-settings', [AdminSettingWebController::class, 'checkoutSettings'])->name('admin.checkout-settings.index');
+    Route::post('/checkout-settings', [AdminSettingWebController::class, 'updateCheckoutSettings'])->name('admin.checkout-settings.update');
     Route::get('/payment-methods', [AdminSettingWebController::class, 'paymentMethods'])->name('admin.payment-methods.index');
     Route::post('/payment-methods', [AdminSettingWebController::class, 'storePaymentMethod'])->name('admin.payment-methods.store');
     Route::put('/payment-methods/{id}', [AdminSettingWebController::class, 'updatePaymentMethod'])->name('admin.payment-methods.update');

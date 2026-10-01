@@ -54,15 +54,32 @@ class AdminModuleWebController extends Controller
 
     public function adjustStock(Request $request, int $id)
     {
+        $validated = $request->validate([
+            'delta' => 'required|integer|min:-10000|max:10000',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
         $product = Product::findOrFail($id);
-        $delta = (int) $request->input('delta', 0);
+        $delta = (int) $validated['delta'];
         $product->stock = max(0, (int) $product->stock + $delta);
         if ($product->stock <= 0) {
-            $product->stock_status = 'out_of_stock';
+            $product->stock_status = $product->backorder ? 'on_backorder' : 'out_of_stock';
         } elseif ($product->stock_status === 'out_of_stock') {
             $product->stock_status = 'in_stock';
         }
         $product->save();
+
+        try {
+            AdminAuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'inventory.adjust',
+                'model_type' => Product::class,
+                'model_id' => $product->id,
+                'details' => trim(($validated['reason'] ?? '') !== '' ? "delta={$delta}; " . $validated['reason'] : "delta={$delta}"),
+            ]);
+        } catch (\Throwable $e) {
+            // Audit logging must never break stock adjustments.
+        }
 
         return back()->with('success', "Stock updated for {$product->title}.");
     }
@@ -267,6 +284,39 @@ class AdminModuleWebController extends Controller
             ->limit(10)
             ->get();
 
+        // Guest vs registered
+        $guestOrders = Order::where('created_at', '>=', $since)->whereNull('user_id')->count();
+        $registeredOrders = Order::where('created_at', '>=', $since)->whereNotNull('user_id')->count();
+
+        // Paid vs created vs cancelled/refunded
+        $paidOrders = Order::where('created_at', '>=', $since)->whereIn('payment_status', ['success', 'verified'])->count();
+        $cancelledOrders = Order::where('created_at', '>=', $since)->whereIn('status', ['cancelled', 'refunded', 'returned'])->count();
+
+        // Device / browser / source / campaign breakdowns (privacy-conscious aggregates only)
+        $deviceBreakdown = Order::where('created_at', '>=', $since)
+            ->selectRaw('COALESCE(device_type, "Unknown") as name, COUNT(*) as count')
+            ->groupBy('name')->orderByDesc('count')->get();
+        $browserBreakdown = Order::where('created_at', '>=', $since)
+            ->selectRaw('COALESCE(browser, "Unknown") as name, COUNT(*) as count')
+            ->groupBy('name')->orderByDesc('count')->limit(8)->get();
+        $sourceBreakdown = Order::where('created_at', '>=', $since)
+            ->selectRaw('COALESCE(NULLIF(utm_source, ""), order_source, "Direct") as name, COUNT(*) as count')
+            ->groupBy('name')->orderByDesc('count')->limit(10)->get();
+        $campaignBreakdown = Order::where('created_at', '>=', $since)
+            ->whereNotNull('utm_campaign')
+            ->selectRaw('utm_campaign as name, COUNT(*) as count, SUM(total_price) as revenue')
+            ->groupBy('name')->orderByDesc('count')->limit(10)->get();
+        $shippingBreakdown = Order::where('created_at', '>=', $since)
+            ->selectRaw('COALESCE(shipping_method_name, "Standard") as name, COUNT(*) as count')
+            ->groupBy('name')->orderByDesc('count')->get();
+
+        // Attributed vs unattributed conversions
+        $attributed = Order::where('created_at', '>=', $since)
+            ->where(function ($q) {
+                $q->whereNotNull('utm_source')->orWhereNotNull('utm_campaign');
+            })->count();
+        $unattributed = max(0, $orderCount - $attributed);
+
         return view('admin.analytics.index', [
             'range' => $days,
             'revenue' => $revenue,
@@ -277,6 +327,17 @@ class AdminModuleWebController extends Controller
             'paymentBreakdown' => $paymentBreakdown,
             'revenueTrend' => $revenueTrend,
             'topProducts' => $topProducts,
+            'guestOrders' => $guestOrders,
+            'registeredOrders' => $registeredOrders,
+            'paidOrders' => $paidOrders,
+            'cancelledOrders' => $cancelledOrders,
+            'deviceBreakdown' => $deviceBreakdown,
+            'browserBreakdown' => $browserBreakdown,
+            'sourceBreakdown' => $sourceBreakdown,
+            'campaignBreakdown' => $campaignBreakdown,
+            'shippingBreakdown' => $shippingBreakdown,
+            'attributed' => $attributed,
+            'unattributed' => $unattributed,
             'headerTitle' => 'Analytics',
         ]);
     }

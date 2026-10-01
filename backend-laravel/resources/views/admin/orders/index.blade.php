@@ -15,8 +15,8 @@
              :class="filtersOpen ? 'flex' : 'hidden md:flex'">
             <select name="status" class="admin-control w-full sm:w-44">
                 <option value="">All Statuses</option>
-                @foreach(['pending','confirmed','processing','shipped','delivered','cancelled'] as $s)
-                    <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst($s) }}</option>
+                @foreach(['pending','payment_pending','payment_verification','confirmed','processing','packed','shipped','out_for_delivery','delivered','cancelled','returned','refunded'] as $s)
+                    <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                 @endforeach
             </select>
             <x-admin.button type="submit" size="sm" class="w-full sm:w-auto">Filter</x-admin.button>
@@ -118,9 +118,16 @@
                                 <td><x-admin.badge :variant="$statusVariant">{{ $ord->status }}</x-admin.badge></td>
                                 <td class="admin-hide-md text-slate-500">{{ $ord->created_at->format('M d, Y') }}</td>
                                 <td class="text-right">
-                                    <div class="inline-flex items-center gap-1">
+                                    <div class="inline-flex items-center gap-1" x-data="{ open: false }">
                                         <x-admin.button :href="route('admin.orders.show', $ord->id)" variant="outline" size="sm">Details</x-admin.button>
                                         <x-admin.button :href="route('admin.orders.invoice', $ord->id)" variant="ghost" size="sm" target="_blank">Invoice</x-admin.button>
+                                        <div class="relative">
+                                            <button @click="open = !open" @click.away="open = false" class="rounded-[6px] px-2 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100">▾</button>
+                                            <div x-show="open" x-cloak class="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl py-1 text-left">
+                                                <a href="{{ route('admin.orders.invoice.download', $ord->id) }}" class="block px-3 py-2 text-xs font-semibold hover:bg-slate-50">Download PDF</a>
+                                                <a href="{{ route('admin.orders.packing-slip', $ord->id) }}" target="_blank" class="block px-3 py-2 text-xs font-semibold hover:bg-slate-50">Packing Slip</a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

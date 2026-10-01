@@ -13,10 +13,14 @@
                 <label class="mb-1 block text-xs font-bold">Type *</label>
                 <select name="type" required class="admin-control w-full text-sm">
                     <option value="facebook_pixel">Facebook Pixel</option>
+                    <option value="facebook_conversion_api">Facebook Conversions API (server)</option>
                     <option value="google_tag">Google Tag / GA</option>
+                    <option value="google_tag_manager">Google Tag Manager</option>
+                    <option value="google_analytics">Google Analytics 4</option>
                     <option value="tiktok_pixel">TikTok Pixel</option>
                     <option value="custom">Custom Script</option>
                 </select>
+                <p class="mt-1 text-[11px] text-slate-400">For server Conversions API: set Pixel ID + Access Token on a <code>facebook_conversion_api</code> row. Tags load only after visitor consent.</p>
             </div>
             <div><label class="mb-1 block text-xs font-bold">Pixel / Tag ID</label><input name="pixel_id" class="admin-control w-full text-sm font-mono"></div>
             <div><label class="mb-1 block text-xs font-bold">Script Code</label><textarea name="script_code" rows="4" class="w-full rounded-[6px] border border-[var(--admin-border)] px-3 py-2.5 font-mono text-sm"></textarea></div>

@@ -805,9 +805,107 @@ class ProductService
         }
     }
 
+    /**
+     * Coerce null/empty values to DB-safe defaults for NOT NULL columns.
+     * Central guard so web forms (ConvertEmptyStringsToNull), API and seeders
+     * can never trigger "NOT NULL constraint failed" SQL errors.
+     */
+    public static function sanitizeAttributes(array $data): array
+    {
+        $nonNullDecimals = [
+            'price', 'discount', 'cost_price', 'profit_margin',
+            'tax', 'vat', 'shipping_charge', 'cod_fee',
+        ];
+        foreach ($nonNullDecimals as $field) {
+            if (array_key_exists($field, $data)) {
+                $v = $data[$field];
+                $data[$field] = ($v === '' || $v === null || $v === 'null') ? 0 : (float) $v;
+            }
+        }
+
+        $nullableDecimals = [
+            'sale_price', 'flash_sale_price', 'wholesale_price', 'dealer_price',
+        ];
+        foreach ($nullableDecimals as $field) {
+            if (array_key_exists($field, $data)) {
+                $v = $data[$field];
+                $data[$field] = ($v === '' || $v === null || $v === 'null') ? null : (float) $v;
+            }
+        }
+
+        if (array_key_exists('stock', $data)) {
+            $v = $data['stock'];
+            $data['stock'] = ($v === '' || $v === null || $v === 'null') ? 0 : max(0, (int) $v);
+        }
+        if (array_key_exists('low_stock_alert', $data)) {
+            $v = $data['low_stock_alert'];
+            $data['low_stock_alert'] = ($v === '' || $v === null || $v === 'null') ? 10 : max(0, (int) $v);
+        }
+        if (array_key_exists('min_order', $data)) {
+            $v = $data['min_order'];
+            $data['min_order'] = ($v === '' || $v === null || $v === 'null') ? 1 : max(1, (int) $v);
+        }
+        if (array_key_exists('max_order', $data)) {
+            $v = $data['max_order'];
+            $data['max_order'] = ($v === '' || $v === null || $v === 'null' || (int) $v <= 0) ? null : (int) $v;
+        }
+        foreach (['category_id', 'sub_category_id', 'child_category_id', 'brand_id', 'collection_id', 'vendor_id', 'supplier_id'] as $fk) {
+            if (array_key_exists($fk, $data)) {
+                $v = $data[$fk];
+                $data[$fk] = ($v === '' || $v === null || $v === 'null' || (int) $v <= 0) ? null : (int) $v;
+            }
+        }
+
+        foreach ([
+            'unlimited_stock', 'backorder', 'track_inventory', 'emi_available',
+            'is_featured', 'is_trending', 'is_flash_sale', 'is_new_arrival',
+            'is_best_seller', 'is_limited_edition', 'is_official', 'is_hot_deal', 'is_archived',
+        ] as $boolField) {
+            if (array_key_exists($boolField, $data) && !is_bool($data[$boolField])) {
+                $data[$boolField] = filter_var($data[$boolField], FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
+        // Sale price must never exceed regular price
+        $price = isset($data['price']) ? (float) $data['price'] : null;
+        if (array_key_exists('sale_price', $data) && $data['sale_price'] !== null && $price !== null && $price > 0) {
+            if ((float) $data['sale_price'] >= $price || (float) $data['sale_price'] <= 0) {
+                if ((float) $data['sale_price'] >= $price) {
+                    $data['sale_price'] = null;
+                }
+            }
+        }
+        // Clamp discount to 0-100
+        if (isset($data['discount'])) {
+            $data['discount'] = min(100, max(0, (float) $data['discount']));
+        }
+
+        // Keep stock_status consistent with inventory flags
+        if (array_key_exists('stock', $data) || array_key_exists('unlimited_stock', $data) || array_key_exists('backorder', $data)) {
+            $unlimited = (bool) ($data['unlimited_stock'] ?? false);
+            // Only auto-sync when caller did not explicitly set a valid status,
+            // or when stock key is present (form resubmits carry stale status).
+            $stockVal = array_key_exists('stock', $data) ? (int) $data['stock'] : null;
+            if ($unlimited) {
+                $data['stock_status'] = 'in_stock';
+            } elseif ($stockVal !== null) {
+                if ($stockVal <= 0) {
+                    $data['stock_status'] = !empty($data['backorder']) ? 'on_backorder' : 'out_of_stock';
+                } elseif (isset($data['low_stock_alert']) && $stockVal <= (int) $data['low_stock_alert']) {
+                    $data['stock_status'] = 'low_stock';
+                } else {
+                    $data['stock_status'] = 'in_stock';
+                }
+            }
+        }
+
+        return $data;
+    }
+
     public static function create(array $data): array
     {
         return DB::transaction(function () use ($data) {
+            $data = self::sanitizeAttributes($data);
             $variants = $data['variants'] ?? [];
             $specs = $data['specs'] ?? [];
             $relations = $data['relations'] ?? [];
@@ -857,6 +955,7 @@ class ProductService
         return DB::transaction(function () use ($id, $data) {
             $product = Product::findOrFail($id);
 
+            $data = self::sanitizeAttributes($data);
             $variants = $data['variants'] ?? null;
             $specs = $data['specs'] ?? null;
             $relations = $data['relations'] ?? null;

@@ -27,6 +27,7 @@ window.homepageBuilder = function homepageBuilder(opts) {
         sortable: null,
         slideEditing: null,
         slideIsNew: false,
+        slideValidationError: '',
         deleteSlideTarget: null,
         // Media picker
         pickerOpen: false,
@@ -176,11 +177,13 @@ window.homepageBuilder = function homepageBuilder(opts) {
         },
 
         openSlideCreate() {
+            this.slideValidationError = '';
             this.slideIsNew = true;
             this.slideEditing = this.blankSlide();
         },
 
         openSlideEdit(slide) {
+            this.slideValidationError = '';
             this.slideIsNew = false;
             this.slideEditing = structuredClone(slide);
         },
@@ -197,22 +200,31 @@ window.homepageBuilder = function homepageBuilder(opts) {
             }
         },
 
+        activeHeroSlidesCount() {
+            return (this.config.heroSlides || []).filter(s => s.status === 'active').length;
+        },
+
+        inactiveHeroSlidesCount() {
+            return (this.config.heroSlides || []).filter(s => s.status !== 'active').length;
+        },
+
         saveSlide() {
             if (!this.slideEditing) return;
+            this.slideValidationError = '';
             if (!this.slideEditing.desktopImage) {
-                alert('A desktop image is required');
+                this.slideValidationError = 'A desktop image is required for this slide.';
                 return;
             }
             if ((this.slideEditing.title || '').length > 120) {
-                alert('Title must be 120 characters or fewer');
+                this.slideValidationError = 'Title must be 120 characters or fewer.';
                 return;
             }
             if (!this.isValidButtonUrl(this.slideEditing.primaryButtonUrl)) {
-                alert('Primary button link must be a valid URL or internal path');
+                this.slideValidationError = 'Primary button link must be a valid URL or internal path (e.g. /shop).';
                 return;
             }
             if (!this.isValidButtonUrl(this.slideEditing.secondaryButtonUrl)) {
-                alert('Secondary button link must be a valid URL or internal path');
+                this.slideValidationError = 'Secondary button link must be a valid URL or internal path.';
                 return;
             }
             if (this.slideIsNew) {

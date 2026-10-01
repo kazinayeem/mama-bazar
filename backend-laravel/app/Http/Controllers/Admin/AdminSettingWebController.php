@@ -24,8 +24,18 @@ class AdminSettingWebController extends Controller
 
     public function updateSettings(Request $request)
     {
-        foreach ($request->except(['_token']) as $key => $value) {
-            SiteSetting::updateOrCreate(['key' => $key], ['value' => $value]);
+        $validated = $request->validate([
+            '*' => 'nullable|string|max:10000',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            if (in_array($key, ['_token', '_method'], true)) {
+                continue;
+            }
+            if (!preg_match('/^[a-zA-Z0-9_.\-]{1,100}$/', (string) $key)) {
+                continue;
+            }
+            SiteSetting::updateOrCreate(['key' => $key], ['value' => is_string($value) ? trim($value) : $value]);
         }
 
         return back()->with('success', 'Site settings updated successfully.');
@@ -33,15 +43,125 @@ class AdminSettingWebController extends Controller
 
     public function shipping()
     {
-        $methods = ShippingMethod::orderBy('priority', 'asc')->get();
+        $methods = ShippingMethod::orderBy('priority', 'asc')->orderBy('id')->get();
         return view('admin.settings.shipping', compact('methods'));
+    }
+
+    protected function shippingRules(bool $isUpdate = false): array
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'charge' => 'required|numeric|min:0|max:100000',
+            'estimated_delivery' => 'nullable|string|max:100',
+            'description' => 'nullable|string|max:1000',
+            'applicable_areas' => 'nullable|string|max:2000',
+            'priority' => 'nullable|integer|min:0|max:10000',
+            'free_shipping_min_amount' => 'nullable|numeric|min:0|max:1000000',
+            'cod_available' => 'nullable|boolean',
+            'status' => 'nullable|in:active,inactive',
+        ];
+    }
+
+    protected function shippingPayload(Request $request, ?ShippingMethod $existing = null): array
+    {
+        $v = $request->validate($this->shippingRules($existing !== null));
+        $maxPriority = (int) (ShippingMethod::max('priority') ?? 0);
+        return [
+            'name' => trim($v['name']),
+            'charge' => (float) $v['charge'],
+            'estimated_delivery' => isset($v['estimated_delivery']) ? trim((string) $v['estimated_delivery']) : null,
+            'description' => isset($v['description']) ? trim((string) $v['description']) : null,
+            'applicable_areas' => isset($v['applicable_areas']) ? trim((string) $v['applicable_areas']) : null,
+            'priority' => isset($v['priority']) && $v['priority'] !== null ? (int) $v['priority'] : ($existing?->priority ?? $maxPriority + 10),
+            'free_shipping_min_amount' => isset($v['free_shipping_min_amount']) && $v['free_shipping_min_amount'] !== null && $v['free_shipping_min_amount'] !== '' ? (float) $v['free_shipping_min_amount'] : null,
+            'cod_available' => $request->boolean('cod_available', $existing?->cod_available ?? true),
+            'status' => $v['status'] ?? ($existing?->status ?? 'active'),
+        ];
     }
 
     public function storeShipping(Request $request)
     {
-        $request->validate(['name' => 'required|string', 'charge' => 'required|numeric']);
-        ShippingMethod::create($request->all());
+        ShippingMethod::create($this->shippingPayload($request));
         return back()->with('success', 'Shipping method created.');
+    }
+
+    public function updateShipping(Request $request, $id)
+    {
+        $method = ShippingMethod::findOrFail($id);
+        $method->update($this->shippingPayload($request, $method));
+        return back()->with('success', 'Shipping method updated.');
+    }
+
+    public function toggleShipping($id)
+    {
+        $method = ShippingMethod::findOrFail($id);
+        $method->status = $method->status === 'active' ? 'inactive' : 'active';
+        $method->save();
+        return back()->with('success', "Shipping method {$method->status}.");
+    }
+
+    public function reorderShipping(Request $request)
+    {
+        $validated = $request->validate([
+            'order' => 'required|array|min:1',
+            'order.*' => 'integer',
+        ]);
+        foreach ($validated['order'] as $index => $id) {
+            ShippingMethod::where('id', $id)->update(['priority' => ($index + 1) * 10]);
+        }
+        return back()->with('success', 'Shipping order updated.');
+    }
+
+    public function destroyShipping($id)
+    {
+        $method = ShippingMethod::findOrFail($id);
+        $ordersUsing = \App\Models\Order::where('shipping_method_id', $method->id)->count();
+        if ($ordersUsing > 0) {
+            // Safe-delete: keep history, deactivate instead.
+            $method->status = 'inactive';
+            $method->save();
+            return back()->with('success', "Method is used by {$ordersUsing} order(s) — deactivated instead of deleted to preserve history.");
+        }
+        $method->delete();
+        return back()->with('success', 'Shipping method deleted.');
+    }
+
+    public function checkoutSettings()
+    {
+        $settings = SiteSetting::all()->pluck('value', 'key');
+        $checkout = [];
+        $raw = $settings['checkout_settings'] ?? null;
+        if ($raw) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $checkout = $decoded;
+            }
+        }
+        return view('admin.settings.checkout', compact('settings', 'checkout'));
+    }
+
+    public function updateCheckoutSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'min_order_amount' => 'nullable|numeric|min:0|max:1000000',
+            'free_shipping_threshold' => 'nullable|numeric|min:0|max:1000000',
+            'default_district' => 'nullable|string|max:100',
+            'require_alt_phone' => 'nullable|boolean',
+            'allow_notes' => 'nullable|boolean',
+            'cod_note' => 'nullable|string|max:1000',
+            'announcement_enabled' => 'nullable|boolean',
+        ]);
+        $payload = [
+            'min_order_amount' => isset($validated['min_order_amount']) ? (float) $validated['min_order_amount'] : 0,
+            'free_shipping_threshold' => $validated['free_shipping_threshold'] ?? null,
+            'default_district' => trim((string) ($validated['default_district'] ?? 'Dhaka')),
+            'require_alt_phone' => $request->boolean('require_alt_phone', false),
+            'allow_notes' => $request->boolean('allow_notes', true),
+            'cod_note' => trim((string) ($validated['cod_note'] ?? '')),
+            'announcement_enabled' => $request->boolean('announcement_enabled', true),
+        ];
+        SiteSetting::updateOrCreate(['key' => 'checkout_settings'], ['value' => json_encode($payload)]);
+        return back()->with('success', 'Checkout settings saved.');
     }
 
     public function paymentMethods()

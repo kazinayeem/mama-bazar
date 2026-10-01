@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-tracking-scripts />
 </head>
 <body class="min-h-screen flex flex-col bg-[#F8FAF8] font-body text-slate-800 antialiased" x-data="{ mobileMenu: false }">
 
@@ -288,7 +289,7 @@
             </div>
 
             <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row">
-                <p>&copy; {{ date('Y') }} MamaBazar. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} MamaBazar. All rights reserved. · <button type="button" onclick="window.mbConsentShow && window.mbConsentShow()" class="underline hover:text-slate-600">Cookie settings</button></p>
                 <div class="flex flex-wrap items-center justify-center gap-2">
                     <span class="mr-1 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">We Accept</span>
                     @forelse(($footerPaymentMethods ?? collect())->reject(fn ($m) => $m->code === 'cod') as $pm)
@@ -313,5 +314,6 @@
     </footer>
 
     @stack('scripts')
+    <x-consent-banner />
 </body>
 </html>

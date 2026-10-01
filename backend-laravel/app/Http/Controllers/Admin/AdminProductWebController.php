@@ -77,20 +77,40 @@ class AdminProductWebController extends Controller
 
     public function store(AdminProductRequest $request)
     {
-        $payload = $this->normalizePayload($request);
-        $payload = $this->processVariantImages($request, $payload);
+        try {
+            $payload = $this->normalizePayload($request);
+            $payload = $this->processVariantImages($request, $payload);
 
-        $product = ProductService::create($payload);
+            $product = ProductService::create($payload);
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Product created successfully',
-                'data' => $product,
-            ], 201);
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product created successfully',
+                    'data' => $product,
+                ], 201);
+            }
+
+            return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Product creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to create product. Please check your inputs and try again.',
+                ], 422);
+            }
+
+            return back()->withInput()->withErrors([
+                'general' => 'Unable to create product. An unexpected error occurred. Please try again.',
+            ]);
         }
-
-        return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
 
     public function show($id)
@@ -125,20 +145,41 @@ class AdminProductWebController extends Controller
 
     public function update(AdminProductRequest $request, $id)
     {
-        $payload = $this->normalizePayload($request);
-        $payload = $this->processVariantImages($request, $payload);
+        try {
+            $payload = $this->normalizePayload($request);
+            $payload = $this->processVariantImages($request, $payload);
 
-        $product = ProductService::update((int) $id, $payload);
+            $product = ProductService::update((int) $id, $payload);
 
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Product updated successfully',
-                'data' => $product,
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product updated successfully',
+                    'data' => $product,
+                ]);
+            }
+
+            return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Product update failed', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to update product. Please check your inputs and try again.',
+                ], 422);
+            }
+
+            return back()->withInput()->withErrors([
+                'general' => 'Unable to update product. An unexpected error occurred. Please try again.',
             ]);
         }
-
-        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
 
     public function destroy($id, Request $request)
@@ -521,16 +562,27 @@ class AdminProductWebController extends Controller
             $data['stock'] = ($v === '' || $v === null || $v === 'null') ? 0 : (int) $v;
         }
 
-        // Convert empty strings to null for float columns (or 0 for non-nullables like discount)
+        // Convert empty strings to null for truly-nullable float columns.
+        // NOT NULL columns (cost_price, profit_margin, tax, vat, shipping_charge,
+        // cod_fee) default to 0 so saves never hit SQL NOT NULL violations.
         foreach ([
-            'sale_price', 'cost_price', 'profit_margin',
-            'tax', 'vat', 'shipping_charge', 'cod_fee', 'flash_sale_price',
+            'sale_price', 'flash_sale_price',
             'wholesale_price', 'dealer_price'
         ] as $floatField) {
             if (array_key_exists($floatField, $data)) {
                 $v = $data[$floatField];
                 $data[$floatField] = ($v === '' || $v === null || $v === 'null') ? null : (float) $v;
             }
+        }
+        foreach (['cost_price', 'profit_margin', 'tax', 'vat', 'shipping_charge', 'cod_fee'] as $zeroFloat) {
+            if (array_key_exists($zeroFloat, $data)) {
+                $v = $data[$zeroFloat];
+                $data[$zeroFloat] = ($v === '' || $v === null || $v === 'null') ? 0.0 : (float) $v;
+            }
+        }
+        if (array_key_exists('price', $data)) {
+            $v = $data['price'];
+            $data['price'] = ($v === '' || $v === null || $v === 'null') ? 0.0 : (float) $v;
         }
         if (array_key_exists('discount', $data)) {
             $v = $data['discount'];
@@ -550,14 +602,20 @@ class AdminProductWebController extends Controller
             }
         }
 
-        // Cast boolean flags
+        // Cast boolean flags safely
         foreach ([
             'unlimited_stock', 'backorder', 'track_inventory', 'emi_available',
             'is_featured', 'is_trending', 'is_flash_sale', 'is_new_arrival',
             'is_best_seller', 'is_limited_edition', 'is_official', 'is_hot_deal'
         ] as $boolField) {
-            if (isset($data[$boolField])) {
-                $data[$boolField] = filter_var($data[$boolField], FILTER_VALIDATE_BOOLEAN);
+            if (array_key_exists($boolField, $data)) {
+                $val = $data[$boolField];
+                if (is_bool($val)) {
+                    $data[$boolField] = $val;
+                } else {
+                    $filtered = filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                    $data[$boolField] = $filtered !== null ? $filtered : false;
+                }
             }
         }
 

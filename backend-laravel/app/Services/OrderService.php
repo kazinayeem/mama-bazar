@@ -41,6 +41,12 @@ class OrderService
         return "GHB-" . $code;
     }
 
+    public static function generateInvoiceNumber(?int $sequence = null): string
+    {
+        $seq = $sequence ?? ((int) (\App\Models\Order::max('id') ?? 0) + 1);
+        return 'INV-' . date('Y') . '-' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
+    }
+
     public static function getTimelineWithFallback(Order $order): array
     {
         $logs = OrderStatusHistory::where('order_id', $order->id)
@@ -125,11 +131,13 @@ class OrderService
                 'orderId' => $item->order_id,
                 'productId' => $item->product_id,
                 'variantId' => $item->variant_id,
+                'productTitle' => $item->product_title ?: $item->product?->title,
+                'productSku' => $item->product_sku ?: $item->product?->sku,
                 'size' => $item->size,
                 'color' => $item->color,
                 'quantity' => $item->quantity,
                 'price' => (float) $item->price,
-                'variantName' => $item->variant?->name,
+                'variantName' => $item->variant_name ?: $item->variant?->name,
                 'product' => $item->product ? [
                     'title' => $item->product->title,
                     'image' => $image,
@@ -140,6 +148,9 @@ class OrderService
         return [
             'id' => $order->id,
             'orderId' => $order->order_id,
+            'invoiceNumber' => $order->invoice_number,
+            'accessToken' => $order->access_token,
+            'isGuest' => empty($order->user_id),
             'userId' => $order->user_id,
             'customerName' => $order->customer_name,
             'phone' => $order->phone,
@@ -183,7 +194,20 @@ class OrderService
 
     public static function createOrder(array $input): array
     {
-        return DB::transaction(function () use ($input) {
+        // Idempotency: safe retry / double-submit returns the original order.
+        $idempotencyKey = $input['idempotency_key'] ?? $input['idempotencyKey'] ?? null;
+        if ($idempotencyKey) {
+            $existing = Order::where('idempotency_key', $idempotencyKey)->first();
+            if ($existing) {
+                return [
+                    'order' => self::formatOrder($existing),
+                    'auth' => null,
+                    'duplicate' => true,
+                ];
+            }
+        }
+
+        return DB::transaction(function () use ($input, $idempotencyKey) {
             $items = $input['items'] ?? [];
             if (empty($items)) {
                 throw new Exception("Order must contain at least one item", 400);
@@ -193,7 +217,7 @@ class OrderService
             $itemsWithPrice = [];
 
             $productIds = array_unique(array_filter(array_map(fn($it) => $it['productId'] ?? $it['product_id'] ?? null, $items)));
-            $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+            $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
 
             foreach ($items as $item) {
                 $productId = $item['productId'] ?? $item['product_id'] ?? null;
@@ -208,7 +232,7 @@ class OrderService
                 $itemPrice = 0;
 
                 if ($variantId) {
-                    $variant = ProductVariant::where('id', $variantId)->where('product_id', $productId)->first();
+                    $variant = ProductVariant::where('id', $variantId)->where('product_id', $productId)->lockForUpdate()->first();
                     if (!$variant) throw new Exception("Variant not found for product {$product->title}", 400);
                     if (!$variant->availability || $variant->status === 'inactive') {
                         throw new Exception("Variant \"{$variant->name}\" is not available", 400);
@@ -221,7 +245,7 @@ class OrderService
                     $size = $item['size'] ?? null;
                     $color = $item['color'] ?? null;
 
-                    $variants = ProductVariant::where('product_id', $productId)->where('status', 'active')->get();
+                    $variants = ProductVariant::where('product_id', $productId)->where('status', 'active')->lockForUpdate()->get();
                     $matchedVariant = $variants->first(function ($v) use ($size, $color) {
                         $opts = (array) $v->options;
                         $sizeMatch = !$size || collect($opts)->contains(fn($val) => strcasecmp($val, $size) === 0);
@@ -259,6 +283,11 @@ class OrderService
                 }
 
                 $subtotal += $itemPrice * $quantity;
+                $matchedVariantName = null;
+                if ($variantId) {
+                    $v = ProductVariant::where('id', $variantId)->first();
+                    $matchedVariantName = $v?->name;
+                }
                 $itemsWithPrice[] = [
                     'productId' => $productId,
                     'variantId' => $variantId,
@@ -266,49 +295,75 @@ class OrderService
                     'size' => $item['size'] ?? null,
                     'color' => $item['color'] ?? null,
                     'price' => $itemPrice,
+                    'productTitle' => $product->title,
+                    'productSku' => $product->sku ?? ('MB-' . $product->id),
+                    'variantName' => $matchedVariantName,
                 ];
             }
 
-            // Shipping
-            $shippingCost = (float) ($input['shippingCost'] ?? $input['shipping_cost'] ?? 0);
-            $shippingMethodName = null;
+            // Shipping — always recalculated server-side, never trusted from frontend.
+            $customerDistrict = $input['district'] ?? $input['District'] ?? null;
             $shippingMethodId = $input['shippingMethodId'] ?? $input['shipping_method_id'] ?? null;
-
-            if (!empty($shippingMethodId)) {
-                $method = ShippingMethod::where('id', $shippingMethodId)->where('status', 'active')->first();
-                if ($method) {
-                    $shippingMethodId = $method->id;
-                    $shippingMethodName = $method->name;
-                    $freeMin = $method->free_shipping_min_amount;
-                    $shippingCost = ($freeMin !== null && $subtotal >= (float) $freeMin) ? 0 : (float) $method->charge;
+            if (empty($shippingMethodId)) {
+                throw new Exception("Please select a delivery method", 400);
+            }
+            $method = ShippingMethod::where('id', $shippingMethodId)->where('status', 'active')->first();
+            if (! $method) {
+                throw new Exception("Selected delivery method is unavailable", 400);
+            }
+            if (! $method->isApplicableTo($customerDistrict)) {
+                throw new Exception("\"{$method->name}\" is not available for " . ($customerDistrict ?: 'your area'), 400);
+            }
+            $shippingMethodId = $method->id;
+            $shippingMethodName = $method->name;
+            $freeMin = $method->free_shipping_min_amount;
+            if ($freeMin === null) {
+                $globalSettings = SiteSetting::where('key', 'checkout_settings')->first();
+                if ($globalSettings) {
+                    $decoded = json_decode($globalSettings->value, true);
+                    $freeMin = $decoded['free_shipping_threshold'] ?? null;
                 }
             }
+            $shippingCost = ($freeMin !== null && $freeMin !== '' && $subtotal >= (float) $freeMin) ? 0 : (float) $method->charge;
 
             // Payment method
             $paymentMethodCode = strtolower($input['paymentMethod'] ?? $input['payment_method'] ?? 'cod');
             $paymentMethod = PaymentMethod::where('code', $paymentMethodCode)->first();
-            if ($paymentMethod && (!$paymentMethod->enabled || $paymentMethod->maintenance_mode)) {
+            if (! $paymentMethod) {
+                throw new Exception("Selected payment method is unavailable", 400);
+            }
+            if (! $paymentMethod->enabled || $paymentMethod->maintenance_mode) {
                 throw new Exception("{$paymentMethod->name} is currently unavailable", 400);
             }
+            if ($paymentMethodCode === 'cod' && isset($method) && ! $method->cod_available) {
+                throw new Exception("Cash on Delivery is not available for {$method->name}", 400);
+            }
 
-            // Coupon
+            // Coupon — validated server-side; invalid codes are rejected, not ignored.
             $discount = 0;
-            if (!empty($input['couponCode'])) {
-                $coupon = Coupon::where('code', $input['couponCode'])->where('status', 'active')->first();
-                if ($coupon) {
-                    if ($coupon->expiry_date && $coupon->expiry_date->isPast()) {
-                        throw new Exception("Coupon has expired", 400);
-                    }
-                    if ($coupon->min_order_amount && $subtotal < (float) $coupon->min_order_amount) {
-                        throw new Exception("Minimum order amount is {$coupon->min_order_amount} Tk", 400);
-                    }
-                    if ($coupon->discount_type === 'percentage') {
-                        $discount = ($subtotal * (float) $coupon->discount_value) / 100;
-                    } else {
-                        $discount = (float) $coupon->discount_value;
-                    }
-                    $discount = min($discount, $subtotal);
+            $couponCode = trim((string) ($input['couponCode'] ?? $input['coupon_code'] ?? ''));
+            if ($couponCode !== '') {
+                $coupon = Coupon::whereRaw('LOWER(code) = ?', [mb_strtolower($couponCode)])
+                    ->where('status', 'active')
+                    ->first();
+                if (! $coupon) {
+                    throw new Exception("Invalid or expired coupon code", 400);
                 }
+                if ($coupon->expiry_date && $coupon->expiry_date->isPast()) {
+                    throw new Exception("Coupon has expired", 400);
+                }
+                if ($coupon->min_order_amount && $subtotal < (float) $coupon->min_order_amount) {
+                    throw new Exception("Minimum order amount is {$coupon->min_order_amount} Tk", 400);
+                }
+                if ($coupon->discount_type === 'percentage') {
+                    $discount = ($subtotal * (float) $coupon->discount_value) / 100;
+                } else {
+                    $discount = (float) $coupon->discount_value;
+                }
+                $discount = round(min($discount, $subtotal), 2);
+                $couponCode = $coupon->code;
+            } else {
+                $couponCode = null;
             }
 
             // Tax
@@ -377,9 +432,34 @@ class OrderService
                 }
             }
 
+            // Privacy-conscious analytics metadata (hashed/truncated IP only)
+            $rawIp = $input['_client_ip'] ?? null;
+            $uaString = $input['_user_agent'] ?? null;
+            $parsed = \App\Support\DeviceDetector::parse($uaString);
+            $nextSeq = ((int) (Order::max('id') ?? 0)) + 1;
+
             // Create Order
             $order = Order::create([
                 'order_id' => self::generateOrderId(),
+                'invoice_number' => self::generateInvoiceNumber($nextSeq),
+                'access_token' => bin2hex(random_bytes(16)),
+                'idempotency_key' => $idempotencyKey,
+                'ip_hash' => \App\Support\DeviceDetector::hashIp($rawIp),
+                'ip_truncated' => \App\Support\DeviceDetector::truncateIp($rawIp),
+                'user_agent' => $uaString ? mb_substr($uaString, 0, 1000) : null,
+                'browser' => $parsed['browser'],
+                'os_platform' => $parsed['os'],
+                'device_type' => $parsed['device'],
+                'referrer' => isset($input['_referrer']) ? mb_substr((string) $input['_referrer'], 0, 500) : null,
+                'landing_page' => isset($input['_landing_page']) ? mb_substr((string) $input['_landing_page'], 0, 500) : null,
+                'utm_source' => $input['utm_source'] ?? null,
+                'utm_medium' => $input['utm_medium'] ?? null,
+                'utm_campaign' => $input['utm_campaign'] ?? null,
+                'utm_content' => $input['utm_content'] ?? null,
+                'utm_term' => $input['utm_term'] ?? null,
+                'order_source' => $input['order_source'] ?? 'web',
+                'marketing_consent' => !empty($input['marketing_consent']),
+                'fb_event_id' => $input['fb_event_id'] ?? ('order-' . time() . '-' . $nextSeq),
                 'user_id' => $resolvedUserId,
                 'customer_name' => $input['customer_name'] ?? $input['customerName'] ?? $input['name'] ?? 'Customer',
                 'phone' => $input['phone'] ?? '',
@@ -397,7 +477,7 @@ class OrderService
                 'shipping_method_name' => $shippingMethodName,
                 'shipping_cost' => $shippingCost,
                 'subtotal' => $subtotal,
-                'coupon_code' => $input['couponCode'] ?? $input['coupon_code'] ?? null,
+                'coupon_code' => $couponCode,
                 'discount' => $discount,
                 'tax' => $tax,
                 'order_note' => $input['orderNote'] ?? $input['order_note'] ?? null,
@@ -428,22 +508,41 @@ class OrderService
                 'created_by_user_id' => $resolvedUserId,
             ]);
 
-            // Insert order items and decrement stock
+            // Insert order items (with snapshots) and decrement stock atomically
+            // (rows were locked with lockForUpdate above, preventing oversell races).
             foreach ($itemsWithPrice as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['productId'],
                     'variant_id' => $item['variantId'],
+                    'product_title' => $item['productTitle'] ?? null,
+                    'product_sku' => $item['productSku'] ?? null,
+                    'variant_name' => $item['variantName'] ?? null,
                     'size' => $item['size'],
                     'color' => $item['color'],
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                 ]);
 
-                Product::where('id', $item['productId'])->decrement('stock', $item['quantity']);
+                $parent = $products->get($item['productId']);
+                $isUnlimited = $parent && (bool) $parent->unlimited_stock;
 
-                if ($item['variantId']) {
-                    ProductVariant::where('id', $item['variantId'])->decrement('stock', $item['quantity']);
+                if (!$isUnlimited) {
+                    $affected = Product::where('id', $item['productId'])
+                        ->where('stock', '>=', $item['quantity'])
+                        ->decrement('stock', $item['quantity']);
+                    if ($affected === 0) {
+                        throw new Exception("Insufficient stock for {$parent->title} (sold out during checkout)", 400);
+                    }
+
+                    if ($item['variantId']) {
+                        $vAffected = ProductVariant::where('id', $item['variantId'])
+                            ->where('stock', '>=', $item['quantity'])
+                            ->decrement('stock', $item['quantity']);
+                        if ($vAffected === 0) {
+                            throw new Exception("Insufficient variant stock for {$parent->title} (sold out during checkout)", 400);
+                        }
+                    }
                 }
             }
 
@@ -467,36 +566,38 @@ class OrderService
     }
 
     /**
-     * Public-facing order tracking: find an order by its order_id string,
-     * with an optional phone number verification step.
-     *
-     * @param  string|null  $orderId  e.g. "MB-000123"
-     * @param  string|null  $phone    customer phone for verification
-     * @return array|null             formatted order or null if not found / mismatch
+     * Secure guest order tracking: order reference + verified phone (or access token).
+     * Returns null on mismatch without leaking which field was wrong.
      */
-    public static function trackOrder(?string $orderId, ?string $phone = null): ?array
+    public static function trackOrder(?string $orderId, ?string $phone = null, ?string $token = null): ?array
     {
         if (empty($orderId)) {
             return null;
         }
 
-        // Normalise: trim whitespace, make case-insensitive
         $orderId = trim($orderId);
-
-        $query = Order::whereRaw('LOWER(order_id) = ?', [strtolower($orderId)]);
-
-        // If a phone number is supplied, verify it matches
-        if (!empty($phone)) {
-            $cleanPhone = preg_replace('/\s+/', '', trim($phone));
-            $query->where(function ($q) use ($cleanPhone) {
-                $q->whereRaw("REPLACE(phone, ' ', '') = ?", [$cleanPhone])
-                  ->orWhereRaw("REPLACE(alternative_phone, ' ', '') = ?", [$cleanPhone]);
-            });
+        $order = Order::whereRaw('LOWER(order_id) = ?', [strtolower($orderId)])->first();
+        if (!$order) {
+            return null;
         }
 
-        $order = $query->first();
+        // Secure token bypass (e.g. link from confirmation SMS/email)
+        if (!empty($token) && $order->access_token && hash_equals((string) $order->access_token, (string) $token)) {
+            return self::formatOrder($order);
+        }
 
-        return $order ? self::formatOrder($order) : null;
+        // Phone verification is required — never expose by order ID alone.
+        if (empty($phone)) {
+            return null;
+        }
+        $cleanPhone = preg_replace('/[\s\-]/', '', trim($phone));
+        $stored = preg_replace('/[\s\-]/', '', (string) $order->phone);
+        $storedAlt = preg_replace('/[\s\-]/', '', (string) $order->alternative_phone);
+        if ($cleanPhone !== $stored && $cleanPhone !== $storedAlt) {
+            return null;
+        }
+
+        return self::formatOrder($order);
     }
 }
 

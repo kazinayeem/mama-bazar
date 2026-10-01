@@ -1,4 +1,5 @@
 @php
+    $errors = $errors ?? new \Illuminate\Support\ViewErrorBag();
     $isEditing = isset($product) && !empty($product['id']);
     $actionUrl = $isEditing ? route('admin.products.update', $product['id']) : route('admin.products.store');
     $method = $isEditing ? 'PUT' : 'POST';
@@ -87,8 +88,19 @@
             : json_encode($product['structuredData'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
+    $resolveBool = function ($snakeKey, $camelKey, $default) {
+        if (session()->has('_old_input')) {
+            $val = old($snakeKey, old($camelKey));
+            if ($val !== null) {
+                return filter_var($val, FILTER_VALIDATE_BOOLEAN);
+            }
+            return false;
+        }
+        return (bool) $default;
+    };
+
     $initialForm = [
-        'hasVariants' => (bool) old('has_variants', !empty($existingVariants)),
+        'hasVariants' => $resolveBool('has_variants', 'hasVariants', !empty($existingVariants)),
         'title' => old('title', $product['title'] ?? ''),
         'slug' => old('slug', $product['slug'] ?? ''),
         'description' => old('description', $product['description'] ?? ''),
@@ -127,20 +139,20 @@
         'minOrder' => (string) old('min_order', old('minOrder', isset($product['minOrder']) ? $product['minOrder'] : '')),
         'maxOrder' => (string) old('max_order', old('maxOrder', isset($product['maxOrder']) ? $product['maxOrder'] : '')),
         'stockStatus' => old('stock_status', old('stockStatus', $product['stockStatus'] ?? 'in_stock')),
-        'unlimitedStock' => (bool) old('unlimited_stock', old('unlimitedStock', !empty($product['unlimitedStock']))),
-        'backorder' => (bool) old('backorder', !empty($product['backorder'])),
-        'trackInventory' => (bool) old('track_inventory', old('trackInventory', $product['trackInventory'] ?? true)),
+        'unlimitedStock' => $resolveBool('unlimited_stock', 'unlimitedStock', $product['unlimitedStock'] ?? ($product['unlimited_stock'] ?? false)),
+        'backorder' => $resolveBool('backorder', 'allow_backorder', $product['backorder'] ?? false),
+        'trackInventory' => $resolveBool('track_inventory', 'trackInventory', $product['trackInventory'] ?? ($product['track_inventory'] ?? true)),
         'productStatus' => old('product_status', old('productStatus', $product['productStatus'] ?? 'draft')),
         'status' => old('status', $product['status'] ?? 'inactive'),
-        'isFeatured' => (bool) old('is_featured', old('isFeatured', !empty($product['isFeatured']))),
-        'isTrending' => (bool) old('is_trending', old('isTrending', !empty($product['isTrending']))),
-        'isFlashSale' => (bool) old('is_flash_sale', old('isFlashSale', !empty($product['isFlashSale']))),
-        'isNewArrival' => (bool) old('is_new_arrival', old('isNewArrival', !empty($product['isNewArrival']))),
-        'isBestSeller' => (bool) old('is_best_seller', old('isBestSeller', !empty($product['isBestSeller']))),
-        'isLimitedEdition' => (bool) old('is_limited_edition', old('isLimitedEdition', !empty($product['isLimitedEdition']))),
-        'isOfficial' => (bool) old('is_official', old('isOfficial', !empty($product['isOfficial']))),
-        'isHotDeal' => (bool) old('is_hot_deal', old('isHotDeal', !empty($product['isHotDeal']))),
-        'emiAvailable' => (bool) old('emi_available', old('emiAvailable', !empty($product['emiAvailable']))),
+        'isFeatured' => $resolveBool('is_featured', 'isFeatured', !empty($product['isFeatured'])),
+        'isTrending' => $resolveBool('is_trending', 'isTrending', !empty($product['isTrending'])),
+        'isFlashSale' => $resolveBool('is_flash_sale', 'isFlashSale', !empty($product['isFlashSale'])),
+        'isNewArrival' => $resolveBool('is_new_arrival', 'isNewArrival', !empty($product['isNewArrival'])),
+        'isBestSeller' => $resolveBool('is_best_seller', 'isBestSeller', !empty($product['isBestSeller'])),
+        'isLimitedEdition' => $resolveBool('is_limited_edition', 'isLimitedEdition', !empty($product['isLimitedEdition'])),
+        'isOfficial' => $resolveBool('is_official', 'isOfficial', !empty($product['isOfficial'])),
+        'isHotDeal' => $resolveBool('is_hot_deal', 'isHotDeal', !empty($product['isHotDeal'])),
+        'emiAvailable' => $resolveBool('emi_available', 'emiAvailable', !empty($product['emiAvailable'])),
         'seoTitle' => old('seo_title', old('seoTitle', $product['seoTitle'] ?? '')),
         'seoDescription' => old('seo_description', old('seoDescription', $product['seoDescription'] ?? '')),
         'seoKeywords' => old('seo_keywords', old('seoKeywords', $product['seoKeywords'] ?? '')),
@@ -184,6 +196,18 @@
 
     <input type="hidden" name="save_mode" :value="saveMode">
     <input type="hidden" name="has_variants" :value="form.hasVariants ? 1 : 0">
+    <input type="hidden" name="track_inventory" :value="form.trackInventory ? 1 : 0">
+    <input type="hidden" name="unlimited_stock" :value="form.unlimitedStock ? 1 : 0">
+    <input type="hidden" name="backorder" :value="form.backorder ? 1 : 0">
+    <input type="hidden" name="emi_available" :value="form.emiAvailable ? 1 : 0">
+    <input type="hidden" name="is_featured" :value="form.isFeatured ? 1 : 0">
+    <input type="hidden" name="is_trending" :value="form.isTrending ? 1 : 0">
+    <input type="hidden" name="is_flash_sale" :value="form.isFlashSale ? 1 : 0">
+    <input type="hidden" name="is_new_arrival" :value="form.isNewArrival ? 1 : 0">
+    <input type="hidden" name="is_best_seller" :value="form.isBestSeller ? 1 : 0">
+    <input type="hidden" name="is_limited_edition" :value="form.isLimitedEdition ? 1 : 0">
+    <input type="hidden" name="is_official" :value="form.isOfficial ? 1 : 0">
+    <input type="hidden" name="is_hot_deal" :value="form.isHotDeal ? 1 : 0">
     <input type="hidden" name="tags" :value="JSON.stringify(form.tags)">
     <input type="hidden" name="features" :value="JSON.stringify(form.features)">
     <input type="hidden" name="size_options" :value="JSON.stringify(form.sizeOptions)">
@@ -276,25 +300,98 @@
     </div>
 
     @if(isset($errors) && $errors->any())
-        <!-- Server Validation Errors Banner -->
-        <div class="rounded-xl border border-red-200 bg-red-50 p-4">
-            <p class="text-xs font-bold text-red-700">Please correct the following errors:</p>
-            <ul class="mt-1.5 list-disc list-inside text-xs text-red-600 space-y-0.5">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        @php
+            $errorCount = $errors->count();
+            $fieldAnchorMap = [
+                'title' => 'field_title',
+                'slug' => 'field_slug',
+                'description' => 'field_description',
+                'short_description' => 'field_short_description',
+                'price' => 'field_price',
+                'sale_price' => 'field_sale_price',
+                'discount' => 'field_discount',
+                'cost_price' => 'field_cost_price',
+                'category_id' => 'field_category_id',
+                'sub_category_id' => 'field_sub_category_id',
+                'child_category_id' => 'field_child_category_id',
+                'brand_id' => 'field_brand_id',
+                'collection_id' => 'field_collection_id',
+                'vendor_id' => 'field_vendor_id',
+                'supplier_id' => 'field_supplier_id',
+                'sku' => 'field_sku',
+                'barcode' => 'field_barcode',
+                'stock' => 'field_stock',
+                'low_stock_alert' => 'field_low_stock_alert',
+                'min_order' => 'field_min_order',
+                'max_order' => 'field_max_order',
+                'track_inventory' => 'field_track_inventory',
+                'unlimited_stock' => 'field_unlimited_stock',
+                'backorder' => 'field_backorder',
+                'seo_title' => 'field_seo_title',
+                'seo_description' => 'field_seo_description',
+                'seo_keywords' => 'field_seo_keywords',
+                'canonical_url' => 'field_canonical_url',
+                'structured_data' => 'field_structured_data',
+                'images' => 'field_images',
+                'variants' => 'field_has_variants',
+                'has_variants' => 'field_has_variants',
+            ];
+        @endphp
+        <!-- Enhanced Server Validation Errors Banner -->
+        <div id="errorSummaryBanner" role="alert" class="rounded-2xl border border-red-200 bg-red-50/90 p-5 shadow-xs transition-all">
+            <div class="flex items-start gap-3">
+                <div class="rounded-xl bg-red-100 p-2 text-red-600 shrink-0">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-red-900">
+                        {{ $errorCount === 1 ? 'There is 1 validation issue with your submission' : "There are {$errorCount} validation issues that need your attention" }}
+                    </h3>
+                    <p class="mt-0.5 text-xs text-red-700">Please review and correct the highlighted fields below before saving.</p>
+                    <ul class="mt-3 space-y-1.5 text-xs">
+                        @foreach($errors->getMessages() as $field => $messages)
+                            @php
+                                $baseField = explode('.', $field)[0];
+                                $targetId = $fieldAnchorMap[$baseField] ?? $fieldAnchorMap[$field] ?? null;
+                            @endphp
+                            @foreach($messages as $msg)
+                                <li class="flex items-center gap-2 text-red-700">
+                                    <span class="inline-block h-1.5 w-1.5 rounded-full bg-red-500 shrink-0"></span>
+                                    @if($targetId)
+                                        <a href="#{{ $targetId }}" class="font-medium underline hover:text-red-900 transition focus:outline-none focus:ring-1 focus:ring-red-400 rounded">
+                                            {{ $msg }}
+                                        </a>
+                                    @else
+                                        <span>{{ $msg }}</span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
         </div>
     @endif
 
     <!-- Client Error Banner -->
-    <div x-show="validationErrors.length > 0" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4">
-        <p class="text-xs font-bold text-red-700">Please correct the following issues:</p>
-        <ul class="mt-1 list-disc list-inside text-xs text-red-600 space-y-0.5">
-            <template x-for="(err, idx) in validationErrors" :key="idx">
-                <li x-text="err"></li>
-            </template>
-        </ul>
+    <div x-show="validationErrors.length > 0" x-cloak class="rounded-2xl border border-red-200 bg-red-50/90 p-5 shadow-xs">
+        <div class="flex items-start gap-3">
+            <div class="rounded-xl bg-red-100 p-2 text-red-600 shrink-0">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-bold text-red-900" x-text="`${validationErrors.length} issue${validationErrors.length > 1 ? 's' : ''} prevent saving:`"></h3>
+                <ul class="mt-2 list-disc list-inside text-xs text-red-700 space-y-1">
+                    <template x-for="(err, idx) in validationErrors" :key="idx">
+                        <li x-text="err"></li>
+                    </template>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- Section 1: General Information -->
@@ -310,24 +407,31 @@
         <div class="grid gap-4 sm:grid-cols-2">
             <!-- Title -->
             <div class="sm:col-span-2 space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">
+                <label for="field_title" class="text-xs font-bold text-slate-800">
                     Product Title <span class="text-red-500">*</span>
                 </label>
                 <input
                     type="text"
+                    id="field_title"
                     name="title"
                     x-model="form.title"
                     @input="handleTitleChange($event.target.value)"
                     placeholder='e.g. Samsung 55" 4K Smart TV'
                     required
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('title') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                 />
+                @error('title')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Slug -->
             <div class="sm:col-span-2 space-y-1.5">
                 <div class="flex items-center justify-between">
-                    <label class="text-xs font-bold text-slate-800">Slug (URL)</label>
+                    <label for="field_slug" class="text-xs font-bold text-slate-800">Slug (URL)</label>
                     <button
                         type="button"
                         @click="resetSlugFromTitle()"
@@ -339,25 +443,39 @@
                 </div>
                 <input
                     type="text"
+                    id="field_slug"
                     name="slug"
                     x-model="form.slug"
                     @input="slugTouched = true"
                     placeholder="auto-generated from title, e.g. samsung-tv"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-mono focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('slug') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg font-mono focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                 />
+                @error('slug')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
                 <p class="text-[11px] text-slate-400">Auto-generated from title. Only English letters, numbers and hyphens.</p>
             </div>
 
             <!-- Short Description -->
             <div class="sm:col-span-2 space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Short Description</label>
+                <label for="field_short_description" class="text-xs font-bold text-slate-800">Short Description</label>
                 <textarea
+                    id="field_short_description"
                     name="short_description"
                     x-model="form.shortDescription"
                     rows="2"
                     placeholder="One-line product highlight shown on cards"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('short_description') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg focus:outline-hidden focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                 ></textarea>
+                @error('short_description')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Full Description (Tiptap rich HTML) -->
@@ -445,138 +563,202 @@
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-2">
             <!-- Category -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Category</label>
+                <label for="field_category_id" class="text-xs font-bold text-slate-800">Category</label>
                 <select
+                    id="field_category_id"
                     name="category_id"
                     x-model="form.categoryId"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('category_id') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="">Select Category</option>
                     @foreach($categories->whereNull('parent_id') as $cat)
                         <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                     @endforeach
                 </select>
+                @error('category_id')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Sub Category -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Sub-category</label>
+                <label for="field_sub_category_id" class="text-xs font-bold text-slate-800">Sub-category</label>
                 <select
+                    id="field_sub_category_id"
                     name="sub_category_id"
                     x-model="form.subCategoryId"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('sub_category_id') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="">Select Sub-category</option>
                     @foreach($categories->whereNotNull('parent_id') as $sub)
                         <option value="{{ $sub->id }}">{{ $sub->name }}</option>
                     @endforeach
                 </select>
+                @error('sub_category_id')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Child Category -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Child category</label>
+                <label for="field_child_category_id" class="text-xs font-bold text-slate-800">Child category</label>
                 <select
+                    id="field_child_category_id"
                     name="child_category_id"
                     x-model="form.childCategoryId"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('child_category_id') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="">Select Child Category</option>
                     @foreach($categories->whereNotNull('parent_id') as $sub)
                         <option value="{{ $sub->id }}">{{ $sub->name }}</option>
                     @endforeach
                 </select>
+                @error('child_category_id')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Brand -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Brand</label>
+                <label for="field_brand_id" class="text-xs font-bold text-slate-800">Brand</label>
                 <select
+                    id="field_brand_id"
                     name="brand_id"
                     x-model="form.brandId"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('brand_id') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="">Select Brand</option>
                     @foreach($brands as $b)
                         <option value="{{ $b->id }}">{{ $b->name }}</option>
                     @endforeach
                 </select>
+                @error('brand_id')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Collection -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Collection</label>
+                <label for="field_collection_id" class="text-xs font-bold text-slate-800">Collection</label>
                 <select
+                    id="field_collection_id"
                     name="collection_id"
                     x-model="form.collectionId"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('collection_id') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="">Select Collection</option>
                     @foreach($collections as $col)
                         <option value="{{ $col->id }}">{{ $col->name }}</option>
                     @endforeach
                 </select>
+                @error('collection_id')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Vendor -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Vendor</label>
+                <label for="field_vendor_id" class="text-xs font-bold text-slate-800">Vendor</label>
                 <select
+                    id="field_vendor_id"
                     name="vendor_id"
                     x-model="form.vendorId"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('vendor_id') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="">Select Vendor</option>
                     @foreach($vendors as $v)
                         <option value="{{ $v->id }}">{{ $v->name }}</option>
                     @endforeach
                 </select>
+                @error('vendor_id')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Supplier -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Supplier</label>
+                <label for="field_supplier_id" class="text-xs font-bold text-slate-800">Supplier</label>
                 <select
+                    id="field_supplier_id"
                     name="supplier_id"
                     x-model="form.supplierId"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('supplier_id') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="">Select Supplier</option>
                     @foreach($suppliers as $s)
                         <option value="{{ $s->id }}">{{ $s->name }}</option>
                     @endforeach
                 </select>
+                @error('supplier_id')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- SKU -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">SKU</label>
+                <label for="field_sku" class="text-xs font-bold text-slate-800">SKU</label>
                 <input
                     type="text"
+                    id="field_sku"
                     name="sku"
                     x-model="form.sku"
                     placeholder="e.g. TV-55-4K"
-                    class="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs font-mono border {{ $errors->has('sku') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('sku')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Barcode -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Barcode</label>
+                <label for="field_barcode" class="text-xs font-bold text-slate-800">Barcode</label>
                 <input
                     type="text"
+                    id="field_barcode"
                     name="barcode"
                     x-model="form.barcode"
                     placeholder="e.g. 8801234567890"
-                    class="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs font-mono border {{ $errors->has('barcode') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('barcode')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Country of Origin -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Country of Origin</label>
+                <label for="field_country_of_origin" class="text-xs font-bold text-slate-800">Country of Origin</label>
                 <input
                     type="text"
+                    id="field_country_of_origin"
                     name="country_of_origin"
                     x-model="form.countryOfOrigin"
                     placeholder="e.g. Bangladesh"
@@ -586,9 +768,10 @@
 
             <!-- Warehouse -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Warehouse</label>
+                <label for="field_warehouse" class="text-xs font-bold text-slate-800">Warehouse</label>
                 <input
                     type="text"
+                    id="field_warehouse"
                     name="warehouse"
                     x-model="form.warehouse"
                     placeholder="e.g. Dhaka Main"
@@ -598,9 +781,10 @@
 
             <!-- Video URL -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Video URL</label>
+                <label for="field_video_url" class="text-xs font-bold text-slate-800">Video URL</label>
                 <input
                     type="text"
+                    id="field_video_url"
                     name="video_url"
                     x-model="form.videoUrl"
                     placeholder="https://youtube.com/watch?v=…"
@@ -610,9 +794,10 @@
 
             <!-- Warranty -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Warranty</label>
+                <label for="field_warranty" class="text-xs font-bold text-slate-800">Warranty</label>
                 <input
                     type="text"
+                    id="field_warranty"
                     name="warranty"
                     x-model="form.warranty"
                     placeholder="e.g. 1 year official"
@@ -622,9 +807,10 @@
 
             <!-- Weight -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Weight</label>
+                <label for="field_weight" class="text-xs font-bold text-slate-800">Weight</label>
                 <input
                     type="text"
+                    id="field_weight"
                     name="weight"
                     x-model="form.weight"
                     placeholder="e.g. 5.5 kg"
@@ -634,9 +820,10 @@
 
             <!-- Dimensions -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Dimensions</label>
+                <label for="field_dimensions" class="text-xs font-bold text-slate-800">Dimensions</label>
                 <input
                     type="text"
+                    id="field_dimensions"
                     name="dimensions"
                     x-model="form.dimensions"
                     placeholder="e.g. 123 x 71 x 8 cm"
@@ -646,9 +833,10 @@
 
             <!-- Payment Phone -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Payment Phone (bKash / Nagad)</label>
+                <label for="field_payment_phone_number" class="text-xs font-bold text-slate-800">Payment Phone (bKash / Nagad)</label>
                 <input
                     type="text"
+                    id="field_payment_phone_number"
                     name="payment_phone_number"
                     x-model="form.paymentPhoneNumber"
                     placeholder="e.g. 01711111111"
@@ -737,175 +925,259 @@
         <div x-show="!form.hasVariants || form.variants.length === 0" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <!-- Price -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">
+                <label for="field_price" class="text-xs font-bold text-slate-800">
                     Price (৳) <span class="text-red-500">*</span>
                 </label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_price"
                     name="price"
                     x-model="form.price"
                     @input="handlePriceChange($event.target.value)"
                     placeholder="45000"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('price')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Sale Price -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Sale Price (৳)</label>
+                <label for="field_sale_price" class="text-xs font-bold text-slate-800">Sale Price (৳)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_sale_price"
                     name="sale_price"
                     x-model="form.salePrice"
                     @input="handleSalePriceChange($event.target.value)"
                     placeholder="42000"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('sale_price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('sale_price')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Discount % -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Discount (%)</label>
+                <label for="field_discount" class="text-xs font-bold text-slate-800">Discount (%)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
                     max="100"
+                    id="field_discount"
                     name="discount"
                     x-model="form.discount"
                     @input="handleDiscountChange($event.target.value)"
                     placeholder="10"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('discount') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('discount')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Cost Price -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Cost Price (৳)</label>
+                <label for="field_cost_price" class="text-xs font-bold text-slate-800">Cost Price (৳)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_cost_price"
                     name="cost_price"
                     x-model="form.costPrice"
                     placeholder="35000"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('cost_price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('cost_price')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Profit Margin -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Profit Margin (%)</label>
+                <label for="field_profit_margin" class="text-xs font-bold text-slate-800">Profit Margin (%)</label>
                 <input
                     type="number"
                     step="0.01"
+                    id="field_profit_margin"
                     name="profit_margin"
                     x-model="form.profitMargin"
                     placeholder="Auto-calculated"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('profit_margin') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('profit_margin')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Flash Sale Price -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Flash Sale Price (৳)</label>
+                <label for="field_flash_sale_price" class="text-xs font-bold text-slate-800">Flash Sale Price (৳)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_flash_sale_price"
                     name="flash_sale_price"
                     x-model="form.flashSalePrice"
                     placeholder="39990"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('flash_sale_price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('flash_sale_price')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Wholesale Price -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Wholesale Price (৳)</label>
+                <label for="field_wholesale_price" class="text-xs font-bold text-slate-800">Wholesale Price (৳)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_wholesale_price"
                     name="wholesale_price"
                     x-model="form.wholesalePrice"
                     placeholder="38000"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('wholesale_price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('wholesale_price')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Dealer Price -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Dealer Price (৳)</label>
+                <label for="field_dealer_price" class="text-xs font-bold text-slate-800">Dealer Price (৳)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_dealer_price"
                     name="dealer_price"
                     x-model="form.dealerPrice"
                     placeholder="37000"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('dealer_price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('dealer_price')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Tax -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Tax (%)</label>
+                <label for="field_tax" class="text-xs font-bold text-slate-800">Tax (%)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_tax"
                     name="tax"
                     x-model="form.tax"
                     placeholder="5"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('tax') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('tax')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- VAT -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">VAT (%)</label>
+                <label for="field_vat" class="text-xs font-bold text-slate-800">VAT (%)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_vat"
                     name="vat"
                     x-model="form.vat"
                     placeholder="15"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('vat') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('vat')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Shipping Charge -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Shipping Charge (৳)</label>
+                <label for="field_shipping_charge" class="text-xs font-bold text-slate-800">Shipping Charge (৳)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_shipping_charge"
                     name="shipping_charge"
                     x-model="form.shippingCharge"
                     placeholder="100"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('shipping_charge') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('shipping_charge')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- COD Fee -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">COD Fee (৳)</label>
+                <label for="field_cod_fee" class="text-xs font-bold text-slate-800">COD Fee (৳)</label>
                 <input
                     type="number"
                     step="0.01"
                     min="0"
+                    id="field_cod_fee"
                     name="cod_fee"
                     x-model="form.codFee"
                     placeholder="50"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('cod_fee') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('cod_fee')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
         </div>
     </div>
@@ -923,123 +1195,179 @@
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <!-- Stock -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">
+                <label for="field_stock" class="text-xs font-bold text-slate-800">
                     Stock Quantity <span x-show="form.hasVariants">(Base)</span>
                 </label>
                 <input
                     type="number"
                     min="0"
+                    id="field_stock"
                     name="stock"
                     x-model="form.stock"
                     :disabled="form.hasVariants && form.variants.length > 0"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg disabled:bg-slate-100 disabled:text-slate-400"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('stock') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg disabled:bg-slate-100 disabled:text-slate-400"
                 />
+                @error('stock')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
                 <p x-show="form.hasVariants && form.variants.length > 0" class="text-[10px] text-slate-400">Managed per variant below</p>
             </div>
 
             <!-- Low Stock Alert -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Low Stock Alert</label>
+                <label for="field_low_stock_alert" class="text-xs font-bold text-slate-800">Low Stock Alert</label>
                 <input
                     type="number"
                     min="0"
+                    id="field_low_stock_alert"
                     name="low_stock_alert"
                     x-model="form.lowStockAlert"
                     placeholder="5"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('low_stock_alert') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('low_stock_alert')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Stock Status -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Stock Status</label>
+                <label for="field_stock_status" class="text-xs font-bold text-slate-800">Stock Status</label>
                 <select
+                    id="field_stock_status"
                     name="stock_status"
                     x-model="form.stockStatus"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('stock_status') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg bg-white"
                 >
                     <option value="in_stock">In stock</option>
                     <option value="low_stock">Low stock</option>
                     <option value="out_of_stock">Out of stock</option>
                     <option value="on_backorder">On backorder</option>
                 </select>
+                @error('stock_status')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Min Order -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Minimum Order Qty</label>
+                <label for="field_min_order" class="text-xs font-bold text-slate-800">Minimum Order Qty</label>
                 <input
                     type="number"
                     min="0"
+                    id="field_min_order"
                     name="min_order"
                     x-model="form.minOrder"
                     placeholder="1"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('min_order') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('min_order')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Max Order -->
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Maximum Order Qty</label>
+                <label for="field_max_order" class="text-xs font-bold text-slate-800">Maximum Order Qty</label>
                 <input
                     type="number"
                     min="0"
+                    id="field_max_order"
                     name="max_order"
                     x-model="form.maxOrder"
                     placeholder="10"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border {{ $errors->has('max_order') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
                 />
+                @error('max_order')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
         </div>
 
         <!-- Inventory Toggles -->
         <div class="grid gap-3 sm:grid-cols-3 pt-2">
             <!-- Unlimited Stock -->
-            <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 bg-white">
-                <div>
-                    <p class="text-xs font-bold text-slate-900">Unlimited Stock</p>
-                    <p class="text-[11px] text-slate-400">Ignore stock counting</p>
+            <div>
+                <div id="field_unlimited_stock" class="flex items-center justify-between gap-3 rounded-xl border {{ $errors->has('unlimited_stock') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-200 bg-white' }} p-3">
+                    <div>
+                        <p class="text-xs font-bold text-slate-900">Unlimited Stock</p>
+                        <p class="text-[11px] text-slate-400">Ignore stock counting</p>
+                    </div>
+                    <input
+                        type="checkbox"
+                        x-model="form.unlimitedStock"
+                        class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-4 w-4"
+                    />
                 </div>
-                <input
-                    type="checkbox"
-                    name="unlimited_stock"
-                    x-model="form.unlimitedStock"
-                    class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-4 w-4"
-                />
+                @error('unlimited_stock')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Backorder -->
-            <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 bg-white">
-                <div>
-                    <p class="text-xs font-bold text-slate-900">Allow Backorder</p>
-                    <p class="text-[11px] text-slate-400">Accept orders when out of stock</p>
+            <div>
+                <div id="field_backorder" class="flex items-center justify-between gap-3 rounded-xl border {{ $errors->has('backorder') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-200 bg-white' }} p-3">
+                    <div>
+                        <p class="text-xs font-bold text-slate-900">Allow Backorder</p>
+                        <p class="text-[11px] text-slate-400">Accept orders when out of stock</p>
+                    </div>
+                    <input
+                        type="checkbox"
+                        x-model="form.backorder"
+                        class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-4 w-4"
+                    />
                 </div>
-                <input
-                    type="checkbox"
-                    name="backorder"
-                    x-model="form.backorder"
-                    class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-4 w-4"
-                />
+                @error('backorder')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Track Inventory -->
-            <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 bg-white">
-                <div>
-                    <p class="text-xs font-bold text-slate-900">Track Inventory</p>
-                    <p class="text-[11px] text-slate-400">Decrement stock on orders</p>
+            <div>
+                <div id="field_track_inventory" class="flex items-center justify-between gap-3 rounded-xl border {{ $errors->has('track_inventory') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-200 bg-white' }} p-3">
+                    <div>
+                        <p class="text-xs font-bold text-slate-900">Track Inventory</p>
+                        <p class="text-[11px] text-slate-400">Decrement stock on orders</p>
+                    </div>
+                    <input
+                        type="checkbox"
+                        x-model="form.trackInventory"
+                        class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-4 w-4"
+                    />
                 </div>
-                <input
-                    type="checkbox"
-                    name="track_inventory"
-                    x-model="form.trackInventory"
-                    class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-4 w-4"
-                />
+                @error('track_inventory')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
         </div>
     </div>
 
     <!-- Section 4: Images (Local Storage Uploader) -->
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs space-y-5">
+    <div id="field_images" class="rounded-2xl border @if($errors->has('images') || $errors->has('images.*')) border-red-500 ring-1 ring-red-500 is-invalid-field @else border-slate-200 @endif bg-white p-5 sm:p-6 shadow-xs space-y-5">
         <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
             <div>
                 <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -1056,6 +1384,19 @@
                 <span x-text="`Uploading ${uploadingCount} image${uploadingCount > 1 ? 's' : ''}...`"></span>
             </div>
         </div>
+
+        @error('images')
+            <p class="text-xs font-medium text-red-600 mt-1 flex items-center gap-1">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
+        @error('images.*')
+            <p class="text-xs font-medium text-red-600 mt-1 flex items-center gap-1">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
 
         <!-- Hidden input for single-image replace -->
         <input
@@ -1245,7 +1586,7 @@
     </div>
 
     <!-- Section 5: Variants (Dynamic Variant Generator) -->
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs space-y-5" x-data="variantManager()">
+    <div id="field_variants" class="rounded-2xl border @if($errors->has('has_variants') || $errors->has('variants') || $errors->has('variants.*')) border-red-500 ring-1 ring-red-500 is-invalid-field @else border-slate-200 @endif bg-white p-5 sm:p-6 shadow-xs space-y-5" x-data="variantManager()">
         <div class="border-b border-slate-100 pb-3">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
@@ -1255,7 +1596,7 @@
         </div>
 
         <!-- Has Variants Switch -->
-        <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4 bg-slate-50/50">
+        <div id="field_has_variants" class="flex items-center justify-between gap-4 rounded-xl border @error('has_variants') border-red-500 ring-1 ring-red-500 is-invalid-field @else border-slate-200 @enderror p-4 bg-slate-50/50">
             <div>
                 <p class="text-xs font-bold text-slate-900">Product has variants</p>
                 <p class="text-[11px] text-slate-500" x-text="form.hasVariants ? 'ON — sold in multiple variants (e.g. colors/sizes) with individual pricing and stock.' : 'OFF — simple product with a single price and stock.'"></p>
@@ -1266,8 +1607,20 @@
                 class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-5 w-5"
             />
         </div>
+        @error('has_variants')
+            <p class="text-xs font-medium text-red-600 mt-1 flex items-center gap-1">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
+        @error('variants')
+            <p class="text-xs font-medium text-red-600 mt-1 flex items-center gap-1">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
 
-        // Variants workspace — only mount fields when variants are enabled
+        <!-- Variants workspace — only mount fields when variants are enabled -->
         <div x-show="form.hasVariants" x-cloak class="space-y-5">
             <!-- Color & Size Selection -->
             <div class="grid gap-4 sm:grid-cols-2">
@@ -1617,14 +1970,17 @@
                 ];
             @endphp
             @foreach($flags as [$key, $label, $desc])
-                <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 bg-white">
+                @php $snakeKey = Str::snake($key); @endphp
+                <div id="field_{{ $snakeKey }}" class="flex items-center justify-between gap-3 rounded-xl border @error($snakeKey) border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-200 @enderror p-3 bg-white">
                     <div>
                         <p class="text-xs font-bold text-slate-900">{{ $label }}</p>
                         <p class="text-[11px] text-slate-400">{{ $desc }}</p>
+                        @error($snakeKey)
+                            <p class="text-[10px] font-medium text-red-600 mt-0.5">{{ $message }}</p>
+                        @enderror
                     </div>
                     <input
                         type="checkbox"
-                        name="{{ Str::snake($key) }}"
                         x-model="form.{{ $key }}"
                         class="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-4 w-4"
                     />
@@ -1635,75 +1991,118 @@
         <!-- SEO Metadata Fields -->
         <div class="grid gap-4 sm:grid-cols-2 pt-2">
             <div class="sm:col-span-2 space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">SEO Title</label>
+                <label for="field_seo_title" class="text-xs font-bold text-slate-800">SEO Title</label>
                 <input
                     type="text"
+                    id="field_seo_title"
                     name="seo_title"
                     x-model="form.seoTitle"
                     placeholder="Meta title"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border @error('seo_title') border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-300 @enderror rounded-lg"
                 />
+                @error('seo_title')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <div class="sm:col-span-2 space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">SEO Description</label>
+                <label for="field_seo_description" class="text-xs font-bold text-slate-800">SEO Description</label>
                 <textarea
+                    id="field_seo_description"
                     name="seo_description"
                     x-model="form.seoDescription"
                     rows="2"
                     placeholder="Meta description"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border @error('seo_description') border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-300 @enderror rounded-lg"
                 ></textarea>
+                @error('seo_description')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <div class="sm:col-span-2 space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">SEO Keywords</label>
+                <label for="field_seo_keywords" class="text-xs font-bold text-slate-800">SEO Keywords</label>
                 <input
                     type="text"
+                    id="field_seo_keywords"
                     name="seo_keywords"
                     x-model="form.seoKeywords"
                     placeholder="comma, separated, keywords"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border @error('seo_keywords') border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-300 @enderror rounded-lg"
                 />
+                @error('seo_keywords')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <div class="sm:col-span-2 space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Canonical URL</label>
+                <label for="field_canonical_url" class="text-xs font-bold text-slate-800">Canonical URL</label>
                 <input
                     type="text"
+                    id="field_canonical_url"
                     name="canonical_url"
                     x-model="form.canonicalUrl"
                     placeholder="https://example.com/products/…"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border @error('canonical_url') border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-300 @enderror rounded-lg"
                 />
+                @error('canonical_url')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">OG Image URL</label>
+                <label for="field_og_image" class="text-xs font-bold text-slate-800">OG Image URL</label>
                 <input
                     type="text"
+                    id="field_og_image"
                     name="og_image"
                     x-model="form.ogImage"
                     placeholder="https://…"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border @error('og_image') border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-300 @enderror rounded-lg"
                 />
+                @error('og_image')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <div class="space-y-1.5">
-                <label class="text-xs font-bold text-slate-800">Twitter Image URL</label>
+                <label for="field_twitter_image" class="text-xs font-bold text-slate-800">Twitter Image URL</label>
                 <input
                     type="text"
+                    id="field_twitter_image"
                     name="twitter_image"
                     x-model="form.twitterImage"
                     placeholder="https://…"
-                    class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs border @error('twitter_image') border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-300 @enderror rounded-lg"
                 />
+                @error('twitter_image')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
 
             <!-- Structured Data JSON -->
             <div class="sm:col-span-2 space-y-1.5" x-data="{ jsonError: null }">
-                <label class="text-xs font-bold text-slate-800">Structured Data (JSON-LD)</label>
+                <label for="field_structured_data" class="text-xs font-bold text-slate-800">Structured Data (JSON-LD)</label>
                 <textarea
+                    id="field_structured_data"
                     name="structured_data"
                     x-model="form.structuredData"
                     @input="
@@ -1714,9 +2113,15 @@
                     "
                     rows="4"
                     placeholder='{"@type":"Product",…}'
-                    class="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg"
+                    class="w-full px-3 py-2 text-xs font-mono border @error('structured_data') border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field @else border-slate-300 @enderror rounded-lg"
                 ></textarea>
                 <p x-show="jsonError" x-text="'Invalid JSON: ' + jsonError" class="text-[11px] text-red-600 font-semibold"></p>
+                @error('structured_data')
+                    <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
             </div>
         </div>
     </div>
@@ -2050,6 +2455,25 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         validationErrors: [],
 
+        init() {
+            @if(isset($errors) && $errors->any())
+                this.$nextTick(() => {
+                    const firstInvalid = document.querySelector('.is-invalid-field');
+                    if (firstInvalid) {
+                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if (window.innerWidth >= 768) {
+                            const focusable = firstInvalid.matches('input:not([type="hidden"]), select, textarea') 
+                                ? firstInvalid 
+                                : firstInvalid.querySelector('input:not([type="hidden"]), select, textarea');
+                            if (focusable) {
+                                try { focusable.focus({ preventScroll: true }); } catch(e) {}
+                            }
+                        }
+                    }
+                });
+            @endif
+        },
+
         // Image Management State
         isDragging: false,
         draggedImageIndex: null,
@@ -2302,6 +2726,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         submitMode(mode) {
+            if (this.submitting) return;
             this.saveMode = mode;
             this.submitForm();
         },
@@ -2334,6 +2759,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         submitForm() {
+            if (this.submitting) return;
             if (!this.validate()) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;

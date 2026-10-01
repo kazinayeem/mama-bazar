@@ -35,12 +35,29 @@ class AnalyticsController extends Controller
             'fbc' => 'nullable|string',
             'email' => 'nullable|string',
             'phone' => 'nullable|string',
+            'eventId' => 'nullable|string|max:64',
+            'orderId' => 'nullable|string|max:30',
         ]);
 
         $contentIds = is_array($validated['contentIds']) ? $validated['contentIds'] : [$validated['contentIds']];
         $currency = $validated['currency'] ?? self::DEFAULT_CURRENCY;
         $contentType = $validated['contentType'] ?? self::DEFAULT_CONTENT_TYPE;
-        $eventId = (string) Str::uuid();
+        // Stable event ID for browser↔server deduplication (refresh-safe).
+        $eventId = $validated['eventId'] ?? (string) Str::uuid();
+
+        // Mark the order as purchase-tracked so refreshes never double-report.
+        if (!empty($validated['orderId'])) {
+            $existing = \App\Models\Order::where('order_id', $validated['orderId'])->first();
+            if ($existing && !$existing->purchase_tracked_at) {
+                $existing->purchase_tracked_at = now();
+                if (empty($existing->fb_event_id)) {
+                    $existing->fb_event_id = $eventId;
+                }
+                $existing->save();
+            } elseif ($existing && $existing->purchase_tracked_at) {
+                return response()->json(['success' => true, 'data' => ['sent' => false, 'reason' => 'Already tracked']]);
+            }
+        }
 
         $activeIntegrations = MarketingIntegration::where('status', 'active')->get();
         $facebookPixelId = null;

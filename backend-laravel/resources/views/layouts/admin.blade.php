@@ -88,8 +88,15 @@
                                     $active = $active && request('tab') === 'profit';
                                 } elseif (($item['label'] ?? '') === 'Expense Reports') {
                                     $active = $active && request('tab') !== 'profit';
+                                } elseif (($item['label'] ?? '') === 'Returns & Refunds') {
+                                    $active = $active && in_array(request('status'), ['cancelled', 'refunded', 'returned'], true);
+                                } elseif (($item['label'] ?? '') === 'Orders') {
+                                    $active = $active && !in_array(request('status'), ['cancelled', 'refunded', 'returned'], true);
                                 }
                                 $url = route($item['route'], $item['params'] ?? []);
+                                if (!empty($item['fragment'])) {
+                                    $url .= '#' . $item['fragment'];
+                                }
                             @endphp
                             <a href="{{ $url }}"
                                title="{{ $item['label'] }}"

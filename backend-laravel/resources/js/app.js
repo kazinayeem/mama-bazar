@@ -66,6 +66,16 @@ document.addEventListener('alpine:init', () => {
             }
             this.save();
             this.drawerOpen = true;
+            try {
+                if (window.mbTrack) {
+                    window.mbTrack('add_to_cart', {
+                        value: Math.round(price * qty),
+                        currency: 'BDT',
+                        content_ids: [String(product.id)],
+                        content_type: 'product',
+                    });
+                }
+            } catch (e) {}
         },
 
         updateQuantity(key, quantity) {
@@ -81,8 +91,19 @@ document.addEventListener('alpine:init', () => {
         },
 
         removeItem(key) {
+            const removed = this.items.find(i => i.key === key);
             this.items = this.items.filter(i => i.key !== key);
             this.save();
+            try {
+                if (removed && window.mbTrack) {
+                    window.mbTrack('remove_from_cart', {
+                        value: Math.round((removed.price || 0) * (removed.quantity || 0)),
+                        currency: 'BDT',
+                        content_ids: [String(removed.id)],
+                        content_type: 'product',
+                    });
+                }
+            } catch (e) {}
         },
 
         clear() {

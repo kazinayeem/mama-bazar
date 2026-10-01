@@ -57,6 +57,7 @@ class AdminNav
             ]],
             ['label' => 'Sales', 'items' => [
                 ['label' => 'Orders', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'shopping-cart'],
+                ['label' => 'Returns & Refunds', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'receipt-text', 'params' => ['status' => 'cancelled']],
                 ['label' => 'Coupons', 'route' => 'admin.coupons.index', 'match' => 'admin.coupons.*', 'icon' => 'ticket-percent'],
                 ['label' => 'Marketing', 'route' => 'admin.marketing.index', 'match' => 'admin.marketing.*', 'icon' => 'megaphone'],
             ]],
@@ -82,6 +83,9 @@ class AdminNav
             ]],
             ['label' => 'Insights', 'items' => [
                 ['label' => 'Analytics', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'bar-chart-3'],
+                ['label' => 'Traffic Sources', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'megaphone', 'fragment' => 'sources'],
+                ['label' => 'Campaigns', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'ticket-percent', 'fragment' => 'campaigns'],
+                ['label' => 'Conversion Events', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'chart-pie', 'fragment' => 'events'],
             ]],
             ['label' => 'Security & Access', 'items' => [
                 ['label' => 'Team Members', 'route' => 'admin.members.index', 'match' => 'admin.members.*', 'icon' => 'user-check'],

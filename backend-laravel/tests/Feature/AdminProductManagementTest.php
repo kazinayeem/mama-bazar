@@ -88,23 +88,25 @@ class AdminProductManagementTest extends TestCase
             'low_stock_alert' => 10,
         ]);
 
-        // Search by name
+        // Search by name (note: admin header shows a global low-stock notification
+        // containing the product title, so negative assertions use SKU which
+        // only appears in the product table rows).
         $response = $this->actingAs($this->admin)->get('/admin/products?search=iPhone');
         $response->assertStatus(200);
         $response->assertSee('iPhone 15 Pro Max');
-        $response->assertDontSee('Sony WH-1000XM5');
+        $response->assertDontSee('SNY-XM5');
 
         // Search by SKU
         $response = $this->actingAs($this->admin)->get('/admin/products?search=SNY-XM5');
         $response->assertStatus(200);
         $response->assertSee('Sony WH-1000XM5');
-        $response->assertDontSee('iPhone 15 Pro Max');
+        $response->assertDontSee('IPH-15PM');
 
         // Filter by Stock status (low_stock)
         $response = $this->actingAs($this->admin)->get('/admin/products?stock=low_stock');
         $response->assertStatus(200);
         $response->assertSee('Sony WH-1000XM5');
-        $response->assertDontSee('iPhone 15 Pro Max');
+        $response->assertDontSee('IPH-15PM');
     }
 
     public function test_admin_can_view_create_product_page(): void
