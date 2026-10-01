@@ -2,28 +2,38 @@
 
 namespace App\Services;
 
-use App\Http\Controllers\Admin\AdminOrderWebController;
+use App\Mail\RenderedEmail;
 use App\Models\EmailLog;
-use App\Models\Order;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\QueryException;
+use Illuminate\Mail\SentMessage;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Throwable;
 
+/**
+ * Sends one email and records it in email_logs.
+ *
+ * "sent" means the SMTP server accepted the message. It does not prove
+ * inbox delivery; bounces/complaints arrive asynchronously (if at all).
+ */
 class EmailDispatcherService
 {
     /**
-     * Send an email immediately and record in email_logs.
-     *
-     * @param string $to Recipient email address
-     * @param string $recipientName Recipient full name
-     * @param string $subject Email subject line
-     * @param string $htmlContent Rendered HTML message
-     * @param string|null $plainContent Plain text fallback
-     * @param string $emailType e.g. 'otp', 'transactional', 'order', 'invoice', 'campaign'
-     * @param int|null $orderId Related Order ID
-     * @param int|null $campaignId Related Campaign ID
-     * @param array $attachments Array of [ 'data' => string, 'name' => string, 'mime' => string ]
-     * @return array [ 'success' => bool, 'log_id' => int, 'error' => ?string ]
+     * @param  array<int, array{data: string, name: string, mime?: string}>  $attachments
+     * @param  array{
+     *     dedupe_key?: string|null,
+     *     template_key?: string|null,
+     *     user_id?: int|null,
+     *     replay?: array|null,
+     *     redact?: array<int, string>,
+     *     marketing?: bool,
+     *     unsubscribe_email?: string|null,
+     *     from_name?: string|null,
+     *     from_address?: string|null,
+     *     log_id?: int|null,
+     *     metadata?: array,
+     * }  $options
+     * @return array{success: bool, skipped?: bool, duplicate?: bool, log_id: int|null, error: string|null}
      */
     public static function send(
         string $to,
@@ -34,252 +44,205 @@ class EmailDispatcherService
         string $emailType = 'transactional',
         ?int $orderId = null,
         ?int $campaignId = null,
-        array $attachments = []
+        array $attachments = [],
+        array $options = []
     ): array {
         $to = strtolower(trim($to));
+        $redact = array_values(array_filter($options['redact'] ?? [], fn ($v) => is_string($v) && $v !== ''));
+        $subject = trim(preg_replace('/[\r\n]+/', ' ', $subject) ?? '');
+        $recipientName = $recipientName !== null ? trim(preg_replace('/[\r\n]+/', ' ', $recipientName) ?? '') : null;
+        $loggedSubject = self::redact($subject, $redact);
 
-        // Create log record in 'queued' state
-        $log = EmailLog::create([
-            'recipient_email' => $to,
-            'recipient_name' => $recipientName,
-            'subject' => $subject,
-            'email_type' => $emailType,
-            'order_id' => $orderId,
-            'campaign_id' => $campaignId,
-            'status' => 'queued',
-            'attempts' => 1,
-            'metadata' => [
-                'has_attachments' => !empty($attachments),
-                'attachment_names' => array_column($attachments, 'name'),
-            ],
-        ]);
+        $log = self::openLog($to, $recipientName, $loggedSubject, $emailType, $orderId, $campaignId, $attachments, $options);
+        if ($log === null) {
+            return ['success' => false, 'skipped' => true, 'duplicate' => true, 'log_id' => null, 'error' => 'Duplicate email suppressed.'];
+        }
+        if ($log->wasRecentlyCreated === false && in_array($log->status, ['sent', 'delivered'], true)) {
+            return ['success' => false, 'skipped' => true, 'duplicate' => true, 'log_id' => $log->id, 'error' => 'Already sent.'];
+        }
 
-        // Check if outgoing emails are globally enabled
-        if (!EmailSettingService::isSendingEnabled()) {
-            $log->update([
-                'status' => 'skipped',
-                'error_message' => 'Email delivery is currently disabled in Email Settings.',
-            ]);
+        if (! filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            $log->update(['status' => 'failed', 'error_message' => 'Invalid recipient email address.']);
 
-            return [
-                'success' => false,
-                'skipped' => true,
-                'log_id' => $log->id,
-                'error' => 'Email delivery is disabled in settings.',
-            ];
+            return ['success' => false, 'log_id' => $log->id, 'error' => 'Invalid recipient email address.'];
+        }
+
+        if (! EmailSettingService::isSendingEnabled()) {
+            $log->update(['status' => 'skipped', 'error_message' => 'Outgoing email is disabled in Email Settings.']);
+
+            return ['success' => false, 'skipped' => true, 'log_id' => $log->id, 'error' => 'Email delivery is disabled in settings.'];
         }
 
         try {
-            // Apply dynamic runtime SMTP credentials
-            EmailSettingService::applyRuntimeConfig();
-
-            $fromAddress = EmailSettingService::get('mail_from_address', 'contact@mama-bazar.com');
-            $fromName = EmailSettingService::get('mail_from_name', 'Mama Bazar');
+            $fromAddress = $options['from_address'] ?? null ?: EmailSettingService::get('mail_from_address');
+            $fromName = $options['from_name'] ?? null ?: EmailSettingService::get('mail_from_name', 'Mama Bazar');
             $replyTo = EmailSettingService::get('mail_reply_to');
+            $marketing = (bool) ($options['marketing'] ?? false);
+            $unsubscribeEmail = $options['unsubscribe_email'] ?? ($marketing ? $to : null);
 
-            Mail::send([], [], function ($message) use ($to, $recipientName, $subject, $htmlContent, $plainContent, $fromAddress, $fromName, $replyTo, $attachments) {
-                $message->to($to, $recipientName ?: null)
-                    ->from($fromAddress, $fromName)
-                    ->subject($subject);
+            $headers = [];
+            if ($marketing && $unsubscribeEmail) {
+                $headers['List-Unsubscribe'] = '<'.EmailPreferenceService::oneClickUrl($unsubscribeEmail).'>';
+                $headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+                $headers['Precedence'] = 'bulk';
+            }
 
-                if (!empty($replyTo)) {
-                    $message->replyTo($replyTo);
-                }
+            $uniqueAttachments = collect($attachments)
+                ->filter(fn ($att) => ! empty($att['data']) && ! empty($att['name']))
+                ->unique('name')
+                ->values()
+                ->all();
 
-                $message->html($htmlContent);
+            $mailable = new RenderedEmail(
+                renderedSubject: $subject,
+                renderedHtml: $htmlContent,
+                renderedText: $plainContent,
+                fileAttachments: $uniqueAttachments,
+                extraHeaders: $headers,
+                fromAddress: $fromAddress,
+                fromName: $fromName,
+                replyToAddress: ! empty($replyTo) && filter_var($replyTo, FILTER_VALIDATE_EMAIL) ? $replyTo : null,
+                emailType: $emailType,
+            );
 
-                if (!empty($plainContent)) {
-                    $message->text($plainContent);
-                }
-
-                // Add in-memory attachments
-                foreach ($attachments as $att) {
-                    if (!empty($att['data']) && !empty($att['name'])) {
-                        $message->attachData(
-                            $att['data'],
-                            $att['name'],
-                            ['mime' => $att['mime'] ?? 'application/pdf']
-                        );
-                    }
-                }
-            });
+            $sent = Mail::mailer(EmailSettingService::mailerName())
+                ->to($to, $recipientName ?: null)
+                ->send($mailable);
 
             $log->update([
                 'status' => 'sent',
                 'sent_at' => now(),
                 'error_message' => null,
+                'message_id' => $sent instanceof SentMessage ? mb_substr((string) $sent->getMessageId(), 0, 255) : null,
             ]);
 
-            return [
-                'success' => true,
-                'log_id' => $log->id,
-                'error' => null,
-            ];
+            return ['success' => true, 'log_id' => $log->id, 'error' => null];
         } catch (Throwable $e) {
-            $errMsg = $e->getMessage();
+            $error = self::redact(EmailSettingService::sanitizeError($e->getMessage()), $redact);
 
-            $log->update([
-                'status' => 'failed',
-                'error_message' => mb_substr($errMsg, 0, 1000),
-            ]);
+            $log->update(['status' => 'failed', 'error_message' => mb_substr($error, 0, 1000)]);
 
-            return [
-                'success' => false,
-                'log_id' => $log->id,
-                'error' => $errMsg,
-            ];
-        }
-    }
-
-    /**
-     * Generate PDF invoice content in memory for an Order.
-     */
-    public static function generateInvoicePdf(Order $order): ?string
-    {
-        try {
-            $store = BusinessSettingService::forInvoice();
-            $store['logo_base64'] = BusinessSettingService::logoBase64();
-
-            $pdf = Pdf::loadView('admin.orders.invoice-pdf', [
-                'order' => $order->loadMissing(['items.product', 'items.variant']),
-                'store' => $store,
-            ])
-            ->setPaper('a4', 'portrait')
-            ->setOptions([
-                'isRemoteEnabled' => false,
-                'isHtml5ParserEnabled' => true,
-                'defaultFont' => 'DejaVu Sans',
-            ]);
-
-            return $pdf->output();
-        } catch (Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Invoice PDF generation failed for order #{$order->order_id}: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Dispatch an automated order email based on order state.
-     */
-    public static function dispatchOrderEmail(Order $order, string $triggerType): array
-    {
-        if (empty($order->email)) {
-            return ['success' => false, 'skipped' => true, 'reason' => 'Order has no email address.'];
-        }
-
-        // Map trigger type to template key and automation setting
-        $map = [
-            'order_confirmation' => ['tpl' => 'order_confirmation', 'setting' => 'order_created'],
-            'order_created'      => ['tpl' => 'order_confirmation', 'setting' => 'order_created'],
-            'payment_confirmation' => ['tpl' => 'payment_confirmation', 'setting' => 'payment_confirmed'],
-            'order_processing'   => ['tpl' => 'order_processing', 'setting' => 'order_status'],
-            'order_confirmed'    => ['tpl' => 'order_confirmation', 'setting' => 'order_status'],
-            'order_shipped'      => ['tpl' => 'order_shipped', 'setting' => 'order_status'],
-            'order_out_for_delivery' => ['tpl' => 'out_for_delivery', 'setting' => 'order_status'],
-            'order_delivered'    => ['tpl' => 'order_delivered', 'setting' => 'order_status'],
-            'order_cancelled'    => ['tpl' => 'order_cancelled', 'setting' => 'order_status'],
-            'order_refunded'     => ['tpl' => 'refund_notification', 'setting' => 'order_status'],
-            'invoice_email'      => ['tpl' => 'invoice_email', 'setting' => 'invoice_pdf'],
-        ];
-
-        $config = $map[$triggerType] ?? null;
-        if (!$config) {
-            return ['success' => false, 'error' => "Unknown order email trigger: {$triggerType}"];
-        }
-
-        // Check automation toggle
-        if (!EmailSettingService::isAutomationEnabled($config['setting'])) {
-            return ['success' => false, 'skipped' => true, 'reason' => "Automation '{$config['setting']}' is disabled."];
-        }
-
-        // Build data payload
-        $itemsTableHtml = self::formatOrderItemsTable($order);
-        $orderData = [
-            'customer_name' => $order->customer_name ?: 'Valued Customer',
-            'customer_email' => $order->email,
-            'order_number' => $order->order_id,
-            'order_total' => '৳' . number_format((float) $order->total_price, 0),
-            'order_date' => $order->created_at ? $order->created_at->format('M d, Y · h:i A') : date('M d, Y'),
-            'payment_method' => strtoupper($order->payment_method),
-            'payment_status' => ucfirst(str_replace('_', ' ', $order->payment_status)),
-            'shipping_address' => implode(', ', array_filter([$order->address, $order->area, $order->district])),
-            'items_table' => $itemsTableHtml,
-            'tracking_url' => url('/track?order_id=' . urlencode($order->order_id) . '&phone=' . urlencode($order->phone)),
-            'invoice_url' => url('/admin/orders/' . $order->id . '/invoice'),
-        ];
-
-        // Attach PDF invoice if configured or if invoice email
-        $attachments = [];
-        $shouldAttachInvoice = ($triggerType === 'invoice_email') ||
-            (in_array($triggerType, ['order_confirmation', 'order_created', 'payment_confirmation'], true) && EmailSettingService::isAutomationEnabled('invoice_pdf'));
-
-        if ($shouldAttachInvoice) {
-            $pdfContent = self::generateInvoicePdf($order);
-            if ($pdfContent) {
-                $attachments[] = [
-                    'data' => $pdfContent,
-                    'name' => 'Mama-Bazar-Invoice-' . $order->order_id . '.pdf',
-                    'mime' => 'application/pdf',
-                ];
+            if ($e instanceof TransportExceptionInterface) {
+                EmailSettingService::recordSendFailure($error);
             }
+
+            return ['success' => false, 'log_id' => $log->id, 'error' => $error];
+        }
+    }
+
+    /**
+     * Create the log row, or reuse an existing one (retry / same dedupe key).
+     * Returns null when a concurrent request already claimed the dedupe key.
+     */
+    protected static function openLog(
+        string $to,
+        ?string $name,
+        string $subject,
+        string $type,
+        ?int $orderId,
+        ?int $campaignId,
+        array $attachments,
+        array $options
+    ): ?EmailLog {
+        $metadata = array_merge($options['metadata'] ?? [], [
+            'attachment_names' => array_values(array_unique(array_column($attachments, 'name'))),
+        ]);
+        if (! empty($options['replay'])) {
+            $metadata['replay'] = $options['replay'];
         }
 
-        $rendered = EmailTemplateService::render($config['tpl'], $orderData);
+        $attributes = [
+            'recipient_email' => mb_substr($to, 0, 255),
+            'recipient_name' => $name ? mb_substr($name, 0, 255) : null,
+            'subject' => mb_substr($subject, 0, 255),
+            'email_type' => $type,
+            'template_key' => $options['template_key'] ?? null,
+            'order_id' => $orderId,
+            'campaign_id' => $campaignId,
+            'user_id' => $options['user_id'] ?? null,
+            'last_attempt_at' => now(),
+            'metadata' => $metadata,
+        ];
+
+        $existing = null;
+        if (! empty($options['log_id'])) {
+            $existing = EmailLog::find($options['log_id']);
+        } elseif (! empty($options['dedupe_key'])) {
+            $existing = EmailLog::where('dedupe_key', $options['dedupe_key'])->first();
+        }
+
+        if ($existing) {
+            if (in_array($existing->status, ['sent', 'delivered'], true)) {
+                return $existing;
+            }
+            $existing->fill($attributes);
+            $existing->status = 'queued';
+            $existing->attempts = (int) $existing->attempts + 1;
+            $existing->save();
+
+            return $existing;
+        }
+
+        try {
+            return EmailLog::create(array_merge($attributes, [
+                'dedupe_key' => $options['dedupe_key'] ?? null,
+                'status' => 'queued',
+                'attempts' => 1,
+            ]));
+        } catch (QueryException $e) {
+            if (! empty($options['dedupe_key'])) {
+                return null;
+            }
+            throw $e;
+        }
+    }
+
+    public static function alreadySent(string $dedupeKey): bool
+    {
+        return EmailLog::where('dedupe_key', $dedupeKey)->whereIn('status', ['sent', 'delivered'])->exists();
+    }
+
+    /**
+     * @param  array<int, string>  $secrets
+     */
+    public static function redact(string $text, array $secrets): string
+    {
+        foreach ($secrets as $secret) {
+            $text = str_replace($secret, str_repeat('•', min(8, max(4, strlen($secret)))), $text);
+        }
+
+        return $text;
+    }
+
+    /**
+     * Render a stored template and send it in one step.
+     *
+     * @return array{success: bool, skipped?: bool, duplicate?: bool, log_id: int|null, error: string|null}
+     */
+    public static function sendTemplate(
+        string $templateKey,
+        string $to,
+        ?string $name,
+        array $data,
+        string $emailType,
+        array $options = []
+    ): array {
+        $rendered = EmailTemplateService::render($templateKey, array_merge([
+            'customer_name' => $name ?: 'Valued Customer',
+            'customer_email' => $to,
+        ], $data), ['marketing' => $options['marketing'] ?? null, 'preheader' => $options['preheader'] ?? '']);
 
         return self::send(
-            $order->email,
-            $order->customer_name,
+            $to,
+            $name,
             $rendered['subject'],
             $rendered['html'],
             $rendered['plain'],
-            'order',
-            $order->id,
-            null,
-            $attachments
+            $emailType,
+            $options['order_id'] ?? null,
+            $options['campaign_id'] ?? null,
+            $options['attachments'] ?? [],
+            array_merge(['template_key' => $templateKey], $options)
         );
-    }
-
-    /**
-     * Build an email-safe items table HTML snippet.
-     */
-    protected static function formatOrderItemsTable(Order $order): string
-    {
-        $items = $order->items;
-        if ($items->isEmpty()) {
-            return '';
-        }
-
-        $rows = '';
-        foreach ($items as $it) {
-            $title = htmlspecialchars($it->product_title ?: ($it->product?->title ?: 'Item'));
-            $variant = htmlspecialchars(trim(($it->variant_name ?: '') . ' ' . ($it->size ?: '') . ' ' . ($it->color ?: '')));
-            $varSub = $variant ? "<br><span style=\"font-size:11px; color:#64748b;\">{$variant}</span>" : '';
-            $qty = (int) $it->quantity;
-            $price = '৳' . number_format((float) $it->price, 0);
-            $total = '৳' . number_format((float) ($it->price * $qty), 0);
-
-            $rows .= "<tr>
-                <td style=\"padding:8px 10px; border-bottom:1px solid #f1f5f9;\">{$title}{$varSub}</td>
-                <td align=\"center\" style=\"padding:8px 10px; border-bottom:1px solid #f1f5f9;\">{$qty}</td>
-                <td align=\"right\" style=\"padding:8px 10px; border-bottom:1px solid #f1f5f9;\">{$price}</td>
-                <td align=\"right\" style=\"padding:8px 10px; border-bottom:1px solid #f1f5f9; font-weight:600;\">{$total}</td>
-            </tr>";
-        }
-
-        return <<<HTML
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0; border:1px solid #e2e8f0; border-radius:8px; font-size:12px;">
-    <thead>
-        <tr style="background:#f1f5f9; color:#475569; font-size:11px; text-transform:uppercase;">
-            <th align="left" style="padding:8px 10px;">Item</th>
-            <th align="center" style="padding:8px 10px;">Qty</th>
-            <th align="right" style="padding:8px 10px;">Price</th>
-            <th align="right" style="padding:8px 10px;">Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        {$rows}
-    </tbody>
-</table>
-HTML;
     }
 }

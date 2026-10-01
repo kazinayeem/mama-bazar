@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <style>
     @page { size: A4; margin: 12mm 11mm; }
-    {{-- Hind Siliguri (Bengali) is registered programmatically in AdminOrderWebController::registerBengaliFont;
+    {{-- Hind Siliguri (Bengali) is registered programmatically in InvoicePdfService::registerBengaliFont;
          do NOT add @font-face here: an unresolvable URL would shadow the registered font at render time. --}}
     body { font-family: 'Hind Siliguri', 'DejaVu Sans', sans-serif; font-size: 11px; color: #1e293b; line-height: 1.45; }
     .header { width: 100%; border-bottom: 3px solid #0f4d2c; padding-bottom: 10px; }

@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailLog;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
-use App\Models\SiteSetting;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\InvoicePdfService;
+use App\Services\OrderEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,7 +40,10 @@ class AdminOrderWebController extends Controller
     {
         $order = Order::with(['items.product', 'items.variant', 'statusHistory.user', 'user'])->findOrFail($id);
         $store = self::storeInfo();
-        return view('admin.orders.show', compact('order', 'store'));
+        $emailLogs = EmailLog::where('order_id', $order->id)->latest()->take(15)->get();
+        $invoiceReady = InvoicePdfService::isInvoiceReady($order);
+
+        return view('admin.orders.show', compact('order', 'store', 'emailLogs', 'invoiceReady'));
     }
 
     public function invoice($id)
@@ -52,18 +56,30 @@ class AdminOrderWebController extends Controller
     public function downloadInvoice($id)
     {
         $order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
-        $store = self::storeInfo();
-        $store['logo_base64'] = self::logoBase64();
-
-        $pdf = Pdf::loadView('admin.orders.invoice-pdf', compact('order', 'store'))
-            ->setPaper('a4', 'portrait')
-            ->setOptions(['isRemoteEnabled' => false, 'isHtml5ParserEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
-
-        self::registerBengaliFont($pdf->getDomPDF());
 
         $filename = ($order->invoice_number ?: $order->order_id) . '.pdf';
 
-        return $pdf->download($filename);
+        return InvoicePdfService::make($order)->download($filename);
+    }
+
+    /**
+     * Manually email the invoice PDF to the order's own email address.
+     */
+    public function emailInvoice($id)
+    {
+        $order = Order::findOrFail($id);
+
+        if (empty($order->email) || !filter_var($order->email, FILTER_VALIDATE_EMAIL)) {
+            return back()->with('error', 'This order has no valid customer email address.');
+        }
+
+        if (!InvoicePdfService::isInvoiceReady($order)) {
+            return back()->with('error', 'Invoice is not available yet — payment is unverified or the order is cancelled/refunded.');
+        }
+
+        OrderEmailService::queue($order, OrderEmailService::TRIGGER_INVOICE, true);
+
+        return back()->with('success', "Invoice email for #{$order->order_id} has been queued to {$order->email}.");
     }
 
     public function packingSlip($id)
@@ -85,12 +101,13 @@ class AdminOrderWebController extends Controller
         $newStatus = $request->input('status');
         $note = $request->input('note');
 
+        if ($order->status === $newStatus) {
+            return back()->with('success', "Order #{$order->order_id} is already {$newStatus}. No notification sent.");
+        }
+
         $order->status = $newStatus;
         if ($newStatus === 'delivered') {
             $order->payment_status = 'success';
-        }
-        if (in_array($newStatus, ['cancelled', 'refunded'], true)) {
-            // Keep payment_status truthful; admin adjusts separately below.
         }
         $order->save();
 
@@ -153,57 +170,5 @@ class AdminOrderWebController extends Controller
     public static function logoBase64(): ?string
     {
         return \App\Services\BusinessSettingService::logoBase64();
-    }
-
-    /**
-     * Register Hind Siliguri (OFL Bengali font) with dompdf.
-     * registerFont() generates metrics but its URL-based resolution breaks
-     * on special chars in the project path, so entries are then pinned to
-     * the generated extension-less cache paths (the format dompdf resolves).
-     * Falls back silently to DejaVu Sans.
-     */
-    protected static function registerBengaliFont($dompdf): void
-    {
-        try {
-            $regular = public_path('fonts/HindSiliguri-Regular.ttf');
-            $bold = public_path('fonts/HindSiliguri-Bold.ttf');
-            if (!is_file($regular) || !is_readable($regular)) {
-                return;
-            }
-            if (!is_file($bold) || !is_readable($bold)) {
-                $bold = $regular;
-            }
-            // dompdf needs a writable dir for font metrics (absent on fresh deploys).
-            $fontDir = rtrim($dompdf->getOptions()->getFontDir(), '/');
-            if (!is_dir($fontDir)) {
-                @mkdir($fontDir, 0775, true);
-            }
-            if (!is_dir($fontDir) || !is_writable($fontDir)) {
-                return;
-            }
-            $metrics = $dompdf->getFontMetrics();
-            $weights = ['normal' => $regular, 'bold' => $bold, 'italic' => $regular, 'bold_italic' => $bold];
-            foreach (['normal' => $regular, 'bold' => $bold] as $weight => $file) {
-                $metrics->registerFont(
-                    ['family' => 'Hind Siliguri', 'style' => 'normal', 'weight' => $weight],
-                    $file
-                );
-            }
-            // Pin entries to deterministic cache paths (prefix + md5 of source path).
-            $dir = $fontDir;
-            $pinned = [];
-            foreach ($weights as $subtype => $file) {
-                $style = $subtype === 'bold_italic' ? 'bold_italic' : ($subtype === 'italic' ? 'italic' : $subtype);
-                $prefix = 'hind_siliguri_' . $style . '_' . md5($file);
-                if (is_file($dir . '/' . $prefix . '.ufm') || is_file($dir . '/' . $prefix . '.ttf')) {
-                    $pinned[$subtype] = $dir . '/' . $prefix;
-                }
-            }
-            if (isset($pinned['normal'])) {
-                $metrics->setFontFamily('hind siliguri', $pinned);
-            }
-        } catch (\Throwable $e) {
-            // Non-fatal: invoice still renders with the default font.
-        }
     }
 }

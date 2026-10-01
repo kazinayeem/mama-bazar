@@ -25,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
+        \App\Models\Order::created(fn ($order) => \App\Services\OrderEmailService::handleCreated($order));
+        \App\Models\Order::updated(fn ($order) => \App\Services\OrderEmailService::handleUpdated($order));
+
         Blade::directive('sanitizedHtml', function ($expression) {
             return "<?php echo \\App\\Services\\HtmlSanitizer::forDisplay($expression); ?>";
         });
