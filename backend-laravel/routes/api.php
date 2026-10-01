@@ -307,6 +307,7 @@ Route::prefix('reviews')->group(function () {
 
     Route::middleware('jwt.auth')->group(function () {
         Route::post('/', [ReviewController::class, 'create']);
+        Route::put('/{id}', [ReviewController::class, 'update']);
         Route::patch('/{id}/status', [ReviewController::class, 'updateStatus'])->middleware('admin.only');
         Route::delete('/{id}', [ReviewController::class, 'remove'])->middleware('admin.only');
     });

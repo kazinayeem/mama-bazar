@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Mama Bazar - Online Grocery & Essentials' }}</title>
-    <link rel="icon" type="image/png" href="/brandlogo.png">
+    <title>{{ $title ?? ($business['site_name'] . ' - ' . $business['tagline']) }}</title>
+    <link rel="icon" type="image/png" href="{{ $business['favicon_url'] ?: '/brandlogo.png' }}">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,9 +43,9 @@
                 </button>
 
                 <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <img src="/brandlogo.png" alt="Mama Bazar" class="h-8 w-8 object-contain sm:h-9 sm:w-9">
+                    <img src="{{ $business['logo_url'] ?: '/brandlogo.png' }}" alt="{{ $business['business_name'] }}" class="h-8 w-8 object-contain sm:h-9 sm:w-9">
                     <span class="hidden font-extrabold text-lg tracking-tight sm:inline sm:text-xl">
-                        <span class="text-brand-green-500">Mama</span><span class="text-brand-orange-500">Bazar</span>
+                        <span class="text-brand-green-500">{{ $business['name_first_part'] }}</span><span class="text-brand-orange-500">{{ $business['name_second_part'] }}</span>
                     </span>
                 </a>
             </div>
@@ -129,7 +129,7 @@
                     <a href="{{ route('contact') }}" class="transition hover:text-brand-orange-300">Contact</a>
                 </nav>
                 <div class="text-[11px] font-normal text-brand-green-100">
-                    Helpline: <span class="font-bold text-white">01700-000000</span>
+                    Helpline: <a href="tel:{{ $business['phone_raw'] }}" class="font-bold text-white hover:underline">{{ $business['primary_phone'] }}</a>
                 </div>
             </div>
         </div>
@@ -140,7 +140,7 @@
         <div class="fixed inset-0 bg-black/50" @click="mobileMenu = false"></div>
         <div class="fixed inset-y-0 left-0 max-w-xs w-full bg-white shadow-xl z-50 p-5 flex flex-col">
             <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                <span class="font-extrabold text-lg text-brand-green-600">MamaBazar Menu</span>
+                <span class="font-extrabold text-lg text-brand-green-600">{{ $business['business_name'] }}</span>
                 <button type="button" @click="mobileMenu = false" class="text-slate-500 hover:text-slate-800">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -239,57 +239,79 @@
     </main>
 
     <!-- Footer -->
-    <footer class="mt-12 border-t border-brand-green-100 bg-white pb-10 pt-12 text-slate-600">
+    <footer class="mt-12 border-t border-brand-green-100 bg-white pb-8 pt-12 text-slate-600">
         <div class="store-container">
-            <div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
+            <div class="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4 lg:grid-cols-5">
                 <div class="col-span-2">
                     <div class="flex items-center gap-2">
-                        <img src="/brandlogo.png" alt="Mama Bazar" class="h-9 w-9 object-contain">
+                        <img src="{{ $business['logo_url'] ?: '/brandlogo.png' }}" alt="{{ $business['business_name'] }}" class="h-9 w-9 object-contain">
                         <span class="text-xl font-extrabold tracking-tight">
-                            <span class="text-brand-green-500">Mama</span><span class="text-brand-orange-500">Bazar</span>
+                            <span class="text-brand-green-500">{{ $business['name_first_part'] }}</span><span class="text-brand-orange-500">{{ $business['name_second_part'] }}</span>
                         </span>
                     </div>
                     <p class="mt-3 max-w-sm text-xs leading-5 text-slate-500">
-                        Your trusted daily online grocery, lifestyle and essentials store. Quality products delivered across Bangladesh.
+                        {{ $business['footer_description'] ?: $business['business_description'] }}
                     </p>
+                    @if(!empty($footerSocials))
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @foreach($footerSocials as $social)
+                                <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-600 transition hover:border-brand-green-500 hover:text-brand-green-700">{{ $social['label'] }}</a>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
-                <div>
+                <nav aria-label="Shop">
                     <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-900">Shop</h4>
-                    <ul class="space-y-2 text-xs">
-                        <li><a href="{{ route('shop') }}" class="transition hover:text-brand-green-600">All Products</a></li>
-                        <li><a href="{{ route('shop', ['sale' => 'true']) }}" class="transition hover:text-brand-green-600">Flash Deals</a></li>
-                        <li><a href="{{ route('track') }}" class="transition hover:text-brand-green-600">Track Your Order</a></li>
+                    <ul class="space-y-1 text-xs">
+                        <li><a href="{{ route('shop') }}" class="inline-block py-1 transition hover:text-brand-green-600">All Products</a></li>
+                        <li><a href="{{ route('shop') }}" class="inline-block py-1 transition hover:text-brand-green-600">Categories</a></li>
+                        <li><a href="{{ route('shop', ['sale' => 'true']) }}" class="inline-block py-1 transition hover:text-brand-green-600">Deals</a></li>
+                        <li><a href="{{ route('shop', ['sort' => 'newest']) }}" class="inline-block py-1 transition hover:text-brand-green-600">New Arrivals</a></li>
+                        <li><a href="{{ route('track') }}" class="inline-block py-1 transition hover:text-brand-green-600">Track Your Order</a></li>
                     </ul>
-                </div>
+                </nav>
 
-                <div>
-                    <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-900">Customer Care</h4>
-                    <ul class="space-y-2 text-xs">
-                        <li><a href="{{ route('page.show', 'return-refund') }}" class="transition hover:text-brand-green-600">Return & Refund</a></li>
-                        <li><a href="{{ route('page.show', 'shipping') }}" class="transition hover:text-brand-green-600">Shipping Policy</a></li>
-                        <li><a href="{{ route('page.show', 'privacy-policy') }}" class="transition hover:text-brand-green-600">Privacy Policy</a></li>
-                        <li><a href="{{ route('page.show', 'terms-and-conditions') }}" class="transition hover:text-brand-green-600">Terms & Conditions</a></li>
+                <nav aria-label="Customer Support">
+                    <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-900">Customer Support</h4>
+                    <ul class="space-y-1 text-xs">
+                        <li><a href="{{ route('contact') }}" class="inline-block py-1 transition hover:text-brand-green-600">Contact Us</a></li>
+                        <li><a href="{{ $business['return_policy_url'] ?: route('page.show', 'return-refund') }}" class="inline-block py-1 transition hover:text-brand-green-600">Return &amp; Refund Policy</a></li>
+                        <li><a href="{{ route('page.show', 'shipping-policy') }}" class="inline-block py-1 transition hover:text-brand-green-600">Shipping Policy</a></li>
+                        <li><a href="{{ $business['privacy_policy_url'] ?: route('page.show', 'privacy-policy') }}" class="inline-block py-1 transition hover:text-brand-green-600">Privacy Policy</a></li>
+                        <li><a href="{{ $business['terms_url'] ?: route('page.show', 'terms') }}" class="inline-block py-1 transition hover:text-brand-green-600">Terms &amp; Conditions</a></li>
+                        <li><a href="{{ route('faq') }}" class="inline-block py-1 transition hover:text-brand-green-600">Frequently Asked Questions</a></li>
                     </ul>
-                </div>
+                </nav>
 
-                <div>
-                    <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-900">Company</h4>
-                    <ul class="space-y-2 text-xs">
-                        <li><a href="{{ route('about') }}" class="transition hover:text-brand-green-600">About Us</a></li>
-                        <li><a href="{{ route('faq') }}" class="transition hover:text-brand-green-600">FAQ</a></li>
-                        <li><a href="{{ route('contact') }}" class="transition hover:text-brand-green-600">Contact Us</a></li>
+                <nav aria-label="About">
+                    <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-900">About</h4>
+                    <ul class="space-y-1 text-xs">
+                        <li><a href="{{ route('about') }}" class="inline-block py-1 transition hover:text-brand-green-600">About Mama Bazar</a></li>
+                        <li><a href="{{ route('contact') }}" class="inline-block py-1 transition hover:text-brand-green-600">Contact Us</a></li>
+                        <li><a href="{{ route('faq') }}" class="inline-block py-1 transition hover:text-brand-green-600">Help Center</a></li>
                     </ul>
                     <div class="mt-4 space-y-1 text-xs text-slate-500">
-                        <p>Dhaka, Bangladesh</p>
-                        <p>+880 1700-000000</p>
-                        <p>support@mamabazar.com</p>
+                        @if(!empty($business['formatted_address']))
+                            <p>{{ $business['formatted_address'] }}</p>
+                        @endif
+                        @if(!empty($business['primary_phone']))
+                            <p><a href="tel:{{ $business['phone_raw'] }}" class="hover:text-brand-green-600 transition">{{ $business['primary_phone'] }}</a></p>
+                        @endif
+                        @if(!empty($business['support_email']))
+                            <p><a href="mailto:{{ $business['support_email'] }}" class="hover:text-brand-green-600 transition">{{ $business['support_email'] }}</a></p>
+                        @endif
+                        @if(!empty($business['whatsapp_number']))
+                            <p><a href="{{ $business['whatsapp_url'] }}" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-600 transition font-medium">WhatsApp: {{ $business['whatsapp_number'] }}</a></p>
+                        @endif
                     </div>
-                </div>
+                </nav>
             </div>
 
             <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row">
-                <p>&copy; {{ date('Y') }} MamaBazar. All rights reserved. · <button type="button" onclick="window.mbConsentShow && window.mbConsentShow()" class="underline hover:text-slate-600">Cookie settings</button></p>
+                <p class="text-center sm:text-left">{{ $business['copyright_rendered'] }} · <button type="button" onclick="window.mbConsentShow && window.mbConsentShow()" class="underline hover:text-slate-600">Cookie settings</button><br class="sm:hidden">
+                    <span class="mt-1 inline-block sm:ml-1 sm:mt-0">Crafted by <a href="https://bornosoft.bd/" target="_blank" rel="noopener noreferrer" class="font-semibold underline decoration-slate-300 underline-offset-2 hover:text-slate-600">Bornosoft</a> · bornosoft.bd</span></p>
                 <div class="flex flex-wrap items-center justify-center gap-2">
                     <span class="mr-1 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">We Accept</span>
                     @forelse(($footerPaymentMethods ?? collect())->reject(fn ($m) => $m->code === 'cod') as $pm)

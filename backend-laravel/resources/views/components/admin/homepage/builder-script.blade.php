@@ -28,6 +28,7 @@ window.homepageBuilder = function homepageBuilder(opts) {
         slideEditing: null,
         slideIsNew: false,
         slideValidationError: '',
+        slideSaving: false,
         deleteSlideTarget: null,
         // Media picker
         pickerOpen: false,
@@ -163,6 +164,13 @@ window.homepageBuilder = function homepageBuilder(opts) {
             return 'slide-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
         },
 
+        cloneSlide(slide) {
+            // Slides in component state are Alpine reactive proxies — structuredClone()
+            // throws DataCloneError on them. Slides are plain JSON data (they are
+            // JSON.stringified on publish), so a JSON round-trip clone is exact.
+            return JSON.parse(JSON.stringify(slide));
+        },
+
         blankSlide() {
             return {
                 id: this.slideUid(),
@@ -178,14 +186,24 @@ window.homepageBuilder = function homepageBuilder(opts) {
 
         openSlideCreate() {
             this.slideValidationError = '';
+            this.slideSaving = false;
             this.slideIsNew = true;
             this.slideEditing = this.blankSlide();
         },
 
         openSlideEdit(slide) {
+            if (!slide) return;
             this.slideValidationError = '';
+            this.slideSaving = false;
             this.slideIsNew = false;
-            this.slideEditing = structuredClone(slide);
+            // Clone so Cancel discards changes and each open loads fresh data.
+            this.slideEditing = this.cloneSlide(slide);
+        },
+
+        cancelSlideEdit() {
+            if (this.slideSaving) return;
+            this.slideValidationError = '';
+            this.slideEditing = null;
         },
 
         isValidButtonUrl(url) {
@@ -208,8 +226,8 @@ window.homepageBuilder = function homepageBuilder(opts) {
             return (this.config.heroSlides || []).filter(s => s.status !== 'active').length;
         },
 
-        saveSlide() {
-            if (!this.slideEditing) return;
+        async saveSlide() {
+            if (!this.slideEditing || this.slideSaving) return;
             this.slideValidationError = '';
             if (!this.slideEditing.desktopImage) {
                 this.slideValidationError = 'A desktop image is required for this slide.';
@@ -227,13 +245,22 @@ window.homepageBuilder = function homepageBuilder(opts) {
                 this.slideValidationError = 'Secondary button link must be a valid URL or internal path.';
                 return;
             }
-            if (this.slideIsNew) {
-                const slide = { ...this.slideEditing, priority: this.config.heroSlides.length + 1 };
-                this.config.heroSlides = [...this.config.heroSlides, slide];
-            } else {
-                this.config.heroSlides = this.config.heroSlides.map((s) => (s.id === this.slideEditing.id ? { ...this.slideEditing } : s));
+            this.slideSaving = true;
+            try {
+                // Let the UI paint the saving state before the synchronous commit.
+                await this.$nextTick();
+                if (this.slideIsNew) {
+                    const slide = { ...this.slideEditing, priority: this.config.heroSlides.length + 1 };
+                    this.config.heroSlides = [...this.config.heroSlides, slide];
+                } else {
+                    const id = this.slideEditing.id;
+                    this.config.heroSlides = this.config.heroSlides.map((s) => (s.id === id ? { ...this.slideEditing } : s));
+                }
+                this.slideEditing = null;
+                this.slideIsNew = false;
+            } finally {
+                this.slideSaving = false;
             }
-            this.slideEditing = null;
         },
 
         updateSlideField(id, patch) {
@@ -251,7 +278,7 @@ window.homepageBuilder = function homepageBuilder(opts) {
 
         duplicateSlide(slide) {
             const copy = {
-                ...structuredClone(slide),
+                ...this.cloneSlide(slide),
                 id: this.slideUid(),
                 title: slide.title ? slide.title + ' (Copy)' : undefined,
                 priority: this.config.heroSlides.length + 1,

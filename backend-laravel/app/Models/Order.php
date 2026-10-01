@@ -83,6 +83,21 @@ class Order extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Alternative phone safe for display: null when empty or identical to the
+     * primary phone (after whitespace/dash normalization), so invoices never
+     * render the same number twice. Saved data is left untouched.
+     */
+    public function getDisplayAlternativePhoneAttribute(): ?string
+    {
+        $norm = fn ($v) => preg_replace('/[\s\-]/', '', trim((string) $v));
+        $alt = trim((string) $this->alternative_phone);
+        if ($alt === '') {
+            return null;
+        }
+        return $norm($alt) !== $norm($this->phone) ? $alt : null;
+    }
+
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');

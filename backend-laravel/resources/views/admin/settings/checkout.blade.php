@@ -25,6 +25,20 @@
                     <input type="text" name="cod_note" value="{{ old('cod_note', $checkout['cod_note'] ?? '') }}" placeholder="e.g. Pay in cash on delivery" class="admin-control w-full text-xs">
                 </div>
             </div>
+            <div class="sm:col-span-2 space-y-2 rounded-[8px] border border-slate-100 bg-slate-50/60 p-3">
+                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="require_alt_phone" value="1" @checked(old('require_alt_phone', $checkout['require_alt_phone'] ?? false)) class="rounded border-slate-300 text-brand-green-600">
+                    Require alternative phone at checkout
+                </label>
+                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="allow_notes" value="1" @checked(old('allow_notes', $checkout['allow_notes'] ?? true)) class="rounded border-slate-300 text-brand-green-600">
+                    Allow order notes at checkout
+                </label>
+                <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="announcement_enabled" value="1" @checked(old('announcement_enabled', $checkout['announcement_enabled'] ?? true)) class="rounded border-slate-300 text-brand-green-600">
+                    Show storefront announcement bar
+                </label>
+            </div>
             <div>
                 <label class="mb-1 block text-xs font-bold text-slate-700">Related pages</label>
                 <div class="flex flex-wrap gap-2 text-xs">

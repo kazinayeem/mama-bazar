@@ -144,7 +144,7 @@
                 <h3 class="font-bold text-slate-900 uppercase tracking-wider text-xs border-b border-slate-100 pb-2">Customer &amp; Shipping</h3>
                 <p><span class="text-slate-400 font-semibold">Name:</span> <span class="font-bold text-slate-800">{{ $order->customer_name }}</span></p>
                 <p><span class="text-slate-400 font-semibold">Phone:</span> <a href="tel:{{ $order->phone }}" class="font-semibold text-brand-green-700">{{ $order->phone }}</a></p>
-                @if($order->alternative_phone)<p><span class="text-slate-400 font-semibold">Alt:</span> {{ $order->alternative_phone }}</p>@endif
+                @if($order->display_alternative_phone)<p><span class="text-slate-400 font-semibold">Alt:</span> {{ $order->display_alternative_phone }}</p>@endif
                 @if($order->email)<p><span class="text-slate-400 font-semibold">Email:</span> {{ $order->email }}</p>@endif
                 <p><span class="text-slate-400 font-semibold">Address:</span> {{ $order->address }}@if($order->apartment), {{ $order->apartment }}@endif, {{ $order->district }}</p>
                 <p><span class="text-slate-400 font-semibold">Method:</span> {{ $order->shipping_method_name ?: 'Standard Delivery' }}</p>
@@ -179,7 +179,7 @@
                 <button @click="customerOpen = false" class="text-slate-400 hover:text-slate-800">✕</button>
             </div>
             <p><strong>{{ $order->customer_name }}</strong> <span class="text-xs px-2 py-0.5 rounded-full {{ $order->user_id ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">{{ $order->user_id ? 'Registered' : 'Guest' }}</span></p>
-            <p class="text-xs">Phone: {{ $order->phone }}@if($order->alternative_phone) · Alt: {{ $order->alternative_phone }}@endif</p>
+            <p class="text-xs">Phone: {{ $order->phone }}@if($order->display_alternative_phone) · Alt: {{ $order->display_alternative_phone }}@endif</p>
             @if($order->email)<p class="text-xs">Email: {{ $order->email }}</p>@endif
             <p class="text-xs">{{ $order->address }}, {{ $order->district }}</p>
             <button onclick="copyOrderInfo()" class="w-full py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">Copy Order Information</button>

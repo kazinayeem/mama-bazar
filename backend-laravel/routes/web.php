@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\AdminCouponWebController;
 use App\Http\Controllers\Admin\AdminSettingWebController;
 use App\Http\Controllers\Admin\AdminCatalogWebController;
 use App\Http\Controllers\Admin\AdminModuleWebController;
+use App\Http\Controllers\Admin\AdminReviewWebController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,9 @@ Route::get('/products/{slug}', [ProductWebController::class, 'show'])->name('pro
 Route::post('/products/{slug}/reviews', [ProductWebController::class, 'storeReview'])
     ->middleware('auth')
     ->name('products.review');
+Route::put('/products/{slug}/reviews/{id}', [ProductWebController::class, 'updateReview'])
+    ->middleware('auth')
+    ->name('products.review.update');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
@@ -68,9 +72,9 @@ Route::get('/pages/{slug}', [PageWebController::class, 'show'])->name('page.show
 
 Route::get('/refund-policy', fn () => app(PageWebController::class)->show('return-refund'));
 Route::get('/return-refund-policy', fn () => app(PageWebController::class)->show('return-refund'));
-Route::get('/shipping-policy', fn () => app(PageWebController::class)->show('shipping'));
+Route::get('/shipping-policy', fn () => app(PageWebController::class)->show('shipping-policy'));
 Route::get('/privacy-policy', fn () => app(PageWebController::class)->show('privacy-policy'));
-Route::get('/terms-and-conditions', fn () => app(PageWebController::class)->show('terms-and-conditions'));
+Route::get('/terms-and-conditions', fn () => app(PageWebController::class)->show('terms'));
 Route::get('/cookie-policy', fn () => app(PageWebController::class)->show('cookie-policy'));
 Route::get('/payment-policy', fn () => app(PageWebController::class)->show('payment'));
 Route::get('/cancellation-policy', fn () => app(PageWebController::class)->show('cancellation'));
@@ -86,7 +90,7 @@ Route::get('/admin/login', [AdminAuthController::class, 'showLogin'])->name('adm
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
-Route::prefix('admin')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () {
     Route::get('/', fn () => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
@@ -118,6 +122,14 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/orders/{id}/status', [AdminOrderWebController::class, 'updateStatus'])->name('admin.orders.status');
     Route::post('/orders/{id}/payment', [AdminOrderWebController::class, 'updatePayment'])->name('admin.orders.payment');
     Route::post('/orders/{id}/notes', [AdminOrderWebController::class, 'addNote'])->name('admin.orders.notes');
+
+    // Reviews
+    Route::get('/reviews', [AdminReviewWebController::class, 'index'])->name('admin.reviews.index');
+    Route::get('/reviews/{id}', [AdminReviewWebController::class, 'show'])->name('admin.reviews.show');
+    Route::put('/reviews/{id}', [AdminReviewWebController::class, 'update'])->name('admin.reviews.update');
+    Route::post('/reviews/{id}/status', [AdminReviewWebController::class, 'updateStatus'])->name('admin.reviews.status');
+    Route::post('/reviews/{id}/featured', [AdminReviewWebController::class, 'toggleFeatured'])->name('admin.reviews.featured');
+    Route::delete('/reviews/{id}', [AdminReviewWebController::class, 'destroy'])->name('admin.reviews.destroy');
 
     // Categories
     Route::get('/categories', [AdminCategoryWebController::class, 'index'])->name('admin.categories.index');
@@ -151,6 +163,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     // Marketing
     Route::get('/marketing', [AdminModuleWebController::class, 'marketing'])->name('admin.marketing.index');
     Route::post('/marketing', [AdminModuleWebController::class, 'storeMarketing'])->name('admin.marketing.store');
+    Route::put('/marketing/{id}', [AdminModuleWebController::class, 'updateMarketing'])->name('admin.marketing.update');
     Route::delete('/marketing/{id}', [AdminModuleWebController::class, 'destroyMarketing'])->name('admin.marketing.destroy');
 
     // Finance
@@ -165,10 +178,6 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     // Checkout
     Route::get('/shipping', [AdminSettingWebController::class, 'shipping'])->name('admin.shipping.index');
     Route::post('/shipping', [AdminSettingWebController::class, 'storeShipping'])->name('admin.shipping.store');
-    Route::put('/shipping/{id}', [AdminSettingWebController::class, 'updateShipping'])->name('admin.shipping.update');
-    Route::post('/shipping/{id}/toggle', [AdminSettingWebController::class, 'toggleShipping'])->name('admin.shipping.toggle');
-    Route::post('/shipping/reorder', [AdminSettingWebController::class, 'reorderShipping'])->name('admin.shipping.reorder');
-    Route::delete('/shipping/{id}', [AdminSettingWebController::class, 'destroyShipping'])->name('admin.shipping.destroy');
     Route::put('/shipping/{id}', [AdminSettingWebController::class, 'updateShipping'])->name('admin.shipping.update');
     Route::post('/shipping/{id}/toggle', [AdminSettingWebController::class, 'toggleShipping'])->name('admin.shipping.toggle');
     Route::post('/shipping/reorder', [AdminSettingWebController::class, 'reorderShipping'])->name('admin.shipping.reorder');
@@ -193,9 +202,11 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::delete('/policies/{id}', [AdminModuleWebController::class, 'destroyPolicy'])->name('admin.policies.destroy');
     Route::get('/banners', [AdminSettingWebController::class, 'banners'])->name('admin.banners.index');
     Route::post('/banners', [AdminSettingWebController::class, 'storeBanner'])->name('admin.banners.store');
+    Route::put('/banners/{id}', [AdminSettingWebController::class, 'updateBanner'])->name('admin.banners.update');
     Route::delete('/banners/{id}', [AdminSettingWebController::class, 'destroyBanner'])->name('admin.banners.destroy');
     Route::get('/media', [AdminSettingWebController::class, 'media'])->name('admin.media.index');
     Route::post('/media', [AdminSettingWebController::class, 'storeMedia'])->name('admin.media.store');
+    Route::delete('/media/{id}', [AdminSettingWebController::class, 'destroyMedia'])->name('admin.media.destroy');
     Route::get('/media/picker', [AdminSettingWebController::class, 'mediaPicker'])->name('admin.media.picker');
     Route::post('/media/picker', [AdminSettingWebController::class, 'mediaPickerUpload'])->name('admin.media.picker.upload');
 
@@ -209,10 +220,15 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::delete('/members/{id}', [AdminModuleWebController::class, 'destroyMember'])->name('admin.members.destroy');
     Route::get('/backup', [AdminSettingWebController::class, 'backup'])->name('admin.backup.index');
     Route::post('/backup', [AdminSettingWebController::class, 'createBackup'])->name('admin.backup.create');
+    Route::get('/backup/{id}/download', [AdminSettingWebController::class, 'downloadBackup'])->name('admin.backup.download');
+    Route::post('/backup/restore', [AdminSettingWebController::class, 'restoreBackup'])->name('admin.backup.restore');
+    Route::delete('/backup/{id}', [AdminSettingWebController::class, 'deleteBackup'])->name('admin.backup.destroy');
 
     // System
     Route::get('/inventory', [AdminModuleWebController::class, 'inventory'])->name('admin.inventory.index');
     Route::post('/inventory/{id}/adjust', [AdminModuleWebController::class, 'adjustStock'])->name('admin.inventory.adjust');
+    Route::get('/settings/business', [AdminSettingWebController::class, 'businessSettings'])->name('admin.settings.business');
+    Route::post('/settings/business', [AdminSettingWebController::class, 'updateBusinessSettings'])->name('admin.settings.business.update');
     Route::get('/settings', [AdminSettingWebController::class, 'settings'])->name('admin.settings.index');
     Route::post('/settings', [AdminSettingWebController::class, 'updateSettings'])->name('admin.settings.update');
     Route::match(['get', 'post'], '/fix-storage', [AdminSettingWebController::class, 'fixStorageWeb'])->name('admin.fix-storage');

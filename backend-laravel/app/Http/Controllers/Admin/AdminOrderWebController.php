@@ -30,7 +30,7 @@ class AdminOrderWebController extends Controller
             });
         }
 
-        $orders = $query->orderBy('created_at', 'desc')->paginate(20);
+        $orders = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('admin.orders.index', compact('orders'));
     }
@@ -147,35 +147,12 @@ class AdminOrderWebController extends Controller
 
     public static function storeInfo(): array
     {
-        $all = SiteSetting::all()->pluck('value', 'key')->toArray();
-        $get = function (array $keys, $default) use ($all) {
-            foreach ($keys as $k) {
-                if (!empty($all[$k])) return $all[$k];
-            }
-            return $default;
-        };
-
-        return [
-            'name' => $get(['store_name', 'site_name'], 'Mama Bazar'),
-            'tagline' => $get(['store_tagline'], 'Online Grocery & Essentials'),
-            'address' => $get(['store_address', 'business_address'], 'Dhaka, Bangladesh'),
-            'phone' => $get(['store_phone', 'contact_number', 'helpline'], '01700-000000'),
-            'email' => $get(['support_email', 'store_email'], 'support@mamabazar.com'),
-            'website' => $get(['website', 'store_website'], 'www.mamabazar.com'),
-            'tax_id' => $get(['business_registration', 'tax_id', 'trade_license'], null),
-            'return_policy' => $get(['return_policy_short'], 'Easy 7-day return for damaged or wrong items. Please keep the invoice.'),
-        ];
+        return \App\Services\BusinessSettingService::forInvoice();
     }
 
-    protected static function logoBase64(): ?string
+    public static function logoBase64(): ?string
     {
-        foreach ([public_path('brandlogo.png'), public_path('brand-logo.png'), public_path('logo.png')] as $p) {
-            if (is_file($p)) {
-                $mime = 'image/png';
-                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($p));
-            }
-        }
-        return null;
+        return \App\Services\BusinessSettingService::logoBase64();
     }
 
     /**

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice {{ $order->invoice_number ?: $order->order_id }} — Mama Bazar</title>
-    <link rel="icon" type="image/png" href="/brandlogo.png">
+    <title>Invoice {{ $order->invoice_number ?: $order->order_id }} — {{ $store['name'] ?? 'Mama Bazar' }}</title>
+    <link rel="icon" type="image/png" href="{{ ($store['favicon_url'] ?? null) ?: '/brandlogo.png' }}">
     <style>
         @font-face {
             font-family: 'Inter';
@@ -133,9 +133,9 @@
     <div class="inv-header">
         <div>
             <div class="brand">
-                <img src="/brandlogo.png" alt="Mama Bazar">
+                <img src="{{ $store['logo_url'] ?: '/brandlogo.png' }}" alt="{{ $store['name'] }}">
                 <div>
-                    <div class="brand-name"><span class="g">Mama</span><span class="o">Bazar</span></div>
+                    <div class="brand-name"><span class="g">{{ $store['name_first_part'] ?? 'Mama' }}</span><span class="o">{{ $store['name_second_part'] ?? 'Bazar' }}</span></div>
                     <div class="brand-sub">{{ $store['tagline'] }}</div>
                 </div>
             </div>
@@ -164,8 +164,8 @@
                 @if($order->upazila){{ $order->upazila }}, @endif
                 {{ $order->district ?: $order->division }}@if($order->postal_code) — {{ $order->postal_code }}@endif<br>
                 Phone: <strong>{{ $order->phone }}</strong>
-                @if($order->alternative_phone)<br>Alt: {{ $order->alternative_phone }}@endif
-                @if($order->email)<br>{{ $order->email }}@endif
+                @if($order->display_alternative_phone)<br>Alternative Phone: {{ $order->display_alternative_phone }}@endif
+                @if($order->email)<br>Email: {{ $order->email }}@endif
                 <br><span style="font-size:11px;color:#94a3b8;">{{ $order->user_id ? 'Registered customer' : 'Guest checkout' }}</span>
             </div>
         </div>
@@ -245,6 +245,7 @@
     <div class="footer">
         <div class="thanks">Thank you for shopping with {{ $store['name'] }}!</div>
         <div>This is a system-generated invoice. No signature required.</div>
+        @include('pdf.branding-footer')
     </div>
 
 </div>

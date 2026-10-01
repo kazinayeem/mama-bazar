@@ -343,8 +343,9 @@
             <span x-text="slideValidationError"></span>
         </div>
 
-        {{-- Form Body --}}
-        <div class="p-5 sm:p-6 space-y-5" x-if="slideEditing">
+        {{-- Form Body (template x-if: inner bindings only evaluate when a slide is loaded) --}}
+        <template x-if="slideEditing">
+        <div class="p-5 sm:p-6 space-y-5">
             {{-- Section 1: Responsive Visual Media --}}
             <div class="rounded-[8px] border border-slate-200/90 bg-slate-50/50 p-4">
                 <div class="mb-3 flex items-center justify-between">
@@ -374,14 +375,18 @@
                                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                             <span class="rounded bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-800 shadow-sm">Replace</span>
                                         </div>
-                                        <button
-                                            type="button"
-                                            class="absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1 text-white hover:bg-red-600 transition"
+                                        <span
+                                            role="button"
+                                            tabindex="0"
+                                            class="absolute right-1.5 top-1.5 rounded-full bg-black/70 p-1 text-white hover:bg-red-600 transition cursor-pointer"
                                             title="Remove image"
+                                            aria-label="Remove image"
                                             @click.stop="slideEditing[field] = field === 'desktopImage' ? '' : undefined"
+                                            @keydown.enter.prevent="slideEditing[field] = field === 'desktopImage' ? '' : undefined"
+                                            @keydown.space.prevent="slideEditing[field] = field === 'desktopImage' ? '' : undefined"
                                         >
                                             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
+                                        </span>
                                     </div>
                                 </template>
                                 <template x-if="!slideEditing[field]">
@@ -595,22 +600,27 @@
                 </div>
             </div>
         </div>
+        </template>
 
         {{-- Modal Footer --}}
         <div class="sticky bottom-0 z-20 flex items-center justify-end gap-2 border-t border-slate-200/80 bg-white px-5 py-3 sm:px-6">
             <button
                 type="button"
-                @click="slideEditing = null"
-                class="rounded-[6px] border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+                @click="cancelSlideEdit()"
+                :disabled="slideSaving"
+                class="rounded-[6px] border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition disabled:opacity-50"
             >
                 Cancel
             </button>
             <button
                 type="button"
                 @click="saveSlide()"
-                class="rounded-[6px] bg-brand-green-500 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-green-600 active:scale-[0.99] transition"
-                x-text="slideIsNew ? 'Create Slide' : 'Save Changes'"
-            ></button>
+                :disabled="slideSaving"
+                class="inline-flex items-center gap-1.5 rounded-[6px] bg-brand-green-500 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-green-600 active:scale-[0.99] transition disabled:opacity-60"
+            >
+                <span x-show="slideSaving" class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                <span x-text="slideSaving ? 'Saving…' : (slideIsNew ? 'Create Slide' : 'Save Changes')"></span>
+            </button>
         </div>
     </div>
 </div>

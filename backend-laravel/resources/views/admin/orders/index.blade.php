@@ -60,7 +60,7 @@
                                 <dt class="font-semibold uppercase tracking-wide text-slate-400">Payment</dt>
                                 <dd class="text-slate-700">
                                     <span class="uppercase">{{ $ord->payment_method }}</span>
-                                    <span class="{{ $ord->payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600' }}"> · {{ ucfirst($ord->payment_status) }}</span>
+                                    <span class="{{ in_array($ord->payment_status, ['success', 'verified'], true) ? 'text-emerald-600' : 'text-amber-600' }}"> · {{ ucfirst(str_replace('_', ' ', $ord->payment_status)) }}</span>
                                 </dd>
                             </div>
                             <div>
@@ -113,7 +113,7 @@
                                 <td class="font-bold text-slate-900">৳{{ number_format($ord->total_price, 0) }}</td>
                                 <td class="admin-hide-sm">
                                     <span class="block text-[10px] font-bold uppercase text-slate-700">{{ $ord->payment_method }}</span>
-                                    <span class="text-[10px] font-semibold {{ $ord->payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600' }}">{{ ucfirst($ord->payment_status) }}</span>
+                                    <span class="text-[10px] font-semibold {{ in_array($ord->payment_status, ['success', 'verified'], true) ? 'text-emerald-600' : 'text-amber-600' }}">{{ ucfirst(str_replace('_', ' ', $ord->payment_status)) }}</span>
                                 </td>
                                 <td><x-admin.badge :variant="$statusVariant">{{ $ord->status }}</x-admin.badge></td>
                                 <td class="admin-hide-md text-slate-500">{{ $ord->created_at->format('M d, Y') }}</td>

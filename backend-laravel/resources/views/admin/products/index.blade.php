@@ -495,8 +495,12 @@ document.addEventListener('alpine:init', () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this.csrfToken, 'Accept': 'application/json' },
                 body: JSON.stringify({ action, ids: this.selected })
-            }).then(r => r.json()).then(() => { this.bulkDeleteOpen = false; window.location.reload(); })
-              .catch(() => { alert('Bulk action failed'); this.bulkBusy = false; });
+            }).then(r => r.json().then(d => ({ ok: r.ok, body: d })).catch(() => ({ ok: r.ok, body: {} })))
+              .then(({ ok, body }) => {
+                  if (!ok || body.success === false) throw new Error(body.message || 'Bulk action failed');
+                  this.bulkDeleteOpen = false; window.location.reload();
+              })
+              .catch((e) => { alert(e.message || 'Bulk action failed'); this.bulkBusy = false; });
         },
 
         handleExport() {

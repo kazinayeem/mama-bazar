@@ -15,6 +15,7 @@ class AdminNav
             'palette' => '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
             'ruler' => '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
             'store' => '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M10 22v-4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v4"/><path d="M15 5v2"/><path d="M9 5v2"/><path d="M2 7h20"/>',
+            'building' => '<rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
             'truck' => '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
             'shopping-cart' => '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
             'ticket-percent' => '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M9 9h.01"/><path d="m15 9-6 6"/><path d="M15 15h.01"/>',
@@ -35,12 +36,20 @@ class AdminNav
             'database-backup' => '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 12a9 3 0 0 0 5 2.69"/><path d="M21 9.3V5"/><path d="M3 5v14a9 3 0 0 0 6.47 2.88"/><path d="M12 12v4h4"/><path d="M13 20a5 5 0 0 0 9-3 4.5 4.5 0 0 0-4.5-4.5c-1.33 0-2.54.54-3.41 1.41L12 16"/>',
             'boxes' => '<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/>',
             'settings' => '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+            'star' => '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
         ];
     }
 
     /** Exact clone of frontend/src/components/admin/adminNav.ts */
     public static function sections(): array
     {
+        $pendingReviews = 0;
+        try {
+            $pendingReviews = (int) \App\Models\Review::where('status', 'pending')->count();
+        } catch (\Throwable $e) {
+            $pendingReviews = 0;
+        }
+
         return [
             ['label' => 'Overview', 'items' => [
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'icon' => 'layout-dashboard'],
@@ -60,6 +69,7 @@ class AdminNav
                 ['label' => 'Returns & Refunds', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'receipt-text', 'params' => ['status' => 'cancelled']],
                 ['label' => 'Coupons', 'route' => 'admin.coupons.index', 'match' => 'admin.coupons.*', 'icon' => 'ticket-percent'],
                 ['label' => 'Marketing', 'route' => 'admin.marketing.index', 'match' => 'admin.marketing.*', 'icon' => 'megaphone'],
+                ['label' => 'Reviews', 'route' => 'admin.reviews.index', 'match' => 'admin.reviews.*', 'icon' => 'star', 'badge' => $pendingReviews],
             ]],
             ['label' => 'Finance', 'items' => [
                 ['label' => 'Expenses', 'route' => 'admin.expenses.index', 'match' => 'admin.expenses.index', 'icon' => 'receipt-text'],
@@ -71,6 +81,7 @@ class AdminNav
                 ['label' => 'Shipping Methods', 'route' => 'admin.shipping.index', 'match' => 'admin.shipping.*', 'icon' => 'map-pin'],
                 ['label' => 'Payment Methods', 'route' => 'admin.payment-methods.index', 'match' => 'admin.payment-methods.*', 'icon' => 'credit-card'],
                 ['label' => 'Checkout Notices', 'route' => 'admin.checkout-notices.index', 'match' => 'admin.checkout-notices.*', 'icon' => 'bell-ring'],
+                ['label' => 'Checkout Settings', 'route' => 'admin.checkout-settings.index', 'match' => 'admin.checkout-settings.*', 'icon' => 'settings'],
             ]],
             ['label' => 'Customers', 'items' => [
                 ['label' => 'Customers', 'route' => 'admin.customers.index', 'match' => 'admin.customers.*', 'icon' => 'users'],
@@ -93,7 +104,8 @@ class AdminNav
             ]],
             ['label' => 'System', 'items' => [
                 ['label' => 'Inventory', 'route' => 'admin.inventory.index', 'match' => 'admin.inventory.*', 'icon' => 'boxes'],
-                ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => 'admin.settings.*', 'icon' => 'settings'],
+                ['label' => 'Business Information', 'route' => 'admin.settings.business', 'match' => 'admin.settings.business*', 'icon' => 'building'],
+                ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => 'admin.settings.index', 'icon' => 'settings'],
             ]],
         ];
     }

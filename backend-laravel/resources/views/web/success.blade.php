@@ -10,7 +10,7 @@
     <div class="space-y-2">
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Order Placed Successfully!</h1>
         <p class="text-sm text-slate-600">
-            Thank you for shopping with Mama Bazar. Your order has been placed and is being prepared for dispatch.
+            Thank you for shopping with {{ $business['business_name'] }}. Your order has been placed and is being prepared for dispatch.
         </p>
     </div>
 

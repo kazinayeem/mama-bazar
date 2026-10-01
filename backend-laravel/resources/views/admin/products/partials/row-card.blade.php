@@ -83,8 +83,9 @@
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                         body: JSON.stringify({ featured: !featured })
                     })
-                    .then(r => r.json())
-                    .then(d => { featured = d.isFeatured; })
+                    .then(r => { if (!r.ok) throw new Error('Request failed'); return r.json(); })
+                    .then(d => { featured = !!d.isFeatured; })
+                    .catch(() => { alert('Could not update featured status. Please try again.'); })
                     .finally(() => { loading = false; })
                 "
                 :disabled="loading"

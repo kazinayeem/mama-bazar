@@ -176,6 +176,8 @@ class AdminDashboardService
                 'periodRevenue' => $periodRevenue,
                 'periodOrders' => $periodOrders,
                 'outOfStock' => (int) $outStockCount,
+                'pendingReviews' => (int) DB::table('reviews')->where('status', 'pending')->count(),
+                'avgRating' => round((float) (DB::table('reviews')->where('status', 'approved')->avg('rating') ?? 0), 1),
             ],
             'revenueChart' => $revenueChart,
             'statusBreakdown' => $statusBreakdown,

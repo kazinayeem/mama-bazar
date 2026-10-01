@@ -10,6 +10,10 @@
     $tags = is_array($product['tags'] ?? null) ? $product['tags'] : [];
     $reviewsList = isset($reviews) ? $reviews : collect();
     $isLoggedIn = auth()->check();
+    $reviewSummary = $reviewSummary ?? ['average' => 0, 'count' => 0, 'breakdown' => [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0]];
+    $userReview = $userReview ?? null;
+    $canReview = $canReview ?? false;
+    $isVerifiedBuyer = $isVerifiedBuyer ?? false;
 
     $pdpPayload = [
         'id' => (int) ($product['id'] ?? 0),
@@ -154,7 +158,7 @@
                 <span class="text-sm font-semibold text-slate-700">
                     {{ !empty($product['rating']) ? number_format((float)$product['rating'], 1) : 'No rating' }}
                 </span>
-                <span class="text-sm text-slate-600">({{ (int)($product['reviewCount'] ?? 0) }} reviews)</span>
+                <a href="#reviews" class="text-sm text-slate-600 underline-offset-2 hover:text-brand-green-700 hover:underline">({{ (int)($product['reviewCount'] ?? 0) }} reviews)</a>
             </div>
 
             <div class="mt-6 flex flex-wrap items-end gap-3">
@@ -396,62 +400,87 @@
     @endif
 
     {{-- Reviews --}}
-    <section class="mt-16" id="reviews">
-        <div class="mb-8">
-            <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-green-600">Customer feedback</p>
-            <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
-                Reviews ({{ (int)($product['reviewCount'] ?? $reviewsList->count()) }})
-            </h2>
+    <section class="mt-16 scroll-mt-24" id="reviews" x-data="{ reviewModal: false, editMode: false, modalRating: 0 }">
+        <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-green-600">Customer feedback</p>
+                <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
+                    Customer Reviews
+                </h2>
+            </div>
+            @if($canReview)
+                <button type="button" @click="editMode = false; modalRating = 0; reviewModal = true; $nextTick(() => $refs.reviewComment?.focus())"
+                        class="inline-flex items-center gap-2 rounded-full bg-brand-orange-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-orange-600">
+                    Write a Review
+                </button>
+            @elseif($userReview)
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-500">You have already reviewed this product.</span>
+            @endif
         </div>
 
+        @if(session('success') || session('error'))
+            <div class="mb-6 rounded-2xl border p-4 text-sm font-semibold {{ session('error') ? 'border-red-200 bg-red-50 text-red-700' : 'border-brand-green-200 bg-brand-green-50 text-brand-green-700' }}">
+                {{ session('error') ?? session('success') }}
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
-            <div>
-                <h3 class="mb-4 text-lg font-extrabold text-slate-900">Write a review</h3>
-                @if($isLoggedIn)
-                    <form method="POST" action="{{ route('products.review', $product['slug']) }}" class="rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft" x-data="{ rating: {{ (int) old('rating', 0) }} }">
-                        @csrf
-                        <input type="hidden" name="rating" :value="rating">
-                        <div class="mb-4 flex items-center gap-1">
-                            @for($value = 1; $value <= 5; $value++)
-                                <button type="button" class="transition hover:scale-110" @click="rating = {{ $value }}" aria-label="Rate {{ $value }} stars">
-                                    <svg class="h-5 w-5" :class="rating >= {{ $value }} ? 'text-brand-orange-500 fill-brand-orange-500' : 'text-slate-300'" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                </button>
-                            @endfor
+            {{-- Summary + breakdown --}}
+            <div class="rounded-[18px] border border-slate-100 bg-white p-6 text-center shadow-soft">
+                <p class="text-5xl font-black text-slate-900">{{ number_format((float)($reviewSummary['average'] ?? 0), 1) }}</p>
+                <div class="mt-2 flex items-center justify-center gap-0.5" aria-label="Average rating {{ $reviewSummary['average'] }} out of 5">
+                    @for($i = 1; $i <= 5; $i++)
+                        <svg class="h-5 w-5 {{ $i <= round((float)($reviewSummary['average'] ?? 0)) ? 'text-brand-orange-500' : 'text-slate-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    @endfor
+                </div>
+                <p class="mt-2 text-sm text-slate-500">Based on {{ (int)($reviewSummary['count'] ?? 0) }} review{{ (int)($reviewSummary['count'] ?? 0) === 1 ? '' : 's' }}</p>
+                <div class="mt-5 space-y-2 text-left">
+                    @foreach([5, 4, 3, 2, 1] as $stars)
+                        @php $cnt = (int)(($reviewSummary['breakdown'][$stars] ?? 0)); $pct = ($reviewSummary['count'] ?? 0) > 0 ? round($cnt / $reviewSummary['count'] * 100) : 0; @endphp
+                        <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                            <span class="w-6 shrink-0">{{ $stars }} ★</span>
+                            <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                                <div class="h-full rounded-full bg-brand-orange-500" style="width: {{ $pct }}%"></div>
+                            </div>
+                            <span class="w-8 shrink-0 text-right text-slate-500">{{ $cnt }}</span>
                         </div>
-                        @error('rating')
-                            <p class="mb-2 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                        <input
-                            name="title"
-                            type="text"
-                            value="{{ old('title') }}"
-                            placeholder="Review title (optional)"
-                            class="mb-3 w-full rounded-full border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green-500"
-                        >
-                        <textarea
-                            name="comment"
-                            required
-                            maxlength="5000"
-                            rows="4"
-                            placeholder="Share your experience with this product..."
-                            class="mb-3 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand-green-500"
-                        >{{ old('comment') }}</textarea>
-                        @error('comment')
-                            <p class="mb-2 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                        <button type="submit" class="w-full rounded-full bg-brand-green-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-green-700">
-                            Submit Review
-                        </button>
-                    </form>
-                @else
-                    <div class="rounded-[18px] border border-slate-100 bg-white p-6 text-center shadow-soft">
-                        <p class="text-sm text-slate-500">Please log in to write a review.</p>
-                        <a href="{{ route('login') }}" class="mt-4 inline-block rounded-full bg-brand-green-600 px-6 py-2.5 text-sm font-bold text-white">Login</a>
-                    </div>
+                    @endforeach
+                </div>
+                @if($isVerifiedBuyer)
+                    <p class="mt-4 inline-flex items-center rounded-full bg-brand-green-50 px-3 py-1 text-[11px] font-bold text-brand-green-700">Verified Purchase eligible</p>
                 @endif
             </div>
 
-            <div class="lg:col-span-2 space-y-4">
+            {{-- Review list --}}
+            <div class="space-y-4 lg:col-span-2">
+                @if($userReview)
+                    <article class="rounded-[18px] border-2 border-brand-green-200 bg-brand-green-50/50 p-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <p class="text-xs font-bold uppercase tracking-wider text-brand-green-700">Your review · {{ ucfirst($userReview->status) }}</p>
+                            <button type="button" @click="editMode = true; modalRating = {{ (int)$userReview->rating }}; reviewModal = true; $nextTick(() => $refs.reviewComment?.focus())"
+                                    class="rounded-full border border-brand-green-300 bg-white px-4 py-1.5 text-xs font-bold text-brand-green-700 hover:bg-brand-green-50">Edit</button>
+                        </div>
+                        <div class="mt-2 flex items-center gap-0.5">
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg class="h-3.5 w-3.5 {{ $i <= (int)$userReview->rating ? 'text-brand-orange-500' : 'text-slate-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            @endfor
+                            @if($userReview->is_verified_purchase)
+                                <span class="ml-2 rounded-full bg-brand-green-600 px-2 py-0.5 text-[10px] font-bold text-white">Verified Purchase</span>
+                            @endif
+                        </div>
+                        @if($userReview->title)<h4 class="mt-2 text-sm font-extrabold text-slate-900">{{ $userReview->title }}</h4>@endif
+                        <p class="mt-1 text-sm leading-6 text-slate-600">{{ $userReview->comment }}</p>
+                        @if($userReview->status !== 'approved')
+                            <p class="mt-2 text-xs font-semibold text-amber-600">Visible to you only until approved.</p>
+                        @endif
+                    </article>
+                @elseif(!$isLoggedIn)
+                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft">
+                        <p class="text-sm text-slate-600">Please <span class="font-bold text-slate-900">login</span> to write a review.</p>
+                        <a href="{{ route('login') }}" class="rounded-full bg-brand-green-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-green-700">Login</a>
+                    </div>
+                @endif
+
                 @forelse($reviewsList as $review)
                     <article class="rounded-[18px] border border-slate-100 bg-white p-5 shadow-soft">
                         <div class="flex items-center justify-between gap-3">
@@ -460,7 +489,12 @@
                                     {{ strtoupper(substr($review->customer_name ?: 'A', 0, 1)) }}
                                 </span>
                                 <div>
-                                    <p class="text-sm font-bold text-slate-900">{{ $review->customer_name ?: 'Anonymous' }}</p>
+                                    <p class="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-900">
+                                        {{ $review->customer_name ?: 'Anonymous' }}
+                                        @if($review->is_verified_purchase)
+                                            <span class="rounded-full bg-brand-green-600 px-2 py-0.5 text-[10px] font-bold text-white">Verified Purchase</span>
+                                        @endif
+                                    </p>
                                     <p class="text-xs text-slate-500">{{ optional($review->created_at)->format('F j, Y') }}</p>
                                 </div>
                             </div>
@@ -476,11 +510,64 @@
                         <p class="mt-2 text-sm leading-6 text-slate-600">{{ $review->comment }}</p>
                     </article>
                 @empty
-                    <div class="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-16 text-center">
-                        <p class="font-extrabold text-lg text-slate-900">No reviews yet</p>
-                        <p class="mt-2 text-sm text-slate-500">Be the first to share your experience with this product.</p>
-                    </div>
+                    @if(!$userReview)
+                        <div class="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-white py-16 text-center">
+                            <p class="font-extrabold text-lg text-slate-900">No reviews yet</p>
+                            <p class="mt-2 text-sm text-slate-500">Be the first to share your experience with this product.</p>
+                        </div>
+                    @endif
                 @endforelse
+
+                @if(method_exists($reviewsList, 'hasPages') && $reviewsList->hasPages())
+                    <div class="pt-2">{{ $reviewsList->fragment('reviews')->links() }}</div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Review modal --}}
+        <div x-show="reviewModal" x-cloak class="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-4"
+             @click.self="reviewModal = false" @keydown.escape.window="reviewModal = false" role="dialog" aria-modal="true" aria-label="Write a review">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" x-transition>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-extrabold text-slate-900" x-text="editMode ? 'Edit your review' : 'Write a Review'"></h3>
+                    <button type="button" @click="reviewModal = false" class="rounded-full p-2 text-slate-400 hover:bg-slate-100" aria-label="Close">✕</button>
+                </div>
+                <p class="mt-1 truncate text-xs text-slate-500">{{ $product['title'] ?? '' }}</p>
+                <form :action="editMode ? '{{ $userReview ? route('products.review.update', [$product['slug'], $userReview->id]) : '#' }}' : '{{ route('products.review', $product['slug']) }}'"
+                      method="POST" class="mt-4 space-y-4">
+                    @csrf
+                    <template x-if="editMode"><input type="hidden" name="_method" value="PUT"></template>
+                    <input type="hidden" name="rating" :value="modalRating">
+                    <div>
+                        <p class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Rating *</p>
+                        <div class="flex items-center gap-1">
+                            <template x-for="v in [1,2,3,4,5]" :key="v">
+                                <button type="button" @click="modalRating = v" :aria-label="'Rate ' + v + ' stars'"
+                                        class="transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-400 rounded">
+                                    <svg class="h-8 w-8" :class="modalRating >= v ? 'text-brand-orange-500' : 'text-slate-300'" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500" for="review-modal-title">Title (optional)</label>
+                        <input id="review-modal-title" name="title" type="text" maxlength="200"
+                               value="{{ old('title', $userReview->title ?? '') }}"
+                               class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green-500">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500" for="review-modal-comment">Review *</label>
+                        <textarea id="review-modal-comment" x-ref="reviewComment" name="comment" required maxlength="5000" rows="4"
+                                  class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand-green-500">{{ old('comment', $userReview->comment ?? '') }}</textarea>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="button" @click="reviewModal = false"
+                                class="flex-1 rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
+                        <button type="submit" :disabled="modalRating < 1"
+                                class="flex-1 rounded-full bg-brand-orange-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-brand-orange-600 disabled:cursor-not-allowed disabled:opacity-40"
+                                x-text="editMode ? 'Save Changes' : 'Submit Review'"></button>
+                    </div>
+                </form>
             </div>
         </div>
     </section>

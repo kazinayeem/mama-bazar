@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Review;
+use App\Services\ReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -129,6 +130,8 @@ class ReviewController extends Controller
                 'reviews.title',
                 'reviews.comment',
                 'reviews.status',
+                'reviews.is_verified_purchase as isVerifiedPurchase',
+                'reviews.is_featured as isFeatured',
                 'reviews.created_at as createdAt',
                 'products.title as productTitle',
                 'products.slug as productSlug',
@@ -148,50 +151,69 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'productId' => 'required|integer',
-            'rating' => 'required|numeric|min:1|max:5',
+            'rating' => 'required|integer|min:1|max:5',
             'title' => 'nullable|string|max:200',
-            'comment' => 'required|string',
+            'comment' => 'required|string|max:5000',
             'customerName' => 'nullable|string|max:100',
         ]);
 
-        $product = Product::find($validated['productId']);
-        if (!$product) {
-            return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+        try {
+            $review = ReviewService::submit(
+                (int) $validated['productId'],
+                $request->user(),
+                (int) $validated['rating'],
+                $validated['title'] ?? null,
+                (string) $validated['comment']
+            );
+        } catch (\Exception $e) {
+            $code = in_array($e->getCode(), [400, 403, 404, 409, 422], true) ? $e->getCode() : 400;
+            return response()->json(['success' => false, 'message' => $e->getMessage()], $code);
         }
-
-        $user = $request->user();
-        if ($user) {
-            $existing = Review::where('product_id', $validated['productId'])
-                ->where('user_id', $user->id)
-                ->first();
-            if ($existing) {
-                return response()->json(['success' => false, 'message' => 'You have already reviewed this product'], 400);
-            }
-        }
-
-        $review = Review::create([
-            'product_id' => $validated['productId'],
-            'user_id' => $user ? $user->id : null,
-            'customer_name' => $user ? ($user->name ?? $request->input('customerName')) : $request->input('customerName'),
-            'rating' => max(1, min(5, (int) $validated['rating'])),
-            'title' => $validated['title'] ?? null,
-            'comment' => $validated['comment'],
-            'status' => 'pending',
-        ]);
-
-        $fullReview = $this->getReviewRecord($review->id);
 
         return response()->json([
             'success' => true,
-            'data' => $fullReview,
+            'data' => $this->getReviewRecord($review->id),
             'message' => 'Review submitted and pending approval',
         ], 201);
+    }
+
+    /**
+     * Owner-only edit (JWT users). Returns the review to pending re-moderation.
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $review = Review::find($id);
+        if (!$review) {
+            return response()->json(['success' => false, 'message' => 'Review not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'title' => 'nullable|string|max:200',
+            'comment' => 'required|string|max:5000',
+        ]);
+
+        try {
+            $updated = ReviewService::updateOwn(
+                $review,
+                $request->user(),
+                (int) $validated['rating'],
+                $validated['title'] ?? null,
+                (string) $validated['comment']
+            );
+        } catch (\Exception $e) {
+            $code = in_array($e->getCode(), [400, 403, 404, 409, 422], true) ? $e->getCode() : 400;
+            return response()->json(['success' => false, 'message' => $e->getMessage()], $code);
+        }
+
+        return response()->json(['success' => true, 'data' => $this->getReviewRecord($updated->id)]);
     }
 
     public function updateStatus(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
             'status' => 'required|in:pending,approved,rejected',
+            'admin_note' => 'nullable|string|max:2000',
         ]);
 
         $review = Review::find($id);
@@ -199,9 +221,14 @@ class ReviewController extends Controller
             return response()->json(['success' => false, 'message' => 'Review not found'], 404);
         }
 
-        $review->update(['status' => $validated['status']]);
+        $updated = ReviewService::setStatus(
+            $review,
+            $validated['status'],
+            $request->user(),
+            $validated['admin_note'] ?? null
+        );
 
-        return response()->json(['success' => true, 'data' => $this->getReviewRecord($id)]);
+        return response()->json(['success' => true, 'data' => $this->getReviewRecord($updated->id)]);
     }
 
     public function remove(int $id): JsonResponse
@@ -230,6 +257,8 @@ class ReviewController extends Controller
                 'reviews.title',
                 'reviews.comment',
                 'reviews.status',
+                'reviews.is_verified_purchase as isVerifiedPurchase',
+                'reviews.is_featured as isFeatured',
                 'reviews.created_at as createdAt',
                 'products.title as productTitle',
                 'products.slug as productSlug',

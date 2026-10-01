@@ -70,12 +70,18 @@ class AdminModuleWebController extends Controller
         $product->save();
 
         try {
+            $actor = Auth::user();
             AdminAuditLog::create([
-                'user_id' => Auth::id(),
+                'actor_id' => $actor?->id,
+                'actor_name' => $actor?->name,
+                'actor_email' => $actor?->email,
                 'action' => 'inventory.adjust',
-                'model_type' => Product::class,
-                'model_id' => $product->id,
+                'target_type' => Product::class,
+                'target_id' => $product->id,
                 'details' => trim(($validated['reason'] ?? '') !== '' ? "delta={$delta}; " . $validated['reason'] : "delta={$delta}"),
+                'ip_address' => $request->ip(),
+                'user_agent' => mb_substr((string) $request->userAgent(), 0, 500),
+                'status' => 'success',
             ]);
         } catch (\Throwable $e) {
             // Audit logging must never break stock adjustments.
@@ -382,6 +388,24 @@ class AdminModuleWebController extends Controller
         MarketingIntegration::create($data);
 
         return back()->with('success', 'Marketing integration saved.');
+    }
+
+    public function updateMarketing(Request $request, int $id)
+    {
+        $integration = MarketingIntegration::findOrFail($id);
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:100',
+            'pixel_id' => 'nullable|string|max:255',
+            'script_code' => 'nullable|string',
+            'access_token' => 'nullable|string',
+            'test_event_code' => 'nullable|string|max:255',
+            'status' => 'nullable|string|max:50',
+        ]);
+        $data['status'] = $data['status'] ?? 'active';
+        $integration->update($data);
+
+        return back()->with('success', 'Marketing integration updated.');
     }
 
     public function destroyMarketing(int $id)

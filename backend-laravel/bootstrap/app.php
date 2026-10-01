@@ -10,6 +10,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use App\Http\Middleware\JwtAuthMiddleware;
 use App\Http\Middleware\RequirePermissionMiddleware;
 use App\Http\Middleware\AdminOnlyMiddleware;
+use App\Http\Middleware\EnsureAdminAccess;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'jwt.auth' => JwtAuthMiddleware::class,
             'require.permission' => RequirePermissionMiddleware::class,
             'admin.only' => AdminOnlyMiddleware::class,
+            'admin.access' => EnsureAdminAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -58,8 +58,9 @@
             <strong>{{ $order->customer_name }}</strong><br>
             {{ $order->address }}@if($order->apartment), {{ $order->apartment }}@endif<br>
             @if($order->area){{ $order->area }},@endif @if($order->upazila){{ $order->upazila }},@endif {{ $order->district }}@if($order->postal_code) — {{ $order->postal_code }}@endif<br>
-            Phone: {{ $order->phone }}@if($order->alternative_phone) / {{ $order->alternative_phone }}@endif<br>
-            @if($order->email){{ $order->email }}<br>@endif
+            Phone: {{ $order->phone }}<br>
+            @if($order->display_alternative_phone)Alternative Phone: {{ $order->display_alternative_phone }}<br>@endif
+            @if($order->email)Email: {{ $order->email }}<br>@endif
             <span style="color:#94a3b8;">{{ $order->user_id ? 'Registered' : 'Guest' }}</span>
         </td>
         <td style="text-align:right;">
@@ -108,6 +109,8 @@
     {{ $store['return_policy'] }}<br>
     Helpline: {{ $store['phone'] }} | {{ $store['email'] }}
 </div>
+
+@include('pdf.branding-footer')
 
 </body>
 </html>

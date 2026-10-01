@@ -207,7 +207,11 @@ class HomepageService
             ->orderBy('priority', 'desc')
             ->get();
 
-        $reviews = Review::where('status', 'approved')
+        // Homepage testimonials: featured + approved first, then latest approved.
+        // Pending/rejected are never exposed (enforced in the query itself).
+        $reviews = Review::with('product')
+            ->where('status', 'approved')
+            ->orderBy('is_featured', 'desc')
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get()
@@ -217,6 +221,8 @@ class HomepageService
                 'rating' => $r->rating,
                 'title' => $r->title,
                 'comment' => $r->comment,
+                'isVerifiedPurchase' => (bool) $r->is_verified_purchase,
+                'isFeatured' => (bool) $r->is_featured,
                 'createdAt' => $r->created_at ? $r->created_at->toIso8601String() : null,
                 'productTitle' => $r->product?->title,
                 'productSlug' => $r->product?->slug,

@@ -34,7 +34,7 @@
                 <span x-text="open === 3 ? '−' : '+'" class="text-brand-green-600 font-extrabold text-base"></span>
             </button>
             <div x-show="open === 3" class="p-4 text-xs text-slate-600 leading-relaxed border-t border-slate-100">
-                Visit the <a href="{{ route('track') }}" class="font-bold text-brand-green-600 hover:underline">Track Order</a> page and enter either your Order ID (GHB-XXXXXX) or the phone number you used during checkout.
+                Visit the <a href="{{ route('track') }}" class="font-bold text-brand-green-600 hover:underline">Track Order</a> page and enter either your Order ID (BS-XXXXXX) or the phone number you used during checkout.
             </div>
         </div>
 
@@ -46,6 +46,34 @@
             <div x-show="open === 4" class="p-4 text-xs text-slate-600 leading-relaxed border-t border-slate-100">
                 If an item is damaged or defective upon arrival, notify us within 7 days for a hassle-free replacement or full refund.
             </div>
+        </div>
+    </div>
+
+    {{-- Still have questions banner --}}
+    <div class="p-6 rounded-3xl bg-brand-green-50/60 border border-brand-green-200 text-center space-y-3">
+        <h3 class="text-sm font-bold text-slate-900">Still have questions or need support?</h3>
+        <p class="text-xs text-slate-600 max-w-md mx-auto">
+            Our support team is ready to help you with order inquiries, product details, or return requests.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-1">
+            @if(!empty($business['primary_phone']))
+                <a href="tel:{{ $business['phone_raw'] }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-brand-green-300 text-xs font-bold text-brand-green-800 hover:bg-brand-green-100 transition shadow-xs">
+                    <span>📞</span> {{ $business['primary_phone'] }}
+                </a>
+            @endif
+            @if(!empty($business['support_email']))
+                <a href="mailto:{{ $business['support_email'] }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-brand-green-300 text-xs font-bold text-brand-green-800 hover:bg-brand-green-100 transition shadow-xs">
+                    <span>✉️</span> {{ $business['support_email'] }}
+                </a>
+            @endif
+            @if(!empty($business['whatsapp_number']))
+                <a href="{{ $business['whatsapp_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition shadow-xs">
+                    <span>💬</span> WhatsApp Us
+                </a>
+            @endif
+            <a href="{{ route('contact') }}" class="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-brand-green-600 text-white text-xs font-bold hover:bg-brand-green-700 transition shadow-xs">
+                Contact Page &rarr;
+            </a>
         </div>
     </div>
 </div>

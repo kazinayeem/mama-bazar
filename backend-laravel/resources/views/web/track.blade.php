@@ -5,7 +5,7 @@
 
     <div class="text-center space-y-2">
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Track Your Order</h1>
-        <p class="text-xs text-slate-500">Enter your Order ID (e.g. GHB-XXXXXX) and the phone number used at checkout to check delivery status.</p>
+        <p class="text-xs text-slate-500">Enter your Order ID (e.g. BS-XXXXXX) and the phone number used at checkout to check delivery status.</p>
     </div>
 
     {{-- Search Form --}}
@@ -178,6 +178,14 @@
                 <div class="text-3xl">📦</div>
                 <p class="text-sm font-semibold text-slate-700">{{ $error ?: 'No order found.' }}</p>
                 <p class="text-xs text-slate-400">Please double-check your Order ID or phone number and try again.</p>
+                @if(!empty($business['primary_phone']) || !empty($business['support_email']))
+                    <p class="text-xs text-slate-500 pt-2 border-t border-slate-100">
+                        Need assistance? Call helpline: <a href="tel:{{ $business['phone_raw'] }}" class="font-semibold text-brand-green-700 hover:underline">{{ $business['primary_phone'] }}</a>
+                        @if(!empty($business['support_email']))
+                            or email <a href="mailto:{{ $business['support_email'] }}" class="font-semibold text-brand-green-700 hover:underline">{{ $business['support_email'] }}</a>
+                        @endif
+                    </p>
+                @endif
             </div>
         @endif
     @endif

@@ -37,6 +37,12 @@
                             class="w-full rounded-[6px] border border-[var(--admin-border)] bg-white py-1.5 text-[10px] font-bold text-slate-700 hover:bg-slate-50">
                         Copy URL
                     </button>
+                    <form action="{{ route('admin.media.destroy', $asset->id) }}" method="POST" onsubmit="return confirm('Delete this file? Pages using its URL will break.');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="w-full rounded-[6px] border border-red-200 bg-white py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50">
+                            Delete
+                        </button>
+                    </form>
                 </div>
             @empty
                 <div class="col-span-full">

@@ -190,7 +190,11 @@
                             @endfor
                         </div>
                         <p class="mt-2.5 line-clamp-3 text-sm leading-6 text-slate-600">{{ $comment }}</p>
-                        <p class="mt-3 text-xs font-bold text-slate-900">{{ $name }}</p>
+                        <p class="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-900">— {{ $name }}
+                            @if(!empty($r['isVerifiedPurchase'] ?? $r['is_verified_purchase'] ?? false))
+                                <span class="rounded-full bg-brand-green-50 px-2 py-0.5 text-[10px] font-bold text-brand-green-700">Verified Purchase</span>
+                            @endif
+                        </p>
                         @if($productTitle)
                             <p class="mt-0.5 truncate text-[11px] text-slate-400">{{ $productTitle }}</p>
                         @endif

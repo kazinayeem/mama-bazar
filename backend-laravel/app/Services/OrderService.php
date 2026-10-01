@@ -31,20 +31,40 @@ class OrderService
         "delivered",
     ];
 
+    /** Prefix for newly generated order numbers (Bornosoft). Legacy `GHB-` orders remain valid. */
+    public const ORDER_NUMBER_PREFIX = 'BS';
+
     public static function generateOrderId(): string
     {
         $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        $code = "";
-        for ($i = 0; $i < 6; $i++) {
-            $code .= $chars[random_int(0, strlen($chars) - 1)];
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $code = "";
+            for ($i = 0; $i < 6; $i++) {
+                $code .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            $candidate = self::ORDER_NUMBER_PREFIX . "-" . $code;
+            if (!Order::where('order_id', $candidate)->exists()) {
+                return $candidate;
+            }
         }
-        return "GHB-" . $code;
+        // Astronomically unlikely fallback: timestamp-suffixed unique id.
+        return self::ORDER_NUMBER_PREFIX . "-" . strtoupper(substr(md5(uniqid((string) random_int(0, PHP_INT_MAX), true)), 0, 6));
     }
 
     public static function generateInvoiceNumber(?int $sequence = null): string
     {
         $seq = $sequence ?? ((int) (\App\Models\Order::max('id') ?? 0) + 1);
         return 'INV-' . date('Y') . '-' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Normalize a BD phone number for storage: trim, drop inner spaces/dashes.
+     * Never concatenates; returns '' when nothing usable remains.
+     */
+    public static function normalizePhone(mixed $value): string
+    {
+        $clean = preg_replace('/[\s\-]/', '', trim((string) $value));
+        return is_string($clean) ? $clean : '';
     }
 
     public static function getTimelineWithFallback(Order $order): array
@@ -212,6 +232,14 @@ class OrderService
             if (empty($items)) {
                 throw new Exception("Order must contain at least one item", 400);
             }
+
+            // Normalize contact phones once so delivery phone / alt phone can never
+            // be stored duplicated or concatenated (e.g. alt identical to phone).
+            // Applies to every entry point (web checkout + API) since all funnel here.
+            $input['phone'] = self::normalizePhone($input['phone'] ?? $input['Phone'] ?? '');
+            $altPhone = self::normalizePhone($input['alternativePhone'] ?? $input['alternative_phone'] ?? '');
+            $input['alternative_phone'] = ($altPhone !== '' && $altPhone !== $input['phone']) ? $altPhone : null;
+            $input['alternativePhone'] = $input['alternative_phone'];
 
             $subtotal = 0;
             $itemsWithPrice = [];

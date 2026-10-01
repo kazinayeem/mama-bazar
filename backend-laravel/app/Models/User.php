@@ -19,6 +19,9 @@ class User extends Authenticatable
         'password',
         'phone',
         'email',
+        'email_verified_at',
+        'marketing_opt_in',
+        'unsubscribe_token',
         'shipping_area',
         'shipping_address',
         'role',
@@ -37,10 +40,26 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
+        'email_verified_at' => 'datetime',
+        'marketing_opt_in' => 'boolean',
         'last_login_at' => 'datetime',
         'reset_token_expires_at' => 'datetime',
         'created_at' => 'datetime',
     ];
+
+    public function getOrCreateUnsubscribeToken(): string
+    {
+        if (!$this->unsubscribe_token) {
+            $this->unsubscribe_token = \Illuminate\Support\Str::random(48);
+            $this->save();
+        }
+        return $this->unsubscribe_token;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return !is_null($this->email_verified_at);
+    }
 
     public function addresses()
     {

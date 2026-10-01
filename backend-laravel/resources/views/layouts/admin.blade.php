@@ -104,6 +104,9 @@
                                class="admin-sidebar__link {{ $active ? 'is-active' : '' }}">
                                 <x-admin.icon :name="$item['icon']" :size="18" />
                                 <span class="truncate" x-show="!collapsed">{{ $item['label'] }}</span>
+                                @if(!empty($item['badge']))
+                                    <span x-show="!collapsed" class="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand-orange-500 px-1.5 py-px text-[10px] font-bold leading-4 text-white">{{ $item['badge'] > 99 ? '99+' : $item['badge'] }}</span>
+                                @endif
                             </a>
                         @endforeach
                     </div>
@@ -114,7 +117,7 @@
         {{-- Footer (~44px) --}}
         <div class="admin-sidebar__footer">
             <div class="admin-sidebar__footer-chip">
-                <span x-show="!collapsed">MamaBazar Admin v1.0</span>
+                <span x-show="!collapsed">MamaBazar Admin v1.0 · <a href="https://bornosoft.bd/" target="_blank" rel="noopener" class="underline decoration-slate-300 underline-offset-2 hover:text-slate-600">Bornosoft</a></span>
                 <span x-show="collapsed">v1.0</span>
             </div>
         </div>

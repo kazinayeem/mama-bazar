@@ -21,41 +21,109 @@
     ];
 @endphp
 
-<div class="admin-page" x-data="{ createOpen: false, filtersOpen: {{ request('status') || request('q') ? 'true' : 'false' }} }">
+<div
+    class="admin-page"
+    x-data="{
+        createOpen: false,
+        editOpen: false,
+        filtersOpen: {{ request('status') || request('q') ? 'true' : 'false' }},
+        editItem: null,
+        editUrl: '',
+        editForm: {},
+        createForm: {},
+        failedEditId: {{ old('edit_id') ? (int) old('edit_id') : 'null' }},
+        itemsMap: @js($items->keyBy('id')),
+        openCreate() {
+            this.createForm = {
+                @foreach($config['fields'] as $field)
+                    @if(($field['type'] ?? '') === 'checkbox')
+                        '{{ $field['name'] }}': false,
+                    @elseif(($field['type'] ?? '') === 'select')
+                        '{{ $field['name'] }}': '{{ array_key_first($field['options'] ?? ['active' => 'Active']) }}',
+                    @elseif(($field['type'] ?? '') === 'hex')
+                        '{{ $field['name'] }}': '#176B3A',
+                    @else
+                        '{{ $field['name'] }}': '',
+                    @endif
+                @endforeach
+            };
+            this.createOpen = true;
+        },
+        openEdit(item) {
+            this.editItem = item;
+            this.editUrl = '{{ route($config['route'].'.update', ':id') }}'.replace(':id', item.id);
+            this.editForm = {};
+            @foreach($config['fields'] as $field)
+                @if(($field['type'] ?? '') === 'checkbox')
+                    this.editForm['{{ $field['name'] }}'] = Boolean(item['{{ $field['name'] }}']);
+                @else
+                    this.editForm['{{ $field['name'] }}'] = item['{{ $field['name'] }}'] ?? '';
+                @endif
+            @endforeach
+            this.editOpen = true;
+        }
+    }"
+    x-init="if (failedEditId && itemsMap[failedEditId]) openEdit(itemsMap[failedEditId])"
+>
+    @if($errors->any())
+        <div role="alert" class="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            <p class="font-bold">Please fix the following:</p>
+            <ul class="mt-1 list-disc pl-5">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
     <x-admin.page-header :title="$config['title']" :subtitle="$config['description'].' · '.$items->total().' items'">
         <x-slot:actions>
-            <x-admin.button type="button" size="sm" @click="createOpen = !createOpen">
+            <x-admin.button type="button" size="sm" @click="openCreate()">
+                <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Add {{ $singular }}
             </x-admin.button>
         </x-slot:actions>
     </x-admin.page-header>
 
-    <div x-show="createOpen" x-cloak class="admin-surface p-4">
-        <h2 class="mb-3 text-sm font-bold text-slate-900">Create {{ $singular }}</h2>
-        <form action="{{ route($config['route'].'.store') }}" method="POST" class="grid gap-3 sm:grid-cols-2">
+    {{-- Create Modal --}}
+    <x-admin.modal name="createOpen" :title="'Create ' . $singular" maxWidth="2xl">
+        <form action="{{ route($config['route'].'.store') }}" method="POST" class="grid gap-3.5 sm:grid-cols-2">
             @csrf
             @foreach($config['fields'] as $field)
                 <div class="{{ !empty($field['full']) ? 'sm:col-span-2' : '' }}">
-                    @include('admin.catalog._field', ['field' => $field, 'value' => old($field['name'])])
+                    @include('admin.catalog._field', ['field' => $field, 'modelPrefix' => 'createForm', 'value' => old($field['name'])])
                 </div>
             @endforeach
-            <div class="flex justify-end gap-2 pt-1 sm:col-span-2">
+            <div class="flex items-center justify-end gap-2 pt-3 sm:col-span-2 border-t border-slate-100">
                 <x-admin.button type="button" variant="outline" size="sm" @click="createOpen = false">Cancel</x-admin.button>
-                <x-admin.button type="submit" size="sm">Create</x-admin.button>
+                <x-admin.button type="submit" size="sm">Create {{ $singular }}</x-admin.button>
             </div>
         </form>
-    </div>
+    </x-admin.modal>
+
+    {{-- Edit Modal --}}
+    <x-admin.modal name="editOpen" x-title="'Edit ' + (editItem ? (editItem.name || editItem.title || editItem.text || ('# ' + editItem.id)) : 'Item')" maxWidth="2xl">
+        <form :action="editUrl" method="POST" class="grid gap-3.5 sm:grid-cols-2">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="edit_id" :value="editItem ? editItem.id : ''">
+            @foreach($config['fields'] as $field)
+                <div class="{{ !empty($field['full']) ? 'sm:col-span-2' : '' }}">
+                    @include('admin.catalog._field', ['field' => $field, 'modelPrefix' => 'editForm'])
+                </div>
+            @endforeach
+            <div class="flex items-center justify-end gap-2 pt-3 sm:col-span-2 border-t border-slate-100">
+                <x-admin.button type="button" variant="outline" size="sm" @click="editOpen = false">Cancel</x-admin.button>
+                <x-admin.button type="submit" size="sm">Save Changes</x-admin.button>
+            </div>
+        </form>
+    </x-admin.modal>
 
     <form method="GET" class="admin-filter-bar">
         <x-admin.search-input name="q" placeholder="Search..." class="sm:max-w-md" />
         <button type="button" @click="filtersOpen = !filtersOpen"
-                class="flex w-full items-center justify-between rounded-[6px] border border-[var(--admin-border)] bg-[var(--admin-muted)] px-3 py-2.5 text-xs font-semibold text-slate-700 md:hidden">
+                class="flex w-full items-center justify-between rounded-lg border border-[var(--admin-border)] bg-[var(--admin-muted)] px-3 py-2 text-xs font-semibold text-slate-700 md:hidden">
             <span>Status{{ request('status') ? ': '.ucfirst(request('status')) : '' }}</span>
             <svg class="h-4 w-4 text-slate-400 transition-transform" :class="filtersOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"
              :class="filtersOpen ? 'flex' : 'hidden md:flex'">
-            <select name="status" class="admin-control w-full sm:w-40">
+            <select name="status" class="admin-control w-full sm:w-40 text-xs">
                 <option value="">All statuses</option>
                 <option value="active" @selected(request('status')==='active')>Active</option>
                 <option value="inactive" @selected(request('status')==='inactive')>Inactive</option>
@@ -80,13 +148,13 @@
                             <div class="flex min-w-0 flex-1 items-start gap-3">
                                 @if(in_array('logo', $config['columns'], true))
                                     @if($item->logo)
-                                        <img src="{{ $item->logo }}" alt="" class="h-10 w-10 rounded-[6px] border border-[var(--admin-border)] object-cover bg-slate-50" loading="lazy">
+                                        <img src="{{ $item->logo }}" alt="" class="h-10 w-10 rounded-lg border border-[var(--admin-border)] object-contain bg-slate-50 p-0.5" loading="lazy">
                                     @else
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-[6px] border border-[var(--admin-border)] bg-[var(--admin-muted)] text-[10px] font-bold text-slate-400">—</div>
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--admin-border)] bg-[var(--admin-muted)] text-[10px] font-bold text-slate-400">—</div>
                                     @endif
                                 @endif
                                 @if(in_array('hex', $config['columns'], true) && $item->hex)
-                                    <span class="admin-swatch mt-1 shrink-0" style="background: {{ $item->hex }}"></span>
+                                    <span class="admin-swatch mt-1 shrink-0 shadow-xs" style="background: {{ $item->hex }}"></span>
                                 @endif
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-semibold text-slate-900">{{ $cardTitle }}</p>
@@ -108,7 +176,7 @@
                             @endif
                         </div>
                         <div class="mt-3 flex gap-2">
-                            <x-admin.button href="#edit-{{ $item->id }}" variant="outline" size="sm" class="flex-1">Edit</x-admin.button>
+                            <button type="button" @click="openEdit(@js($item))" class="inline-flex items-center justify-center gap-1.5 font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-ring)] disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap h-8 rounded-[6px] px-2.5 text-xs border border-[var(--admin-border)] bg-white text-slate-700 hover:bg-[var(--admin-muted)] flex-1">Edit</button>
                             <form action="{{ route($config['route'].'.destroy', $item->id) }}" method="POST" class="flex-1" onsubmit="return confirm('Delete this item?')">
                                 @csrf
                                 @method('DELETE')
@@ -140,7 +208,7 @@
                                 @endforeach
                                 <td class="text-right">
                                     <div class="inline-flex items-center gap-0.5">
-                                        <x-admin.button href="#edit-{{ $item->id }}" variant="ghost" size="sm">Edit</x-admin.button>
+                                        <button type="button" @click="openEdit(@js($item))" class="inline-flex items-center justify-center gap-1.5 font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-ring)] disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap h-8 rounded-[6px] px-2.5 text-xs text-slate-600 hover:bg-slate-100">Edit</button>
                                         <form action="{{ route($config['route'].'.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Delete this item?')">
                                             @csrf
                                             @method('DELETE')
@@ -153,26 +221,6 @@
                     </tbody>
                 </table>
             </div>
-
-            @foreach($items as $item)
-                <details id="edit-{{ $item->id }}" class="border-t border-[var(--admin-border)]">
-                    <summary class="cursor-pointer px-4 py-2.5 text-xs font-semibold text-brand-green-700 hover:bg-brand-green-50">
-                        Edit #{{ $item->id }} — {{ \Illuminate\Support\Str::limit($item->name ?? $item->title ?? $item->text ?? 'Item', 60) }}
-                    </summary>
-                    <form action="{{ route($config['route'].'.update', $item->id) }}" method="POST" class="grid gap-3 p-4 sm:grid-cols-2">
-                        @csrf
-                        @method('PUT')
-                        @foreach($config['fields'] as $field)
-                            <div class="{{ !empty($field['full']) ? 'sm:col-span-2' : '' }}">
-                                @include('admin.catalog._field', ['field' => $field, 'value' => old($field['name'], $item->{$field['name']} ?? null)])
-                            </div>
-                        @endforeach
-                        <div class="flex justify-end sm:col-span-2">
-                            <x-admin.button type="submit" size="sm">Save Changes</x-admin.button>
-                        </div>
-                    </form>
-                </details>
-            @endforeach
 
             <x-admin.pagination :paginator="$items" />
         @endif

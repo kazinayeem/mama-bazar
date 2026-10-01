@@ -9,6 +9,7 @@ $lucide = [
     'palette' => '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
     'ruler' => '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
     'store' => '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M10 22v-4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v4"/><path d="M15 5v2"/><path d="M9 5v2"/><path d="M2 7h20"/>',
+    'building' => '<rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
     'truck' => '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
     'shopping-cart' => '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
     'ticket-percent' => '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M9 9h.01"/><path d="m15 9-6 6"/><path d="M15 15h.01"/>',
@@ -61,6 +62,7 @@ $adminNavSections = [
         ['label' => 'Payment Methods', 'route' => 'admin.payment-methods.index', 'match' => 'admin.payment-methods.*', 'icon' => 'credit-card'],
         ['label' => 'Checkout Notices', 'route' => 'admin.checkout-notices.index', 'match' => 'admin.checkout-notices.*', 'icon' => 'bell-ring'],
         ['label' => 'Checkout Settings', 'route' => 'admin.checkout-settings.index', 'match' => 'admin.checkout-settings.*', 'icon' => 'settings'],
+        ['label' => 'Checkout Settings', 'route' => 'admin.checkout-settings.index', 'match' => 'admin.checkout-settings.*', 'icon' => 'settings'],
     ]],
     ['label' => 'Customers', 'items' => [
         ['label' => 'Customers', 'route' => 'admin.customers.index', 'match' => 'admin.customers.*', 'icon' => 'users'],
@@ -80,7 +82,8 @@ $adminNavSections = [
     ]],
     ['label' => 'System', 'items' => [
         ['label' => 'Inventory', 'route' => 'admin.inventory.index', 'match' => 'admin.inventory.*', 'icon' => 'boxes'],
-        ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => 'admin.settings.*', 'icon' => 'settings'],
+        ['label' => 'Business Information', 'route' => 'admin.settings.business', 'match' => 'admin.settings.business*', 'icon' => 'building'],
+        ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => 'admin.settings.index', 'icon' => 'settings'],
     ]],
 ];
 

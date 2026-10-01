@@ -18,7 +18,7 @@
                     <label class="block text-xs font-bold text-slate-700 mb-1">Security PIN Verification *</label>
                     <input type="password" name="pin" required placeholder="Enter security PIN" 
                         class="w-full text-xs admin-control focus:border-brand-green-500 focus:outline-none font-mono">
-                    <p class="text-[10px] text-slate-400 mt-1">Hint: Server Challenge Code is active.</p>
+                    <p class="text-[10px] text-slate-400 mt-1">Hint: {{ $challenge ?? 'Server Challenge Code is active.' }}</p>
                 </div>
 
                 <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-[6px] bg-brand-green-500 text-sm font-medium text-white hover:bg-brand-green-600">
@@ -52,6 +52,7 @@
                         <th class="p-4">Size</th>
                         <th class="p-4">Tables</th>
                         <th class="p-4">Created Date</th>
+                        <th class="p-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -62,15 +63,47 @@
                             <td class="p-4 text-slate-600">{{ number_format(($b['size'] ?? 0) / 1024, 1) }} KB</td>
                             <td class="p-4 text-slate-600">{{ $b['table_count'] ?? 41 }}</td>
                             <td class="p-4 text-slate-500">{{ $b['created_at'] ?? 'Recently' }}</td>
+                            <td class="p-4">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a href="{{ route('admin.backup.download', $b['id']) }}" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-slate-50">Download</a>
+                                    <form action="{{ route('admin.backup.destroy', $b['id']) }}" method="POST" class="flex items-center gap-1" onsubmit="return confirm('Permanently delete this backup archive?');">
+                                        @csrf @method('DELETE')
+                                        <input type="password" name="pin" required placeholder="PIN" title="Security PIN required" class="w-20 rounded-lg border border-slate-200 px-2 py-1.5 font-mono text-[11px]">
+                                        <button type="submit" class="px-2.5 py-1.5 rounded-lg border border-red-200 text-[11px] font-bold text-red-600 hover:bg-red-50">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="p-8 text-center text-slate-400">No backups created yet.</td>
+                            <td colspan="6" class="p-8 text-center text-slate-400">No backups created yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <!-- Restore Card (destructive — PIN protected, safety snapshot auto-created) -->
+    <div class="admin-surface p-4 space-y-3 border-red-100">
+        <h3 class="text-sm font-bold text-red-700 border-b border-red-100 pb-2">Restore From Archive (Danger Zone)</h3>
+        @if($errors->any())
+            <div role="alert" class="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                <ul class="list-disc pl-5">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+            </div>
+        @endif
+        <form action="{{ route('admin.backup.restore') }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-end gap-2" onsubmit="return confirm('Restore will replace the live database (a safety snapshot is auto-created first). Continue?');">
+            @csrf
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Backup .zip file</label>
+                <input type="file" name="file" accept=".zip" required class="text-xs admin-control file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Security PIN *</label>
+                <input type="password" name="pin" required placeholder="Enter security PIN" class="text-xs admin-control font-mono">
+            </div>
+            <button type="submit" class="h-9 px-4 rounded-[6px] bg-red-600 text-xs font-bold text-white hover:bg-red-700">Restore Database</button>
+        </form>
     </div>
 
 </div>

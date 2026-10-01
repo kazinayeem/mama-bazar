@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Packing Slip {{ $order->order_id }} — Mama Bazar</title>
+<title>Packing Slip {{ $order->order_id }} — {{ $store['name'] ?? 'Mama Bazar' }}</title>
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, 'Noto Sans Bengali', sans-serif; background: #eef2ee; color: #1e293b; font-size: 14px; }
@@ -37,11 +37,11 @@
             <div style="color:#15803d;font-weight:800;">{{ $order->order_id }} · {{ $order->invoice_number }}</div>
             <div style="font-size:12px;color:#64748b;">{{ $order->created_at?->format('F d, Y h:i A') }} · {{ ucfirst($order->status) }}</div>
         </div>
-        <div style="text-align:right;font-weight:800;font-size:18px;"><span style="color:#16a34a;">Mama</span><span style="color:#f97316;">Bazar</span></div>
+        <div style="text-align:right;font-weight:800;font-size:18px;"><span style="color:#16a34a;">{{ $store['name_first_part'] ?? 'Mama' }}</span><span style="color:#f97316;">{{ $store['name_second_part'] ?? 'Bazar' }}</span></div>
     </div>
     <div class="addr">
         <strong style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;">Deliver To</strong><br>
-        <strong style="font-size:18px;">{{ $order->customer_name }}</strong> — {{ $order->phone }}@if($order->alternative_phone) / {{ $order->alternative_phone }}@endif<br>
+        <strong style="font-size:18px;">{{ $order->customer_name }}</strong> — {{ $order->phone }}@if($order->display_alternative_phone) / {{ $order->display_alternative_phone }}@endif<br>
         {{ $order->address }}@if($order->apartment), {{ $order->apartment }}@endif, {{ $order->district }}<br>
         <span style="font-size:13px;">{{ $order->shipping_method_name ?: 'Standard' }} · {{ strtoupper($order->payment_method) }} · ৳{{ number_format($order->total_price, 0) }} {{ $order->payment_status === 'success' ? '(Paid)' : '(Collect)' }}</span>
     </div>
@@ -63,5 +63,6 @@
         <div>Packed by: __________</div><div>Checked by: __________</div><div style="margin-left:auto;">Total items: <strong>{{ $order->items->sum('quantity') }}</strong></div>
     </div>
 </div>
+@include('pdf.branding-footer')
 </body>
 </html>

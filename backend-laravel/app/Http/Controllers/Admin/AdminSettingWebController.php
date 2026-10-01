@@ -10,6 +10,7 @@ use App\Models\CheckoutNotice;
 use App\Models\Banner;
 use App\Models\MediaAsset;
 use App\Services\BackupService;
+use App\Services\BusinessSettingService;
 use App\Services\MediaStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,80 @@ class AdminSettingWebController extends Controller
     {
         $settings = SiteSetting::all()->pluck('value', 'key');
         return view('admin.settings.index', compact('settings'));
+    }
+
+    protected function authorizeAdmin(): void
+    {
+        $role = Auth::user()?->role;
+        if (!in_array($role, ['admin', 'manager', 'superadmin'], true)) {
+            abort(403, 'Unauthorized. Administrator access required.');
+        }
+    }
+
+    public function businessSettings()
+    {
+        $this->authorizeAdmin();
+        $business = BusinessSettingService::all();
+        return view('admin.settings.business', compact('business'));
+    }
+
+    public function updateBusinessSettings(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'business_name' => 'required|string|max:255',
+            'site_name' => 'nullable|string|max:255',
+            'tagline' => 'nullable|string|max:255',
+            'business_description' => 'nullable|string|max:1000',
+            'logo_url' => 'nullable|string|max:500',
+            'logo_file' => 'nullable|image|max:5120',
+            'favicon_url' => 'nullable|string|max:500',
+            'favicon_file' => 'nullable|image|max:2048',
+            'primary_phone' => 'required|string|max:50',
+            'secondary_phone' => 'nullable|string|max:50',
+            'support_phone' => 'nullable|string|max:50',
+            'primary_email' => 'required|email|max:255',
+            'support_email' => 'nullable|email|max:255',
+            'sales_email' => 'nullable|email|max:255',
+            'whatsapp_number' => 'nullable|string|max:50',
+            'support_url' => 'nullable|string|max:500',
+            'address_line1' => 'nullable|string|max:255',
+            'address_line2' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'district' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:100',
+            'website_url' => 'nullable|url|max:255',
+            'facebook_url' => 'nullable|url|max:255',
+            'instagram_url' => 'nullable|url|max:255',
+            'youtube_url' => 'nullable|url|max:255',
+            'linkedin_url' => 'nullable|url|max:255',
+            'tiktok_url' => 'nullable|url|max:255',
+            'twitter_url' => 'nullable|url|max:255',
+            'copyright_text' => 'nullable|string|max:255',
+            'business_registration' => 'nullable|string|max:255',
+            'footer_description' => 'nullable|string|max:1000',
+            'return_policy_url' => 'nullable|string|max:255',
+            'privacy_policy_url' => 'nullable|string|max:255',
+            'terms_url' => 'nullable|string|max:255',
+        ]);
+
+        $data = $request->except(['logo_file', 'favicon_file']);
+
+        if ($request->hasFile('logo_file')) {
+            $upload = MediaStorageService::uploadFile($request->file('logo_file'), 'branding');
+            $data['logo_url'] = $upload['url'];
+        }
+
+        if ($request->hasFile('favicon_file')) {
+            $upload = MediaStorageService::uploadFile($request->file('favicon_file'), 'branding');
+            $data['favicon_url'] = $upload['url'];
+        }
+
+        BusinessSettingService::setMany($data);
+
+        return back()->with('success', 'Business information updated successfully.');
     }
 
     public function updateSettings(Request $request)
@@ -37,6 +112,8 @@ class AdminSettingWebController extends Controller
             }
             SiteSetting::updateOrCreate(['key' => $key], ['value' => is_string($value) ? trim($value) : $value]);
         }
+
+        BusinessSettingService::clearCache();
 
         return back()->with('success', 'Site settings updated successfully.');
     }
@@ -74,7 +151,7 @@ class AdminSettingWebController extends Controller
             'applicable_areas' => isset($v['applicable_areas']) ? trim((string) $v['applicable_areas']) : null,
             'priority' => isset($v['priority']) && $v['priority'] !== null ? (int) $v['priority'] : ($existing?->priority ?? $maxPriority + 10),
             'free_shipping_min_amount' => isset($v['free_shipping_min_amount']) && $v['free_shipping_min_amount'] !== null && $v['free_shipping_min_amount'] !== '' ? (float) $v['free_shipping_min_amount'] : null,
-            'cod_available' => $request->boolean('cod_available', $existing?->cod_available ?? true),
+            'cod_available' => $request->boolean('cod_available'),
             'status' => $v['status'] ?? ($existing?->status ?? 'active'),
         ];
     }
@@ -151,14 +228,19 @@ class AdminSettingWebController extends Controller
             'cod_note' => 'nullable|string|max:1000',
             'announcement_enabled' => 'nullable|boolean',
         ]);
+        $existing = [];
+        $row = SiteSetting::where('key', 'checkout_settings')->first();
+        if ($row && is_array(json_decode((string) $row->value, true))) {
+            $existing = json_decode((string) $row->value, true);
+        }
         $payload = [
             'min_order_amount' => isset($validated['min_order_amount']) ? (float) $validated['min_order_amount'] : 0,
             'free_shipping_threshold' => $validated['free_shipping_threshold'] ?? null,
             'default_district' => trim((string) ($validated['default_district'] ?? 'Dhaka')),
-            'require_alt_phone' => $request->boolean('require_alt_phone', false),
-            'allow_notes' => $request->boolean('allow_notes', true),
+            'require_alt_phone' => $request->has('require_alt_phone') ? $request->boolean('require_alt_phone') : ($existing['require_alt_phone'] ?? false),
+            'allow_notes' => $request->has('allow_notes') ? $request->boolean('allow_notes') : ($existing['allow_notes'] ?? true),
             'cod_note' => trim((string) ($validated['cod_note'] ?? '')),
-            'announcement_enabled' => $request->boolean('announcement_enabled', true),
+            'announcement_enabled' => $request->has('announcement_enabled') ? $request->boolean('announcement_enabled') : ($existing['announcement_enabled'] ?? true),
         ];
         SiteSetting::updateOrCreate(['key' => 'checkout_settings'], ['value' => json_encode($payload)]);
         return back()->with('success', 'Checkout settings saved.');
@@ -295,6 +377,32 @@ class AdminSettingWebController extends Controller
         return back()->with('success', 'Banner created successfully.');
     }
 
+    public function updateBanner(Request $request, $id)
+    {
+        $banner = Banner::findOrFail($id);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'position' => 'required|string|max:50',
+            'link' => 'nullable|string|max:255',
+            'priority' => 'nullable|integer',
+            'status' => 'nullable|string|max:50',
+            'image' => 'nullable|image|max:5120',
+        ]);
+
+        $data = $request->except(['image']);
+
+        if ($request->hasFile('image')) {
+            if ($banner->image) {
+                MediaStorageService::deleteFile($banner->image);
+            }
+            $upload = MediaStorageService::uploadFile($request->file('image'), 'banners');
+            $data['image'] = $upload['url'];
+        }
+
+        $banner->update($data);
+        return back()->with('success', 'Banner updated successfully.');
+    }
+
     public function destroyBanner($id)
     {
         $banner = Banner::findOrFail($id);
@@ -331,6 +439,15 @@ class AdminSettingWebController extends Controller
         ]);
 
         return back()->with('success', 'File uploaded locally.');
+    }
+
+    public function destroyMedia($id)
+    {
+        $asset = MediaAsset::findOrFail((int) $id);
+        MediaStorageService::deleteFile($asset->url);
+        $asset->delete();
+
+        return back()->with('success', 'Media file deleted.');
     }
 
     /** JSON media library for Alpine media pickers (Homepage Builder, etc.). */
@@ -421,6 +538,77 @@ class AdminSettingWebController extends Controller
         ]);
 
         return back()->with('success', "Database backup created: {$backup->filename}");
+    }
+
+    public function downloadBackup($id)
+    {
+        $backup = \App\Models\AdminBackup::findOrFail((int) $id);
+        $filepath = $backup->filepath;
+
+        if ($filepath && file_exists($filepath)) {
+            $safeFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', (string) $backup->filename);
+
+            return response()->download($filepath, $safeFilename, [
+                'Content-Type' => 'application/zip',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
+
+        return back()->with('error', 'Backup file is no longer available on this server.');
+    }
+
+    public function restoreBackup(Request $request)
+    {
+        $request->validate([
+            'pin' => 'required|string',
+            'file' => 'required|file|mimes:zip|max:102400',
+        ]);
+
+        if (!BackupService::verifyPin($request->input('pin'))) {
+            return back()->with('error', 'Invalid security PIN provided.');
+        }
+
+        $user = Auth::user();
+
+        try {
+            BackupService::restoreBackup($request->file('file')->getRealPath(), [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'ip' => $request->ip(),
+                'userAgent' => $request->userAgent(),
+            ]);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Restore failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Database restored. A pre-restore safety backup was preserved.');
+    }
+
+    public function deleteBackup(Request $request, $id)
+    {
+        $request->validate(['pin' => 'required|string']);
+
+        if (!BackupService::verifyPin($request->input('pin'))) {
+            return back()->with('error', 'Invalid security PIN provided.');
+        }
+
+        $user = Auth::user();
+
+        try {
+            BackupService::deleteBackup((int) $id, [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'ip' => $request->ip(),
+                'userAgent' => $request->userAgent(),
+            ]);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Backup deleted.');
     }
 
     /**

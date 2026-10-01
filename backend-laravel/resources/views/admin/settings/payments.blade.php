@@ -62,6 +62,13 @@
         </x-slot:actions>
     </x-admin.page-header>
 
+    @if($errors->any())
+        <div role="alert" class="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            <p class="font-bold">Please fix the following:</p>
+            <ul class="mt-1 list-disc pl-5">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
+
     <div class="admin-table-wrap">
         <template x-if="methods.length === 0">
             <div class="p-6">

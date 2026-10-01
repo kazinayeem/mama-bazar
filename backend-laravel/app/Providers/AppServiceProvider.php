@@ -29,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
             return "<?php echo \\App\\Services\\HtmlSanitizer::forDisplay($expression); ?>";
         });
 
+        View::composer('*', function ($view) {
+            try {
+                $view->with('business', \App\Services\BusinessSettingService::all());
+            } catch (\Throwable $e) {
+                $view->with('business', \App\Services\BusinessSettingService::defaults());
+            }
+        });
+
         View::composer('layouts.app', function ($view) {
             try {
                 $view->with('announcement', HomepageService::getAnnouncement());
@@ -48,6 +56,14 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('footerPaymentMethods', $footerPayments);
             } catch (\Throwable $e) {
                 $view->with('footerPaymentMethods', collect());
+            }
+
+            // Footer social links from centralized business settings
+            try {
+                $b = \App\Services\BusinessSettingService::all();
+                $view->with('footerSocials', $b['social_links'] ?? []);
+            } catch (\Throwable $e) {
+                $view->with('footerSocials', []);
             }
         });
     }

@@ -73,11 +73,22 @@
                     'icon' => 'boxes',
                     'iconBg' => 'bg-brand-green-50 text-brand-green-600',
                 ],
+                [
+                    'label' => 'Pending Reviews',
+                    'value' => number_format($kpis['pendingReviews'] ?? 0),
+                    'sub' => 'Avg rating '.($kpis['avgRating'] ?? 0).' ★ (approved)',
+                    'hint' => ($kpis['pendingReviews'] ?? 0) > 0 ? 'Needs moderation' : 'All clear',
+                    'icon' => 'star',
+                    'iconBg' => 'bg-amber-50 text-amber-600',
+                    'warn' => ($kpis['pendingReviews'] ?? 0) > 0,
+                    'href' => route('admin.reviews.index', ['status' => 'pending']),
+                ],
             ];
         @endphp
 
         @foreach($kpiCards as $card)
-            <div class="admin-surface p-4 transition-shadow hover:shadow-md">
+            @php $cardTag = !empty($card['href']) ? 'a' : 'div'; @endphp
+            <{{ $cardTag }} @if(!empty($card['href'])) href="{{ $card['href'] }}" @endif class="admin-surface block p-4 transition-shadow hover:shadow-md">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <p class="text-sm text-slate-500">{{ $card['label'] }}</p>
@@ -95,7 +106,7 @@
                         </svg>
                     </div>
                 </div>
-            </div>
+            </{{ $cardTag }}>
         @endforeach
     </div>
 
