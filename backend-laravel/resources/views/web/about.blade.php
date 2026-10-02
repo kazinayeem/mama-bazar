@@ -35,6 +35,11 @@
                 <p class="text-xs text-slate-600">Dedicated support team ready to assist with returns, exchanges, or order questions.</p>
             </div>
         </div>
+
+        <h2 class="text-xl font-bold text-slate-900 pt-2 border-t border-slate-100">Technology &amp; Platform Engineering</h2>
+        <p>
+            {{ $business['business_name'] }} is developed and technically architected by <a href="https://bornosoft.bd" target="_blank" rel="noopener" class="font-semibold text-brand-green-700 hover:underline">Bornosoft</a>, a software development company in Bangladesh specializing in custom high-performance e-commerce platforms, scalable backend architectures, and secure web applications. The platform is engineered with modern responsive design, rapid product discovery, and robust checkout workflows to serve shoppers nationwide.
+        </p>
     </div>
 </div>
 @endsection

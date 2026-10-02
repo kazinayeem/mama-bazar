@@ -21,8 +21,8 @@ class SeoController extends Controller
             $now = now()->toIso8601String();
             $baseUrl = config('app.url', url('/'));
 
-            $content = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $content .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+            $content = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+            $content .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
             $subSitemaps = [
                 '/sitemap-products.xml',
@@ -33,7 +33,7 @@ class SeoController extends Controller
 
             foreach ($subSitemaps as $path) {
                 $content .= "    <sitemap>\n";
-                $content .= "        <loc>" . htmlspecialchars(rtrim($baseUrl, '/') . $path, ENT_XML1, 'UTF-8') . "</loc>\n";
+                $content .= '        <loc>'.htmlspecialchars(rtrim($baseUrl, '/').$path, ENT_XML1, 'UTF-8')."</loc>\n";
                 $content .= "        <lastmod>{$now}</lastmod>\n";
                 $content .= "    </sitemap>\n";
             }
@@ -60,15 +60,15 @@ class SeoController extends Controller
                 ->orderBy('id', 'desc')
                 ->get(['id', 'slug', 'updated_at', 'created_at']);
 
-            $content = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+            $content = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
             foreach ($products as $p) {
                 $url = route('products.show', ['slug' => $p->slug]);
                 $lastmod = ($p->updated_at ?? $p->created_at ?? now())->toIso8601String();
 
                 $content .= "    <url>\n";
-                $content .= "        <loc>" . htmlspecialchars($url, ENT_XML1, 'UTF-8') . "</loc>\n";
+                $content .= '        <loc>'.htmlspecialchars($url, ENT_XML1, 'UTF-8')."</loc>\n";
                 $content .= "        <lastmod>{$lastmod}</lastmod>\n";
                 $content .= "        <changefreq>daily</changefreq>\n";
                 $content .= "        <priority>0.8</priority>\n";
@@ -96,15 +96,15 @@ class SeoController extends Controller
                 ->orderBy('sort_order', 'asc')
                 ->get(['id', 'slug', 'created_at']);
 
-            $content = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+            $content = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
             foreach ($categories as $cat) {
                 $url = route('shop', ['category' => $cat->slug]);
                 $lastmod = ($cat->created_at ?? now())->toIso8601String();
 
                 $content .= "    <url>\n";
-                $content .= "        <loc>" . htmlspecialchars($url, ENT_XML1, 'UTF-8') . "</loc>\n";
+                $content .= '        <loc>'.htmlspecialchars($url, ENT_XML1, 'UTF-8')."</loc>\n";
                 $content .= "        <lastmod>{$lastmod}</lastmod>\n";
                 $content .= "        <changefreq>weekly</changefreq>\n";
                 $content .= "        <priority>0.7</priority>\n";
@@ -132,15 +132,15 @@ class SeoController extends Controller
                 ->has('products')
                 ->get(['id', 'slug', 'created_at']);
 
-            $content = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+            $content = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
             foreach ($brands as $brand) {
                 $url = route('shop', ['brand' => $brand->slug]);
                 $lastmod = ($brand->created_at ?? now())->toIso8601String();
 
                 $content .= "    <url>\n";
-                $content .= "        <loc>" . htmlspecialchars($url, ENT_XML1, 'UTF-8') . "</loc>\n";
+                $content .= '        <loc>'.htmlspecialchars($url, ENT_XML1, 'UTF-8')."</loc>\n";
                 $content .= "        <lastmod>{$lastmod}</lastmod>\n";
                 $content .= "        <changefreq>weekly</changefreq>\n";
                 $content .= "        <priority>0.6</priority>\n";
@@ -164,21 +164,21 @@ class SeoController extends Controller
     public function sitemapPages(): Response
     {
         $xml = Cache::remember('seo_sitemap_pages', 3600, function () {
-            $content = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+            $content = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+            $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
             $staticPages = [
                 ['loc' => url('/'), 'priority' => '1.0', 'freq' => 'daily'],
                 ['loc' => route('shop'), 'priority' => '0.9', 'freq' => 'daily'],
-                ['loc' => route('about'), 'priority' => '0.5', 'freq' => 'monthly'],
-                ['loc' => route('faq'), 'priority' => '0.5', 'freq' => 'monthly'],
+                ['loc' => route('about'), 'priority' => '0.8', 'freq' => 'weekly'],
+                ['loc' => route('faq'), 'priority' => '0.8', 'freq' => 'weekly'],
                 ['loc' => route('contact'), 'priority' => '0.6', 'freq' => 'monthly'],
             ];
 
             foreach ($staticPages as $sp) {
                 $content .= "    <url>\n";
-                $content .= "        <loc>" . htmlspecialchars($sp['loc'], ENT_XML1, 'UTF-8') . "</loc>\n";
-                $content .= "        <lastmod>" . now()->toIso8601String() . "</lastmod>\n";
+                $content .= '        <loc>'.htmlspecialchars($sp['loc'], ENT_XML1, 'UTF-8')."</loc>\n";
+                $content .= '        <lastmod>'.now()->toIso8601String()."</lastmod>\n";
                 $content .= "        <changefreq>{$sp['freq']}</changefreq>\n";
                 $content .= "        <priority>{$sp['priority']}</priority>\n";
                 $content .= "    </url>\n";
@@ -190,11 +190,11 @@ class SeoController extends Controller
                 ->get(['slug', 'created_at']);
 
             foreach ($policies as $pol) {
-                $url = url('/pages/' . $pol->slug);
+                $url = url('/pages/'.$pol->slug);
                 $lastmod = ($pol->created_at ?? now())->toIso8601String();
 
                 $content .= "    <url>\n";
-                $content .= "        <loc>" . htmlspecialchars($url, ENT_XML1, 'UTF-8') . "</loc>\n";
+                $content .= '        <loc>'.htmlspecialchars($url, ENT_XML1, 'UTF-8')."</loc>\n";
                 $content .= "        <lastmod>{$lastmod}</lastmod>\n";
                 $content .= "        <changefreq>monthly</changefreq>\n";
                 $content .= "        <priority>0.4</priority>\n";
@@ -218,7 +218,7 @@ class SeoController extends Controller
     public function robots(): Response
     {
         $baseUrl = config('app.url', url('/'));
-        $sitemapUrl = rtrim($baseUrl, '/') . '/sitemap.xml';
+        $sitemapUrl = rtrim($baseUrl, '/').'/sitemap.xml';
 
         $text = "User-agent: *\n";
         $text .= "Allow: /\n";

@@ -47,6 +47,16 @@
                 If an item is damaged or defective upon arrival, notify us within 7 days for a hassle-free replacement or full refund.
             </div>
         </div>
+
+        <div class="border border-slate-100 rounded-2xl overflow-hidden">
+            <button type="button" @click="open = (open === 5 ? 0 : 5)" class="w-full text-left p-4 font-bold text-xs sm:text-sm text-slate-800 flex justify-between items-center bg-slate-50/50 hover:bg-slate-50">
+                <span>Who developed and maintains the Mama Bazar platform?</span>
+                <span x-text="open === 5 ? '−' : '+'" class="text-brand-green-600 font-extrabold text-base"></span>
+            </button>
+            <div x-show="open === 5" class="p-4 text-xs text-slate-600 leading-relaxed border-t border-slate-100">
+                Mama Bazar was engineered and is actively maintained by <a href="https://bornosoft.bd" target="_blank" rel="noopener" class="font-semibold text-brand-green-700 hover:underline">Bornosoft</a>, a software development and digital transformation company based in Bangladesh specializing in custom e-commerce platforms, scalable backend architectures, and secure cloud applications.
+            </div>
+        </div>
     </div>
 
     {{-- Still have questions banner --}}

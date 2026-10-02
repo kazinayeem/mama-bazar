@@ -7,8 +7,10 @@ use App\Jobs\SendTemplatedEmailJob;
 use App\Models\ContactMessage;
 use App\Models\PolicyPage;
 use App\Services\EmailSettingService;
+use App\Services\SeoService;
 use App\Support\EmailQueue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PageWebController extends Controller
 {
@@ -20,12 +22,12 @@ class PageWebController extends Controller
         }
 
         $cleanDesc = trim(preg_replace('/\s+/', ' ', strip_tags($page->content ?? '')));
-        $seo = \App\Services\SeoService::getForPage(
+        $seo = SeoService::getForPage(
             $page->title,
-            \Illuminate\Support\Str::limit($cleanDesc, 155),
-            url('/pages/' . $slug),
+            Str::limit($cleanDesc, 155),
+            url('/pages/'.$slug),
             'index, follow',
-            [$page->title => url('/pages/' . $slug)]
+            [$page->title => url('/pages/'.$slug)]
         );
 
         return view('web.page', compact('page', 'seo'));
@@ -33,33 +35,21 @@ class PageWebController extends Controller
 
     public function about()
     {
-        $seo = \App\Services\SeoService::getForPage(
-            'About Us',
-            'Learn more about Mama Bazar, your trusted online shopping partner for grocery and lifestyle essentials in Bangladesh.',
-            route('about'),
-            'index, follow',
-            ['About Us' => route('about')]
-        );
+        $seo = SeoService::getForAbout();
 
         return view('web.about', compact('seo'));
     }
 
     public function faq()
     {
-        $seo = \App\Services\SeoService::getForPage(
-            'Frequently Asked Questions',
-            'Find answers to common questions about orders, delivery, payments, returns, and warranty at Mama Bazar.',
-            route('faq'),
-            'index, follow',
-            ['FAQ' => route('faq')]
-        );
+        $seo = SeoService::getForFaq();
 
         return view('web.faq', compact('seo'));
     }
 
     public function contact()
     {
-        $seo = \App\Services\SeoService::getForPage(
+        $seo = SeoService::getForPage(
             'Contact Us',
             'Get in touch with Mama Bazar customer support. We are available via phone, email, and live messaging across Bangladesh.',
             route('contact'),

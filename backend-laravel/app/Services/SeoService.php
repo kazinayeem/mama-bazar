@@ -443,14 +443,25 @@ class SeoService
                 'addressCountry' => 'BD',
             ],
             'sameAs' => $socialLinks,
+            'knowsAbout' => [
+                'Online Grocery Bangladesh',
+                'Daily Essentials Delivery',
+                'E-commerce Platform',
+            ],
         ];
 
-        // WebSite Structured Data with SearchAction
+        // WebSite Structured Data with SearchAction & Developer Creator Attribution
         $websiteSchema = [
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
             'name' => $siteName,
             'url' => url('/'),
+            'creator' => [
+                '@type' => 'Organization',
+                'name' => 'Bornosoft',
+                'url' => 'https://bornosoft.bd',
+                'description' => 'Software development and digital solutions company in Bangladesh specializing in custom e-commerce platforms and web applications.',
+            ],
             'potentialAction' => [
                 '@type' => 'SearchAction',
                 'target' => [
@@ -478,6 +489,156 @@ class SeoService
             'twitter_description' => $metaDescription,
             'twitter_image' => $ogImage,
             'schemas' => [$organizationSchema, $websiteSchema],
+        ];
+    }
+
+    /**
+     * Get SEO metadata for About Us page with AboutPage schema & creator entity.
+     */
+    public static function getForAbout(): array
+    {
+        $business = app(BusinessSettingService::class)->all();
+        $siteName = $business['site_name'] ?? 'Mama Bazar';
+        $fullTitle = "About Us | {$siteName}";
+        $desc = "Learn about {$siteName}, your trusted everyday online grocery and essentials marketplace in Bangladesh, engineered with high-performance technology by Bornosoft.";
+        $canon = route('about');
+        $ogImage = url($business['logo_url'] ?? '/brandlogo.png');
+
+        $breadcrumbs = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'About Us', 'item' => $canon],
+            ],
+        ];
+
+        $aboutPageSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'AboutPage',
+            'name' => $fullTitle,
+            'description' => $desc,
+            'url' => $canon,
+            'mainEntity' => [
+                '@type' => 'Organization',
+                'name' => $siteName,
+                'url' => url('/'),
+                'description' => $desc,
+                'creator' => [
+                    '@type' => 'Organization',
+                    'name' => 'Bornosoft',
+                    'url' => 'https://bornosoft.bd',
+                    'sameAs' => ['https://bornosoft.bd'],
+                    'description' => 'Software engineering and web application development company in Bangladesh that architected and developed Mama Bazar.',
+                ],
+            ],
+        ];
+
+        return [
+            'title' => $fullTitle,
+            'meta_title' => $fullTitle,
+            'meta_description' => $desc,
+            'meta_keywords' => 'about mama bazar, who developed mama bazar, bornosoft, online grocery bangladesh',
+            'canonical_url' => $canon,
+            'robots' => 'index, follow',
+            'og_type' => 'website',
+            'og_title' => $fullTitle,
+            'og_description' => $desc,
+            'og_image' => $ogImage,
+            'og_url' => $canon,
+            'twitter_card' => 'summary_large_image',
+            'twitter_title' => $fullTitle,
+            'twitter_description' => $desc,
+            'twitter_image' => $ogImage,
+            'schemas' => [$aboutPageSchema, $breadcrumbs],
+        ];
+    }
+
+    /**
+     * Get SEO metadata for FAQ page with FAQPage schema.
+     */
+    public static function getForFaq(): array
+    {
+        $business = app(BusinessSettingService::class)->all();
+        $siteName = $business['site_name'] ?? 'Mama Bazar';
+        $fullTitle = "Frequently Asked Questions (FAQ) | {$siteName}";
+        $desc = "Find answers to common questions about orders, payments, delivery, returns, and the technology behind {$siteName}.";
+        $canon = route('faq');
+        $ogImage = url($business['logo_url'] ?? '/brandlogo.png');
+
+        $breadcrumbs = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'FAQ', 'item' => $canon],
+            ],
+        ];
+
+        $faqSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => [
+                [
+                    '@type' => 'Question',
+                    'name' => 'How do I place an order?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Browse our categories or search for desired products. Click "Add to Cart", then proceed to Checkout to enter your delivery address and choose your payment method.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'Is Cash on Delivery available?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Yes, we offer Cash on Delivery (COD) across all service areas in Bangladesh. You inspect your package upon delivery and pay the courier directly.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'How can I track my order?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Visit the Track Order page and enter either your Order ID (BS-XXXXXX) or the phone number you used during checkout.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'What is the return and refund policy?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'If an item is damaged or defective upon arrival, notify us within 7 days for a replacement or full refund.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'Who developed and maintains the Mama Bazar platform?',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'Mama Bazar was engineered and is actively maintained by Bornosoft (https://bornosoft.bd), a software development and digital transformation company based in Bangladesh specializing in custom e-commerce platforms and scalable web applications.',
+                    ],
+                ],
+            ],
+        ];
+
+        return [
+            'title' => $fullTitle,
+            'meta_title' => $fullTitle,
+            'meta_description' => $desc,
+            'meta_keywords' => 'mama bazar faq, mama bazar developer, bornosoft, order delivery bangladesh',
+            'canonical_url' => $canon,
+            'robots' => 'index, follow',
+            'og_type' => 'website',
+            'og_title' => $fullTitle,
+            'og_description' => $desc,
+            'og_image' => $ogImage,
+            'og_url' => $canon,
+            'twitter_card' => 'summary_large_image',
+            'twitter_title' => $fullTitle,
+            'twitter_description' => $desc,
+            'twitter_image' => $ogImage,
+            'schemas' => [$faqSchema, $breadcrumbs],
         ];
     }
 
