@@ -50,6 +50,9 @@
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="truncate text-sm font-semibold text-slate-900">{{ $rev->title ?: Str::limit($rev->comment, 40) }}</p>
+                                @if($rev->title && $rev->comment)
+                                    <p class="truncate text-xs text-slate-600">{{ Str::limit($rev->comment, 40) }}</p>
+                                @endif
                                 <p class="text-xs text-slate-500">{{ $rev->customer_name }} · {{ str_repeat('★', $rev->rating) }}</p>
                                 <p class="text-[11px] text-slate-400">{{ $rev->product?->title }}</p>
                             </div>
@@ -70,7 +73,10 @@
                         @foreach($reviews as $rev)
                             <tr>
                                 <td>
-                                    <span class="block font-semibold text-slate-900">{{ Str::limit($rev->title ?: $rev->comment, 60) }}</span>
+                                    <span class="block font-semibold text-slate-900">{{ $rev->title ?: Str::limit($rev->comment, 60) }}</span>
+                                    @if($rev->title && $rev->comment)
+                                        <span class="block text-xs text-slate-500">{{ Str::limit($rev->comment, 60) }}</span>
+                                    @endif
                                     <span class="text-[11px] text-slate-400">{{ $rev->customer_name }}</span>
                                 </td>
                                 <td class="text-slate-600">{{ Str::limit($rev->product?->title ?: '—', 30) }}</td>
