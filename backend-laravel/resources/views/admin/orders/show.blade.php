@@ -178,12 +178,37 @@
                     <p class="text-slate-400">Invoice email is available once payment is verified (or for Cash on Delivery orders).</p>
                 @endif
                 @forelse($emailLogs as $log)
-                    <div class="flex items-start justify-between gap-2">
-                        <div class="min-w-0">
-                            <p class="truncate font-semibold text-slate-700">{{ $log->subject }}</p>
-                            <p class="text-[11px] text-slate-400">{{ $log->created_at?->format('M d, h:i A') }}@if(! empty($log->metadata['invoice_attachment_failed'])) · PDF failed @endif</p>
+                    <div class="border-b border-slate-100 pb-2.5 last:border-b-0 last:pb-0 space-y-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate font-semibold text-slate-800">{{ $log->subject }}</p>
+                                <p class="text-[11px] text-slate-400">
+                                    {{ ($log->sent_at ?? $log->last_attempt_at ?? $log->created_at)?->format('M d, h:i A') }}
+                                    @if(! empty($log->metadata['attachment_names'])) · PDF attached @endif
+                                    @if($log->attempts > 1) · {{ $log->attempts }} attempts @endif
+                                    @if(! empty($log->metadata['invoice_attachment_failed'])) · <span class="text-red-500 font-semibold">PDF failed</span> @endif
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                @include('admin.email.partials.status-badge', ['status' => $log->status])
+                            </div>
                         </div>
-                        @include('admin.email.partials.status-badge', ['status' => $log->status])
+
+                        @if($log->status === 'queued')
+                            <p class="text-[11px] text-amber-700 bg-amber-50/60 rounded px-2 py-0.5">Queued — waiting for queue worker to deliver.</p>
+                        @elseif($log->status === 'processing')
+                            <p class="text-[11px] text-amber-700 bg-amber-50/60 rounded px-2 py-0.5">Processing — worker is sending via SMTP...</p>
+                        @elseif($log->status === 'sent' && $log->message_id)
+                            <p class="text-[10px] text-slate-400 truncate" title="{{ $log->message_id }}">SMTP ID: {{ $log->message_id }}</p>
+                        @elseif($log->status === 'failed')
+                            <div class="rounded bg-red-50 p-2 text-[11px] text-red-700 space-y-1.5">
+                                <p class="break-words font-medium">{{ $log->error_message ?: 'Delivery failed without error details.' }}</p>
+                                <form action="{{ route('admin.email.logs.retry', $log->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="font-bold text-red-800 underline hover:text-red-900">↻ Retry delivery</button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 @empty
                     <p class="text-slate-400">No emails sent for this order yet.</p>

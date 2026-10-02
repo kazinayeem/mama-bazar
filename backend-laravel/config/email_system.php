@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'queue_connection' => env('EMAIL_QUEUE_CONNECTION', 'database'),
+    'queue_connection' => env('EMAIL_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'database')),
 
     'queue_name' => env('EMAIL_QUEUE_NAME', 'emails'),
 

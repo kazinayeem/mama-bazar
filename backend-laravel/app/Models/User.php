@@ -32,6 +32,13 @@ class User extends Authenticatable
         'permissions_json',
         'status',
         'last_login_at',
+        'last_login_ip',
+        'last_login_location',
+        'must_change_password',
+        'invitation_token_hash',
+        'invitation_sent_at',
+        'invitation_expires_at',
+        'invitation_accepted_at',
         'reset_token_hash',
         'reset_token_expires_at',
     ];
@@ -40,6 +47,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'reset_token_hash',
+        'invitation_token_hash',
     ];
 
     protected $casts = [
@@ -48,9 +56,33 @@ class User extends Authenticatable
         'marketing_opt_in' => 'boolean',
         'marketing_opt_in_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'must_change_password' => 'boolean',
+        'invitation_sent_at' => 'datetime',
+        'invitation_expires_at' => 'datetime',
+        'invitation_accepted_at' => 'datetime',
         'reset_token_expires_at' => 'datetime',
         'created_at' => 'datetime',
     ];
+
+    public function loginHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MemberLoginHistory::class, 'user_id')->orderByDesc('login_at');
+    }
+
+    public function isInvitationPending(): bool
+    {
+        return ! empty($this->invitation_token_hash)
+            && is_null($this->invitation_accepted_at)
+            && ($this->invitation_expires_at === null || $this->invitation_expires_at->isFuture());
+    }
+
+    public function isInvitationExpired(): bool
+    {
+        return ! empty($this->invitation_token_hash)
+            && is_null($this->invitation_accepted_at)
+            && $this->invitation_expires_at !== null
+            && $this->invitation_expires_at->isPast();
+    }
 
     public function getOrCreateUnsubscribeToken(): string
     {

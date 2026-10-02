@@ -8,6 +8,7 @@ use App\Jobs\SendTransactionalEmailJob;
 use App\Models\EmailCampaign;
 use App\Models\EmailCampaignRecipient;
 use App\Models\EmailLog;
+use App\Models\Order;
 use App\Support\EmailQueue;
 
 /**
@@ -28,6 +29,19 @@ class EmailRetryService
 
         $replay = (array) ($log->metadata['replay'] ?? []);
         $log->update(['status' => 'queued', 'error_message' => null]);
+
+        if (! EmailQueue::isBackground() && ($replay['kind'] ?? null) === 'order') {
+            $order = Order::find((int) ($replay['order_id'] ?? 0));
+            if (! $order) {
+                return ['success' => false, 'message' => 'Order no longer exists.'];
+            }
+            $result = OrderEmailService::send($order, (string) ($replay['trigger'] ?? 'invoice'), $log->dedupe_key);
+            if ($result['success'] ?? false) {
+                return ['success' => true, 'message' => 'Email successfully sent via SMTP.'];
+            }
+
+            return ['success' => false, 'message' => 'Email delivery failed: '.($result['error'] ?? 'Check SMTP logs.')];
+        }
 
         $queued = match ($replay['kind'] ?? null) {
             'order' => EmailQueue::dispatch(new SendTransactionalEmailJob((int) $replay['order_id'], (string) $replay['trigger'], $log->dedupe_key)),

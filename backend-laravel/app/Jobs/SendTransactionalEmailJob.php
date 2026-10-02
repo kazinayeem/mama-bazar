@@ -2,7 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Models\EmailLog;
 use App\Models\Order;
+use App\Services\EmailSettingService;
 use App\Services\OrderEmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -46,6 +48,12 @@ class SendTransactionalEmailJob implements ShouldQueue
             return;
         }
 
+        if ($this->dedupeKey) {
+            EmailLog::where('dedupe_key', $this->dedupeKey)
+                ->where('status', 'queued')
+                ->update(['status' => 'processing', 'last_attempt_at' => now()]);
+        }
+
         $finalAttempt = $this->job === null || $this->attempts() >= $this->tries;
         $result = OrderEmailService::send($order, $this->triggerType, $this->dedupeKey, $finalAttempt);
 
@@ -58,5 +66,15 @@ class SendTransactionalEmailJob implements ShouldQueue
     public function failed(Throwable $exception): void
     {
         Log::error("Order email '{$this->triggerType}' failed for order id {$this->orderId}: ".$exception->getMessage());
+
+        if ($this->dedupeKey) {
+            $safe = EmailSettingService::sanitizeError($exception->getMessage());
+            EmailLog::where('dedupe_key', $this->dedupeKey)
+                ->whereIn('status', ['queued', 'processing'])
+                ->update([
+                    'status' => 'failed',
+                    'error_message' => mb_substr($safe, 0, 1000),
+                ]);
+        }
     }
 }

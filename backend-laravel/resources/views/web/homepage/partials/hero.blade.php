@@ -25,9 +25,9 @@
     @mouseenter="stop()"
     @mouseleave="start()"
 >
-    <section class="relative bg-slate-900 py-3 sm:py-4 lg:py-5">
+    <section class="relative bg-white py-3 sm:py-4 lg:py-5">
         <div class="store-container relative">
-            <div class="relative overflow-hidden rounded-[10px] sm:rounded-xl shadow-lg">
+            <div class="relative overflow-hidden rounded-[10px] sm:rounded-xl shadow-lg bg-white">
                 <template x-for="(slide, i) in slides" :key="slide.id || i">
                     <div
                         x-show="index === i"

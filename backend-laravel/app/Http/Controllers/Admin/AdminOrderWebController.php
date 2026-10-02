@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailLog;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Services\BusinessSettingService;
 use App\Services\InvoicePdfService;
 use App\Services\OrderEmailService;
+use App\Support\EmailQueue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,9 +27,9 @@ class AdminOrderWebController extends Controller
             $s = $request->input('search');
             $query->where(function ($q) use ($s) {
                 $q->where('order_id', 'like', "%{$s}%")
-                  ->orWhere('invoice_number', 'like', "%{$s}%")
-                  ->orWhere('customer_name', 'like', "%{$s}%")
-                  ->orWhere('phone', 'like', "%{$s}%");
+                    ->orWhere('invoice_number', 'like', "%{$s}%")
+                    ->orWhere('customer_name', 'like', "%{$s}%")
+                    ->orWhere('phone', 'like', "%{$s}%");
             });
         }
 
@@ -50,6 +52,7 @@ class AdminOrderWebController extends Controller
     {
         $order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
         $store = self::storeInfo();
+
         return view('admin.orders.invoice', compact('order', 'store'));
     }
 
@@ -67,23 +70,39 @@ class AdminOrderWebController extends Controller
     {
         $order = Order::findOrFail($id);
 
-        if (empty($order->email) || !filter_var($order->email, FILTER_VALIDATE_EMAIL)) {
+        if (empty($order->email) || ! filter_var($order->email, FILTER_VALIDATE_EMAIL)) {
             return back()->with('error', 'This order has no valid customer email address.');
         }
 
-        if (!InvoicePdfService::isInvoiceReady($order)) {
+        if (! InvoicePdfService::isInvoiceReady($order)) {
             return back()->with('error', 'Invoice is not available yet — payment is unverified or the order is cancelled/refunded.');
         }
 
-        OrderEmailService::queue($order, OrderEmailService::TRIGGER_INVOICE, true);
+        if (! EmailQueue::isBackground()) {
+            $dedupeKey = OrderEmailService::dedupeKey($order, OrderEmailService::TRIGGER_INVOICE, true);
+            $result = OrderEmailService::send($order, OrderEmailService::TRIGGER_INVOICE, $dedupeKey);
 
-        return back()->with('success', "Invoice email for #{$order->order_id} has been queued to {$order->email}.");
+            if ($result['success'] ?? false) {
+                return back()->with('success', "Invoice email for #{$order->order_id} was successfully sent via SMTP to {$order->email}.");
+            }
+
+            return back()->with('error', 'Invoice email delivery failed: '.($result['error'] ?? 'Check SMTP logs.'));
+        }
+
+        $queued = OrderEmailService::queue($order, OrderEmailService::TRIGGER_INVOICE, true);
+
+        if (! $queued) {
+            return back()->with('error', "Could not queue invoice email for #{$order->order_id}. Duplicate or delivery disabled.");
+        }
+
+        return back()->with('success', "Invoice email for #{$order->order_id} has been queued for delivery to {$order->email}. Status: Queued (awaiting queue worker).");
     }
 
     public function packingSlip($id)
     {
         $order = Order::with(['items.product', 'items.variant'])->findOrFail($id);
         $store = self::storeInfo();
+
         return view('admin.orders.packing-slip', compact('order', 'store'));
     }
 
@@ -134,7 +153,7 @@ class AdminOrderWebController extends Controller
         OrderStatusHistory::create([
             'order_id' => $order->id,
             'status' => $order->status,
-            'note' => 'Payment: ' . $request->input('payment_status') . ($request->input('note') ? ' — ' . $request->input('note') : ''),
+            'note' => 'Payment: '.$request->input('payment_status').($request->input('note') ? ' — '.$request->input('note') : ''),
             'created_by_user_id' => Auth::id(),
         ]);
 
@@ -147,7 +166,7 @@ class AdminOrderWebController extends Controller
 
         $request->validate(['admin_notes' => 'required|string|max:2000']);
 
-        $order->admin_notes = trim(($order->admin_notes ? $order->admin_notes . "\n" : '') . '[' . now()->format('Y-m-d H:i') . ' | ' . (Auth::user()->name ?? 'Admin') . '] ' . $request->input('admin_notes'));
+        $order->admin_notes = trim(($order->admin_notes ? $order->admin_notes."\n" : '').'['.now()->format('Y-m-d H:i').' | '.(Auth::user()->name ?? 'Admin').'] '.$request->input('admin_notes'));
         $order->save();
 
         OrderStatusHistory::create([
@@ -162,11 +181,11 @@ class AdminOrderWebController extends Controller
 
     public static function storeInfo(): array
     {
-        return \App\Services\BusinessSettingService::forInvoice();
+        return BusinessSettingService::forInvoice();
     }
 
     public static function logoBase64(): ?string
     {
-        return \App\Services\BusinessSettingService::logoBase64();
+        return BusinessSettingService::logoBase64();
     }
 }

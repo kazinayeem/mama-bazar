@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'email.verified' => EnsureEmailVerified::class,
             'email.schema' => EnsureEmailSchemaReady::class,
             'smtp.unlocked' => EnsureSmtpUnlocked::class,
+            'admin.password.changed' => EnsureAdminPasswordChanged::class,
         ]);
 
         // RFC 8058 one-click unsubscribe is POSTed by mail clients without a CSRF token (route is signed).

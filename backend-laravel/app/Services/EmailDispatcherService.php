@@ -131,6 +131,56 @@ class EmailDispatcherService
     }
 
     /**
+     * Record a queued email log row immediately upon dispatch so the admin
+     * panel reflects that an email is pending in the queue worker.
+     */
+    public static function recordQueued(
+        string $to,
+        ?string $name,
+        string $subject,
+        string $type,
+        ?int $orderId = null,
+        ?string $templateKey = null,
+        ?string $dedupeKey = null,
+        array $metadata = []
+    ): ?EmailLog {
+        $to = strtolower(trim($to));
+        $attributes = [
+            'recipient_email' => mb_substr($to, 0, 255),
+            'recipient_name' => $name ? mb_substr(trim($name), 0, 255) : null,
+            'subject' => mb_substr(trim(preg_replace('/[\r\n]+/', ' ', $subject) ?? ''), 0, 255),
+            'email_type' => $type,
+            'template_key' => $templateKey,
+            'order_id' => $orderId,
+            'status' => 'queued',
+            'attempts' => 0,
+            'dedupe_key' => $dedupeKey,
+            'metadata' => $metadata,
+            'last_attempt_at' => null,
+        ];
+
+        if ($dedupeKey) {
+            $existing = EmailLog::where('dedupe_key', $dedupeKey)->first();
+            if ($existing) {
+                if (! in_array($existing->status, ['sent', 'delivered'], true)) {
+                    $existing->update([
+                        'status' => 'queued',
+                        'error_message' => null,
+                    ]);
+                }
+
+                return $existing;
+            }
+        }
+
+        try {
+            return EmailLog::create($attributes);
+        } catch (QueryException $e) {
+            return $dedupeKey ? EmailLog::where('dedupe_key', $dedupeKey)->first() : null;
+        }
+    }
+
+    /**
      * Create the log row, or reuse an existing one (retry / same dedupe key).
      * Returns null when a concurrent request already claimed the dedupe key.
      */
@@ -176,7 +226,7 @@ class EmailDispatcherService
                 return $existing;
             }
             $existing->fill($attributes);
-            $existing->status = 'queued';
+            $existing->status = 'processing';
             $existing->attempts = (int) $existing->attempts + 1;
             $existing->save();
 
@@ -186,7 +236,7 @@ class EmailDispatcherService
         try {
             return EmailLog::create(array_merge($attributes, [
                 'dedupe_key' => $options['dedupe_key'] ?? null,
-                'status' => 'queued',
+                'status' => 'processing',
                 'attempts' => 1,
             ]));
         } catch (QueryException $e) {

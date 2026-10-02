@@ -39,7 +39,7 @@ class EmailTemplateService
     public const SUBJECT_FORBIDDEN = ['otp_code', 'reset_url'];
 
     /** Security-critical templates that are always sent (built-in default used if the stored one is inactive). */
-    public const ALWAYS_ACTIVE = ['account_verification_otp', 'login_otp', 'email_change_otp', 'password_reset'];
+    public const ALWAYS_ACTIVE = ['account_verification_otp', 'login_otp', 'email_change_otp', 'password_reset', 'member_invitation'];
 
     protected static bool $defaultsEnsured = false;
 
@@ -92,6 +92,11 @@ class EmailTemplateService
                 'security_event' => 'Security event description',
                 'security_time' => 'Time of the security event',
                 'login_url' => 'Sign-in page URL',
+                'member_name' => 'Team member name',
+                'member_email' => 'Team member email address',
+                'member_role' => 'Assigned administrative role',
+                'setup_link' => 'Account setup link URL',
+                'expires_hours' => 'Invitation link validity in hours',
             ],
             'Contact' => [
                 'contact_name' => 'Contact form name',
@@ -622,6 +627,24 @@ HTML;
                     .'<p>Hello {{customer_name}}, this is a confirmation that the following change was made to your account:</p>'
                     .'<p style="padding:12px 16px;background:#f8fafc;border-left:4px solid #0f4d2c;"><strong>{{security_event}}</strong><br><span '.$muted.'>{{security_time}}</span></p>'
                     .'<p>If this was you, no action is needed. If not, reset your password immediately and contact us at {{support_phone}}.</p>',
+            ],
+            'member_invitation' => [
+                'name' => 'Team Member Invitation',
+                'category' => 'auth',
+                'subject' => 'Welcome to the {{business_name}} Admin Team',
+                'body_html' => self::heading('Welcome to {{business_name}}')
+                    .'<p>Hello {{member_name}},</p>'
+                    .'<p>Welcome to the <strong>{{business_name}}</strong> admin team. Your administrator account has been created successfully.</p>'
+                    .self::orderFacts([
+                        ['Name', '{{member_name}}'],
+                        ['Email', '{{member_email}}'],
+                        ['Assigned role', '{{member_role}}'],
+                    ])
+                    .'<p>To activate your account and create your password, use the secure account setup link below:</p>'
+                    .self::button('{{setup_link}}', 'Set Up Password', '#0f4d2c')
+                    .'<p '.$muted.'>For security reasons, this link expires after {{expires_hours}} hours and can only be used once.</p>'
+                    .'<p '.$muted.'>Please create a strong, unique password before accessing your account.</p>'
+                    .'<p '.$muted.'>If you did not expect this invitation, please contact your administrator.</p>',
             ],
             'order_confirmation' => [
                 'name' => 'Order Confirmation',

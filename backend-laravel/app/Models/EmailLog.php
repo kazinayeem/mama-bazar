@@ -16,6 +16,7 @@ class EmailLog extends Model
      */
     public const STATUSES = [
         'queued' => 'Queued',
+        'processing' => 'Processing',
         'sent' => 'Accepted by SMTP',
         'failed' => 'Failed',
         'skipped' => 'Skipped',

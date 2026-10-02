@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\SendTransactionalEmailJob;
 use App\Models\EmailLog;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Support\EmailQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -168,9 +169,28 @@ class OrderEmailService
             return false;
         }
 
-        EmailQueue::dispatch(new SendTransactionalEmailJob($order->id, $trigger, $dedupeKey));
+        $subject = match ($trigger) {
+            self::TRIGGER_INVOICE => "Invoice #{$order->order_id}",
+            self::TRIGGER_CREATED => "Order confirmation — {$order->order_id}",
+            self::TRIGGER_PAYMENT => "Payment confirmed — {$order->order_id}",
+            default => "Order update — {$order->order_id}",
+        };
 
-        return true;
+        EmailDispatcherService::recordQueued(
+            $order->email,
+            $order->customer_name,
+            $subject,
+            $trigger === self::TRIGGER_INVOICE ? 'invoice' : 'order',
+            $order->id,
+            $config['template'],
+            $dedupeKey,
+            [
+                'replay' => ['kind' => 'order', 'order_id' => $order->id, 'trigger' => $trigger],
+                'manual' => $manual,
+            ]
+        );
+
+        return EmailQueue::dispatch(new SendTransactionalEmailJob($order->id, $trigger, $dedupeKey));
     }
 
     /**
@@ -294,7 +314,7 @@ class OrderEmailService
             return 'Cash on Delivery';
         }
 
-        $name = \App\Models\PaymentMethod::where('code', $order->payment_method)->value('name');
+        $name = PaymentMethod::where('code', $order->payment_method)->value('name');
 
         return $name ?: strtoupper((string) $order->payment_method);
     }

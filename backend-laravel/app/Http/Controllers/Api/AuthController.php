@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\Web\AuthWebController;
+use App\Models\Order;
 use App\Models\User;
 use App\Models\UserAddress;
-use App\Models\Order;
 use App\Services\JwtService;
-use App\Services\RbacService;
 use App\Services\OrderService;
-use Exception;
+use App\Services\RbacService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -57,7 +57,7 @@ class AuthController extends Controller
             ->orWhere('email', $identifier)
             ->first();
 
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return response()->json(['success' => false, 'message' => 'Invalid credentials'], 401);
         }
 
@@ -113,7 +113,7 @@ class AuthController extends Controller
                 ->first();
         } else {
             $user = User::where('phone', '01700000000')->orWhere('role', 'user')->first();
-            if (!$user) {
+            if (! $user) {
                 $user = User::where('phone', '01711111111')
                     ->orWhere('phone', '01943124215')
                     ->orWhere('custom_role', 'SUPER_ADMIN')
@@ -122,7 +122,7 @@ class AuthController extends Controller
             }
         }
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Development account not found in database'], 404);
         }
 
@@ -206,6 +206,7 @@ class AuthController extends Controller
     public function requestPasswordReset(Request $request)
     {
         $request->validate(['phone' => 'required|string']);
+
         return response()->json(['success' => true, 'message' => 'Password reset link sent to phone']);
     }
 
@@ -215,6 +216,7 @@ class AuthController extends Controller
             'token' => 'required|string',
             'newPassword' => 'required|string|min:6',
         ]);
+
         return response()->json(['success' => true, 'message' => 'Password reset successfully']);
     }
 
@@ -228,11 +230,13 @@ class AuthController extends Controller
         $auth = $request->attributes->get('auth_user');
         $user = User::find($auth['id']);
 
-        if (!$user || !Hash::check($validated['oldPassword'], $user->password)) {
+        if (! $user || ! Hash::check($validated['oldPassword'], $user->password)) {
             return response()->json(['success' => false, 'message' => 'Current password is incorrect'], 400);
         }
 
         $user->update(['password' => Hash::make($validated['newPassword'])]);
+
+        AuthWebController::queueSecurityNotice($user, 'Your password was changed.');
 
         return response()->json(['success' => true, 'message' => 'Password changed successfully']);
     }
@@ -241,7 +245,7 @@ class AuthController extends Controller
     {
         $auth = $request->attributes->get('auth_user');
         $user = User::find($auth['id']);
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
 
@@ -269,15 +273,23 @@ class AuthController extends Controller
     {
         $auth = $request->attributes->get('auth_user');
         $user = User::find($auth['id']);
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
 
         $updateData = [];
-        if ($request->has('name')) $updateData['name'] = $request->input('name');
-        if ($request->has('phone')) $updateData['phone'] = $request->input('phone');
-        if ($request->has('shippingArea')) $updateData['shipping_area'] = $request->input('shippingArea');
-        if ($request->has('shippingAddress')) $updateData['shipping_address'] = $request->input('shippingAddress');
+        if ($request->has('name')) {
+            $updateData['name'] = $request->input('name');
+        }
+        if ($request->has('phone')) {
+            $updateData['phone'] = $request->input('phone');
+        }
+        if ($request->has('shippingArea')) {
+            $updateData['shipping_area'] = $request->input('shippingArea');
+        }
+        if ($request->has('shippingAddress')) {
+            $updateData['shipping_address'] = $request->input('shippingAddress');
+        }
 
         $user->update($updateData);
 
@@ -300,7 +312,7 @@ class AuthController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $formatted = $orders->map(fn($o) => OrderService::formatOrder($o))->toArray();
+        $formatted = $orders->map(fn ($o) => OrderService::formatOrder($o))->toArray();
 
         return response()->json(['success' => true, 'data' => $formatted]);
     }
@@ -313,7 +325,7 @@ class AuthController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $formatted = $addresses->map(fn($a) => [
+        $formatted = $addresses->map(fn ($a) => [
             'id' => $a->id,
             'userId' => $a->user_id,
             'recipientName' => $a->recipient_name,
@@ -385,7 +397,7 @@ class AuthController extends Controller
     {
         $auth = $request->attributes->get('auth_user');
         $address = UserAddress::where('id', $id)->where('user_id', $auth['id'])->first();
-        if (!$address) {
+        if (! $address) {
             return response()->json(['success' => false, 'message' => 'Address not found'], 404);
         }
 
@@ -398,7 +410,7 @@ class AuthController extends Controller
     {
         $auth = $request->attributes->get('auth_user');
         $address = UserAddress::where('id', $id)->where('user_id', $auth['id'])->first();
-        if (!$address) {
+        if (! $address) {
             return response()->json(['success' => false, 'message' => 'Address not found'], 404);
         }
 
@@ -410,17 +422,19 @@ class AuthController extends Controller
     public function getAll()
     {
         $users = User::orderBy('created_at', 'desc')->get()->makeHidden(['password', 'reset_token_hash']);
+
         return response()->json(['success' => true, 'data' => $users]);
     }
 
     public function remove($id)
     {
         $user = User::find($id);
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
 
         $user->delete();
+
         return response()->json(['success' => true, 'data' => ['deleted' => true]]);
     }
 }

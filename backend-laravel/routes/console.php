@@ -159,6 +159,49 @@ Artisan::command('email:diagnose-smtp {--host=} {--port=} {--encryption=}', func
     }
 })->purpose('Diagnose production SMTP connectivity, DNS, firewall, and authentication');
 
+Artisan::command('email:process-queue {--limit=100}', function () {
+    $conn = (string) config('email_system.queue_connection', 'database');
+    $queue = (string) config('email_system.queue_name', 'emails');
+
+    if ($conn === 'sync') {
+        $this->info("Queue connection is 'sync'. Transactional emails are executed synchronously.");
+
+        return 0;
+    }
+
+    $pendingCount = 0;
+    if ($conn === 'database') {
+        try {
+            $pendingCount = DB::table('jobs')->where('queue', $queue)->count();
+        } catch (Throwable $e) {
+            $pendingCount = 0;
+        }
+    }
+
+    $this->info("Processing email queue (Connection: {$conn}, Queue: {$queue}, Pending: {$pendingCount})...");
+
+    $exitCode = Artisan::call('queue:work', [
+        'connection' => $conn,
+        '--queue' => "{$queue},default",
+        '--stop-when-empty' => true,
+        '--max-time' => 50,
+        '--tries' => 3,
+    ]);
+
+    $remaining = 0;
+    if ($conn === 'database') {
+        try {
+            $remaining = DB::table('jobs')->where('queue', $queue)->count();
+        } catch (Throwable $e) {
+            $remaining = 0;
+        }
+    }
+
+    $this->info("Queue processing finished. Remaining in '{$queue}': {$remaining}.");
+
+    return $exitCode;
+})->purpose('Process pending email jobs from the email queue');
+
 Schedule::command('email:dispatch-scheduled-campaigns')->everyMinute()->withoutOverlapping();
 Schedule::command('email:send-review-invitations')->hourly()->withoutOverlapping();
 Schedule::command('email:prune')->dailyAt('03:15');
