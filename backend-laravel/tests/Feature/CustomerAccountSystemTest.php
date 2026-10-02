@@ -416,4 +416,60 @@ class CustomerAccountSystemTest extends TestCase
         $response->assertSee('BS-TRACK-888');
         $response->assertSee('shipped');
     }
+
+    public function test_orders_page_layout_structure_and_empty_state(): void
+    {
+        // Zero orders initially
+        $response = $this->actingAs($this->customer)->get(route('account.orders'));
+
+        $response->assertStatus(200);
+        // Assert layout CSS classes exist
+        $response->assertSee('account-layout', false);
+        $response->assertSee('account-sidebar', false);
+        $response->assertSee('account-main', false);
+        // Assert empty state elements
+        $response->assertSee('No orders found');
+        $response->assertSee('Continue Shopping');
+        // Assert mobile nav tabs are present
+        $response->assertSee('Account Mobile Navigation');
+        // Assert order count
+        $response->assertSee('Total Orders:');
+
+        // Create multiple orders for customer
+        Order::create([
+            'order_id' => 'BS-MULTI-001',
+            'user_id' => $this->customer->id,
+            'customer_name' => $this->customer->name,
+            'phone' => $this->customer->phone,
+            'address' => 'Dhaka',
+            'shipping_cost' => 60,
+            'subtotal' => 1500,
+            'total_price' => 1560,
+            'status' => 'delivered',
+            'payment_status' => 'success',
+        ]);
+
+        Order::create([
+            'order_id' => 'BS-MULTI-002',
+            'user_id' => $this->customer->id,
+            'customer_name' => $this->customer->name,
+            'phone' => $this->customer->phone,
+            'address' => 'Dhaka',
+            'shipping_cost' => 60,
+            'subtotal' => 3000,
+            'total_price' => 3060,
+            'status' => 'processing',
+            'payment_status' => 'pending',
+        ]);
+
+        $responseWithOrders = $this->actingAs($this->customer)->get(route('account.orders'));
+        $responseWithOrders->assertStatus(200);
+        $responseWithOrders->assertSee('BS-MULTI-001');
+        $responseWithOrders->assertSee('BS-MULTI-002');
+        $responseWithOrders->assertSee('delivered');
+        $responseWithOrders->assertSee('processing');
+        $responseWithOrders->assertSee('View Details');
+        $responseWithOrders->assertSee('Track');
+        $responseWithOrders->assertDontSee('No orders found');
+    }
 }
