@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
+use App\Services\EmailCampaignService;
 use App\Services\EmailDispatcherService;
 use App\Services\EmailPreferenceService;
 use App\Services\EmailTemplateService;
@@ -182,7 +183,7 @@ class AdminEmailTemplateController extends Controller
             'cta_url' => url('/shop'),
             'coupon_code' => 'SAMPLE10',
             'offer_expires' => now()->addWeek()->format('d M Y'),
-            'coupon_block' => \App\Services\EmailCampaignService::couponBlock('SAMPLE10', now()->addWeek()->format('d M Y')),
+            'coupon_block' => EmailCampaignService::couponBlock('SAMPLE10', now()->addWeek()->format('d M Y')),
             'unsubscribe_url' => EmailPreferenceService::unsubscribeUrl($email),
             'preferences_url' => EmailPreferenceService::preferencesUrl($email),
         ];

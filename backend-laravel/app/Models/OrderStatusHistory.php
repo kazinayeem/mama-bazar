@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class OrderStatusHistory extends Model
 {
     protected $table = 'order_status_history';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\JwtService;
+use App\Services\RbacService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Services\JwtService;
-use App\Services\RbacService;
 
 class JwtAuthMiddleware
 {
@@ -33,14 +33,14 @@ class JwtAuthMiddleware
         }
 
         $authHeader = $request->header('Authorization');
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
         $token = substr($authHeader, 7);
         $decoded = JwtService::verify($token);
 
-        if (!$decoded || !isset($decoded['id'])) {
+        if (! $decoded || ! isset($decoded['id'])) {
             return response()->json(['success' => false, 'message' => 'Invalid or expired token'], 401);
         }
 

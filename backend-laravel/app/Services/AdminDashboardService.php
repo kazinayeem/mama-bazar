@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -34,7 +35,7 @@ class AdminDashboardService
      *     revenueChart: list<array{date: string, revenue: float, orders: int, label: string}>,
      *     statusBreakdown: array<string, int>,
      *     statusChart: list<array{name: string, value: int}>,
-     *     recentOrders: \Illuminate\Support\Collection,
+     *     recentOrders: Collection,
      *     topProducts: list<array<string, mixed>>,
      *     lowStockProducts: list<array<string, mixed>>,
      *     hasOrderItems: bool

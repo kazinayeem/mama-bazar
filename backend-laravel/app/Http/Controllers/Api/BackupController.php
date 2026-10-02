@@ -7,7 +7,6 @@ use App\Models\AdminBackup;
 use App\Services\BackupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BackupController extends Controller
@@ -15,6 +14,7 @@ class BackupController extends Controller
     public function listBackups(): JsonResponse
     {
         $data = BackupService::listBackups();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -42,7 +42,7 @@ class BackupController extends Controller
     public function downloadBackup(int $id)
     {
         $backup = AdminBackup::find($id);
-        if (!$backup) {
+        if (! $backup) {
             return response()->json(['success' => false, 'message' => 'Backup not found'], 404);
         }
 
@@ -51,6 +51,7 @@ class BackupController extends Controller
         // If local file path
         if (file_exists($filepath)) {
             $safeFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $backup->filename);
+
             return response()->download($filepath, $safeFilename, [
                 'Content-Type' => 'application/zip',
                 'Cache-Control' => 'no-store, no-cache, must-revalidate',
@@ -61,9 +62,10 @@ class BackupController extends Controller
         // If Cloudinary / remote URL
         if (str_starts_with($filepath, 'http://') || str_starts_with($filepath, 'https://')) {
             $safeFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $backup->filename);
+
             return new StreamedResponse(function () use ($filepath) {
                 $handle = fopen($filepath, 'rb');
-                while (!feof($handle)) {
+                while (! feof($handle)) {
                     echo fread($handle, 1024 * 8);
                     flush();
                 }
@@ -83,7 +85,7 @@ class BackupController extends Controller
     {
         $actor = $request->user();
 
-        if (!$request->hasFile('file')) {
+        if (! $request->hasFile('file')) {
             return response()->json(['success' => false, 'message' => "Please attach a backup archive (.zip) in the 'file' field"], 400);
         }
 
@@ -134,12 +136,12 @@ class BackupController extends Controller
     public function verifyPin(Request $request): JsonResponse
     {
         $pin = $request->input('pin');
-        if (!$pin || !is_string($pin)) {
+        if (! $pin || ! is_string($pin)) {
             return response()->json(['success' => false, 'message' => 'PIN is required'], 400);
         }
 
         $isValid = BackupService::validatePin($pin);
-        if (!$isValid) {
+        if (! $isValid) {
             return response()->json([
                 'success' => false,
                 'message' => 'Wrong PIN. Nice try 😄 Please check your backup PIN and try again.',

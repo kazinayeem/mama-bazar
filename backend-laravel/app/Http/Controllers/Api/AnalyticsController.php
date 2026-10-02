@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarketingIntegration;
+use App\Models\Order;
 use App\Models\TrackingLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,10 +14,15 @@ use Illuminate\Support\Str;
 class AnalyticsController extends Controller
 {
     private const FB_GRAPH_API_VERSION = 'v21.0';
+
     private const FB_EVENT_NAME = 'Purchase';
+
     private const FB_PLATFORM = 'facebook_capi';
+
     private const FB_ACTION_SOURCE = 'website';
+
     private const DEFAULT_CURRENCY = 'BDT';
+
     private const DEFAULT_CONTENT_TYPE = 'product';
 
     private function hashSHA256(string $value): string
@@ -46,9 +52,9 @@ class AnalyticsController extends Controller
         $eventId = $validated['eventId'] ?? (string) Str::uuid();
 
         // Mark the order as purchase-tracked so refreshes never double-report.
-        if (!empty($validated['orderId'])) {
-            $existing = \App\Models\Order::where('order_id', $validated['orderId'])->first();
-            if ($existing && !$existing->purchase_tracked_at) {
+        if (! empty($validated['orderId'])) {
+            $existing = Order::where('order_id', $validated['orderId'])->first();
+            if ($existing && ! $existing->purchase_tracked_at) {
                 $existing->purchase_tracked_at = now();
                 if (empty($existing->fb_event_id)) {
                     $existing->fb_event_id = $eventId;
@@ -69,12 +75,16 @@ class AnalyticsController extends Controller
                 $facebookPixelId = $row->pixel_id;
             }
             if ($row->type === 'facebook_conversion_api') {
-                if ($row->access_token) $facebookAccessToken = $row->access_token;
-                if ($row->test_event_code) $facebookTestEventCode = $row->test_event_code;
+                if ($row->access_token) {
+                    $facebookAccessToken = $row->access_token;
+                }
+                if ($row->test_event_code) {
+                    $facebookTestEventCode = $row->test_event_code;
+                }
             }
         }
 
-        if (!$facebookPixelId || !$facebookAccessToken) {
+        if (! $facebookPixelId || ! $facebookAccessToken) {
             return response()->json([
                 'success' => true,
                 'data' => ['sent' => false, 'reason' => 'Facebook Conversion API not configured'],
@@ -89,10 +99,18 @@ class AnalyticsController extends Controller
             'client_user_agent' => $userAgent,
         ];
 
-        if (!empty($validated['fbp'])) $userData['fbp'] = $validated['fbp'];
-        if (!empty($validated['fbc'])) $userData['fbc'] = $validated['fbc'];
-        if (!empty($validated['email'])) $userData['em'] = [$this->hashSHA256($validated['email'])];
-        if (!empty($validated['phone'])) $userData['ph'] = [$this->hashSHA256($validated['phone'])];
+        if (! empty($validated['fbp'])) {
+            $userData['fbp'] = $validated['fbp'];
+        }
+        if (! empty($validated['fbc'])) {
+            $userData['fbc'] = $validated['fbc'];
+        }
+        if (! empty($validated['email'])) {
+            $userData['em'] = [$this->hashSHA256($validated['email'])];
+        }
+        if (! empty($validated['phone'])) {
+            $userData['ph'] = [$this->hashSHA256($validated['phone'])];
+        }
 
         $eventData = [
             'event_name' => self::FB_EVENT_NAME,
@@ -113,13 +131,13 @@ class AnalyticsController extends Controller
             $payload['test_event_code'] = $facebookTestEventCode;
         }
 
-        $url = "https://graph.facebook.com/" . self::FB_GRAPH_API_VERSION . "/{$facebookPixelId}/events?access_token=" . urlencode($facebookAccessToken);
+        $url = 'https://graph.facebook.com/'.self::FB_GRAPH_API_VERSION."/{$facebookPixelId}/events?access_token=".urlencode($facebookAccessToken);
 
         try {
             $response = Http::post($url, $payload);
             $result = $response->json();
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 TrackingLog::create([
                     'event_name' => self::FB_EVENT_NAME,
                     'platform' => self::FB_PLATFORM,
@@ -127,6 +145,7 @@ class AnalyticsController extends Controller
                     'status' => 'failed',
                     'error_message' => json_encode($result),
                 ]);
+
                 return response()->json(['success' => true, 'data' => ['sent' => false, 'error' => $result]]);
             }
 

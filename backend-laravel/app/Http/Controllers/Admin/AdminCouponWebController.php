@@ -11,12 +11,14 @@ class AdminCouponWebController extends Controller
     public function index()
     {
         $coupons = Coupon::orderBy('created_at', 'desc')->paginate(20);
+
         return view('admin.coupons.index', compact('coupons'));
     }
 
     protected function couponRules(?int $ignoreId = null): array
     {
         $unique = $ignoreId ? "unique:coupons,code,{$ignoreId}" : 'unique:coupons,code';
+
         return [
             'code' => "required|string|max:50|{$unique}",
             'discount_type' => 'required|in:fixed,percentage',

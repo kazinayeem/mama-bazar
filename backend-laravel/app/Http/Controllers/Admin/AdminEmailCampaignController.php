@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureAdminPermission;
 use App\Models\EmailCampaign;
-use App\Models\EmailCampaignRecipient;
 use App\Models\Product;
 use App\Services\EmailCampaignService;
 use App\Services\EmailDispatcherService;

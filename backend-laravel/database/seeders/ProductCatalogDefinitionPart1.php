@@ -23,7 +23,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Xiaomi Redmi 13C 6GB/128GB', 'brand' => 'xiaomi', 'sub' => 2, 'price' => 15499, 'sale' => 14499, 'stock' => 40, 'specs' => ['Display' => '6.74" 90Hz Dot Drop', 'Chip' => 'Helio G85', 'Camera' => '50MP AI Dual', 'Battery' => '5000 mAh 18W']],
                     ['title' => 'Samsung Galaxy A05s 4GB/64GB', 'brand' => 'samsung', 'sub' => 2, 'price' => 17999, 'sale' => 16500, 'stock' => 32, 'specs' => ['Display' => '6.7" FHD+ 90Hz PLS LCD', 'Chip' => 'Snapdragon 680', 'Camera' => '50MP Triple', 'Battery' => '5000 mAh 25W']],
                     ['title' => 'Walton Olvio MM26 Feature Phone', 'brand' => 'walton', 'sub' => 3, 'price' => 1850, 'sale' => 1699, 'stock' => 60, 'specs' => ['Display' => '2.4" QVGA', 'Battery' => '1800 mAh', 'SIM' => 'Dual SIM', 'Features' => 'Wireless FM, Flashlight']],
-                ]
+                ],
             ],
             // 2. Laptops & Ultrabooks
             [
@@ -41,7 +41,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'HP Envy 16 Core i7 Laptop', 'brand' => 'hp', 'sub' => 2, 'price' => 175000, 'sale' => 165000, 'stock' => 15, 'specs' => ['Display' => '16" WQXGA 120Hz', 'CPU' => 'Core i7-13700H', 'GPU' => 'RTX 4060 8GB', 'Storage' => '1TB SSD']],
                     ['title' => 'Acer Predator Helios 16 Gaming', 'brand' => 'acer', 'sub' => 0, 'price' => 245000, 'sale' => 229999, 'stock' => 9, 'specs' => ['Display' => '16" 240Hz 3ms G-SYNC', 'CPU' => 'Core i7-13700HX', 'GPU' => 'RTX 4070 8GB', 'Cooling' => 'AeroBlade 3D Fans']],
                     ['title' => 'MSI Katana 15 Gaming Core i7', 'brand' => 'msi', 'sub' => 0, 'price' => 155000, 'sale' => 146999, 'stock' => 16, 'specs' => ['Display' => '15.6" FHD 144Hz IPS', 'CPU' => 'Core i7-13620H', 'GPU' => 'RTX 4060 8GB', 'RAM' => '16GB DDR5']],
-                ]
+                ],
             ],
             // 3. Desktop Computers
             [
@@ -58,7 +58,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'MSI MAG Infinite S3 Gaming Desktop', 'brand' => 'msi', 'sub' => 0, 'price' => 165000, 'sale' => 155000, 'stock' => 11, 'specs' => ['CPU' => 'Core i5-14400F', 'GPU' => 'RTX 4060 8GB', 'RAM' => '16GB DDR5', 'Storage' => '1TB M.2 PCIe NVMe']],
                     ['title' => 'Lenovo IdeaCentre AIO 3 24-inch Core i5', 'brand' => 'lenovo', 'sub' => 1, 'price' => 84000, 'sale' => 79999, 'stock' => 16, 'specs' => ['Display' => '23.8" FHD IPS', 'CPU' => 'Core i5-12450H', 'RAM' => '8GB DDR4', 'Speakers' => 'Harman Kardon 2x3W']],
                     ['title' => 'Dell OptiPlex 7010 Micro Desktop', 'brand' => 'dell', 'sub' => 3, 'price' => 72000, 'sale' => null, 'stock' => 20, 'specs' => ['CPU' => 'Core i5-13500T vPro', 'RAM' => '16GB DDR4', 'SSD' => '512GB NVMe', 'OS' => 'Windows 11 Pro']],
-                ]
+                ],
             ],
             // 4. Computer Components
             [
@@ -75,7 +75,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Kingston FURY Renegade 64GB DDR5 6400MHz', 'brand' => 'kingston', 'sub' => 3, 'price' => 28000, 'sale' => 25999, 'stock' => 14, 'specs' => ['Capacity' => '64GB (2x32GB)', 'Speed' => 'DDR5 6400MT/s', 'Heatsink' => 'Aluminum heat spreader', 'Latency' => 'CL32']],
                     ['title' => 'AMD Ryzen 5 7600X Desktop Processor', 'brand' => 'amd', 'sub' => 0, 'price' => 26500, 'sale' => 24500, 'stock' => 25, 'specs' => ['Cores' => '6 Cores / 12 Threads', 'Base/Boost' => '4.7 GHz / 5.3 GHz', 'Cache' => '38MB Total', 'Socket' => 'AM5']],
                     ['title' => 'ASUS ROG Thor 1000W Platinum II PSU', 'brand' => 'asus', 'sub' => 2, 'price' => 39500, 'sale' => 36999, 'stock' => 10, 'specs' => ['Wattage' => '1000W', 'Efficiency' => '80 PLUS Platinum', 'PCIe 5.0' => '16-pin 12VHPWR cable', 'Display' => 'OLED Power Display']],
-                ]
+                ],
             ],
             // 5. Computer Storage
             [
@@ -92,7 +92,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Kingston A400 480GB 2.5-inch SATA SSD', 'brand' => 'kingston', 'sub' => 2, 'price' => 4500, 'sale' => 3999, 'stock' => 50, 'specs' => ['Form Factor' => '2.5-inch 7mm', 'Read/Write' => '500MB/s / 450MB/s', 'Controller' => '2Ch', 'Ideal for' => 'Budget system boot drive']],
                     ['title' => 'SanDisk Ultra Dual Drive Luxe 128GB Type-C', 'brand' => 'sandisk', 'sub' => 3, 'price' => 2200, 'sale' => 1950, 'stock' => 60, 'specs' => ['Connectors' => 'Reversible USB Type-C & Type-A', 'Speed' => 'Up to 400 MB/s read', 'Body' => 'All-metal swivel design', 'Capacity' => '128GB']],
                     ['title' => 'SanDisk Ultra Flair 64GB USB 3.0 Flash Drive', 'brand' => 'sandisk', 'sub' => 3, 'price' => 950, 'sale' => 850, 'stock' => 70, 'specs' => ['Speed' => 'Up to 150 MB/s', 'Casing' => 'Durable sleek metal', 'Interface' => 'USB 3.0 (backward compatible)', 'Capacity' => '64GB']],
-                ]
+                ],
             ],
             // 6. Monitors & Displays
             [
@@ -109,7 +109,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'ASUS ZenScreen MB16AH Portable Monitor', 'brand' => 'asus', 'sub' => 3, 'price' => 26000, 'sale' => 23999, 'stock' => 16, 'specs' => ['Panel' => '15.6" Full HD IPS Anti-glare', 'Weight' => '0.73 kg ultra-portable', 'Ports' => 'USB Type-C and Micro-HDMI', 'Case' => 'Foldable smart kickstand case']],
                     ['title' => 'Dell P2422H 24-inch FHD IPS Office Monitor', 'brand' => 'dell', 'sub' => 1, 'price' => 23500, 'sale' => 21999, 'stock' => 30, 'specs' => ['Display' => '23.8" FHD 1080p IPS 60Hz', 'Ergonomics' => 'Height, pivot, tilt, swivel adjustable', 'Bezel' => 'Three-sided ultrathin bezel', 'Eye Care' => 'ComfortView Plus low blue light']],
                     ['title' => 'Samsung 32-inch Smart Monitor M7 4K UHD', 'brand' => 'samsung', 'sub' => 1, 'price' => 42000, 'sale' => 38999, 'stock' => 15, 'specs' => ['Size' => '32" 4K UHD (3840 x 2160) VA', 'Smart OS' => 'Tizen OS with Netflix, YouTube built-in', 'Remote' => 'SolarCell Voice Remote', 'Hub' => 'IoT SmartThings Hub']],
-                ]
+                ],
             ],
             // 7. PC Peripherals & Accessories
             [
@@ -126,7 +126,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Logitech MX Mechanical Wireless Illuminated Keyboard', 'brand' => 'logitech', 'sub' => 0, 'price' => 18900, 'sale' => 17500, 'stock' => 16, 'specs' => ['Switches' => 'Low Profile Tactile Quiet switches', 'Backlit' => 'Smart illumination auto hand detection', 'Multi-Device' => 'Pair up to 3 devices via Bluetooth/Bolt', 'Battery' => '15 days or up to 10 months backlighting off']],
                     ['title' => 'Razer Gigantus V2 Large Gaming Mouse Pad', 'brand' => 'razer', 'sub' => 2, 'price' => 2200, 'sale' => 1950, 'stock' => 50, 'specs' => ['Size' => '450 x 400 x 3 mm Large', 'Fabric' => 'Textured micro-weave cloth surface', 'Speed' => 'Optimized across all mouse sensors', 'Rubber' => 'High-density rubber foam with anti-slip base']],
                     ['title' => 'Anker 7-in-1 USB-C Hub with 4K HDMI', 'brand' => 'anker', 'sub' => 3, 'price' => 4999, 'sale' => 4499, 'stock' => 40, 'specs' => ['Connectivity' => '4K HDMI, 100W Power Delivery, SD/TF Card, 2x USB 3.0', 'HDMI' => 'Up to 4K @ 60Hz', 'Housing' => 'Sleek aluminum alloy body', 'Weight' => '75g pocket sized']],
-                ]
+                ],
             ],
             // 8. Networking & WiFi
             [
@@ -143,7 +143,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'ASUS RT-AX86U Pro Dual-Band WiFi 6 Gaming Router', 'brand' => 'asus', 'sub' => 0, 'price' => 28000, 'sale' => 25999, 'stock' => 12, 'specs' => ['Speed' => 'AX5700 up to 5700 Mbps', 'Port' => '2.5G port for ultra-fast multi-gigabit connections', 'Mobile Gaming' => 'Mobile Game Mode minimizes lag in ASUS app', 'Security' => 'AiProtection Pro powered by Trend Micro']],
                     ['title' => 'TP-Link RE315 AC1200 OneMesh WiFi Range Extender', 'brand' => 'tp-link', 'sub' => 2, 'price' => 3200, 'sale' => 2899, 'stock' => 40, 'specs' => ['Speed' => 'AC1200 Dual Band (867 Mbps 5GHz + 300 Mbps 2.4GHz)', 'Indicator' => 'Smart signal indicator helps find optimal placement', 'Mode' => 'AP mode transforms wired connection into wireless', 'OneMesh' => 'Creates seamless mesh network']],
                     ['title' => 'TP-Link TL-SG105 5-Port Gigabit Desktop Switch', 'brand' => 'tp-link', 'sub' => 3, 'price' => 1950, 'sale' => 1750, 'stock' => 50, 'specs' => ['Ports' => '5x Gigabit RJ45 Shielded ports', 'Design' => 'Fanless quiet metal chassis', 'Setup' => 'Plug and play, no configuration needed', 'Buffer' => 'Non-blocking architecture']],
-                ]
+                ],
             ],
             // 9. Tablets & E-Readers
             [
@@ -161,7 +161,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Apple iPad mini 6th Gen 64GB Wi-Fi', 'brand' => 'apple', 'sub' => 0, 'price' => 64000, 'sale' => 59999, 'stock' => 15, 'specs' => ['Display' => '8.3" Liquid Retina compact display', 'Chip' => 'A15 Bionic with Neural Engine', 'Pencil' => 'Supports Apple Pencil 2nd gen magnetically', 'Design' => 'Edge-to-edge screen with Touch ID on top']],
                     ['title' => 'Wacom One 13.3-inch Pen Drawing Display', 'brand' => 'asus', 'sub' => 2, 'price' => 45000, 'sale' => 41999, 'stock' => 10, 'specs' => ['Screen' => '13.3" Full HD 1920x1080 paper-like friction', 'Pen' => 'Battery-free pen with 4096 pressure levels', 'Tilt' => '60-degree natural tilt recognition', 'OS' => 'Compatible with Windows, Mac, and Android']],
                     ['title' => 'BOOX Note Air3 B&W 10.3 E-Ink Tablet', 'brand' => 'xiaomi', 'sub' => 3, 'price' => 58000, 'sale' => 54000, 'stock' => 8, 'specs' => ['Display' => '10.3" Carta 1200 glass screen with flat-cover', 'OS' => 'Android 12 open system with Google Play Store', 'Stylus' => 'Magnetic stylus with digital eraser', 'Chassis' => 'Solid aluminum casing 5.8mm thin']],
-                ]
+                ],
             ],
             // 10. Smartwatches & Wearables
             [
@@ -179,7 +179,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Amazfit GTR 4 Smartwatch 14-Day Battery', 'brand' => 'xiaomi', 'sub' => 1, 'price' => 22000, 'sale' => 19999, 'stock' => 16, 'specs' => ['Display' => '1.43" HD AMOLED anti-glare glass bezel', 'GPS' => 'Dual-band circularly-polarized GPS tracking', 'Sports' => '150+ sports modes with smart recognition', 'Calls' => 'Bluetooth phone calls with speaker and mic']],
                     ['title' => 'Oura Ring Gen 3 Horizon Heritage Smart Ring', 'brand' => 'apple', 'sub' => 3, 'price' => 45000, 'sale' => 42000, 'stock' => 8, 'specs' => ['Form' => 'Sleek seamless circular titanium ring', 'Sensors' => 'Research-grade sensors: Sleep, Readiness, Activity', 'Battery' => 'Up to 7 days battery with wireless fast dock', 'Water' => 'Water resistant up to 100 meters']],
                     ['title' => 'Huawei Watch Fit 3 AMOLED Ultra-Slim', 'brand' => 'xiaomi', 'sub' => 0, 'price' => 15500, 'sale' => 13999, 'stock' => 25, 'specs' => ['Screen' => '1.82" AMOLED 1500 nits peak brightness', 'Profile' => '9.9mm ultra-thin lightweight body 26g', 'Management' => 'Comprehensive Calorie and Diet Management', 'Battery' => 'Up to 10 days max battery life']],
-                ]
+                ],
             ],
             // 11. Headphones & Audio
             [
@@ -197,7 +197,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Razer BlackShark V2 Pro Wireless Gaming Headset', 'brand' => 'razer', 'sub' => 2, 'price' => 21000, 'sale' => 18999, 'stock' => 16, 'specs' => ['Drivers' => 'Razer TriForce Titanium 50mm Drivers', 'Mic' => 'Razer HyperClear Super Wideband Mic', 'Wireless' => 'Razer HyperSpeed Wireless 2.4GHz + Bluetooth', 'Battery' => 'Up to 70 hours with Type-C fast charging']],
                     ['title' => 'Apple AirPods 3rd Gen with Lightning Case', 'brand' => 'apple', 'sub' => 0, 'price' => 21000, 'sale' => 19500, 'stock' => 28, 'specs' => ['Sound' => 'Personalized Spatial Audio with dynamic head tracking', 'EQ' => 'Adaptive EQ automatically tunes music to ears', 'Design' => 'Contoured design with force sensor controls', 'Resistance' => 'IPX4 sweat and water resistant']],
                     ['title' => 'Shure SE215 PRO Sound Isolating Earphones', 'brand' => 'sony', 'sub' => 3, 'price' => 13500, 'sale' => 12200, 'stock' => 20, 'specs' => ['Sound' => 'Clear sound and deep bass from single dynamic MicroDriver', 'Isolation' => 'Blocks up to 37 dB of ambient stage noise', 'Cable' => 'Detachable Kevlar-reinforced MMCX 3.5mm wire', 'Fit' => 'Secure over-the-ear configuration']],
-                ]
+                ],
             ],
             // 12. Speakers & Home Audio
             [
@@ -215,7 +215,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Sony SRS-XE300 X-Series Wireless Speaker', 'brand' => 'sony', 'sub' => 0, 'price' => 19500, 'sale' => 17500, 'stock' => 18, 'specs' => ['Diffuser' => 'Line-Shape Diffuser sends music across wider soundstage', 'Drivers' => 'X-Balanced Speaker Unit for rich, powerful sound', 'Durability' => 'IP67 waterproof, dustproof, and shockproof', 'Battery' => '24 hours battery with ambient noise sensing']],
                     ['title' => 'Sony HT-S20R 5.1ch Dolby Digital Soundbar', 'brand' => 'sony', 'sub' => 2, 'price' => 24500, 'sale' => 22500, 'stock' => 25, 'specs' => ['Setup' => 'Real 5.1ch surround sound with rear speakers & subwoofer', 'Power' => '400W total power output fills room with sound', 'Connectivity' => 'HDMI ARC, Optical, Analog and USB audio playback', 'Modes' => 'Auto Sound, Cinema, Music, Voice, Night modes']],
                     ['title' => 'JBL PartyBox Encore Essential with Mic', 'brand' => 'jbl', 'sub' => 3, 'price' => 34000, 'sale' => 31000, 'stock' => 14, 'specs' => ['Power' => '100W JBL Original Pro Sound with deep bass', 'Light' => 'Dynamic light show with fun ring strobe light', 'Playtime' => '6 hours battery life with splash-proof IPX4 design', 'Karaoke' => 'Wired microphone input with gain control']],
-                ]
+                ],
             ],
             // 13. Cameras & Photography
             [
@@ -232,7 +232,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'DJI RS 3 Pro Handheld Gimbal Stabilizer', 'brand' => 'dji', 'sub' => 3, 'price' => 95000, 'sale' => 88000, 'stock' => 8, 'specs' => ['Payload' => 'Tested 4.5 kg payload for cinema cameras', 'Arms' => 'Extended carbon fiber axis arms', 'Locks' => 'Automated axis locks for rapid balancing', 'LiDAR' => 'Supports LiDAR focusing system for manual lenses']],
                     ['title' => 'DJI Osmo Mobile 6 Smartphone Gimbal', 'brand' => 'dji', 'sub' => 3, 'price' => 17500, 'sale' => 15999, 'stock' => 25, 'specs' => ['Stabilization' => '3-axis smartphone stabilization', 'Extension' => 'Built-in 215mm extension rod for high/low angles', 'Tracking' => 'ActiveTrack 6.0 keeps subjects centered', 'Display' => 'Status panel displays battery and gimbal mode']],
                     ['title' => 'Sony Alpha A6700 APS-C Mirrorless Camera', 'brand' => 'sony', 'sub' => 0, 'price' => 158000, 'sale' => 148000, 'stock' => 11, 'specs' => ['Sensor' => '26MP APS-C Exmor R BSI CMOS Sensor', 'AI' => 'Dedicated AI processing unit for subject recognition', 'Video' => '4K 120p and 4K 60p oversampled from 6K', 'Body' => 'Comfortable grip with dust and moisture resistance']],
-                ]
+                ],
             ],
             // 14. Smart Home & IoT
             [
@@ -249,7 +249,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Xiaomi Smart Door Lock E10 Fingerprint', 'brand' => 'xiaomi', 'sub' => 3, 'price' => 16500, 'sale' => 14999, 'stock' => 12, 'specs' => ['Unlock' => 'Fingerprint, password, NFC, Bluetooth, emergency key', 'Sensor' => 'High-precision semiconductor fingerprint scanner', 'Cylinder' => 'Class C straight ferrule lock cylinder for anti-pick security', 'Alert' => 'Integrated doorbell with tamper alarm notification']],
                     ['title' => 'Philips Hue Bridge Smart Light Hub', 'brand' => 'philips', 'sub' => 0, 'price' => 7200, 'sale' => 6499, 'stock' => 20, 'specs' => ['Capacity' => 'Connect and control up to 50 lights and 12 accessories', 'Automations' => 'Create timers, routines and sunrise/sunset schedules', 'Matter' => 'Matter-ready update for universal smart home ecosystem', 'Zigbee' => 'Ultra-reliable Zigbee mesh protocol']],
                     ['title' => 'Google Nest Hub 2nd Gen Smart Display', 'brand' => 'google', 'sub' => 0, 'price' => 11500, 'sale' => 9999, 'stock' => 22, 'specs' => ['Screen' => '7-inch touchscreen smart home command center', 'Speaker' => 'Enhanced speaker with 50% more bass', 'Sensing' => 'Soli radar sleep sensing technology', 'Control' => 'Control thousands of compatible smart lights and cameras']],
-                ]
+                ],
             ],
             // 15. Televisions & Video
             [
@@ -266,7 +266,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Google Chromecast with Google TV 4K Snow', 'brand' => 'google', 'sub' => 3, 'price' => 6500, 'sale' => 5750, 'stock' => 45, 'specs' => ['Resolution' => 'Up to 4K HDR at 60 fps with Dolby Vision & HDR10+', 'Interface' => 'Google TV groups content from all subscription apps', 'Remote' => 'Voice remote with dedicated Google Assistant button', 'Connectivity' => 'Wi-Fi 802.11ac and Bluetooth']],
                     ['title' => 'LG 50-inch UR7500 4K Smart TV with webOS', 'brand' => 'lg', 'sub' => 1, 'price' => 56000, 'sale' => 51999, 'stock' => 16, 'specs' => ['Screen' => '50" Real 4K display with HDR10 Pro', 'Processor' => 'α5 AI Processor 4K Gen6', 'Audio' => 'AI Sound with virtual 5.1 up-mix', 'Smart' => 'webOS 23 with Apple AirPlay 2 and HomeKit']],
                     ['title' => 'BenQ TK700STi 4K HDR Short Throw Gaming Projector', 'brand' => 'dell', 'sub' => 2, 'price' => 175000, 'sale' => 165000, 'stock' => 5, 'specs' => ['Resolution' => 'True 4K UHD 8.3 million pixels', 'Throw' => 'Short throw projects 100" screen from just 6.5 feet', 'Gaming' => 'World-leading low input lag 16ms at 4K 60Hz', 'Brightness' => '3000 ANSI Lumens for bright-room viewing']],
-                ]
+                ],
             ],
             // 16. Gaming Consoles & Gear
             [
@@ -283,7 +283,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Sony DualSense Edge Wireless Controller', 'brand' => 'sony', 'sub' => 3, 'price' => 24500, 'sale' => 22999, 'stock' => 11, 'specs' => ['Modularity' => 'Replaceable stick modules and changeable stick caps', 'Buttons' => 'Mappable back buttons and custom button mapping profiles', 'Stops' => 'Adjustable trigger travel distance stops', 'Case' => 'Carrying case with braided USB-C cable & lockable connector']],
                     ['title' => 'Razer Wolverine V2 Pro Wireless Controller for PS5', 'brand' => 'razer', 'sub' => 3, 'price' => 29500, 'sale' => 26999, 'stock' => 8, 'specs' => ['Wireless' => 'Razer HyperSpeed Wireless 2.4GHz ultra-fast connection', 'Switches' => 'Razer Mecha-Tactile Action Buttons with 3M click lifecycle', 'D-Pad' => '8-way microswitch D-pad for precise directional input', 'Custom' => '6 additional remappable triggers and bumpers']],
                     ['title' => 'Nintendo Switch Pro Controller Black', 'brand' => 'sony', 'sub' => 2, 'price' => 7800, 'sale' => 6999, 'stock' => 25, 'specs' => ['Grip' => 'Premium ergonomic grip for extended play sessions', 'Sensors' => 'Motion controls and HD rumble built-in', 'NFC' => 'Built-in amiibo functionality on NFC touchpoint', 'Battery' => 'Up to 40 hours battery life on single charge']],
-                ]
+                ],
             ],
             // 17. Men's Formal Wear
             [
@@ -301,7 +301,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'H&M Slim Fit Structured Blazer in Dark Blue', 'brand' => 'hm', 'sub' => 0, 'price' => 9500, 'sale' => 8499, 'stock' => 22, 'specs' => ['Fabric' => 'Textured birdseye woven fabric', 'Vents' => 'Double back vents for ease of movement', 'Buttons' => 'Two-button front fastening', 'Care' => 'Dry clean only']],
                     ['title' => 'Zara Man Herringbone Pattern Formal Shirt', 'brand' => 'zara', 'sub' => 1, 'price' => 4200, 'sale' => 3700, 'stock' => 32, 'specs' => ['Weave' => 'Subtle tonal herringbone weave', 'Material' => '100% Mercerized cotton', 'Collar' => 'Cutaway collar suitable for wide tie knots', 'Fit' => 'Regular tailored fit']],
                     ['title' => 'Fossil Steel & Onyx Cufflinks and Tie Clip Set', 'brand' => 'fossil', 'sub' => 3, 'price' => 4500, 'sale' => 3999, 'stock' => 25, 'specs' => ['Material' => 'Solid 316L stainless steel', 'Inlay' => 'Polished black natural onyx stone', 'Closure' => 'Bullet-back toggle clasp', 'Packaging' => 'Luxe velvet presentation gift box']],
-                ]
+                ],
             ],
             // 18. Men's Casual Wear
             [
@@ -319,7 +319,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Nike Dri-FIT Legend Short Sleeve Training Tee', 'brand' => 'nike', 'sub' => 0, 'price' => 2450, 'sale' => 2100, 'stock' => 55, 'specs' => ['Technology' => 'Dri-FIT technology wicks sweat for quick drying', 'Odor' => 'Anti-odor finish keeps garment fresher', 'Material' => '100% Lightweight polyester jersey', 'Feel' => 'Soft poly-cotton feel with athletic stretch']],
                     ['title' => 'Puma Evostripe Full-Zip Men\'s Track Jacket', 'brand' => 'puma', 'sub' => 3, 'price' => 5400, 'sale' => 4799, 'stock' => 28, 'specs' => ['Cut' => 'Evostripe articulated cutline for maximum flexibility', 'Fabric' => '77% Cotton, 23% Recycled polyester double knit', 'dryCELL' => 'Moisture-wicking dryCELL technology', 'Storage' => 'Concealed zip pockets for secure storage']],
                     ['title' => 'Levi\'s 511 Slim Fit Stretch Twill Chino Pants', 'brand' => 'levis', 'sub' => 2, 'price' => 5800, 'sale' => 5100, 'stock' => 32, 'specs' => ['Fit' => 'Modern slim with room to move', 'Stretch' => 'Levi\'s Flex advanced stretch technology', 'Rise' => 'Sits below waist, slim from hip to ankle', 'Versatility' => 'Perfect alternative to traditional blue jeans']],
-                ]
+                ],
             ],
             // 19. Men's Traditional Wear
             [
@@ -337,7 +337,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Anjan\'s Handloom Khadi Cotton Kurta Mustard', 'brand' => 'bata', 'sub' => 1, 'price' => 2850, 'sale' => 2499, 'stock' => 35, 'specs' => ['Fabric' => 'Natural handspun khadi cotton', 'Texture' => 'Authentic earthy slub texture', 'Buttons' => 'Natural coconut shell buttons', 'Season' => 'Year-round breathable everyday wear']],
                     ['title' => 'Aarong Premium Jacquard Festive Koti Navy', 'brand' => 'apex', 'sub' => 3, 'price' => 4200, 'sale' => 3700, 'stock' => 24, 'specs' => ['Design' => 'Self-patterned floral jacquard weave', 'Pockets' => 'Two welt pockets and chest pocket for handkerchief', 'Lining' => 'Fully lined with smooth satin interior', 'Closure' => 'Five front brass button fastening']],
                     ['title' => 'Apex Handcrafted Leather Nagra Khussa Shoes', 'brand' => 'apex', 'sub' => 0, 'price' => 3990, 'sale' => 3490, 'stock' => 30, 'specs' => ['Upper' => 'Supple genuine crust leather with ethnic threadwork', 'Sole' => 'Flexible handcrafted leather sole with rubber heel tip', 'Insole' => 'Cushioned leather footbed for wedding comfort', 'Style' => 'Curved traditional toe nagra silhouette']],
-                ]
+                ],
             ],
             // 20. Women's Traditional Wear
             [
@@ -355,7 +355,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Fabindia Tussar Silk Saree Hand Block Printed', 'brand' => 'bata', 'sub' => 0, 'price' => 9800, 'sale' => 8800, 'stock' => 14, 'specs' => ['Fabric' => 'Pure wild Tussar silk certified Silk Mark', 'Print' => 'Natural dye traditional wooden block prints', 'Texture' => 'Rich porous textured handfeel', 'Color' => 'Warm mustard beige and terracotta']],
                     ['title' => 'Libas Georgette Embroidered Kurta & Palazzo Set', 'brand' => 'zara', 'sub' => 1, 'price' => 4200, 'sale' => 3650, 'stock' => 28, 'specs' => ['Material' => 'Flowy poly-georgette with full inner lining', 'Bottom' => 'Matching flared wide-leg palazzo pants with elastic waist', 'Work' => 'Resham thread and sequin embroidery across front', 'Wash' => 'Gentle hand wash cold']],
                     ['title' => 'Aarong Embroidered Cotton Kurti Tunic Olive', 'brand' => 'apex', 'sub' => 2, 'price' => 2650, 'sale' => 2300, 'stock' => 40, 'specs' => ['Fabric' => '100% Combed handloom cotton', 'Work' => 'Ethnic floral embroidery on chest panel', 'Neck' => 'Mandarin collar with subtle keyhole slit', 'Fit' => 'Comfortable daily wear regular fit']],
-                ]
+                ],
             ],
             // 21. Women's Western Wear
             [
@@ -373,7 +373,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Zara Wide-Leg High Waist Flowy Trousers', 'brand' => 'zara', 'sub' => 2, 'price' => 4800, 'sale' => 4200, 'stock' => 28, 'specs' => ['Waist' => 'Extra high-waist with belt loops', 'Cut' => 'Wide palazzo leg with front pleats', 'Fabric' => 'Drapey wrinkle-resistant twill', 'Pockets' => 'Side slit pockets and false rear welts']],
                     ['title' => 'H&M Sleeveless Satin Slip Midi Dress Emerald', 'brand' => 'hm', 'sub' => 0, 'price' => 3450, 'sale' => 2999, 'stock' => 22, 'specs' => ['Material' => 'Heavy fluid satin with lustrous glossy sheen', 'Neckline' => 'Cowl draped neckline with adjustable spaghetti straps', 'Cut' => 'Bias cut hugs curves naturally', 'Care' => 'Machine wash delicate']],
                     ['title' => 'Zara Striped Knit Boatneck Top Navy White', 'brand' => 'zara', 'sub' => 1, 'price' => 2800, 'sale' => 2400, 'stock' => 38, 'specs' => ['Style' => 'Timeless French Breton nautical stripes', 'Neck' => 'Wide bateau boatneck collar', 'Fabric' => 'Breathable 100% cotton knit', 'Sleeves' => 'Three-quarter sleeves with side vents']],
-                ]
+                ],
             ],
             // 22. Women's Activewear & Lounge
             [
@@ -391,7 +391,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'H&M Cozy Waffle-Knit Hoodie & Shorts Lounge Set', 'brand' => 'hm', 'sub' => 2, 'price' => 3200, 'sale' => 2799, 'stock' => 30, 'specs' => ['Texture' => 'Lightweight thermal waffle honeycomb knit', 'Top' => 'Cropped slouchy long-sleeve hoodie', 'Bottom' => 'Elastic waist matching lounge shorts with pockets', 'Fabric' => '60% Cotton, 40% Polyester blend']],
                     ['title' => 'Zara Silk-Blend Lace Trim Cami & Shorts Pajamas', 'brand' => 'zara', 'sub' => 3, 'price' => 3999, 'sale' => 3499, 'stock' => 20, 'specs' => ['Material' => 'Luxurious silk-satin blend with delicate eyelash lace', 'Top' => 'V-neck camisole with adjustable cross back straps', 'Bottom' => 'Flirty mini sleep shorts with scalloped lace hem', 'Care' => 'Hand wash recommended']],
                     ['title' => 'Adidas Essentials Linear French Terry Sweatpants', 'brand' => 'adidas', 'sub' => 2, 'price' => 3800, 'sale' => 3350, 'stock' => 35, 'specs' => ['Fabric' => '100% Cotton French terry soft interior', 'Logo' => 'Linear Adidas wordmark printed down lower left leg', 'Pockets' => 'Front slip-in hand pockets', 'Fit' => 'Slim tapered athletic fit']],
-                ]
+                ],
             ],
             // 23. Men's Footwear
             [
@@ -409,7 +409,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Bata Executive Slip-On Tassel Loafers Burgundy', 'brand' => 'bata', 'sub' => 1, 'price' => 4990, 'sale' => 4490, 'stock' => 26, 'specs' => ['Design' => 'Elegant dual front tassels with woven apron detail', 'Upper' => 'Supple polished box leather in deep burgundy', 'Sole' => 'Lightweight shock-absorbing EVA rubber outsole', 'Fit' => 'Easy slip-on with dual hidden elastic side gores']],
                     ['title' => 'Apex Men\'s Casual Genuine Leather Cross Sandals', 'brand' => 'apex', 'sub' => 3, 'price' => 2990, 'sale' => 2690, 'stock' => 45, 'specs' => ['Straps' => 'Wide crisscross oil-tanned leather straps', 'Footbed' => 'Molded anatomical cork footbed with suede cover', 'Sole' => 'Durable ribbed rubber tread for summer traction', 'Durability' => 'Double-stitched stress points for longevity']],
                     ['title' => 'Bata Power Walking Athletic Sneakers Navy', 'brand' => 'bata', 'sub' => 0, 'price' => 3290, 'sale' => 2890, 'stock' => 38, 'specs' => ['Upper' => 'Breathable air-mesh with synthetic support overlays', 'Midsole' => 'Ultra-cushioned Phylon foam absorbs road shock', 'Insole' => 'Removable memory-tech anti-odor footbed', 'Weight' => '220g featherweight daily walking shoe']],
-                ]
+                ],
             ],
             // 24. Women's Footwear
             [
@@ -427,7 +427,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Adidas Stan Smith Women\'s Originals Sneaker', 'brand' => 'adidas', 'sub' => 2, 'price' => 10500, 'sale' => 9499, 'stock' => 26, 'specs' => ['Upper' => 'Synthetic Primegreen upper with minimum 50% recycled', 'Perforations' => 'Perforated 3-Stripes along sides for ventilation', 'Heel Tab' => 'Signature green heel patch with Trefoil logo', 'Outsole' => 'Low-profile rubber cupsole']],
                     ['title' => 'Bata Comfit Everyday Wedge Comfort Sandals', 'brand' => 'bata', 'sub' => 0, 'price' => 2990, 'sale' => 2590, 'stock' => 40, 'specs' => ['Wedge' => '2-inch gradual wedge platform provides elevation', 'Footbed' => 'Contoured footbed cradles arch and heel', 'Upper' => 'Dual soft synthetic leather cross straps', 'Closure' => 'Elastic backstrap for secure effortless on/off']],
                     ['title' => 'Zara Suede Flat Chelsea Boots with Lug Sole', 'brand' => 'zara', 'sub' => 3, 'price' => 7800, 'sale' => 6999, 'stock' => 16, 'specs' => ['Upper' => '100% Split suede leather with water-repellent finish', 'Sole' => 'Heavy-duty track lug sole for bold urban look', 'Gores' => 'Elastic side panels and rear pull loop', 'Color' => 'Sandy camel beige']],
-                ]
+                ],
             ],
             // 25. Watches & Horology
             [
@@ -445,7 +445,7 @@ class ProductCatalogDefinitionPart1
                     ['title' => 'Orient Bambino Version 4 Automatic Dress Watch', 'brand' => 'seiko', 'sub' => 0, 'price' => 22000, 'sale' => 19999, 'stock' => 14, 'specs' => ['Movement' => 'Japanese automatic in-house caliber F6724', 'Crystal' => 'Vintage domed mineral crystal', 'Dial' => 'Sunburst ombre dial with slender polished hands', 'Case' => '42mm polished stainless steel with exhibition back']],
                     ['title' => 'Fossil Minimalist Slim Three-Hand Watch Black', 'brand' => 'fossil', 'sub' => 2, 'price' => 11500, 'sale' => 9999, 'stock' => 30, 'specs' => ['Case' => '44mm ultra-slim 8mm profile black plated case', 'Dial' => 'Matte black minimalist dial with clean stick indices', 'Strap' => '22mm black stainless steel mesh bracelet', 'Water' => '50-meter water resistance']],
                     ['title' => 'Casio G-Shock Mudmaster Twin Sensor GG-1000', 'brand' => 'casio', 'sub' => 3, 'price' => 32000, 'sale' => 28999, 'stock' => 12, 'specs' => ['Sensors' => 'Twin sensor: Digital compass and thermometer', 'Protection' => 'Mud Resistant gasket buttons prevent sand intrusion', 'Structure' => 'Heavy-duty resin and steel reinforced case', 'Light' => 'Super Illuminator auto high-brightness LED']],
-                ]
+                ],
             ],
         ];
     }

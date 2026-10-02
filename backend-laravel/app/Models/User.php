@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Http\Middleware\EnsureAdminAccess;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -64,7 +67,7 @@ class User extends Authenticatable
         'created_at' => 'datetime',
     ];
 
-    public function loginHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function loginHistories(): HasMany
     {
         return $this->hasMany(MemberLoginHistory::class, 'user_id')->orderByDesc('login_at');
     }
@@ -86,16 +89,17 @@ class User extends Authenticatable
 
     public function getOrCreateUnsubscribeToken(): string
     {
-        if (!$this->unsubscribe_token) {
-            $this->unsubscribe_token = \Illuminate\Support\Str::random(48);
+        if (! $this->unsubscribe_token) {
+            $this->unsubscribe_token = Str::random(48);
             $this->save();
         }
+
         return $this->unsubscribe_token;
     }
 
     public function isEmailVerified(): bool
     {
-        return !is_null($this->email_verified_at);
+        return ! is_null($this->email_verified_at);
     }
 
     /**
@@ -105,13 +109,13 @@ class User extends Authenticatable
     public function mustVerifyEmail(): bool
     {
         return (bool) $this->email_verification_required
-            && !empty($this->email)
-            && !$this->isEmailVerified();
+            && ! empty($this->email)
+            && ! $this->isEmailVerified();
     }
 
     public function isStaff(): bool
     {
-        return \App\Http\Middleware\EnsureAdminAccess::isAdminLike($this);
+        return EnsureAdminAccess::isAdminLike($this);
     }
 
     public function addresses()
@@ -137,5 +141,15 @@ class User extends Authenticatable
     public function expenses()
     {
         return $this->hasMany(Expense::class, 'member_id');
+    }
+
+    public function customerNotes()
+    {
+        return $this->hasMany(CustomerNote::class, 'customer_id')->orderByDesc('created_at');
+    }
+
+    public function emailLogs()
+    {
+        return $this->hasMany(EmailLog::class, 'user_id')->orderByDesc('created_at');
     }
 }

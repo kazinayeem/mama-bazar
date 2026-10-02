@@ -44,6 +44,7 @@ class ProductImageSeeder extends Seeder
 SVG;
 
         file_put_contents($path, $svg);
+
         return "/storage/brands/{$slug}.svg";
     }
 
@@ -83,6 +84,7 @@ SVG;
 SVG;
 
         file_put_contents($path, $svg);
+
         return "/storage/categories/{$slug}.svg";
     }
 
@@ -140,6 +142,7 @@ SVG;
 SVG;
 
         file_put_contents($path, $svg);
+
         return "/storage/products/{$filename}";
     }
 }

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('email_otps')) {
+        if (! Schema::hasTable('email_otps')) {
             Schema::create('email_otps', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->unsignedInteger('user_id')->nullable()->index();

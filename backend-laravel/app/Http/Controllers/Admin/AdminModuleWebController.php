@@ -4,19 +4,22 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminAuditLog;
+use App\Models\Category;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\MarketingIntegration;
-use App\Models\Category;
 use App\Models\Order;
 use App\Models\PolicyPage;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\AuditService;
 use App\Services\HomepageService;
+use App\Services\MemberInvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AdminModuleWebController extends Controller
 {
@@ -78,7 +81,7 @@ class AdminModuleWebController extends Controller
                 'action' => 'inventory.adjust',
                 'target_type' => Product::class,
                 'target_id' => $product->id,
-                'details' => trim(($validated['reason'] ?? '') !== '' ? "delta={$delta}; " . $validated['reason'] : "delta={$delta}"),
+                'details' => trim(($validated['reason'] ?? '') !== '' ? "delta={$delta}; ".$validated['reason'] : "delta={$delta}"),
                 'ip_address' => $request->ip(),
                 'user_agent' => mb_substr((string) $request->userAgent(), 0, 500),
                 'status' => 'success',
@@ -287,7 +290,7 @@ class AdminModuleWebController extends Controller
 
         $revenueTrend = Order::where('created_at', '>=', $since)
             ->whereNotIn('status', ['cancelled', 'refunded'])
-            ->selectRaw("date(created_at) as day, SUM(total_price) as total")
+            ->selectRaw('date(created_at) as day, SUM(total_price) as total')
             ->groupBy('day')
             ->orderBy('day')
             ->get();
@@ -438,7 +441,7 @@ class AdminModuleWebController extends Controller
         ]);
 
         $decoded = json_decode($request->input('config_json'), true);
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             return back()->with('error', 'Invalid homepage configuration.');
         }
 
@@ -511,78 +514,296 @@ class AdminModuleWebController extends Controller
 
     /* ── Team Members ────────────────────────────────────────── */
 
-    public function members()
-    {
-        $members = User::whereIn('role', ['admin', 'manager', 'editor', 'staff', 'super_admin'])
-            ->orWhereNotNull('custom_role')
-            ->orderByDesc('id')
-            ->get();
+    /* ── Team Members ────────────────────────────────────────── */
 
-        $auditLogs = AdminAuditLog::orderByDesc('id')->limit(50)->get();
+    public function members(Request $request)
+    {
+        $search = $request->query('search');
+        $roleFilter = $request->query('role');
+        $statusFilter = $request->query('status');
+
+        $query = User::where(function ($q) {
+            $q->whereIn('role', ['admin', 'manager', 'editor', 'staff', 'super_admin'])
+                ->orWhereNotNull('custom_role');
+        });
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($roleFilter) {
+            $query->where('role', $roleFilter);
+        }
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        $members = $query->withCount([
+            'loginHistories as total_successful_logins' => function ($q) {
+                $q->where('status', 'success');
+            },
+        ])->orderByDesc('id')->paginate(15)->withQueryString();
+
+        $auditLogs = AdminAuditLog::where(function ($q) {
+            $q->where('target_type', 'member')
+                ->orWhere('action', 'like', 'member.%')
+                ->orWhere('action', 'like', 'login.%');
+        })->orWhere(function ($q) {
+            $q->whereNull('target_type');
+        })->orderByDesc('id')->limit(50)->get();
 
         return view('admin.members.index', [
             'members' => $members,
             'auditLogs' => $auditLogs,
             'headerTitle' => 'Team Members',
+            'search' => $search,
+            'roleFilter' => $roleFilter,
+            'statusFilter' => $statusFilter,
+        ]);
+    }
+
+    public function showMember(Request $request, int $id)
+    {
+        $member = User::where(function ($q) {
+            $q->whereIn('role', ['admin', 'manager', 'editor', 'staff', 'super_admin'])
+                ->orWhereNotNull('custom_role');
+        })->findOrFail($id);
+
+        $statusFilter = $request->query('status');
+        $historyQuery = $member->loginHistories()->orderByDesc('login_at');
+
+        if ($statusFilter && in_array($statusFilter, ['success', 'failure'], true)) {
+            $historyQuery->where('status', $statusFilter);
+        }
+
+        $loginHistories = $historyQuery->paginate(15)->withQueryString();
+
+        $totalLogins = $member->loginHistories()->count();
+        $successfulLogins = $member->loginHistories()->where('status', 'success')->count();
+        $failedLogins = $member->loginHistories()->where('status', 'failure')->count();
+        $lastLogin = $member->loginHistories()->where('status', 'success')->latest('login_at')->first();
+
+        $auditLogs = AdminAuditLog::where(function ($q) use ($member) {
+            $q->where('target_id', (string) $member->id)
+                ->orWhere('actor_id', $member->id);
+        })->orderByDesc('id')->limit(30)->get();
+
+        return view('admin.members.show', [
+            'member' => $member,
+            'loginHistories' => $loginHistories,
+            'totalLogins' => $totalLogins,
+            'successfulLogins' => $successfulLogins,
+            'failedLogins' => $failedLogins,
+            'lastLogin' => $lastLogin,
+            'auditLogs' => $auditLogs,
+            'statusFilter' => $statusFilter,
+            'headerTitle' => "Team Member: {$member->name}",
         ]);
     }
 
     public function storeMember(Request $request)
     {
+        $currentUser = Auth::user();
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20|unique:users,phone',
-            'email' => 'nullable|email|max:255',
-            'password' => 'required|string|min:6',
+            'email' => 'required|email|max:255|unique:users,email',
             'role' => 'required|in:admin,manager,editor,staff',
             'status' => 'nullable|in:active,inactive',
         ]);
 
-        User::create([
+        if ($data['role'] === 'admin' && ! in_array($currentUser?->role, ['super_admin', 'admin'], true)) {
+            return back()->with('error', 'Only administrators can assign the Admin role.')->withInput();
+        }
+
+        $initialPassword = Str::random(32);
+
+        $member = User::create([
             'name' => $data['name'],
             'phone' => $data['phone'],
-            'email' => $data['email'] ?? null,
-            'password' => Hash::make($data['password']),
+            'email' => $data['email'],
+            'password' => Hash::make($initialPassword),
             'role' => $data['role'],
             'status' => $data['status'] ?? 'active',
+            'must_change_password' => true,
         ]);
 
-        return back()->with('success', 'Team member created.');
+        $inviteResult = MemberInvitationService::createInvitation($member, $currentUser);
+
+        AuditService::log([
+            'actorId' => $currentUser?->id,
+            'actorName' => $currentUser?->name ?? 'System',
+            'actorEmail' => $currentUser?->email,
+            'action' => 'member.created',
+            'targetType' => 'member',
+            'targetId' => (string) $member->id,
+            'ipAddress' => $request->ip(),
+            'userAgent' => $request->userAgent(),
+            'status' => 'success',
+            'details' => [
+                'name' => $member->name,
+                'email' => $member->email,
+                'role' => $member->role,
+                'invitation_sent' => $inviteResult['success'],
+            ],
+        ]);
+
+        if ($inviteResult['success']) {
+            return back()->with('success', "Team member created and invitation queued to {$member->email}.");
+        }
+
+        return back()->with('warning', "Team member created, but the invitation email could not be dispatched: {$inviteResult['message']}. You can resend the invitation from the member table.");
+    }
+
+    public function resendInvitation(Request $request, int $id)
+    {
+        $member = User::findOrFail($id);
+
+        if (empty($member->email)) {
+            return back()->with('error', 'Cannot send invitation: member has no email address.');
+        }
+
+        $inviteResult = MemberInvitationService::createInvitation($member, Auth::user());
+
+        if ($inviteResult['success']) {
+            return back()->with('success', "Invitation email queued to {$member->email}.");
+        }
+
+        return back()->with('error', "Failed to dispatch invitation email: {$inviteResult['message']}");
     }
 
     public function updateMember(Request $request, int $id)
     {
         $user = User::findOrFail($id);
+        $currentUser = Auth::user();
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20|unique:users,phone,'.$id,
-            'email' => 'nullable|email|max:255',
-            'password' => 'nullable|string|min:6',
+            'email' => 'required|email|max:255|unique:users,email,'.$id,
+            'password' => 'nullable|string|min:8',
             'role' => 'required|in:admin,manager,editor,staff',
             'status' => 'nullable|in:active,inactive',
         ]);
 
+        if ($data['role'] === 'admin' && $user->role !== 'admin' && ! in_array($currentUser?->role, ['super_admin', 'admin'], true)) {
+            return back()->with('error', 'Only administrators can elevate members to the Admin role.');
+        }
+
+        $oldRole = $user->role;
+        $oldStatus = $user->status;
+
         $user->name = $data['name'];
         $user->phone = $data['phone'];
-        $user->email = $data['email'] ?? null;
+        $user->email = $data['email'];
         $user->role = $data['role'];
         $user->status = $data['status'] ?? $user->status;
+
+        $passwordUpdated = false;
         if (! empty($data['password'])) {
             $user->password = Hash::make($data['password']);
+            $user->must_change_password = false;
+            $passwordUpdated = true;
         }
+
         $user->save();
+
+        if ($oldRole !== $user->role) {
+            AuditService::log([
+                'actorId' => $currentUser?->id,
+                'actorName' => $currentUser?->name ?? 'System',
+                'actorEmail' => $currentUser?->email,
+                'action' => 'member.role_changed',
+                'targetType' => 'member',
+                'targetId' => (string) $user->id,
+                'ipAddress' => $request->ip(),
+                'userAgent' => $request->userAgent(),
+                'status' => 'success',
+                'details' => ['old_role' => $oldRole, 'new_role' => $user->role],
+            ]);
+        }
+
+        if ($oldStatus !== $user->status) {
+            $action = $user->status === 'active' ? 'member.activated' : 'member.deactivated';
+            AuditService::log([
+                'actorId' => $currentUser?->id,
+                'actorName' => $currentUser?->name ?? 'System',
+                'actorEmail' => $currentUser?->email,
+                'action' => $action,
+                'targetType' => 'member',
+                'targetId' => (string) $user->id,
+                'ipAddress' => $request->ip(),
+                'userAgent' => $request->userAgent(),
+                'status' => 'success',
+                'details' => ['status' => $user->status],
+            ]);
+        }
+
+        if ($passwordUpdated) {
+            AuditService::log([
+                'actorId' => $currentUser?->id,
+                'actorName' => $currentUser?->name ?? 'System',
+                'actorEmail' => $currentUser?->email,
+                'action' => 'member.password_changed',
+                'targetType' => 'member',
+                'targetId' => (string) $user->id,
+                'ipAddress' => $request->ip(),
+                'userAgent' => $request->userAgent(),
+                'status' => 'success',
+                'details' => ['reason' => 'Direct admin password update'],
+            ]);
+        }
+
+        AuditService::log([
+            'actorId' => $currentUser?->id,
+            'actorName' => $currentUser?->name ?? 'System',
+            'actorEmail' => $currentUser?->email,
+            'action' => 'member.updated',
+            'targetType' => 'member',
+            'targetId' => (string) $user->id,
+            'ipAddress' => $request->ip(),
+            'userAgent' => $request->userAgent(),
+            'status' => 'success',
+            'details' => ['name' => $user->name, 'email' => $user->email, 'role' => $user->role],
+        ]);
 
         return back()->with('success', 'Team member updated.');
     }
 
-    public function destroyMember(int $id)
+    public function destroyMember(Request $request, int $id)
     {
         $user = User::findOrFail($id);
-        if ($user->id === Auth::id()) {
+        $currentUser = Auth::user();
+
+        if ($user->id === $currentUser?->id) {
             return back()->with('error', 'You cannot delete your own account.');
         }
+
+        if (in_array($user->role, ['super_admin', 'admin'], true) && ! in_array($currentUser?->role, ['super_admin', 'admin'], true)) {
+            return back()->with('error', 'You are not authorized to delete administrator accounts.');
+        }
+
+        AuditService::log([
+            'actorId' => $currentUser?->id,
+            'actorName' => $currentUser?->name ?? 'System',
+            'actorEmail' => $currentUser?->email,
+            'action' => 'member.removed',
+            'targetType' => 'member',
+            'targetId' => (string) $user->id,
+            'ipAddress' => $request->ip(),
+            'userAgent' => $request->userAgent(),
+            'status' => 'success',
+            'details' => ['name' => $user->name, 'email' => $user->email, 'role' => $user->role],
+        ]);
+
         $user->delete();
 
-        return back()->with('success', 'Team member removed.');
+        return redirect()->route('admin.members.index')->with('success', 'Team member removed.');
     }
 }

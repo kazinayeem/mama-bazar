@@ -2,19 +2,19 @@
 
 namespace App\Services;
 
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Models\ProductSpec;
-use App\Models\ProductRelation;
-use App\Models\Category;
 use App\Models\Brand;
-use App\Models\Vendor;
-use App\Models\Supplier;
+use App\Models\Category;
 use App\Models\Collection;
+use App\Models\Color;
+use App\Models\Product;
+use App\Models\ProductRelation;
+use App\Models\ProductSpec;
+use App\Models\ProductVariant;
 use App\Models\Review;
-use App\Services\HtmlSanitizer;
-use Illuminate\Support\Facades\DB;
+use App\Models\Supplier;
+use App\Models\Vendor;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class ProductService
 {
@@ -46,17 +46,19 @@ class ProductService
                 $query->where('id', '!=', $excludeId);
             }
 
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 return $candidate;
             }
 
-            if (!$autoSuffix) {
+            if (! $autoSuffix) {
                 throw new Exception("Slug \"{$slug}\" is already in use by another product. Please choose a different slug.", 409);
             }
 
             $candidate = "{$slug}-{$suffix}";
             $suffix++;
-            if ($suffix > 1000) return $candidate;
+            if ($suffix > 1000) {
+                return $candidate;
+            }
         }
     }
 
@@ -209,7 +211,7 @@ class ProductService
         ];
 
         if ($withChildren || $product->relationLoaded('variants')) {
-            $formatted['variants'] = $product->variants->map(fn($v) => [
+            $formatted['variants'] = $product->variants->map(fn ($v) => [
                 'id' => $v->id,
                 'name' => $v->name,
                 'options' => $v->options ?: [],
@@ -241,7 +243,7 @@ class ProductService
         }
 
         if ($withChildren || $product->relationLoaded('specs')) {
-            $formatted['specs'] = $product->specs->map(fn($s) => [
+            $formatted['specs'] = $product->specs->map(fn ($s) => [
                 'id' => $s->id,
                 'label' => $s->label,
                 'value' => $s->value,
@@ -254,7 +256,7 @@ class ProductService
             $relatedProducts = $relatedIds
                 ? Product::whereIn('id', $relatedIds)->get()->keyBy('id')
                 : collect();
-            $formatted['relations'] = $product->productRelations->map(fn($r) => [
+            $formatted['relations'] = $product->productRelations->map(fn ($r) => [
                 'id' => $r->id,
                 'type' => $r->type,
                 'relatedProductId' => $r->related_product_id,
@@ -285,7 +287,7 @@ class ProductService
     {
         $active = array_values(array_filter(
             $variants,
-            fn($v) => ($v['status'] ?? 'active') !== 'inactive' && ($v['availability'] ?? true) !== false
+            fn ($v) => ($v['status'] ?? 'active') !== 'inactive' && ($v['availability'] ?? true) !== false
         ));
 
         $keyOrder = [];
@@ -293,7 +295,7 @@ class ProductService
 
         foreach ($active as $variant) {
             $opts = $variant['options'] ?? [];
-            if (!is_array($opts)) {
+            if (! is_array($opts)) {
                 continue;
             }
             foreach ($opts as $key => $value) {
@@ -302,18 +304,18 @@ class ProductService
                 if ($key === '' || $value === '') {
                     continue;
                 }
-                if (!isset($valuesByKey[$key])) {
+                if (! isset($valuesByKey[$key])) {
                     $keyOrder[] = $key;
                     $valuesByKey[$key] = [];
                 }
-                if (!isset($valuesByKey[$key][$value])) {
+                if (! isset($valuesByKey[$key][$value])) {
                     $valuesByKey[$key][$value] = true;
                 }
             }
         }
 
         // Fallback axes from product-level fields when variants don't declare them
-        if (empty($valuesByKey['Color']) && empty($valuesByKey['color']) && !empty($colorOptions)) {
+        if (empty($valuesByKey['Color']) && empty($valuesByKey['color']) && ! empty($colorOptions)) {
             $keyOrder[] = 'Color';
             $valuesByKey['Color'] = [];
             foreach ($colorOptions as $c) {
@@ -323,7 +325,7 @@ class ProductService
                 }
             }
         }
-        if (empty($valuesByKey['Size']) && empty($valuesByKey['size']) && !empty($sizeOptions)) {
+        if (empty($valuesByKey['Size']) && empty($valuesByKey['size']) && ! empty($sizeOptions)) {
             $keyOrder[] = 'Size';
             $valuesByKey['Size'] = [];
             foreach ($sizeOptions as $s) {
@@ -340,7 +342,7 @@ class ProductService
 
         $colorMeta = [];
         foreach ($colorOptions as $c) {
-            if (!is_array($c) || empty($c['name'])) {
+            if (! is_array($c) || empty($c['name'])) {
                 continue;
             }
             $colorMeta[mb_strtolower((string) $c['name'])] = [
@@ -352,11 +354,11 @@ class ProductService
         // Enrich Color-like groups with hex from catalog when available
         $catalogHex = [];
         try {
-            if (class_exists(\App\Models\Color::class)) {
-                foreach (\App\Models\Color::query()->get(['name', 'hex', 'display_name']) as $row) {
-                    if (!empty($row->hex)) {
+            if (class_exists(Color::class)) {
+                foreach (Color::query()->get(['name', 'hex', 'display_name']) as $row) {
+                    if (! empty($row->hex)) {
                         $catalogHex[mb_strtolower((string) $row->name)] = $row->hex;
-                        if (!empty($row->display_name)) {
+                        if (! empty($row->display_name)) {
                             $catalogHex[mb_strtolower((string) $row->display_name)] = $row->hex;
                         }
                         // slug-ish lookup: "Space Black" ↔ "space-black"
@@ -389,7 +391,7 @@ class ProductService
                     if ($hex) {
                         $entry['value'] = $hex;
                     }
-                    if (!empty($meta['image'])) {
+                    if (! empty($meta['image'])) {
                         $entry['image'] = $meta['image'];
                     }
                 }
@@ -409,7 +411,9 @@ class ProductService
 
     public static function fetchRatingMap(array $productIds): array
     {
-        if (empty($productIds)) return [];
+        if (empty($productIds)) {
+            return [];
+        }
 
         $ratings = Review::select('product_id', DB::raw('AVG(rating) as avg_rating'), DB::raw('COUNT(*) as total_count'))
             ->whereIn('product_id', $productIds)
@@ -424,6 +428,7 @@ class ProductService
                 'reviewCount' => (int) $r->total_count,
             ];
         }
+
         return $map;
     }
 
@@ -436,47 +441,51 @@ class ProductService
         $builder = Product::with(['brandRel', 'category', 'subCategory', 'childCategory', 'collection', 'vendor', 'supplierRel', 'variants']);
 
         // Status
-        if (!empty($query['status']) && $query['status'] !== 'all') {
+        if (! empty($query['status']) && $query['status'] !== 'all') {
             $builder->where('status', $query['status']);
         } elseif (empty($query['status']) && empty($query['productStatus'])) {
             $builder->where('status', 'active');
         }
 
-        if (!empty($query['productStatus']) && $query['productStatus'] !== 'all') {
+        if (! empty($query['productStatus']) && $query['productStatus'] !== 'all') {
             $builder->where('product_status', $query['productStatus']);
         }
 
         // Search (also accept legacy `q`)
         $searchTerm = $query['search'] ?? $query['q'] ?? null;
-        if (!empty($searchTerm)) {
-            $term = '%' . trim((string) $searchTerm) . '%';
+        if (! empty($searchTerm)) {
+            $term = '%'.trim((string) $searchTerm).'%';
             $builder->where(function ($q) use ($term) {
                 $q->where('title', 'like', $term)
-                  ->orWhere('sku', 'like', $term)
-                  ->orWhere('barcode', 'like', $term)
-                  ->orWhere('brand', 'like', $term)
-                  ->orWhere('tags', 'like', $term)
-                  ->orWhere('description', 'like', $term)
-                  ->orWhere('short_description', 'like', $term)
-                  ->orWhereHas('brandRel', fn ($bq) => $bq->where('name', 'like', $term)->orWhere('slug', 'like', $term))
-                  ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', $term)->orWhere('slug', 'like', $term))
-                  ->orWhereHas('subCategory', fn ($cq) => $cq->where('name', 'like', $term)->orWhere('slug', 'like', $term));
+                    ->orWhere('sku', 'like', $term)
+                    ->orWhere('barcode', 'like', $term)
+                    ->orWhere('brand', 'like', $term)
+                    ->orWhere('tags', 'like', $term)
+                    ->orWhere('description', 'like', $term)
+                    ->orWhere('short_description', 'like', $term)
+                    ->orWhereHas('brandRel', fn ($bq) => $bq->where('name', 'like', $term)->orWhere('slug', 'like', $term))
+                    ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', $term)->orWhere('slug', 'like', $term))
+                    ->orWhereHas('subCategory', fn ($cq) => $cq->where('name', 'like', $term)->orWhere('slug', 'like', $term));
             });
         }
 
-        if (!empty($query['sku'])) $builder->where('sku', 'like', "%{$query['sku']}%");
-        if (!empty($query['barcode'])) $builder->where('barcode', 'like', "%{$query['barcode']}%");
+        if (! empty($query['sku'])) {
+            $builder->where('sku', 'like', "%{$query['sku']}%");
+        }
+        if (! empty($query['barcode'])) {
+            $builder->where('barcode', 'like', "%{$query['barcode']}%");
+        }
 
         // Category resolution (slug or numeric id) — includes children when parent selected
-        if (!empty($query['category']) && $query['category'] !== 'all') {
+        if (! empty($query['category']) && $query['category'] !== 'all') {
             if (is_numeric($query['category'])) {
                 $catId = (int) $query['category'];
                 $childIds = Category::where('parent_id', $catId)->pluck('id')->all();
                 $ids = array_values(array_unique(array_merge([$catId], $childIds)));
                 $builder->where(function ($q) use ($ids) {
                     $q->whereIn('category_id', $ids)
-                      ->orWhereIn('sub_category_id', $ids)
-                      ->orWhereIn('child_category_id', $ids);
+                        ->orWhereIn('sub_category_id', $ids)
+                        ->orWhereIn('child_category_id', $ids);
                 });
             } else {
                 $cat = Category::where('slug', $query['category'])->first();
@@ -485,36 +494,36 @@ class ProductService
                     $ids = array_values(array_unique(array_merge([$cat->id], $childIds)));
                     $builder->where(function ($q) use ($ids) {
                         $q->whereIn('category_id', $ids)
-                          ->orWhereIn('sub_category_id', $ids)
-                          ->orWhereIn('child_category_id', $ids);
+                            ->orWhereIn('sub_category_id', $ids)
+                            ->orWhereIn('child_category_id', $ids);
                     });
                 }
             }
         }
 
         // Explicit subcategory filter
-        if (!empty($query['subcategory']) && $query['subcategory'] !== 'all') {
+        if (! empty($query['subcategory']) && $query['subcategory'] !== 'all') {
             if (is_numeric($query['subcategory'])) {
                 $subId = (int) $query['subcategory'];
                 $builder->where(function ($q) use ($subId) {
                     $q->where('sub_category_id', $subId)
-                      ->orWhere('child_category_id', $subId)
-                      ->orWhere('category_id', $subId);
+                        ->orWhere('child_category_id', $subId)
+                        ->orWhere('category_id', $subId);
                 });
             } else {
                 $sub = Category::where('slug', $query['subcategory'])->first();
                 if ($sub) {
                     $builder->where(function ($q) use ($sub) {
                         $q->where('sub_category_id', $sub->id)
-                          ->orWhere('child_category_id', $sub->id)
-                          ->orWhere('category_id', $sub->id);
+                            ->orWhere('child_category_id', $sub->id)
+                            ->orWhere('category_id', $sub->id);
                     });
                 }
             }
         }
 
         // Brand resolution (slug or numeric id)
-        if (!empty($query['brand']) && $query['brand'] !== 'all') {
+        if (! empty($query['brand']) && $query['brand'] !== 'all') {
             if (is_numeric($query['brand'])) {
                 $builder->where('brand_id', (int) $query['brand']);
             } else {
@@ -528,39 +537,45 @@ class ProductService
         }
 
         // Supplier resolution (slug or numeric id)
-        if (!empty($query['supplier']) && $query['supplier'] !== 'all') {
+        if (! empty($query['supplier']) && $query['supplier'] !== 'all') {
             if (is_numeric($query['supplier'])) {
                 $builder->where('supplier_id', (int) $query['supplier']);
             } else {
                 $supplier = Supplier::where('slug', $query['supplier'])->first();
-                if ($supplier) $builder->where('supplier_id', $supplier->id);
+                if ($supplier) {
+                    $builder->where('supplier_id', $supplier->id);
+                }
             }
         }
 
         // Vendor resolution (slug or numeric id)
-        if (!empty($query['vendor']) && $query['vendor'] !== 'all') {
+        if (! empty($query['vendor']) && $query['vendor'] !== 'all') {
             if (is_numeric($query['vendor'])) {
                 $builder->where('vendor_id', (int) $query['vendor']);
             } else {
                 $vendor = Vendor::where('slug', $query['vendor'])->first();
-                if ($vendor) $builder->where('vendor_id', $vendor->id);
+                if ($vendor) {
+                    $builder->where('vendor_id', $vendor->id);
+                }
             }
         }
 
         // Collection resolution (slug or numeric id)
-        if (!empty($query['collection']) && $query['collection'] !== 'all') {
+        if (! empty($query['collection']) && $query['collection'] !== 'all') {
             if (is_numeric($query['collection'])) {
                 $builder->where('collection_id', (int) $query['collection']);
             } else {
                 $col = Collection::where('slug', $query['collection'])->first();
-                if ($col) $builder->where('collection_id', $col->id);
+                if ($col) {
+                    $builder->where('collection_id', $col->id);
+                }
             }
         }
 
         // Stock filter
-        if (!empty($query['stock']) && $query['stock'] !== 'all') {
+        if (! empty($query['stock']) && $query['stock'] !== 'all') {
             if ($query['stock'] === 'in_stock') {
-                $builder->where(fn($q) => $q->where('stock', '>', 0)->orWhere('unlimited_stock', true));
+                $builder->where(fn ($q) => $q->where('stock', '>', 0)->orWhere('unlimited_stock', true));
             } elseif ($query['stock'] === 'low_stock') {
                 $builder->where('stock', '>', 0)->whereRaw('stock <= COALESCE(low_stock_alert, 5)');
             } elseif ($query['stock'] === 'out_of_stock') {
@@ -571,47 +586,55 @@ class ProductService
         }
 
         // Min/Max price
-        if (isset($query['minPrice']) && $query['minPrice'] !== '') $builder->where('price', '>=', (float) $query['minPrice']);
-        if (isset($query['maxPrice']) && $query['maxPrice'] !== '') $builder->where('price', '<=', (float) $query['maxPrice']);
+        if (isset($query['minPrice']) && $query['minPrice'] !== '') {
+            $builder->where('price', '>=', (float) $query['minPrice']);
+        }
+        if (isset($query['maxPrice']) && $query['maxPrice'] !== '') {
+            $builder->where('price', '<=', (float) $query['maxPrice']);
+        }
 
         // Date ranges
-        if (!empty($query['dateFrom'])) $builder->where('created_at', '>=', $query['dateFrom']);
-        if (!empty($query['dateTo'])) $builder->where('created_at', '<=', $query['dateTo']);
+        if (! empty($query['dateFrom'])) {
+            $builder->where('created_at', '>=', $query['dateFrom']);
+        }
+        if (! empty($query['dateTo'])) {
+            $builder->where('created_at', '<=', $query['dateTo']);
+        }
 
         // In Stock boolean (React uses stock=1)
-        if ((!empty($query['inStock']) && ($query['inStock'] === 'true' || $query['inStock'] === '1' || $query['inStock'] === true))
+        if ((! empty($query['inStock']) && ($query['inStock'] === 'true' || $query['inStock'] === '1' || $query['inStock'] === true))
             || (isset($query['stock']) && $query['stock'] === '1')) {
-            $builder->where(fn($q) => $q->where('stock', '>', 0)->orWhere('unlimited_stock', true));
+            $builder->where(fn ($q) => $q->where('stock', '>', 0)->orWhere('unlimited_stock', true));
         }
 
         // On sale (React sale=1)
-        if ((!empty($query['sale']) && ($query['sale'] === '1' || $query['sale'] === 'true' || $query['sale'] === true))
-            || (!empty($query['onSale']) && $query['onSale'])) {
+        if ((! empty($query['sale']) && ($query['sale'] === '1' || $query['sale'] === 'true' || $query['sale'] === true))
+            || (! empty($query['onSale']) && $query['onSale'])) {
             $builder->where(function ($q) {
                 $q->where(function ($qq) {
                     $qq->whereNotNull('sale_price')->where('sale_price', '>', 0)->whereColumn('sale_price', '<', 'price');
                 })->orWhere('discount', '>', 0)
-                  ->orWhere('is_flash_sale', true)
-                  ->orWhere('is_hot_deal', true);
+                    ->orWhere('is_flash_sale', true)
+                    ->orWhere('is_hot_deal', true);
             });
         }
 
         // Color / size attribute filters (JSON columns when populated)
-        if (!empty($query['color'])) {
+        if (! empty($query['color'])) {
             $color = trim((string) $query['color']);
             $builder->where(function ($q) use ($color) {
-                $q->where('color_options', 'like', '%' . $color . '%');
+                $q->where('color_options', 'like', '%'.$color.'%');
             });
         }
-        if (!empty($query['size'])) {
+        if (! empty($query['size'])) {
             $size = trim((string) $query['size']);
             $builder->where(function ($q) use ($size) {
-                $q->where('size_options', 'like', '%' . $size . '%');
+                $q->where('size_options', 'like', '%'.$size.'%');
             });
         }
 
         // Minimum rating (only meaningful when reviews exist)
-        if (!empty($query['rating']) || !empty($query['minRating'])) {
+        if (! empty($query['rating']) || ! empty($query['minRating'])) {
             $minRating = (float) ($query['rating'] ?? $query['minRating']);
             if ($minRating > 0) {
                 $builder->whereIn('id', function ($sub) use ($minRating) {
@@ -625,7 +648,7 @@ class ProductService
         }
 
         // Labels
-        if (!empty($query['label']) && $query['label'] !== 'all') {
+        if (! empty($query['label']) && $query['label'] !== 'all') {
             $labelField = match ($query['label']) {
                 'featured' => 'is_featured',
                 'trending' => 'is_trending',
@@ -662,7 +685,7 @@ class ProductService
 
         $ratingMap = self::fetchRatingMap($products->pluck('id')->toArray());
 
-        $formatted = $products->map(fn($p) => self::formatProduct($p, $ratingMap[$p->id] ?? null, false))->toArray();
+        $formatted = $products->map(fn ($p) => self::formatProduct($p, $ratingMap[$p->id] ?? null, false))->toArray();
 
         return [
             'data' => $formatted,
@@ -681,22 +704,24 @@ class ProductService
     public static function getById(int $id): ?array
     {
         $product = Product::with(self::DETAIL_RELATIONS)->find($id);
-        if (!$product) {
+        if (! $product) {
             return null;
         }
 
         $ratingMap = self::fetchRatingMap([$id]);
+
         return self::formatProduct($product, $ratingMap[$id] ?? null, true);
     }
 
     public static function getBySlug(string $slug): ?array
     {
         $product = Product::with(self::DETAIL_RELATIONS)->where('slug', $slug)->first();
-        if (!$product) {
+        if (! $product) {
             return null;
         }
 
         $ratingMap = self::fetchRatingMap([$product->id]);
+
         return self::formatProduct($product, $ratingMap[$product->id] ?? null, true);
     }
 
@@ -712,7 +737,7 @@ class ProductService
 
         $ratingMap = self::fetchRatingMap($products->pluck('id')->toArray());
 
-        return $products->map(fn($p) => self::formatProduct($p, $ratingMap[$p->id] ?? null, false))->toArray();
+        return $products->map(fn ($p) => self::formatProduct($p, $ratingMap[$p->id] ?? null, false))->toArray();
     }
 
     /**
@@ -723,12 +748,12 @@ class ProductService
     public static function syncVariants(int $productId, array $variants): void
     {
         $existing = ProductVariant::where('product_id', $productId)->get()->keyBy('id');
-        $existingIds = $existing->keys()->map(fn($id) => (int) $id)->all();
+        $existingIds = $existing->keys()->map(fn ($id) => (int) $id)->all();
         $existingSet = array_flip($existingIds);
         $keptIds = [];
 
         foreach ($variants as $v) {
-            if (!is_array($v) || empty($v['name'])) {
+            if (! is_array($v) || empty($v['name'])) {
                 continue;
             }
 
@@ -736,7 +761,7 @@ class ProductService
             if (is_string($options)) {
                 $options = json_decode($options, true) ?: [];
             }
-            if (!is_array($options)) {
+            if (! is_array($options)) {
                 $options = [];
             }
 
@@ -750,7 +775,7 @@ class ProductService
             }
 
             $images = $v['images'] ?? [];
-            if (!is_array($images)) {
+            if (! is_array($images)) {
                 $images = [];
             }
             if ($thumbnail && empty($images)) {
@@ -794,7 +819,7 @@ class ProductService
         }
 
         $removed = array_diff($existingIds, $keptIds);
-        if (!empty($removed)) {
+        if (! empty($removed)) {
             foreach ($removed as $rid) {
                 $old = $existing->get($rid);
                 if ($old?->thumbnail) {
@@ -861,7 +886,7 @@ class ProductService
             'is_featured', 'is_trending', 'is_flash_sale', 'is_new_arrival',
             'is_best_seller', 'is_limited_edition', 'is_official', 'is_hot_deal', 'is_archived',
         ] as $boolField) {
-            if (array_key_exists($boolField, $data) && !is_bool($data[$boolField])) {
+            if (array_key_exists($boolField, $data) && ! is_bool($data[$boolField])) {
                 $data[$boolField] = filter_var($data[$boolField], FILTER_VALIDATE_BOOLEAN);
             }
         }
@@ -890,7 +915,7 @@ class ProductService
                 $data['stock_status'] = 'in_stock';
             } elseif ($stockVal !== null) {
                 if ($stockVal <= 0) {
-                    $data['stock_status'] = !empty($data['backorder']) ? 'on_backorder' : 'out_of_stock';
+                    $data['stock_status'] = ! empty($data['backorder']) ? 'on_backorder' : 'out_of_stock';
                 } elseif (isset($data['low_stock_alert']) && $stockVal <= (int) $data['low_stock_alert']) {
                     $data['stock_status'] = 'low_stock';
                 } else {
@@ -917,15 +942,15 @@ class ProductService
 
             $product = Product::create($data);
 
-            if (!empty($variants)) {
+            if (! empty($variants)) {
                 self::syncVariants($product->id, $variants);
-                $variantStock = collect($variants)->sum(fn($v) => (int) ($v['stock'] ?? 0));
-                if (!isset($data['stock']) || (int) ($data['stock'] ?? 0) === 0) {
+                $variantStock = collect($variants)->sum(fn ($v) => (int) ($v['stock'] ?? 0));
+                if (! isset($data['stock']) || (int) ($data['stock'] ?? 0) === 0) {
                     $product->update(['stock' => $variantStock]);
                 }
             }
 
-            if (!empty($specs)) {
+            if (! empty($specs)) {
                 foreach ($specs as $index => $s) {
                     ProductSpec::create([
                         'product_id' => $product->id,
@@ -936,7 +961,7 @@ class ProductService
                 }
             }
 
-            if (!empty($relations)) {
+            if (! empty($relations)) {
                 foreach ($relations as $r) {
                     ProductRelation::create([
                         'product_id' => $product->id,
@@ -987,8 +1012,8 @@ class ProductService
 
             if ($variants !== null) {
                 self::syncVariants($id, $variants);
-                if (!empty($variants)) {
-                    $variantStock = collect($variants)->sum(fn($v) => (int) ($v['stock'] ?? 0));
+                if (! empty($variants)) {
+                    $variantStock = collect($variants)->sum(fn ($v) => (int) ($v['stock'] ?? 0));
                     $product->update(['stock' => $variantStock]);
                 }
             } else {
@@ -1033,6 +1058,7 @@ class ProductService
     {
         $product = Product::findOrFail($id);
         $product->delete();
+
         return true;
     }
 
@@ -1057,8 +1083,9 @@ class ProductService
     public static function toggleFeatured(int $id, ?bool $featured = null): bool
     {
         $product = Product::findOrFail($id);
-        $product->is_featured = $featured !== null ? $featured : !$product->is_featured;
+        $product->is_featured = $featured !== null ? $featured : ! $product->is_featured;
         $product->save();
+
         return (bool) $product->is_featured;
     }
 
@@ -1113,13 +1140,17 @@ class ProductService
         }
 
         $headers = str_getcsv(array_shift($lines));
-        $headers = array_map(fn($h) => strtolower(trim(str_replace(['"', "'"], '', $h))), $headers);
+        $headers = array_map(fn ($h) => strtolower(trim(str_replace(['"', "'"], '', $h))), $headers);
 
         $imported = 0;
         foreach ($lines as $line) {
-            if (empty(trim($line))) continue;
+            if (empty(trim($line))) {
+                continue;
+            }
             $row = str_getcsv($line);
-            if (count($row) < 2) continue;
+            if (count($row) < 2) {
+                continue;
+            }
 
             $data = [];
             foreach ($headers as $idx => $header) {
@@ -1128,9 +1159,11 @@ class ProductService
 
             $title = $data['title'] ?? $data['name'] ?? null;
             $price = $data['price'] ?? null;
-            if (!$title || !$price) continue;
+            if (! $title || ! $price) {
+                continue;
+            }
 
-            $slug = SlugService::toAsciiSlug($title) . '-' . substr(uniqid(), -5);
+            $slug = SlugService::toAsciiSlug($title).'-'.substr(uniqid(), -5);
             $slug = self::ensureUniqueSlug($slug, ['autoSuffix' => true]);
 
             $rawDescription = $data['description'] ?? $data['desc'] ?? null;
@@ -1140,16 +1173,16 @@ class ProductService
                 'slug' => $slug,
                 'description' => HtmlSanitizer::clean($rawDescription),
                 'price' => (float) $price,
-                'sale_price' => !empty($data['saleprice']) ? (float)$data['saleprice'] : null,
-                'discount' => !empty($data['discount']) ? (float)$data['discount'] : 0,
-                'cost_price' => !empty($data['costprice']) ? (float)$data['costprice'] : 0,
-                'sku' => !empty($data['sku']) ? $data['sku'] : null,
-                'barcode' => !empty($data['barcode']) ? $data['barcode'] : null,
-                'brand' => !empty($data['brand']) ? $data['brand'] : null,
-                'stock' => !empty($data['stock']) ? (int)$data['stock'] : 0,
+                'sale_price' => ! empty($data['saleprice']) ? (float) $data['saleprice'] : null,
+                'discount' => ! empty($data['discount']) ? (float) $data['discount'] : 0,
+                'cost_price' => ! empty($data['costprice']) ? (float) $data['costprice'] : 0,
+                'sku' => ! empty($data['sku']) ? $data['sku'] : null,
+                'barcode' => ! empty($data['barcode']) ? $data['barcode'] : null,
+                'brand' => ! empty($data['brand']) ? $data['brand'] : null,
+                'stock' => ! empty($data['stock']) ? (int) $data['stock'] : 0,
                 'product_status' => $data['productstatus'] ?? 'published',
                 'status' => ($data['productstatus'] ?? 'published') === 'published' ? 'active' : 'inactive',
-                'stock_status' => (!empty($data['stock']) && (int)$data['stock'] > 0) ? 'in_stock' : 'out_of_stock',
+                'stock_status' => (! empty($data['stock']) && (int) $data['stock'] > 0) ? 'in_stock' : 'out_of_stock',
             ]);
             $imported++;
         }
@@ -1161,7 +1194,7 @@ class ProductService
     {
         $original = Product::with(['variants', 'specs', 'productRelations'])->findOrFail($id);
 
-        $newTitle = "Copy of " . $original->title;
+        $newTitle = 'Copy of '.$original->title;
         $newSlug = self::ensureUniqueSlug(SlugService::toAsciiSlug($newTitle), ['autoSuffix' => true]);
 
         $productData = $original->toArray();

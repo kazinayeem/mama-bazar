@@ -8,7 +8,9 @@ use Tests\TestCase;
 
 class TmpEditAuditTest extends TestCase
 {
-    use RefreshDatabase;    public function test_audit_edit_controls(): void
+    use RefreshDatabase;
+
+    public function test_audit_edit_controls(): void
     {
         $admin = User::create(['name' => 'Admin', 'phone' => '01000000009', 'password' => bcrypt('x'), 'role' => 'admin', 'status' => 'active']);
         $pages = [
@@ -25,9 +27,9 @@ class TmpEditAuditTest extends TestCase
             $n = count($m[0]);
             // find edit hrefs / clicks
             preg_match_all('/<(?:a|button)[^>]*(?:href="#edit-[^"]*"|@click="[^"]*[Ee]dit[^"]*")[^>]*>/', $html, $m2);
-            fwrite(STDERR, "\n{$p} => {$code} | 'Edit' occurrences: {$n} | edit-controls: " . count($m2[0]) . "\n");
+            fwrite(STDERR, "\n{$p} => {$code} | 'Edit' occurrences: {$n} | edit-controls: ".count($m2[0])."\n");
             foreach (array_slice($m2[0], 0, 6) as $c) {
-                fwrite(STDERR, '   ' . substr($c, 0, 160) . "\n");
+                fwrite(STDERR, '   '.substr($c, 0, 160)."\n");
             }
         }
         $this->assertTrue(true);

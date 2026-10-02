@@ -45,7 +45,7 @@ class EmailOtp extends Model
 
     public function isVerified(): bool
     {
-        return !is_null($this->verified_at);
+        return ! is_null($this->verified_at);
     }
 
     public function hasExceededAttempts(): bool

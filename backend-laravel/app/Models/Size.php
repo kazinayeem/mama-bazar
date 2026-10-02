@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Size extends Model
 {
     protected $table = 'sizes';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Services\HomepageService;
 use App\Services\JwtService;
+use Illuminate\Http\Request;
 
 class HomepageController extends Controller
 {
@@ -19,6 +19,7 @@ class HomepageController extends Controller
                 return (int) $decoded['id'];
             }
         }
+
         return null;
     }
 
@@ -26,6 +27,7 @@ class HomepageController extends Controller
     {
         $userId = $this->getOptionalUserId($request);
         $data = HomepageService::getHomepage($userId);
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -37,18 +39,21 @@ class HomepageController extends Controller
     public function getConfig()
     {
         $data = HomepageService::getConfig();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function saveConfig(Request $request)
     {
         $data = HomepageService::saveConfig($request->all());
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function resetConfig()
     {
         $data = HomepageService::resetConfig();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -57,12 +62,14 @@ class HomepageController extends Controller
         $request->validate(['email' => 'required|email']);
         $data = HomepageService::subscribeNewsletter($request->input('email'), $request->input('source'));
         $status = $data['alreadySubscribed'] ? 200 : 201;
+
         return response()->json(['success' => true, 'data' => $data], $status);
     }
 
     public function getSubscribers()
     {
         $data = HomepageService::getSubscribers();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 }

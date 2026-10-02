@@ -2,70 +2,71 @@
 
 namespace App\Services;
 
-use App\Models\AdminBackup;
 use App\Models\AdminAuditLog;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
+use App\Models\AdminBackup;
 use DateTime;
 use DateTimeZone;
-use ZipArchive;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use ZipArchive;
 
 class BackupService
 {
     const TABLE_RESTORE_ORDER = [
-        "site_settings",
-        "admin_roles",
-        "admin_permissions",
-        "role_permissions",
-        "categories",
-        "brands",
-        "collections",
-        "colors",
-        "sizes",
-        "vendors",
-        "suppliers",
-        "shipping_methods",
-        "payment_methods",
-        "checkout_notices",
-        "policy_pages",
-        "banners",
-        "media_assets",
-        "expense_categories",
-        "users",
-        "user_addresses",
-        "user_permissions",
-        "products",
-        "product_variants",
-        "product_specs",
-        "product_relations",
-        "reviews",
-        "coupons",
-        "orders",
-        "order_items",
-        "order_status_history",
-        "marketing_integrations",
-        "tracking_logs",
-        "newsletters",
-        "contact_messages",
-        "expenses",
-        "costs",
-        "bookings",
-        "rentals",
-        "memos",
-        "admin_audit_logs",
+        'site_settings',
+        'admin_roles',
+        'admin_permissions',
+        'role_permissions',
+        'categories',
+        'brands',
+        'collections',
+        'colors',
+        'sizes',
+        'vendors',
+        'suppliers',
+        'shipping_methods',
+        'payment_methods',
+        'checkout_notices',
+        'policy_pages',
+        'banners',
+        'media_assets',
+        'expense_categories',
+        'users',
+        'user_addresses',
+        'user_permissions',
+        'products',
+        'product_variants',
+        'product_specs',
+        'product_relations',
+        'reviews',
+        'coupons',
+        'orders',
+        'order_items',
+        'order_status_history',
+        'marketing_integrations',
+        'tracking_logs',
+        'newsletters',
+        'contact_messages',
+        'expenses',
+        'costs',
+        'bookings',
+        'rentals',
+        'memos',
+        'admin_audit_logs',
     ];
 
     public static function getExpectedBackupPins(): array
     {
-        $now = new DateTime();
+        $now = new DateTime;
 
         $format = function (DateTime $dt, ?string $tzName = null): string {
             $cloned = clone $dt;
             if ($tzName) {
                 $cloned->setTimezone(new DateTimeZone($tzName));
             }
+
             return $cloned->format('dmY');
         };
 
@@ -75,13 +76,16 @@ class BackupService
             $format($now, 'UTC'),
         ]);
 
-        return array_values(array_filter($pins, fn($p) => strlen($p) === 8));
+        return array_values(array_filter($pins, fn ($p) => strlen($p) === 8));
     }
 
     public static function validateBackupPin(?string $inputPin): bool
     {
-        if (!$inputPin) return false;
+        if (! $inputPin) {
+            return false;
+        }
         $cleanPin = trim($inputPin);
+
         return in_array($cleanPin, self::getExpectedBackupPins(), true);
     }
 
@@ -103,7 +107,7 @@ class BackupService
     /**
      * Alias for listBackups() — returns collection as array-accessible items.
      */
-    public static function getBackupList(): \Illuminate\Database\Eloquent\Collection
+    public static function getBackupList(): Collection
     {
         return self::listBackups();
     }
@@ -114,7 +118,8 @@ class BackupService
     public static function getPinChallenge(): string
     {
         $now = new DateTime('now', new DateTimeZone('Asia/Dhaka'));
-        return 'Today\'s date in DDMMYYYY format (' . $now->format('d/m/Y') . ')';
+
+        return 'Today\'s date in DDMMYYYY format ('.$now->format('d/m/Y').')';
     }
 
     /**
@@ -133,16 +138,16 @@ class BackupService
     public static function createBackup(array $options = []): AdminBackup
     {
         $type = $options['type'] ?? 'manual';
-        $timestamp = (new DateTime())->format('Y-m-d\TH-i-s');
+        $timestamp = (new DateTime)->format('Y-m-d\TH-i-s');
         $filename = "mamabazar-backup-{$type}-{$timestamp}.zip";
 
         $storageDir = storage_path('app/backups');
-        if (!is_dir($storageDir)) {
+        if (! is_dir($storageDir)) {
             mkdir($storageDir, 0755, true);
         }
-        $zipPath = $storageDir . '/' . $filename;
+        $zipPath = $storageDir.'/'.$filename;
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             throw new Exception("Failed to create ZIP file at {$zipPath}");
         }
@@ -150,7 +155,7 @@ class BackupService
         $manifest = [
             'formatVersion' => '1.0',
             'application' => 'MamaBazar',
-            'createdAt' => (new DateTime())->format(DateTime::ATOM),
+            'createdAt' => (new DateTime)->format(DateTime::ATOM),
             'type' => $type,
             'tableCount' => 0,
             'totalRecords' => 0,
@@ -161,13 +166,16 @@ class BackupService
         $totalRecords = 0;
 
         foreach (self::TABLE_RESTORE_ORDER as $table) {
-            if (!Schema::hasTable($table)) continue;
+            if (! Schema::hasTable($table)) {
+                continue;
+            }
 
             $rows = DB::table($table)->get()->map(function ($row) use ($table) {
                 $item = (array) $row;
                 if ($table === 'users') {
                     unset($item['reset_token_hash'], $item['reset_token_expires_at']);
                 }
+
                 return $item;
             })->toArray();
 
@@ -229,8 +237,8 @@ class BackupService
 
     public static function restoreBackup(string $zipPath, array $actor = []): array
     {
-        if (!file_exists($zipPath)) {
-            throw new Exception("Backup archive file not found");
+        if (! file_exists($zipPath)) {
+            throw new Exception('Backup archive file not found');
         }
 
         // Safety backup first
@@ -243,15 +251,15 @@ class BackupService
             'userAgent' => $actor['userAgent'] ?? null,
         ]);
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
-            throw new Exception("Failed to open backup archive");
+            throw new Exception('Failed to open backup archive');
         }
 
         $manifestJson = $zip->getFromName('manifest.json');
-        if (!$manifestJson) {
+        if (! $manifestJson) {
             $zip->close();
-            throw new Exception("manifest.json missing from backup archive");
+            throw new Exception('manifest.json missing from backup archive');
         }
 
         $isMysql = DB::connection()->getDriverName() === 'mysql';
@@ -266,10 +274,14 @@ class BackupService
 
             foreach (self::TABLE_RESTORE_ORDER as $table) {
                 $tableJson = $zip->getFromName("database/{$table}.json");
-                if ($tableJson === false) continue;
+                if ($tableJson === false) {
+                    continue;
+                }
 
                 $rows = json_decode($tableJson, true);
-                if (!is_array($rows)) continue;
+                if (! is_array($rows)) {
+                    continue;
+                }
 
                 if (Schema::hasTable($table)) {
                     DB::table($table)->truncate();
@@ -337,8 +349,8 @@ class BackupService
     public static function deleteBackup(int $id, array $actor = []): bool
     {
         $backup = AdminBackup::find($id);
-        if (!$backup) {
-            throw new Exception("Backup not found", 404);
+        if (! $backup) {
+            throw new Exception('Backup not found', 404);
         }
 
         if (file_exists($backup->filepath)) {

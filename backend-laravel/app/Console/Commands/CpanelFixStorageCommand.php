@@ -92,7 +92,7 @@ class CpanelFixStorageCommand extends Command
             }
 
             if ($created) {
-                $this->info("  [OK] Created symlink: {$publicStorage} -> " . @readlink($publicStorage));
+                $this->info("  [OK] Created symlink: {$publicStorage} -> ".@readlink($publicStorage));
             } else {
                 $this->warn('  [!] Symlink creation is not permitted by this PHP/hosting environment.');
                 $this->info('  [+] Ensuring direct HTTP storage fallback route is active:');
@@ -105,7 +105,7 @@ class CpanelFixStorageCommand extends Command
         $this->newLine();
         $this->info('--> Storage diagnostics and repair completed successfully!');
         $this->line('    - Storage permissions: 0775');
-        $this->line('    - Symlink status: ' . (is_link($publicStorage) ? 'Active' : (is_dir($publicStorage) ? 'Physical Directory' : 'HTTP Fallback Mode')));
+        $this->line('    - Symlink status: '.(is_link($publicStorage) ? 'Active' : (is_dir($publicStorage) ? 'Physical Directory' : 'HTTP Fallback Mode')));
         $this->line('    - Fallback route: /storage/{path} active in web.php');
 
         return self::SUCCESS;

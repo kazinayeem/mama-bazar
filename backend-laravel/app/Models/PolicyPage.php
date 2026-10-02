@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PolicyPage extends Model
 {
     protected $table = 'policy_pages';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

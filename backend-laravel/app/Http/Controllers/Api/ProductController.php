@@ -3,57 +3,65 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\ProductService;
-use App\Services\MediaStorageService;
-use App\Services\SlugService;
 use App\Models\Product;
-use Exception;
+use App\Services\MediaStorageService;
+use App\Services\ProductService;
+use App\Services\SlugService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
     private function parseJson($val)
     {
-        if (is_array($val)) return $val;
-        if (is_string($val) && !empty($val)) {
+        if (is_array($val)) {
+            return $val;
+        }
+        if (is_string($val) && ! empty($val)) {
             $decoded = json_decode($val, true);
+
             return is_array($decoded) ? $decoded : [];
         }
+
         return [];
     }
 
     public function getAll(Request $request)
     {
         $result = ProductService::getAll($request->all());
+
         return response()->json(array_merge(['success' => true], $result));
     }
 
     public function getById($id)
     {
         $product = ProductService::getById((int) $id);
-        if (!$product) {
+        if (! $product) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $product]);
     }
 
     public function getBySlug($slug)
     {
         $product = ProductService::getBySlug($slug);
-        if (!$product) {
+        if (! $product) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $product]);
     }
 
     public function getRelated($id)
     {
         $product = Product::find($id);
-        if (!$product) {
+        if (! $product) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
         $related = ProductService::getRelated((int) $product->category_id, (int) $product->id);
+
         return response()->json(['success' => true, 'data' => $related]);
     }
 
@@ -79,7 +87,7 @@ class ProductController extends Controller
         $requestedSlug = $request->filled('slug') ? trim(strtolower($request->input('slug'))) : null;
         $generatedSlug = SlugService::toAsciiSlug($body['title']) ?: 'product';
         $slug = ProductService::ensureUniqueSlug($requestedSlug ?: $generatedSlug, [
-            'autoSuffix' => !$requestedSlug,
+            'autoSuffix' => ! $requestedSlug,
         ]);
 
         $data = [
@@ -98,14 +106,14 @@ class ProductController extends Controller
             'flash_sale_price' => isset($body['flashSalePrice']) && $body['flashSalePrice'] !== '' ? (float) $body['flashSalePrice'] : null,
             'wholesale_price' => isset($body['wholesalePrice']) && $body['wholesalePrice'] !== '' ? (float) $body['wholesalePrice'] : null,
             'dealer_price' => isset($body['dealerPrice']) && $body['dealerPrice'] !== '' ? (float) $body['dealerPrice'] : null,
-            'category_id' => !empty($body['categoryId']) ? (int) $body['categoryId'] : null,
-            'sub_category_id' => !empty($body['subCategoryId']) ? (int) $body['subCategoryId'] : null,
-            'child_category_id' => !empty($body['childCategoryId']) ? (int) $body['childCategoryId'] : null,
-            'collection_id' => !empty($body['collectionId']) ? (int) $body['collectionId'] : null,
-            'brand_id' => !empty($body['brandId']) ? (int) $body['brandId'] : null,
+            'category_id' => ! empty($body['categoryId']) ? (int) $body['categoryId'] : null,
+            'sub_category_id' => ! empty($body['subCategoryId']) ? (int) $body['subCategoryId'] : null,
+            'child_category_id' => ! empty($body['childCategoryId']) ? (int) $body['childCategoryId'] : null,
+            'collection_id' => ! empty($body['collectionId']) ? (int) $body['collectionId'] : null,
+            'brand_id' => ! empty($body['brandId']) ? (int) $body['brandId'] : null,
             'brand' => $body['brand'] ?? null,
-            'vendor_id' => !empty($body['vendorId']) ? (int) $body['vendorId'] : null,
-            'supplier_id' => !empty($body['supplierId']) ? (int) $body['supplierId'] : null,
+            'vendor_id' => ! empty($body['vendorId']) ? (int) $body['vendorId'] : null,
+            'supplier_id' => ! empty($body['supplierId']) ? (int) $body['supplierId'] : null,
             'supplier' => $body['supplier'] ?? null,
             'country_of_origin' => $body['countryOfOrigin'] ?? null,
             'sku' => $body['sku'] ?? null,
@@ -163,7 +171,7 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $existing = Product::find($id);
-        if (!$existing) {
+        if (! $existing) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
@@ -181,7 +189,7 @@ class ProductController extends Controller
 
         if (isset($body['title'])) {
             $updateData['title'] = $body['title'];
-            if (!$request->filled('slug')) {
+            if (! $request->filled('slug')) {
                 $updateData['slug'] = ProductService::ensureUniqueSlug(SlugService::toAsciiSlug($body['title']), [
                     'excludeId' => (int) $id,
                     'autoSuffix' => true,
@@ -209,7 +217,7 @@ class ProductController extends Controller
             'seoKeywords' => 'seo_keywords', 'canonicalUrl' => 'canonical_url', 'ogImage' => 'og_image',
             'twitterImage' => 'twitter_image', 'stock', 'lowStockAlert' => 'low_stock_alert', 'minOrder' => 'min_order',
             'maxOrder' => 'max_order', 'stockStatus' => 'stock_status', 'productStatus' => 'product_status',
-            'paymentPhoneNumber' => 'payment_phone_number', 'status'
+            'paymentPhoneNumber' => 'payment_phone_number', 'status',
         ] as $k => $dbCol) {
             $inputKey = is_string($k) ? $k : $dbCol;
             if ($request->has($inputKey)) {
@@ -220,7 +228,7 @@ class ProductController extends Controller
         // Booleans
         foreach (['emiAvailable', 'isFeatured', 'isTrending', 'isFlashSale', 'isNewArrival', 'isBestSeller', 'isLimitedEdition', 'isOfficial', 'isHotDeal', 'isArchived', 'unlimitedStock', 'backorder', 'trackInventory'] as $flag) {
             if ($request->has($flag)) {
-                $updateData[\Illuminate\Support\Str::snake($flag)] = filter_var($request->input($flag), FILTER_VALIDATE_BOOLEAN);
+                $updateData[Str::snake($flag)] = filter_var($request->input($flag), FILTER_VALIDATE_BOOLEAN);
             }
         }
 
@@ -257,11 +265,12 @@ class ProductController extends Controller
     public function remove($id)
     {
         $existing = Product::find($id);
-        if (!$existing) {
+        if (! $existing) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
         ProductService::remove((int) $id);
+
         return response()->json(['success' => true, 'message' => 'Product deleted']);
     }
 
@@ -273,12 +282,14 @@ class ProductController extends Controller
         ]);
 
         $result = ProductService::bulkAction($validated['ids'], $validated['action']);
+
         return response()->json(array_merge(['success' => true, 'message' => "Bulk {$validated['action']} complete"], $result));
     }
 
     public function duplicate($id)
     {
         $product = ProductService::duplicate((int) $id);
+
         return response()->json(['success' => true, 'data' => $product], 201);
     }
 
@@ -286,6 +297,7 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         $product->update(['draft' => $request->input('draft', [])]);
+
         return response()->json(['success' => true, 'message' => 'Draft saved']);
     }
 
@@ -296,6 +308,7 @@ class ProductController extends Controller
         foreach ($products as $p) {
             $csv .= "{$p->id},\"{$p->title}\",{$p->slug},{$p->price},{$p->stock},{$p->status}\n";
         }
+
         return response()->json(['success' => true, 'csv' => $csv]);
     }
 
@@ -305,6 +318,7 @@ class ProductController extends Controller
         $params = $request->all();
         $params['search'] = $q;
         $result = ProductService::getAll($params);
+
         return response()->json(array_merge(['success' => true], $result));
     }
 
@@ -313,6 +327,7 @@ class ProductController extends Controller
         $params = $request->all();
         $params['category'] = $categoryId;
         $result = ProductService::getAll($params);
+
         return response()->json(array_merge(['success' => true], $result));
     }
 
@@ -321,6 +336,7 @@ class ProductController extends Controller
         $params = $request->all();
         $params['collection'] = $collectionId;
         $result = ProductService::getAll($params);
+
         return response()->json(array_merge(['success' => true], $result));
     }
 
@@ -329,6 +345,7 @@ class ProductController extends Controller
         $params = $request->all();
         $params['brand'] = $brandId;
         $result = ProductService::getAll($params);
+
         return response()->json(array_merge(['success' => true], $result));
     }
 
@@ -337,6 +354,7 @@ class ProductController extends Controller
         $params = $request->all();
         $params['vendor'] = $vendorId;
         $result = ProductService::getAll($params);
+
         return response()->json(array_merge(['success' => true], $result));
     }
 
@@ -344,6 +362,7 @@ class ProductController extends Controller
     {
         $ids = $request->input('ids', []);
         $result = ProductService::bulkAction($ids, 'delete');
+
         return response()->json(array_merge(['success' => true, 'message' => 'Bulk delete complete'], $result));
     }
 
@@ -353,6 +372,7 @@ class ProductController extends Controller
         $status = $request->input('status', 'active');
         $action = $status === 'active' ? 'activate' : ($status === 'draft' ? 'draft' : 'deactivate');
         $result = ProductService::bulkAction($ids, $action);
+
         return response()->json(array_merge(['success' => true, 'message' => 'Bulk update status complete'], $result));
     }
 

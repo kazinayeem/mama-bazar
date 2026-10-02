@@ -36,7 +36,7 @@ class PaymentMethodController extends Controller
     public function getById(int $id): JsonResponse
     {
         $m = PaymentMethod::find($id);
-        if (!$m) {
+        if (! $m) {
             return response()->json(['success' => false, 'message' => 'Payment method not found'], 404);
         }
 
@@ -71,12 +71,12 @@ class PaymentMethodController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $method = PaymentMethod::find($id);
-        if (!$method) {
+        if (! $method) {
             return response()->json(['success' => false, 'message' => 'Payment method not found'], 404);
         }
 
         $validated = $request->validate([
-            'code' => 'sometimes|string|max:50|unique:payment_methods,code,' . $id,
+            'code' => 'sometimes|string|max:50|unique:payment_methods,code,'.$id,
             'name' => 'sometimes|string|max:100',
             'type' => 'sometimes|in:cod,mobile_banking,bank,online',
             'enabled' => 'sometimes|boolean',
@@ -130,7 +130,7 @@ class PaymentMethodController extends Controller
     public function remove(int $id): JsonResponse
     {
         $method = PaymentMethod::find($id);
-        if (!$method) {
+        if (! $method) {
             return response()->json(['success' => false, 'message' => 'Payment method not found'], 404);
         }
 

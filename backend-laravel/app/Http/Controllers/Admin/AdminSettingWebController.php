@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SiteSetting;
-use App\Models\ShippingMethod;
-use App\Models\PaymentMethod;
-use App\Models\CheckoutNotice;
+use App\Models\AdminBackup;
 use App\Models\Banner;
 use App\Models\MediaAsset;
+use App\Models\Order;
+use App\Models\PaymentMethod;
+use App\Models\ShippingMethod;
+use App\Models\SiteSetting;
+use App\Services\ActivityLoggerService;
 use App\Services\BackupService;
 use App\Services\BusinessSettingService;
 use App\Services\MediaStorageService;
@@ -20,13 +22,14 @@ class AdminSettingWebController extends Controller
     public function settings()
     {
         $settings = SiteSetting::all()->pluck('value', 'key');
+
         return view('admin.settings.index', compact('settings'));
     }
 
     protected function authorizeAdmin(): void
     {
         $role = Auth::user()?->role;
-        if (!in_array($role, ['admin', 'manager', 'superadmin'], true)) {
+        if (! in_array($role, ['admin', 'manager', 'superadmin'], true)) {
             abort(403, 'Unauthorized. Administrator access required.');
         }
     }
@@ -35,6 +38,7 @@ class AdminSettingWebController extends Controller
     {
         $this->authorizeAdmin();
         $business = BusinessSettingService::all();
+
         return view('admin.settings.business', compact('business'));
     }
 
@@ -107,7 +111,7 @@ class AdminSettingWebController extends Controller
             if (in_array($key, ['_token', '_method'], true)) {
                 continue;
             }
-            if (!preg_match('/^[a-zA-Z0-9_.\-]{1,100}$/', (string) $key)) {
+            if (! preg_match('/^[a-zA-Z0-9_.\-]{1,100}$/', (string) $key)) {
                 continue;
             }
             SiteSetting::updateOrCreate(['key' => $key], ['value' => is_string($value) ? trim($value) : $value]);
@@ -121,6 +125,7 @@ class AdminSettingWebController extends Controller
     public function shipping()
     {
         $methods = ShippingMethod::orderBy('priority', 'asc')->orderBy('id')->get();
+
         return view('admin.settings.shipping', compact('methods'));
     }
 
@@ -143,6 +148,7 @@ class AdminSettingWebController extends Controller
     {
         $v = $request->validate($this->shippingRules($existing !== null));
         $maxPriority = (int) (ShippingMethod::max('priority') ?? 0);
+
         return [
             'name' => trim($v['name']),
             'charge' => (float) $v['charge'],
@@ -159,6 +165,7 @@ class AdminSettingWebController extends Controller
     public function storeShipping(Request $request)
     {
         ShippingMethod::create($this->shippingPayload($request));
+
         return back()->with('success', 'Shipping method created.');
     }
 
@@ -166,6 +173,7 @@ class AdminSettingWebController extends Controller
     {
         $method = ShippingMethod::findOrFail($id);
         $method->update($this->shippingPayload($request, $method));
+
         return back()->with('success', 'Shipping method updated.');
     }
 
@@ -174,6 +182,7 @@ class AdminSettingWebController extends Controller
         $method = ShippingMethod::findOrFail($id);
         $method->status = $method->status === 'active' ? 'inactive' : 'active';
         $method->save();
+
         return back()->with('success', "Shipping method {$method->status}.");
     }
 
@@ -186,20 +195,23 @@ class AdminSettingWebController extends Controller
         foreach ($validated['order'] as $index => $id) {
             ShippingMethod::where('id', $id)->update(['priority' => ($index + 1) * 10]);
         }
+
         return back()->with('success', 'Shipping order updated.');
     }
 
     public function destroyShipping($id)
     {
         $method = ShippingMethod::findOrFail($id);
-        $ordersUsing = \App\Models\Order::where('shipping_method_id', $method->id)->count();
+        $ordersUsing = Order::where('shipping_method_id', $method->id)->count();
         if ($ordersUsing > 0) {
             // Safe-delete: keep history, deactivate instead.
             $method->status = 'inactive';
             $method->save();
+
             return back()->with('success', "Method is used by {$ordersUsing} order(s) — deactivated instead of deleted to preserve history.");
         }
         $method->delete();
+
         return back()->with('success', 'Shipping method deleted.');
     }
 
@@ -214,6 +226,7 @@ class AdminSettingWebController extends Controller
                 $checkout = $decoded;
             }
         }
+
         return view('admin.settings.checkout', compact('settings', 'checkout'));
     }
 
@@ -243,6 +256,7 @@ class AdminSettingWebController extends Controller
             'announcement_enabled' => $request->has('announcement_enabled') ? $request->boolean('announcement_enabled') : ($existing['announcement_enabled'] ?? true),
         ];
         SiteSetting::updateOrCreate(['key' => 'checkout_settings'], ['value' => json_encode($payload)]);
+
         return back()->with('success', 'Checkout settings saved.');
     }
 
@@ -307,7 +321,7 @@ class AdminSettingWebController extends Controller
     public function togglePaymentMethod($id)
     {
         $method = PaymentMethod::findOrFail($id);
-        $method->enabled = !$method->enabled;
+        $method->enabled = ! $method->enabled;
         $method->save();
 
         return back()->with('success', $method->enabled ? 'Payment method enabled.' : 'Payment method disabled.');
@@ -326,7 +340,7 @@ class AdminSettingWebController extends Controller
 
         $action = $request->boolean('enabled') ? 'Enabled' : 'Disabled';
 
-        return back()->with('success', "{$action} " . count($validated['ids']) . ' payment method(s).');
+        return back()->with('success', "{$action} ".count($validated['ids']).' payment method(s).');
     }
 
     public function destroyPaymentMethod($id)
@@ -338,7 +352,7 @@ class AdminSettingWebController extends Controller
 
     private function normalizePaymentConfig($config): array
     {
-        if (!is_array($config)) {
+        if (! is_array($config)) {
             return [];
         }
 
@@ -360,6 +374,7 @@ class AdminSettingWebController extends Controller
     public function banners()
     {
         $banners = Banner::orderBy('priority', 'desc')->get();
+
         return view('admin.banners.index', compact('banners'));
     }
 
@@ -374,6 +389,7 @@ class AdminSettingWebController extends Controller
         }
 
         Banner::create($data);
+
         return back()->with('success', 'Banner created successfully.');
     }
 
@@ -400,6 +416,7 @@ class AdminSettingWebController extends Controller
         }
 
         $banner->update($data);
+
         return back()->with('success', 'Banner updated successfully.');
     }
 
@@ -410,12 +427,14 @@ class AdminSettingWebController extends Controller
             MediaStorageService::deleteFile($banner->image);
         }
         $banner->delete();
+
         return back()->with('success', 'Banner deleted.');
     }
 
     public function media()
     {
         $media = MediaAsset::orderBy('created_at', 'desc')->paginate(24);
+
         return view('admin.media.index', compact('media'));
     }
 
@@ -517,32 +536,39 @@ class AdminSettingWebController extends Controller
     {
         $backups = BackupService::getBackupList();
         $challenge = BackupService::getPinChallenge();
+
         return view('admin.backup.index', compact('backups', 'challenge'));
     }
 
     public function createBackup(Request $request)
     {
         $pin = $request->input('pin');
-        if (!BackupService::verifyPin($pin)) {
+        if (! BackupService::verifyPin($pin)) {
             return back()->with('error', 'Invalid security PIN provided.');
         }
 
         $user = Auth::user();
         $backup = BackupService::createBackup([
-            'type'          => 'manual',
-            'createdById'   => $user->id,
-            'actorName'     => $user->name,
-            'actorEmail'    => $user->email,
-            'ip'            => $request->ip(),
-            'userAgent'     => $request->userAgent(),
+            'type' => 'manual',
+            'createdById' => $user->id,
+            'actorName' => $user->name,
+            'actorEmail' => $user->email,
+            'ip' => $request->ip(),
+            'userAgent' => $request->userAgent(),
         ]);
+
+        ActivityLoggerService::logSystem(
+            'system.backup_created',
+            "Database backup archive created: {$backup->filename}",
+            ['actor' => $user, 'source' => 'admin', 'metadata' => ['filename' => $backup->filename]]
+        );
 
         return back()->with('success', "Database backup created: {$backup->filename}");
     }
 
     public function downloadBackup($id)
     {
-        $backup = \App\Models\AdminBackup::findOrFail((int) $id);
+        $backup = AdminBackup::findOrFail((int) $id);
         $filepath = $backup->filepath;
 
         if ($filepath && file_exists($filepath)) {
@@ -565,7 +591,7 @@ class AdminSettingWebController extends Controller
             'file' => 'required|file|mimes:zip|max:102400',
         ]);
 
-        if (!BackupService::verifyPin($request->input('pin'))) {
+        if (! BackupService::verifyPin($request->input('pin'))) {
             return back()->with('error', 'Invalid security PIN provided.');
         }
 
@@ -580,7 +606,7 @@ class AdminSettingWebController extends Controller
                 'userAgent' => $request->userAgent(),
             ]);
         } catch (\Throwable $e) {
-            return back()->with('error', 'Restore failed: ' . $e->getMessage());
+            return back()->with('error', 'Restore failed: '.$e->getMessage());
         }
 
         return back()->with('success', 'Database restored. A pre-restore safety backup was preserved.');
@@ -590,7 +616,7 @@ class AdminSettingWebController extends Controller
     {
         $request->validate(['pin' => 'required|string']);
 
-        if (!BackupService::verifyPin($request->input('pin'))) {
+        if (! BackupService::verifyPin($request->input('pin'))) {
             return back()->with('error', 'Invalid security PIN provided.');
         }
 
@@ -605,7 +631,7 @@ class AdminSettingWebController extends Controller
                 'userAgent' => $request->userAgent(),
             ]);
         } catch (\Throwable $e) {
-            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+            return back()->with('error', 'Delete failed: '.$e->getMessage());
         }
 
         return back()->with('success', 'Backup deleted.');
@@ -638,7 +664,7 @@ class AdminSettingWebController extends Controller
         foreach ($dirs as $dir) {
             if (! is_dir($dir)) {
                 @mkdir($dir, 0775, true);
-                $results[] = "Created directory: " . basename($dir);
+                $results[] = 'Created directory: '.basename($dir);
             }
             @chmod($dir, 0775);
         }
@@ -651,7 +677,7 @@ class AdminSettingWebController extends Controller
             $currentTarget = @readlink($link);
             if (! file_exists($link) || ! file_exists($currentTarget)) {
                 @unlink($link);
-                $results[] = "Removed broken symlink at public/storage";
+                $results[] = 'Removed broken symlink at public/storage';
             }
         }
 
@@ -674,12 +700,12 @@ class AdminSettingWebController extends Controller
             }
 
             if ($success) {
-                $results[] = "Successfully created storage symlink!";
+                $results[] = 'Successfully created storage symlink!';
             } else {
-                $results[] = "Note: Symlink creation is restricted by host, but the built-in HTTP storage fallback route is active and serving all uploaded images.";
+                $results[] = 'Note: Symlink creation is restricted by host, but the built-in HTTP storage fallback route is active and serving all uploaded images.';
             }
         } else {
-            $results[] = "Storage link or folder is present and ready.";
+            $results[] = 'Storage link or folder is present and ready.';
         }
 
         if ($request->wantsJson()) {
@@ -690,6 +716,6 @@ class AdminSettingWebController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.settings.index')->with('success', 'Storage check complete: ' . implode(' | ', $results));
+        return redirect()->route('admin.settings.index')->with('success', 'Storage check complete: '.implode(' | ', $results));
     }
 }

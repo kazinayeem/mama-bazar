@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AdminBackup extends Model
 {
     protected $table = 'admin_backups';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

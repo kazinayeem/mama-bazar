@@ -31,27 +31,29 @@ class SqliteToMysqlCommand extends Command
 
         if (! file_exists($sqlitePath)) {
             $this->error("SQLite database file not found at: {$sqlitePath}");
+
             return self::FAILURE;
         }
 
-        $this->info("--> Step 1: Testing MySQL database connection...");
+        $this->info('--> Step 1: Testing MySQL database connection...');
         try {
             DB::connection('mysql')->getPdo();
             $dbName = DB::connection('mysql')->getDatabaseName();
             $this->info("  [OK] Connected to MySQL database: '{$dbName}'");
         } catch (\Throwable $e) {
-            $this->error("  [!] MySQL connection failed: " . $e->getMessage());
-            $this->line("      Please verify DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD in .env");
+            $this->error('  [!] MySQL connection failed: '.$e->getMessage());
+            $this->line('      Please verify DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD in .env');
+
             return self::FAILURE;
         }
 
-        $this->info("--> Step 2: Running migrations on MySQL...");
+        $this->info('--> Step 2: Running migrations on MySQL...');
         $this->call('migrate', [
             '--database' => 'mysql',
             '--force' => true,
         ]);
 
-        $this->info("--> Step 3: Copying all data from SQLite to MySQL...");
+        $this->info('--> Step 3: Copying all data from SQLite to MySQL...');
         $sqlitePdo = new PDO("sqlite:{$sqlitePath}");
         $sqlitePdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -87,7 +89,7 @@ class SqliteToMysqlCommand extends Command
         $mysql->statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->newLine();
-        $this->info("--> Successfully migrated from SQLite to MySQL!");
+        $this->info('--> Successfully migrated from SQLite to MySQL!');
         $this->line("    - Total records copied: {$totalCopied}");
         $this->line("    - Active MySQL connection: '{$dbName}'");
 

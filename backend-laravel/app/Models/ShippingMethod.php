@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ShippingMethod extends Model
 {
     protected $table = 'shipping_methods';
+
     const UPDATED_AT = null;
 
     protected $fillable = [
@@ -36,6 +37,7 @@ class ShippingMethod extends Model
         if (empty($raw)) {
             return [];
         }
+
         return collect(preg_split('/[,\n]+/', (string) $raw))
             ->map(fn ($v) => trim(mb_strtolower($v)))
             ->filter()
@@ -71,6 +73,7 @@ class ShippingMethod extends Model
                 return true;
             }
         }
+
         return false;
     }
 }

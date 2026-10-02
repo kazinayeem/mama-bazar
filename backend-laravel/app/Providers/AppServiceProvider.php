@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Order;
+use App\Models\PaymentMethod;
+use App\Services\BusinessSettingService;
 use App\Services\HomepageService;
+use App\Services\OrderEmailService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -25,8 +29,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-        \App\Models\Order::created(fn ($order) => \App\Services\OrderEmailService::handleCreated($order));
-        \App\Models\Order::updated(fn ($order) => \App\Services\OrderEmailService::handleUpdated($order));
+        Order::created(fn ($order) => OrderEmailService::handleCreated($order));
+        Order::updated(fn ($order) => OrderEmailService::handleUpdated($order));
 
         Blade::directive('sanitizedHtml', function ($expression) {
             return "<?php echo \\App\\Services\\HtmlSanitizer::forDisplay($expression); ?>";
@@ -34,9 +38,9 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('*', function ($view) {
             try {
-                $view->with('business', \App\Services\BusinessSettingService::all());
+                $view->with('business', BusinessSettingService::all());
             } catch (\Throwable $e) {
-                $view->with('business', \App\Services\BusinessSettingService::defaults());
+                $view->with('business', BusinessSettingService::defaults());
             }
         });
 
@@ -53,8 +57,8 @@ class AppServiceProvider extends ServiceProvider
             }
 
             try {
-                \App\Models\PaymentMethod::ensureDefaults();
-                $footerPayments = \App\Models\PaymentMethod::activeCheckout()
+                PaymentMethod::ensureDefaults();
+                $footerPayments = PaymentMethod::activeCheckout()
                     ->get(['code', 'name', 'type']);
                 $view->with('footerPaymentMethods', $footerPayments);
             } catch (\Throwable $e) {
@@ -63,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Footer social links from centralized business settings
             try {
-                $b = \App\Services\BusinessSettingService::all();
+                $b = BusinessSettingService::all();
                 $view->with('footerSocials', $b['social_links'] ?? []);
             } catch (\Throwable $e) {
                 $view->with('footerSocials', []);

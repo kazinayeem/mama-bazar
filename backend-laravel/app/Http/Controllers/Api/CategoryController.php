@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\MediaStorageService;
 use App\Services\SlugService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -33,7 +33,7 @@ class CategoryController extends Controller
 
         $buildTree = function ($parentId) use (&$buildTree, &$byParent) {
             $branch = [];
-            if (!empty($byParent[$parentId])) {
+            if (! empty($byParent[$parentId])) {
                 foreach ($byParent[$parentId] as $c) {
                     $item = $c->toArray();
                     $children = $buildTree($c->id);
@@ -41,6 +41,7 @@ class CategoryController extends Controller
                     $branch[] = $item;
                 }
             }
+
             return $branch;
         };
 
@@ -57,7 +58,7 @@ class CategoryController extends Controller
             $s = $request->input('search');
             $query->where(function ($q) use ($s) {
                 $q->where('name', 'like', "%{$s}%")
-                  ->orWhere('slug', 'like', "%{$s}%");
+                    ->orWhere('slug', 'like', "%{$s}%");
             });
         }
 
@@ -107,25 +108,27 @@ class CategoryController extends Controller
     public function getById($id)
     {
         $category = Category::find($id);
-        if (!$category) {
+        if (! $category) {
             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $category]);
     }
 
     public function getBySlug($slug)
     {
         $category = Category::where('slug', $slug)->first();
-        if (!$category) {
+        if (! $category) {
             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $category]);
     }
 
     public function getUsage($id)
     {
         $category = Category::find($id);
-        if (!$category) {
+        if (! $category) {
             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
         }
 
@@ -188,14 +191,14 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = Category::find($id);
-        if (!$category) {
+        if (! $category) {
             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
         }
 
         $updateData = [];
         if ($request->filled('name')) {
             $updateData['name'] = trim($request->input('name'));
-            if (!$request->filled('slug')) {
+            if (! $request->filled('slug')) {
                 $updateData['slug'] = SlugService::toAsciiSlug($updateData['name']);
             }
         }
@@ -244,7 +247,7 @@ class CategoryController extends Controller
     public function remove($id)
     {
         $category = Category::find($id);
-        if (!$category) {
+        if (! $category) {
             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
         }
 
@@ -267,7 +270,7 @@ class CategoryController extends Controller
         if ($products > 0) {
             return response()->json([
                 'success' => false,
-                'message' => "This category is currently used by {$products} product" . ($products > 1 ? "s" : "") . ".",
+                'message' => "This category is currently used by {$products} product".($products > 1 ? 's' : '').'.',
                 'usageCount' => $products,
                 'subCategories' => 0,
                 'code' => 'in_use',
@@ -275,6 +278,7 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
         return response()->json(['success' => true, 'message' => 'Category deleted']);
     }
 

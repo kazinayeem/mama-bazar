@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\AdminPermission;
+use App\Models\AdminRole;
+use App\Models\RolePermission;
+use App\Models\User;
+use App\Services\RbacService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use App\Models\AdminRole;
-use App\Models\AdminPermission;
-use App\Models\RolePermission;
-use App\Services\RbacService;
 
 class AdminSeeder extends Seeder
 {

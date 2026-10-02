@@ -1,33 +1,34 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\CouponController;
-use App\Http\Controllers\Api\SettingsController;
-use App\Http\Controllers\Api\TrackingController;
-use App\Http\Controllers\Api\AnalyticsController;
-use App\Http\Controllers\Api\CatalogController;
-use App\Http\Controllers\Api\BannerController;
-use App\Http\Controllers\Api\MediaController;
-use App\Http\Controllers\Api\ShippingController;
-use App\Http\Controllers\Api\PaymentMethodController;
-use App\Http\Controllers\Api\CheckoutNoticeController;
-use App\Http\Controllers\Api\UploadController;
-use App\Http\Controllers\Api\ReviewController;
-use App\Http\Controllers\Api\HomepageController;
-use App\Http\Controllers\Api\PagesController;
 use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\MemberController;
-use App\Http\Controllers\Api\ExpenseController;
-use App\Http\Controllers\Api\CostController;
-use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\RentalController;
-use App\Http\Controllers\Api\MemoController;
+use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BackupController;
+use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\CheckoutNoticeController;
+use App\Http\Controllers\Api\CostController;
+use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\HomepageController;
+use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\MemoController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PagesController;
+use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\RentalController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\ShippingController;
+use App\Http\Controllers\Api\TrackingController;
+use App\Http\Controllers\Api\UploadController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -186,41 +187,41 @@ $catalogEntities = [
 
 foreach ($catalogEntities as $type => $permission) {
     Route::prefix($type)->group(function () use ($type, $permission) {
-        Route::get('/', function (Illuminate\Http\Request $request) use ($type) {
+        Route::get('/', function (Request $request) use ($type) {
             return app(CatalogController::class)->list($request, $type);
         });
 
         Route::middleware('jwt.auth')->group(function () use ($type, $permission) {
-            Route::get('/admin', function (Illuminate\Http\Request $request) use ($type) {
+            Route::get('/admin', function (Request $request) use ($type) {
                 return app(CatalogController::class)->listAdmin($request, $type);
             })->middleware('require.permission:catalog.view');
 
-            Route::get('/{id}/usage', function (Illuminate\Http\Request $request, $id) use ($type) {
+            Route::get('/{id}/usage', function (Request $request, $id) use ($type) {
                 return app(CatalogController::class)->getUsage($request, $type, $id);
             })->middleware('require.permission:catalog.view');
 
-            Route::post('/', function (Illuminate\Http\Request $request) use ($type) {
+            Route::post('/', function (Request $request) use ($type) {
                 return app(CatalogController::class)->create($request, $type);
             })->middleware("require.permission:{$permission}");
 
-            Route::put('/{id}', function (Illuminate\Http\Request $request, $id) use ($type) {
+            Route::put('/{id}', function (Request $request, $id) use ($type) {
                 return app(CatalogController::class)->update($request, $type, $id);
             })->middleware("require.permission:{$permission}");
 
-            Route::delete('/{id}', function (Illuminate\Http\Request $request, $id) use ($type) {
+            Route::delete('/{id}', function (Request $request, $id) use ($type) {
                 return app(CatalogController::class)->remove($request, $type, $id);
             })->middleware("require.permission:{$permission}");
 
-            Route::post('/{id}/move-products', function (Illuminate\Http\Request $request, $id) use ($type) {
+            Route::post('/{id}/move-products', function (Request $request, $id) use ($type) {
                 return app(CatalogController::class)->moveProducts($request, $type, $id);
             })->middleware("require.permission:{$permission}");
         });
 
-        Route::get('/slug/{slug}', function (Illuminate\Http\Request $request, $slug) use ($type) {
+        Route::get('/slug/{slug}', function (Request $request, $slug) use ($type) {
             return app(CatalogController::class)->getBySlug($request, $type, $slug);
         });
 
-        Route::get('/{id}', function (Illuminate\Http\Request $request, $id) use ($type) {
+        Route::get('/{id}', function (Request $request, $id) use ($type) {
             return app(CatalogController::class)->getById($request, $type, $id);
         });
     });

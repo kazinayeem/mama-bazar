@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -12,7 +13,7 @@ class ChatController extends Controller
     public function handleChat(Request $request): JsonResponse
     {
         $message = $request->input('message');
-        if (!$message || !is_string($message) || !trim($message)) {
+        if (! $message || ! is_string($message) || ! trim($message)) {
             return response()->json(['success' => false, 'message' => 'Message is required'], 400);
         }
 
@@ -24,7 +25,7 @@ class ChatController extends Controller
                 'message' => $trimmedMessage,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'AI server unavailable. Please try again later.',
@@ -38,7 +39,7 @@ class ChatController extends Controller
                 'success' => true,
                 'reply' => $reply,
             ], 200);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        } catch (ConnectionException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to connect to AI server. Please try again later.',

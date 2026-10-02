@@ -14,6 +14,7 @@ class MediaStorageService
      * Allowed image extensions and max sizes.
      */
     protected static array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif', 'avif', 'pdf'];
+
     protected static int $maxSizeBytes = 10 * 1024 * 1024; // 10MB
 
     /**
@@ -81,10 +82,10 @@ class MediaStorageService
         }
 
         if (str_starts_with($path, 'storage/')) {
-            return '/' . $path;
+            return '/'.$path;
         }
 
-        return '/storage/' . ltrim($path, '/');
+        return '/storage/'.ltrim($path, '/');
     }
 
     /**
@@ -97,7 +98,7 @@ class MediaStorageService
         $folder = trim(preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $folder) ?: 'products/variants', '/');
 
         // Ensure folder directory exists with 0755 permissions (vital for cPanel)
-        $fullFolder = storage_path('app/public/' . $folder);
+        $fullFolder = storage_path('app/public/'.$folder);
         if (! is_dir($fullFolder)) {
             @mkdir($fullFolder, 0755, true);
         }
@@ -105,7 +106,7 @@ class MediaStorageService
         $path = $file->store($folder, 'public');
 
         // Set proper 0644 file permissions so web server can read it
-        $storedFullPath = storage_path('app/public/' . $path);
+        $storedFullPath = storage_path('app/public/'.$path);
         if (file_exists($storedFullPath)) {
             @chmod($storedFullPath, 0644);
         }
@@ -113,7 +114,7 @@ class MediaStorageService
         // On cPanel, if public/storage is a real directory (not a symlink), sync the file there
         $publicDir = public_path('storage');
         if (is_dir($publicDir) && ! is_link($publicDir)) {
-            $publicFile = $publicDir . '/' . $path;
+            $publicFile = $publicDir.'/'.$path;
             $parentDir = dirname($publicFile);
             if (! is_dir($parentDir)) {
                 @mkdir($parentDir, 0755, true);
@@ -125,7 +126,7 @@ class MediaStorageService
         }
 
         return [
-            'url' => '/storage/' . $path,
+            'url' => '/storage/'.$path,
             'path' => $path,
             'filename' => basename($path),
             'provider' => 'local',
@@ -138,9 +139,7 @@ class MediaStorageService
     /**
      * Upload an uploaded file or file from path to public storage disk.
      *
-     * @param UploadedFile|string $file
-     * @param string $folder e.g. 'products', 'categories', 'banners', 'users', 'media'
-     * @return array
+     * @param  string  $folder  e.g. 'products', 'categories', 'banners', 'users', 'media'
      */
     public static function uploadFile(UploadedFile|string $file, string $folder = 'general'): array
     {
@@ -149,7 +148,7 @@ class MediaStorageService
         }
 
         $folder = trim(preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $folder) ?: 'general', '/');
-        $fullFolder = storage_path('app/public/' . $folder);
+        $fullFolder = storage_path('app/public/'.$folder);
         if (! is_dir($fullFolder)) {
             @mkdir($fullFolder, 0755, true);
         }
@@ -158,8 +157,8 @@ class MediaStorageService
 
         // String path
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION)) ?: 'jpg';
-        $filename = time() . '-' . Str::random(12) . '.' . $extension;
-        $path = $folder . '/' . $filename;
+        $filename = time().'-'.Str::random(12).'.'.$extension;
+        $path = $folder.'/'.$filename;
 
         if (file_exists($file)) {
             $content = file_get_contents($file);
@@ -168,12 +167,12 @@ class MediaStorageService
             $mimeType = mime_content_type($file) ?: 'application/octet-stream';
         } else {
             $filename = basename($file);
-            $path = $folder . '/' . $filename;
+            $path = $folder.'/'.$filename;
             $size = 0;
             $mimeType = 'image/jpeg';
         }
 
-        $storedFullPath = storage_path('app/public/' . $path);
+        $storedFullPath = storage_path('app/public/'.$path);
         if (file_exists($storedFullPath)) {
             @chmod($storedFullPath, 0644);
         }
@@ -181,7 +180,7 @@ class MediaStorageService
         // On cPanel, if public/storage is a real directory (not a symlink), sync the file there
         $publicDir = public_path('storage');
         if (is_dir($publicDir) && ! is_link($publicDir)) {
-            $publicFile = $publicDir . '/' . $path;
+            $publicFile = $publicDir.'/'.$path;
             $parentDir = dirname($publicFile);
             if (! is_dir($parentDir)) {
                 @mkdir($parentDir, 0755, true);
@@ -192,7 +191,7 @@ class MediaStorageService
             }
         }
 
-        $url = '/storage/' . $path;
+        $url = '/storage/'.$path;
 
         return [
             'url' => $url,
@@ -227,14 +226,14 @@ class MediaStorageService
     public static function isPathReferenced(?string $pathOrUrl, ?int $exceptVariantId = null): bool
     {
         $relative = self::toRelativePath($pathOrUrl);
-        if (!$relative) {
+        if (! $relative) {
             return true; // treat unknown/external as referenced → do not delete
         }
 
         $candidates = array_values(array_unique(array_filter([
             $relative,
-            '/storage/' . $relative,
-            'storage/' . $relative,
+            '/storage/'.$relative,
+            'storage/'.$relative,
         ])));
 
         $variantQuery = ProductVariant::query()->where(function ($q) use ($candidates) {
@@ -253,10 +252,10 @@ class MediaStorageService
 
         // JSON images arrays may store either form
         foreach ($candidates as $c) {
-            if (ProductVariant::where('images', 'like', '%' . str_replace(['%', '_'], ['\\%', '\\_'], $c) . '%')->exists()) {
+            if (ProductVariant::where('images', 'like', '%'.str_replace(['%', '_'], ['\\%', '\\_'], $c).'%')->exists()) {
                 return true;
             }
-            if (Product::where('images', 'like', '%' . str_replace(['%', '_'], ['\\%', '\\_'], $c) . '%')->exists()) {
+            if (Product::where('images', 'like', '%'.str_replace(['%', '_'], ['\\%', '\\_'], $c).'%')->exists()) {
                 return true;
             }
         }
@@ -269,7 +268,7 @@ class MediaStorageService
      */
     public static function deleteIfUnreferenced(?string $pathOrUrl, ?int $exceptVariantId = null): bool
     {
-        if (!$pathOrUrl) {
+        if (! $pathOrUrl) {
             return false;
         }
 
@@ -303,7 +302,7 @@ class MediaStorageService
         }
 
         $path = self::toRelativePath($url);
-        if (!$path) {
+        if (! $path) {
             return false;
         }
 

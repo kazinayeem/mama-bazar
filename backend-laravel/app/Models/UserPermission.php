@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserPermission extends Model
 {
     protected $table = 'user_permissions';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

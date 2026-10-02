@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 class MemoController extends Controller
 {
     private const DEFAULT_PAGE = 1;
+
     private const DEFAULT_LIMIT = 20;
 
     private function selectColumns()
@@ -49,7 +50,7 @@ class MemoController extends Controller
             $query->where('memos.folder', $request->query('folder'));
         }
         if ($request->filled('search')) {
-            $query->where('memos.title', 'like', '%' . $request->query('search') . '%');
+            $query->where('memos.title', 'like', '%'.$request->query('search').'%');
         }
 
         $total = $query->count();
@@ -80,7 +81,7 @@ class MemoController extends Controller
             ->select($this->selectColumns())
             ->first();
 
-        if (!$row) {
+        if (! $row) {
             return response()->json(['success' => false, 'message' => 'Memo not found'], 404);
         }
 
@@ -119,17 +120,19 @@ class MemoController extends Controller
         ]);
 
         $created = $this->getById($memo->id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $created], 201);
     }
 
     public function remove(int $id): JsonResponse
     {
         $memo = Memo::find($id);
-        if (!$memo) {
+        if (! $memo) {
             return response()->json(['success' => false, 'message' => 'Memo not found'], 404);
         }
 
         $memo->delete();
+
         return response()->json(['success' => true]);
     }
 
@@ -146,6 +149,7 @@ class MemoController extends Controller
         }
 
         $count = Memo::whereIn('id', $ids)->delete();
+
         return response()->json(['success' => true, 'deleted' => $count]);
     }
 }

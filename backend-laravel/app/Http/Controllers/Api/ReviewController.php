@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Review;
 use App\Services\ReviewService;
 use Illuminate\Http\JsonResponse;
@@ -140,7 +139,7 @@ class ReviewController extends Controller
             ])
             ->first();
 
-        if (!$review) {
+        if (! $review) {
             return response()->json(['success' => false, 'message' => 'Review not found'], 404);
         }
 
@@ -167,6 +166,7 @@ class ReviewController extends Controller
             );
         } catch (\Exception $e) {
             $code = in_array($e->getCode(), [400, 403, 404, 409, 422], true) ? $e->getCode() : 400;
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], $code);
         }
 
@@ -183,7 +183,7 @@ class ReviewController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $review = Review::find($id);
-        if (!$review) {
+        if (! $review) {
             return response()->json(['success' => false, 'message' => 'Review not found'], 404);
         }
 
@@ -203,6 +203,7 @@ class ReviewController extends Controller
             );
         } catch (\Exception $e) {
             $code = in_array($e->getCode(), [400, 403, 404, 409, 422], true) ? $e->getCode() : 400;
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], $code);
         }
 
@@ -217,7 +218,7 @@ class ReviewController extends Controller
         ]);
 
         $review = Review::find($id);
-        if (!$review) {
+        if (! $review) {
             return response()->json(['success' => false, 'message' => 'Review not found'], 404);
         }
 
@@ -234,11 +235,12 @@ class ReviewController extends Controller
     public function remove(int $id): JsonResponse
     {
         $review = Review::find($id);
-        if (!$review) {
+        if (! $review) {
             return response()->json(['success' => false, 'message' => 'Review not found'], 404);
         }
 
         $review->delete();
+
         return response()->json(['success' => true, 'message' => 'Review deleted']);
     }
 

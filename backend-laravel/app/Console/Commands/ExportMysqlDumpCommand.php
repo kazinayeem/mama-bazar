@@ -4,8 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Database\MySqlConnection;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use PDO;
 
@@ -35,6 +33,7 @@ class ExportMysqlDumpCommand extends Command
 
         if (! file_exists($sqlitePath)) {
             $this->error("SQLite database not found at: {$sqlitePath}");
+
             return self::FAILURE;
         }
 
@@ -49,12 +48,13 @@ class ExportMysqlDumpCommand extends Command
         $fh = fopen($outputFile, 'w');
         if (! $fh) {
             $this->error("Failed to open output file: {$outputFile}");
+
             return self::FAILURE;
         }
 
         // Header
         fwrite($fh, "-- Mama Bazar MySQL Database Dump\n");
-        fwrite($fh, "-- Generated: " . date('Y-m-d H:i:s') . "\n");
+        fwrite($fh, '-- Generated: '.date('Y-m-d H:i:s')."\n");
         fwrite($fh, "-- Target Server: MySQL 5.7+ / MariaDB 10.3+ (cPanel / phpMyAdmin compatible)\n\n");
         fwrite($fh, "SET FOREIGN_KEY_CHECKS=0;\n");
         fwrite($fh, "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n");
@@ -81,7 +81,7 @@ class ExportMysqlDumpCommand extends Command
             fwrite($fh, "-- Table structure for `{$table}`\n");
             fwrite($fh, "DROP TABLE IF EXISTS `{$table}`;\n");
             foreach ($queries as $q) {
-                fwrite($fh, $q . ";\n");
+                fwrite($fh, $q.";\n");
             }
             fwrite($fh, "\n");
         }
@@ -128,13 +128,13 @@ class ExportMysqlDumpCommand extends Command
                                 ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'],
                                 (string) $val
                             );
-                            $vals[] = "'" . $escaped . "'";
+                            $vals[] = "'".$escaped."'";
                         }
                     }
-                    $valueSets[] = '(' . implode(', ', $vals) . ')';
+                    $valueSets[] = '('.implode(', ', $vals).')';
                 }
 
-                fwrite($fh, "INSERT INTO `{$table}` ({$colList}) VALUES\n" . implode(",\n", $valueSets) . ";\n");
+                fwrite($fh, "INSERT INTO `{$table}` ({$colList}) VALUES\n".implode(",\n", $valueSets).";\n");
             }
 
             fwrite($fh, "\n");
@@ -155,11 +155,11 @@ class ExportMysqlDumpCommand extends Command
 
         $fileSizeMB = round(filesize($outputFile) / (1024 * 1024), 2);
         $this->newLine();
-        $this->info("--> Successfully exported MySQL dump!");
+        $this->info('--> Successfully exported MySQL dump!');
         $this->line("    - File: {$outputFile} ({$fileSizeMB} MB)");
         $this->line("    - Copy: {$altOutput}");
         $this->line("    - Total records exported: {$totalRowsExported}");
-        $this->line("    - Ready for direct import into phpMyAdmin on cPanel!");
+        $this->line('    - Ready for direct import into phpMyAdmin on cPanel!');
 
         return self::SUCCESS;
     }
@@ -169,7 +169,8 @@ class ExportMysqlDumpCommand extends Command
      */
     protected function generateMysqlSchema(PDO $sqlitePdo): array
     {
-        $myConn = new class($sqlitePdo, 'mama_bazar') extends MySqlConnection {
+        $myConn = new class($sqlitePdo, 'mama_bazar') extends MySqlConnection
+        {
             public array $collectedQueries = [];
 
             public function __construct($pdo, $database)
@@ -184,6 +185,7 @@ class ExportMysqlDumpCommand extends Command
             public function statement($query, $bindings = [])
             {
                 $this->collectedQueries[] = $query;
+
                 return true;
             }
 

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 class BusinessSettingService
 {
     public const CACHE_KEY = 'mamabazar:business_info';
+
     public const CACHE_TTL = 86400; // 24 hours
 
     /**
@@ -104,6 +105,7 @@ class BusinessSettingService
         }
 
         $canonical = self::$aliases[$key] ?? $key;
+
         return $all[$canonical] ?? $default;
     }
 
@@ -126,9 +128,9 @@ class BusinessSettingService
             $val = $dbRows[$key] ?? null;
 
             // Check if an alias was stored instead
-            if (($val === null || $val === '') && !empty(self::$aliases)) {
+            if (($val === null || $val === '') && ! empty(self::$aliases)) {
                 foreach (self::$aliases as $aliasKey => $targetKey) {
-                    if ($targetKey === $key && !empty($dbRows[$aliasKey])) {
+                    if ($targetKey === $key && ! empty($dbRows[$aliasKey])) {
                         $val = $dbRows[$aliasKey];
                         break;
                     }
@@ -140,7 +142,7 @@ class BusinessSettingService
 
         // Include any additional site_settings keys not in defaults
         foreach ($dbRows as $k => $v) {
-            if (!isset($settings[$k])) {
+            if (! isset($settings[$k])) {
                 $settings[$k] = $v;
             }
         }
@@ -151,11 +153,11 @@ class BusinessSettingService
             $settings['address_line1'] ?? '',
             $settings['address_line2'] ?? '',
             $settings['city'] ?? '',
-            !empty($settings['postal_code']) ? ($settings['district'] ?? '') . ' - ' . $settings['postal_code'] : ($settings['district'] ?? ''),
+            ! empty($settings['postal_code']) ? ($settings['district'] ?? '').' - '.$settings['postal_code'] : ($settings['district'] ?? ''),
             $settings['country'] ?? '',
         ]);
 
-        $settings['formatted_address'] = !empty($addrParts)
+        $settings['formatted_address'] = ! empty($addrParts)
             ? implode(', ', $addrParts)
             : ($settings['contact_address'] ?? 'Dhaka, Bangladesh');
 
@@ -169,11 +171,11 @@ class BusinessSettingService
         // 3. WhatsApp link
         $waDigits = preg_replace('/\D/', '', $settings['whatsapp_number'] ?: $settings['primary_phone']);
         if (str_starts_with($waDigits, '01')) {
-            $waDigits = '88' . $waDigits;
-        } elseif (!str_starts_with($waDigits, '880') && str_starts_with($waDigits, '1')) {
-            $waDigits = '880' . $waDigits;
+            $waDigits = '88'.$waDigits;
+        } elseif (! str_starts_with($waDigits, '880') && str_starts_with($waDigits, '1')) {
+            $waDigits = '880'.$waDigits;
         }
-        $settings['whatsapp_url'] = !empty($waDigits) ? 'https://wa.me/' . $waDigits : 'https://wa.me/8801700000000';
+        $settings['whatsapp_url'] = ! empty($waDigits) ? 'https://wa.me/'.$waDigits : 'https://wa.me/8801700000000';
 
         // 4. Rendered copyright
         $settings['copyright_rendered'] = str_replace(
@@ -226,7 +228,7 @@ class BusinessSettingService
                 continue;
             }
 
-            if (!in_array($key, $allowedKeys, true) && !isset(self::$aliases[$key])) {
+            if (! in_array($key, $allowedKeys, true) && ! isset(self::$aliases[$key])) {
                 continue;
             }
 
@@ -289,7 +291,7 @@ class BusinessSettingService
     {
         // Try local files first
         $candidates = [];
-        if ($logoUrl && !str_starts_with($logoUrl, 'http://') && !str_starts_with($logoUrl, 'https://')) {
+        if ($logoUrl && ! str_starts_with($logoUrl, 'http://') && ! str_starts_with($logoUrl, 'https://')) {
             $candidates[] = public_path(ltrim($logoUrl, '/'));
         }
 
@@ -306,7 +308,8 @@ class BusinessSettingService
                     'webp' => 'image/webp',
                     default => 'image/png',
                 };
-                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+
+                return 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
             }
         }
 

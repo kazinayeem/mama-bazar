@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use App\Models\Color;
-use App\Models\Size;
-use App\Models\Collection;
-use App\Models\Vendor;
-use App\Models\Supplier;
 use App\Models\Brand;
+use App\Models\Collection;
+use App\Models\Color;
 use App\Models\Product;
+use App\Models\Size;
+use App\Models\Supplier;
+use App\Models\Vendor;
 use App\Services\MediaStorageService;
 use App\Services\SlugService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CatalogController extends Controller
 {
@@ -49,6 +49,7 @@ class CatalogController extends Controller
             $query->orderBy('sort_order', 'asc');
         }
         $data = $query->orderBy('name', 'asc')->get();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -96,9 +97,10 @@ class CatalogController extends Controller
     {
         $model = $this->getModelClass($type);
         $item = $model::find($id);
-        if (!$item) {
-            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)) . ' not found'], 404);
+        if (! $item) {
+            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)).' not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $item]);
     }
 
@@ -106,9 +108,10 @@ class CatalogController extends Controller
     {
         $model = $this->getModelClass($type);
         $item = $model::where('slug', $slug)->first();
-        if (!$item) {
-            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)) . ' not found'], 404);
+        if (! $item) {
+            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)).' not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $item]);
     }
 
@@ -116,6 +119,7 @@ class CatalogController extends Controller
     {
         $fk = $this->getForeignKey($type);
         $count = $fk ? Product::where($fk, $id)->count() : 0;
+
         return response()->json(['success' => true, 'data' => ['products' => $count]]);
     }
 
@@ -129,7 +133,7 @@ class CatalogController extends Controller
         }
 
         if (in_array($type, ['collections', 'vendors', 'suppliers', 'brands'])) {
-            $slug = !empty($data['slug']) ? Str::slug($data['slug']) : SlugService::toAsciiSlug($data['name']);
+            $slug = ! empty($data['slug']) ? Str::slug($data['slug']) : SlugService::toAsciiSlug($data['name']);
             if ($model::where('slug', $slug)->exists()) {
                 return response()->json(['success' => false, 'message' => 'Slug already in use'], 409);
             }
@@ -146,6 +150,7 @@ class CatalogController extends Controller
         }
 
         $created = $model::create($data);
+
         return response()->json(['success' => true, 'data' => $created], 201);
     }
 
@@ -153,13 +158,13 @@ class CatalogController extends Controller
     {
         $model = $this->getModelClass($type);
         $item = $model::find($id);
-        if (!$item) {
-            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)) . ' not found'], 404);
+        if (! $item) {
+            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)).' not found'], 404);
         }
 
         $data = $request->all();
 
-        if (in_array($type, ['collections', 'vendors', 'suppliers', 'brands']) && !empty($data['slug'])) {
+        if (in_array($type, ['collections', 'vendors', 'suppliers', 'brands']) && ! empty($data['slug'])) {
             $slug = Str::slug($data['slug']);
             if ($model::where('slug', $slug)->where('id', '!=', $id)->exists()) {
                 return response()->json(['success' => false, 'message' => 'Slug already in use'], 409);
@@ -177,6 +182,7 @@ class CatalogController extends Controller
         }
 
         $item->update($data);
+
         return response()->json(['success' => true, 'data' => $item]);
     }
 
@@ -184,8 +190,8 @@ class CatalogController extends Controller
     {
         $model = $this->getModelClass($type);
         $item = $model::find($id);
-        if (!$item) {
-            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)) . ' not found'], 404);
+        if (! $item) {
+            return response()->json(['success' => false, 'message' => ucfirst(Str::singular($type)).' not found'], 404);
         }
 
         $fk = $this->getForeignKey($type);
@@ -202,7 +208,8 @@ class CatalogController extends Controller
         }
 
         $item->delete();
-        return response()->json(['success' => true, 'message' => ucfirst(Str::singular($type)) . ' deleted']);
+
+        return response()->json(['success' => true, 'message' => ucfirst(Str::singular($type)).' deleted']);
     }
 
     public function moveProducts(Request $request, string $type, $id)

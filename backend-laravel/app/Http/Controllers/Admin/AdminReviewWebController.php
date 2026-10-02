@@ -40,10 +40,10 @@ class AdminReviewWebController extends Controller
             $s = trim($request->input('search'));
             $query->where(function ($q) use ($s) {
                 $q->where('comment', 'like', "%{$s}%")
-                  ->orWhere('title', 'like', "%{$s}%")
-                  ->orWhere('customer_name', 'like', "%{$s}%")
-                  ->orWhereHas('product', fn ($pq) => $pq->where('title', 'like', "%{$s}%"))
-                  ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%"));
+                    ->orWhere('title', 'like', "%{$s}%")
+                    ->orWhere('customer_name', 'like', "%{$s}%")
+                    ->orWhereHas('product', fn ($pq) => $pq->where('title', 'like', "%{$s}%"))
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%"));
                 if (is_numeric($s)) {
                     $q->orWhere('id', (int) $s);
                 }
@@ -102,7 +102,7 @@ class AdminReviewWebController extends Controller
     public function toggleFeatured(Request $request, $id)
     {
         $review = Review::findOrFail($id);
-        $featured = $request->has('featured') ? (bool) $request->input('featured') : !$review->is_featured;
+        $featured = $request->has('featured') ? (bool) $request->input('featured') : ! $review->is_featured;
         ReviewService::setFeatured($review, $featured);
 
         if ($request->wantsJson() || $request->ajax()) {

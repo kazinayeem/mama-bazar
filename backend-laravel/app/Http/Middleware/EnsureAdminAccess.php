@@ -17,7 +17,7 @@ class EnsureAdminAccess
 
     public static function isAdminLike(?object $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -29,18 +29,18 @@ class EnsureAdminAccess
             return true;
         }
 
-        return !empty($user->custom_role);
+        return ! empty($user->custom_role);
     }
 
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
-        if (!self::isAdminLike($user)) {
+        if (! self::isAdminLike($user)) {
             abort(403, 'You do not have permission to access the admin panel.');
         }
 

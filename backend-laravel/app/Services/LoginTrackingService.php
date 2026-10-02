@@ -47,7 +47,7 @@ class LoginTrackingService
                 'actorId' => $user->id,
                 'actorName' => $user->name,
                 'actorEmail' => $user->email,
-                'action' => 'member.login.success',
+                'action' => 'login.success',
                 'targetType' => 'member',
                 'targetId' => $user->id,
                 'ipAddress' => $ip,
@@ -98,7 +98,7 @@ class LoginTrackingService
                 'country' => $location['country'],
                 'region' => $location['region'],
                 'city' => $location['city'],
-                'status' => 'failed',
+                'status' => 'failure',
                 'failure_reason' => $reason,
             ]);
 
@@ -106,7 +106,7 @@ class LoginTrackingService
                 'actorId' => $targetUser?->id,
                 'actorName' => $targetUser ? $targetUser->name : 'Unknown User',
                 'actorEmail' => $targetUser ? $targetUser->email : $loginIdentifier,
-                'action' => 'member.login.failed',
+                'action' => 'login.failed',
                 'targetType' => 'member',
                 'targetId' => $targetUser ? (string) $targetUser->id : null,
                 'ipAddress' => $ip,

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Services\MediaStorageService;
+use Illuminate\Http\Request;
 
 class UploadController extends Controller
 {
@@ -15,7 +15,7 @@ class UploadController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'file'   => 'required|file|max:20480',
+            'file' => 'required|file|max:20480',
             'folder' => 'nullable|string|max:80',
         ]);
 
@@ -24,12 +24,12 @@ class UploadController extends Controller
         $result = MediaStorageService::uploadFile($file, $folder);
 
         return response()->json([
-            'success'  => true,
-            'url'      => $result['url'],
-            'path'     => $result['path'],
+            'success' => true,
+            'url' => $result['url'],
+            'path' => $result['path'],
             'publicId' => $result['publicId'] ?? $result['path'],
             'provider' => 'local',
-            'data'     => $result,
+            'data' => $result,
         ], 201);
     }
 
@@ -40,10 +40,10 @@ class UploadController extends Controller
     public function uploadMultiple(Request $request)
     {
         $request->validate([
-            'files'   => 'nullable|array',
+            'files' => 'nullable|array',
             'files.*' => 'file|max:20480',
-            'file'    => 'nullable|file|max:20480',
-            'folder'  => 'nullable|string|max:80',
+            'file' => 'nullable|file|max:20480',
+            'folder' => 'nullable|string|max:80',
         ]);
 
         $folder = $request->input('folder', 'general');
@@ -63,8 +63,8 @@ class UploadController extends Controller
 
         return response()->json([
             'success' => true,
-            'urls'    => array_column($results, 'url'),
-            'data'    => $results,
+            'urls' => array_column($results, 'url'),
+            'data' => $results,
         ], 201);
     }
 
@@ -96,11 +96,11 @@ class UploadController extends Controller
         $result = MediaStorageService::uploadFile($file, 'payments');
 
         return response()->json([
-            'success'  => true,
-            'url'      => $result['url'],
+            'success' => true,
+            'url' => $result['url'],
             'publicId' => $result['publicId'] ?? null,
             'provider' => 'local',
-            'data'     => $result,
+            'data' => $result,
         ], 201);
     }
 }

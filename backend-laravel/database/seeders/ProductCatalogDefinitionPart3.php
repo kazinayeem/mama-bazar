@@ -23,7 +23,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Otobi Modern Floating TV Wall Unit Walnut', 'brand' => 'walton', 'sub' => 2, 'price' => 18000, 'sale' => 15999, 'stock' => 15, 'specs' => ['Design' => 'Wall-mounted floating entertainment console', 'Material' => 'High-density melamine faced chipboard (MFC)', 'Panels' => 'Textured walnut woodgrain laminate with black accents', 'Size' => 'Accommodates TVs up to 65 inches']],
                     ['title' => 'Otobi L-Shape Fabric Corner Sectional Sofa', 'brand' => 'walton', 'sub' => 0, 'price' => 42000, 'sale' => 38000, 'stock' => 9, 'specs' => ['Configuration' => 'Reversible modular chaise can be set left or right', 'Fabric' => 'Heavy commercial grade woven linen upholstery', 'Cushions' => 'Zippered removable pillow covers for dry cleaning', 'Seating' => 'Comfortably seats 5 adults']],
                     ['title' => 'Hatil Minimalist Wooden Bookshelf Display Rack', 'brand' => 'apex', 'sub' => 1, 'price' => 12500, 'sale' => 11000, 'stock' => 16, 'specs' => ['Wood' => 'Solid beech and red oak veneered engineered wood', 'Tiers' => '4 open display tiers for books and art objects', 'Structure' => 'Cross-braced back stability bars prevent wobbling', 'Finish' => 'Durable antique natural lacquer finish']],
-                ]
+                ],
             ],
             // 32. Bedroom Furniture
             [
@@ -41,7 +41,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Hatil Modern Vanity Dressing Table with Stool', 'brand' => 'apex', 'sub' => 3, 'price' => 19500, 'sale' => 17500, 'stock' => 15, 'specs' => ['Mirror' => 'Frameless tall clear silver mirror', 'Cosmetics' => 'Multi-tier side shelves for perfumes and cosmetics jars', 'Stool' => 'Padded leatherette cushioned matching wooden stool included', 'Drawer' => 'Velvet-lined jewelry drawer with dividers']],
                     ['title' => 'Otobi Queen Size Hydraulic Lift Bed Frame', 'brand' => 'walton', 'sub' => 0, 'price' => 34000, 'sale' => 30999, 'stock' => 11, 'specs' => ['Mechanism' => 'German engineered pneumatic gas lift pistons lift mattress with ease', 'Underbed' => 'Dust-proof sealed underbed trunk holds seasonal quilts', 'Frame' => 'Heavy gauge powder-coated tubular steel frame inside', 'Headrest' => 'Contemporary two-tone contrasting wooden headboard']],
                     ['title' => 'IKEA Brimnes Wardrobe with 3 Doors Black', 'brand' => 'ikea', 'sub' => 1, 'price' => 22500, 'sale' => 19999, 'stock' => 14, 'specs' => ['Mirror' => 'Center door features full-length mirror saving room space', 'Interior' => 'Includes 1 clothes rail and 3 adjustable shelves', 'Safety' => 'Wall anchor fittings included to prevent tipping', 'Handles' => 'Minimalist recessed plastic handles']],
-                ]
+                ],
             ],
             // 33. Cookware & Tableware
             [
@@ -58,7 +58,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Stanley Quencher H2.0 FlowState Tumbler 40oz', 'brand' => 'adidas', 'sub' => 3, 'price' => 4999, 'sale' => 4499, 'stock' => 45, 'specs' => ['Material' => '90% Recycled 18/8 stainless steel food-grade', 'Lid' => 'FlowState 3-position rotating cover with reusable straw', 'Car' => 'Tapered slim base fits into standard car cup holders', 'Handle' => 'Comfort-grip ergonomic side carry handle']],
                     ['title' => 'Cello Opalware Dazzle Tropical 33-Piece Dinner Set', 'brand' => 'ikea', 'sub' => 2, 'price' => 6500, 'sale' => 5800, 'stock' => 35, 'specs' => ['Material' => 'Bone ash free German technology thermal shock resistant opal glass', 'Hygienic' => '100% Non-porous surface does not absorb curry oils or bacteria', 'Plates' => '6 Dinner, 6 Quarter, 6 Soup bowls, 6 Veg bowls, 2 Serving bowls', 'Durability' => 'Microwave and dishwasher friendly']],
                     ['title' => 'Tefal Comfort 5-Piece Stainless Kitchen Utensil Set', 'brand' => 'tefal', 'sub' => 1, 'price' => 2450, 'sale' => 2100, 'stock' => 60, 'specs' => ['Items' => 'Soup ladle, slotted spoon, pasta fork, pancake spatula, skimmer', 'Material' => 'Reinforced polyamide nylon heat resistant up to 230°C', 'Safe' => 'Will not scratch delicate non-stick pan coatings', 'Hanging' => 'Integrated handle loop for easy wall rack hanging']],
-                ]
+                ],
             ],
             // 34. Home Decor & Lighting
             [
@@ -75,7 +75,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Moroccan Geometric Pattern Handwoven Boho Area Rug', 'brand' => 'ikea', 'sub' => 0, 'price' => 8500, 'sale' => 7499, 'stock' => 18, 'specs' => ['Material' => '100% Natural organic cotton flatweave with braided tassels', 'Pattern' => 'Diamond trellis tribal Moroccan Scandinavian lines', 'Washable' => 'Machine washable cold cycle for effortless hygiene', 'Size' => '5 x 7 Feet (150 x 210 cm)']],
                     ['title' => 'Decozen Antique Brass Lotus Tealight Candle Holder', 'brand' => 'fossil', 'sub' => 0, 'price' => 2200, 'sale' => 1850, 'stock' => 35, 'specs' => ['Metal' => 'Handcrafted solid cast brass with antiqued patina', 'Petals' => 'Three tiers of blooming lotus petals cast romantic shadows', 'Base' => 'Heavy stable felt-padded base prevents table scratches', 'Use' => 'Fits standard tealight and votive candles']],
                     ['title' => 'IKEA Fejka Artificial Monstera Potted Plant 90cm', 'brand' => 'ikea', 'sub' => 2, 'price' => 3400, 'sale' => 2999, 'stock' => 30, 'specs' => ['Realism' => 'Lifelike botanical Swiss cheese plant monstera leaves', 'Care' => 'Zero maintenance: never needs water, pruning, or sunlight', 'Height' => '90 cm tall statement greenery for room corners', 'Pot' => 'Weighted black inner nursery pot for stability']],
-                ]
+                ],
             ],
             // 35. Bedding & Mattresses
             [
@@ -93,7 +93,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Bombay Dyeing Soft Coral Fleece Blanket Floral', 'brand' => 'ikea', 'sub' => 2, 'price' => 2400, 'sale' => 2100, 'stock' => 40, 'specs' => ['Material' => 'Super-soft high-pile microfiber coral fleece 350 GSM', 'Feel' => 'Plush velvet touch with heat-trapping lightweight warmth', 'Print' => 'Vibrant traditional botanical floral embossed pattern', 'Size' => 'Double bed size (220 x 240 cm)']],
                     ['title' => 'Bianca Luxury Microfiber Plush Sleeping Pillow Pair', 'brand' => 'ikea', 'sub' => 3, 'price' => 2100, 'sale' => 1799, 'stock' => 60, 'specs' => ['Pack' => 'Set of 2 luxury hotel pillows (45 x 68 cm)', 'Fill' => 'Siliconized micro poly-fiber stays fluffy and does not flatten', 'Shell' => '100% Breathable cotton casing with double-stitched piped edges', 'Support' => 'Medium-soft support for side and back sleepers']],
                     ['title' => 'IKEA Dvala Pure Cotton Duvet Cover Set Grey', 'brand' => 'ikea', 'sub' => 1, 'price' => 3600, 'sale' => 3100, 'stock' => 38, 'specs' => ['Fabric' => '100% Sustainably grown cotton gets softer with every wash', 'Closure' => 'Concealed snap buttons keep duvet neatly in place', 'Set' => '1 King duvet cover (240 x 220 cm) + 2 pillowcases', 'Yarn' => 'Fine yarn densely woven for long-lasting durability']],
-                ]
+                ],
             ],
             // 36. Skincare & Treatments
             [
@@ -110,7 +110,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'CeraVe Foaming Facial Cleanser for Oily Skin 473ml', 'brand' => 'cerave', 'sub' => 0, 'price' => 2200, 'sale' => 1950, 'stock' => 48, 'specs' => ['Foam' => 'Gel cleanser transforms into gentle foamy lather', 'Ingredients' => 'Ceramides, Niacinamide, and Hyaluronic acid', 'Oil Control' => 'Removes excess oil and makeup without stripping moisture barrier', 'Skin Type' => 'Normal to oily sensitive skin']],
                     ['title' => 'Neutrogena Hydro Boost Water Gel Moisturizer 50g', 'brand' => 'cerave', 'sub' => 3, 'price' => 1650, 'sale' => 1450, 'stock' => 50, 'specs' => ['Base' => 'Oil-free water gel instantly quenches dehydrated skin', 'Complex' => 'Purified Hyaluronic acid acts like sponge for dry skin cells', 'Absorption' => 'Absorbs instantly with zero greasy residue', 'Non-Comedogenic' => 'Won\'t clog pores under makeup']],
                     ['title' => 'La Roche-Posay Anthelios UVMune 400 Invisible Fluid', 'brand' => 'the-ordinary', 'sub' => 2, 'price' => 2850, 'sale' => 2550, 'stock' => 30, 'specs' => ['Filter' => 'Mexoryl 400 filter protects against ultra-long UVA rays', 'Texture' => 'Ultra-fluid invisible lightweight finish', 'Resistance' => 'Very water, sweat, and sand resistant', 'Eyes' => 'Anti-eye stinging formula tested under ophthalmological control']],
-                ]
+                ],
             ],
             // 37. Hair Care & Styling
             [
@@ -127,7 +127,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Tresemme Keratin Smooth Deep Smoothing Conditioner', 'brand' => 'dove', 'sub' => 1, 'price' => 750, 'sale' => 640, 'stock' => 55, 'specs' => ['Keratin' => 'Hydrolyzed keratin and marula oil nourishment', 'Anti-Frizz' => 'Controls frizz for up to 72 hours even in high humidity', 'Detangle' => 'Detangles knots effortlessly leaving hair silky smooth', 'Volume' => '390ml squeeze bottle']],
                     ['title' => 'Mamaearth Rosemary Hair Growth Oil with Methi 250ml', 'brand' => 'dove', 'sub' => 2, 'price' => 950, 'sale' => 820, 'stock' => 45, 'specs' => ['Ingredients' => 'Pure Rosemary oil, Methi (Fenugreek), and Castor oil', 'Action' => 'Stimulates scalp micro-circulation and revitalizes hair follicles', 'Toxins' => 'Made Safe Certified: Free from parabens, mineral oil, silicones', 'Applicator' => 'Comes with deep root comb applicator']],
                     ['title' => 'Philips 1200W Compact Foldable Hair Dryer HP8108', 'brand' => 'philips', 'sub' => 3, 'price' => 1850, 'sale' => 1599, 'stock' => 40, 'specs' => ['Power' => '1200W gentle drying for beautiful everyday results', 'Settings' => '2 flexible speed and heat combinations', 'Foldable' => 'Foldable ergonomic handle for compact travel packing', 'Nozzle' => 'Narrow concentrator nozzle for focused airflow']],
-                ]
+                ],
             ],
             // 38. Fragrances & Perfumes
             [
@@ -145,7 +145,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Carolina Herrera Good Girl Eau de Parfum 80ml', 'brand' => 'chanel', 'sub' => 1, 'price' => 14500, 'sale' => 13200, 'stock' => 20, 'specs' => ['Flacon' => 'Iconic black stiletto high heel bottle with golden heel', 'Duality' => 'Contrasts sweet tuberose and jasmine with roasted cocoa & tonka', 'Top Notes' => 'Almond, Coffee, Bergamot, Lemon', 'Mood' => 'Daring, sensual, and ultra-feminine evening signature']],
                     ['title' => 'Victoria\'s Secret Pure Seduction Fragrance Mist 250ml', 'brand' => 'dove', 'sub' => 3, 'price' => 2200, 'sale' => 1899, 'stock' => 50, 'specs' => ['Type' => 'Refreshing all-over body fragrance mist spray', 'Fragrance' => 'Fruity floral blend of Juiced Plum and Crushed Freesia', 'Hydration' => 'Infused with conditioning Aloe Vera and calming chamomile', 'Size' => '250ml / 8.4 fl oz full size spray bottle']],
                     ['title' => 'Rasasi Hawas for Men Eau de Parfum 100ml', 'brand' => 'dior', 'sub' => 0, 'price' => 5800, 'sale' => 5200, 'stock' => 30, 'specs' => ['Vibe' => 'Fresh aquatic cinnamon blend with magnetic longevity', 'Top Notes' => 'Apple, Bergamot, Lemon, Cinnamon', 'Heart Notes' => 'Orange Blossom, Cardamom, Plum, Watery notes', 'Base Notes' => 'Ambergris, Musk, Patchouli, Driftwood']],
-                ]
+                ],
             ],
             // 39. Men's Grooming & Shaving
             [
@@ -162,7 +162,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Proraso Refreshing Eucalyptus Shaving Cream 150ml', 'brand' => 'nivea', 'sub' => 3, 'price' => 1250, 'sale' => 1050, 'stock' => 50, 'specs' => ['Heritage' => 'Authentic Italian barbershop classic formula since 1948', 'Ingredients' => 'Eucalyptus oil purifies and Menthol cools skin', 'Lather' => 'Hot-soap process creates concentrated rich cushioning lather', 'Purity' => 'No parabens, silicones, mineral oils, or artificial colors']],
                     ['title' => 'Nivea Men Sensitive Post Shave Balm 100ml', 'brand' => 'nivea', 'sub' => 3, 'price' => 850, 'sale' => 720, 'stock' => 65, 'specs' => ['Soothe' => 'Instantly relieves 5 signs of shave irritation: burning, redness, dryness, tightness, itch', 'Alcohol-Free' => '0% Ethyl alcohol formula does not sting freshly shaved skin', 'Enriched' => 'Chamomile and Vitamin E soothe and hydrate skin barrier', 'Dermatology' => 'Dermatologically approved for sensitive skin']],
                     ['title' => 'Gillette Series Sensitive Shave Gel with Aloe 200ml', 'brand' => 'gillette', 'sub' => 3, 'price' => 550, 'sale' => 470, 'stock' => 75, 'specs' => ['Formula' => 'Enriched with soothing Aloe Vera extract', 'Glide' => 'Polymer-enriched lubrication formula minimizes razor drag', 'Protection' => '3x Action: Hydrates, protects, and refreshes skin', 'Rust-Proof' => 'Clean rust-free dispenser can bottom']],
-                ]
+                ],
             ],
             // 40. Bath & Body Care
             [
@@ -179,7 +179,7 @@ class ProductCatalogDefinitionPart3
                     ['title' => 'Palmolive Naturals Ultra Moist Orchid Shower Milk 750ml', 'brand' => 'dove', 'sub' => 0, 'price' => 880, 'sale' => 760, 'stock' => 50, 'specs' => ['Extracts' => '100% Natural exotic orchid flower and moisturizing milk protein', 'Texture' => 'Rich creamy shower milk foams into luxurious velvet lather', 'pH' => 'Dermatologically tested pH balanced 5.5 body wash', 'Fragrance' => 'Sensual floral orchid fragrance lasts after bath']],
                     ['title' => 'Nivea Cocoa Butter Body Cream with Serum 400ml', 'brand' => 'nivea', 'sub' => 1, 'price' => 920, 'sale' => 810, 'stock' => 55, 'specs' => ['Indulgence' => 'Infused with natural Cocoa butter and nourishing Vitamin E', 'Glow' => 'Provides 48-hour moisture and radiant healthy skin glow', 'Scent' => 'Delicious warm cocoa scent envelops senses', 'Absorption' => 'Melts softly into skin without sticky film']],
                     ['title' => 'Dettol ProFresh Cool Body Wash with Menthol 500ml', 'brand' => 'dove', 'sub' => 0, 'price' => 650, 'sale' => 560, 'stock' => 60, 'specs' => ['Cooling' => 'Crisp menthol formula instantly drops skin temperature by 5°C', 'Protection' => '100% Better germ protection against summer body odor', 'Lather' => 'Foams instantly into refreshing energizing bubbles', 'Dispenser' => 'Easy-to-use flip cap shower bottle']],
-                ]
+                ],
             ],
         ];
     }

@@ -76,33 +76,91 @@
 
                 @auth
                     <div class="relative" x-data="{ userMenu: false }">
-                        <button type="button" @click="userMenu = !userMenu" class="flex items-center gap-2 rounded-[8px] border border-brand-green-200 bg-brand-green-50 px-2.5 py-1.5 text-brand-green-700 hover:bg-brand-green-100" aria-label="Account menu">
-                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-green-500 text-xs font-bold text-white">
+                        <button type="button" @click="userMenu = !userMenu" class="flex items-center gap-2 rounded-[8px] border border-brand-green-200 bg-brand-green-50 px-2 py-1 text-brand-green-700 hover:bg-brand-green-100 transition" aria-label="Account menu">
+                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-green-600 text-xs font-black text-white shadow-xs">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </span>
-                            <span class="hidden max-w-[80px] truncate text-xs font-semibold md:inline">{{ auth()->user()->name }}</span>
+                            <span class="hidden max-w-[95px] truncate text-xs font-bold sm:inline">{{ auth()->user()->name }}</span>
+                            <svg class="h-3.5 w-3.5 text-brand-green-600 transition-transform duration-200" :class="{ 'rotate-180': userMenu }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
 
-                        <div x-show="userMenu" @click.away="userMenu = false" x-cloak class="absolute right-0 z-50 mt-2 w-48 rounded-[10px] border border-brand-green-100 bg-white py-2 shadow-card">
+                        <div x-show="userMenu" @click.away="userMenu = false" x-cloak
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             class="absolute right-0 z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5">
+
+                            {{-- Header in dropdown --}}
+                            <div class="px-3 py-2 border-b border-slate-100 mb-1">
+                                <div class="text-xs font-extrabold text-slate-900 truncate">{{ auth()->user()->name }}</div>
+                                <div class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?: auth()->user()->phone }}</div>
+                            </div>
+
                             @if(in_array(auth()->user()->role, ['admin', 'manager', 'editor', 'staff', 'super_admin']) || auth()->user()->custom_role)
-                                <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-xs font-semibold text-brand-green-600 hover:bg-brand-green-50">Admin Panel</a>
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-brand-green-700 bg-brand-green-50/60 hover:bg-brand-green-100 transition">
+                                    <svg class="h-4 w-4 text-brand-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                    <span>Admin Panel</span>
+                                </a>
                                 <div class="my-1 border-t border-slate-100"></div>
                             @endif
-                            <a href="{{ route('account.email') }}" class="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-brand-green-50">Email Settings</a>
+
+                            <a href="{{ route('account.dashboard') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                <span>My Profile</span>
+                            </a>
+
+                            <a href="{{ route('account.orders') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                <span>My Orders</span>
+                            </a>
+
+                            <a href="{{ route('track') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>Track My Orders</span>
+                            </a>
+
+                            <a href="{{ route('account.addresses') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                <span>My Addresses</span>
+                            </a>
+
+                            <a href="{{ route('account.settings') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span>Account Settings</span>
+                            </a>
+
+                            <a href="{{ route('account.email') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                <span>Email Preferences</span>
+                            </a>
+
                             @if(auth()->user()->mustVerifyEmail())
-                                <a href="{{ route('auth.verify-otp') }}" class="block px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50">Verify Email</a>
+                                <a href="{{ route('auth.verify-otp') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-amber-700 bg-amber-50/60 hover:bg-amber-100 transition">
+                                    <svg class="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <span>Verify Email</span>
+                                </a>
                             @endif
+
+                            <div class="my-1 border-t border-slate-100"></div>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="w-full px-4 py-2 text-left text-xs font-semibold text-red-600 hover:bg-red-50">Logout</button>
+                                <button type="submit" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-red-600 hover:bg-red-50 transition">
+                                    <svg class="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                    <span>Logout</span>
+                                </button>
                             </form>
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 rounded-[8px] border border-brand-green-200 bg-brand-green-50 px-3 py-2 text-xs font-bold text-brand-green-700 transition hover:bg-brand-green-100">
-                        <span class="hidden sm:inline">Login</span>
-                        <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-                    </a>
+                    <div class="flex items-center gap-1.5">
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 rounded-[8px] border border-brand-green-200 bg-brand-green-50 px-3 py-2 text-xs font-bold text-brand-green-700 transition hover:bg-brand-green-100">
+                            <span>Sign In</span>
+                        </a>
+                        <a href="{{ route('register') }}" class="hidden sm:inline-flex items-center gap-1 rounded-[8px] bg-brand-green-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-brand-green-700 shadow-xs">
+                            <span>Register</span>
+                        </a>
+                    </div>
                 @endauth
             </div>
         </div>
@@ -149,13 +207,69 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <nav class="mt-4 space-y-3 flex-1 overflow-y-auto">
+            <nav class="mt-4 space-y-2 flex-1 overflow-y-auto">
                 <a href="{{ route('home') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold hover:bg-brand-green-50">Home</a>
                 <a href="{{ route('shop') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold hover:bg-brand-green-50">Shop Catalog</a>
                 <a href="{{ route('shop', ['sale' => 'true']) }}" class="block px-3 py-2 rounded-lg text-sm font-semibold text-brand-orange-600 hover:bg-brand-orange-50">🔥 Hot Deals</a>
                 <a href="{{ route('track') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold hover:bg-brand-green-50">Track Order</a>
                 <a href="{{ route('about') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold hover:bg-brand-green-50">About Us</a>
                 <a href="{{ route('contact') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold hover:bg-brand-green-50">Contact Us</a>
+
+                {{-- Mobile Customer Account Section --}}
+                <div class="pt-4 border-t border-slate-100 mt-3 space-y-1">
+                    @auth
+                        <div class="px-3 py-2 mb-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-green-600 text-xs font-black text-white shrink-0">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </span>
+                            <div class="min-w-0">
+                                <div class="text-xs font-bold text-slate-900 truncate">{{ auth()->user()->name }}</div>
+                                <div class="text-[10px] text-slate-500 truncate">{{ auth()->user()->email ?: auth()->user()->phone }}</div>
+                            </div>
+                        </div>
+
+                        @if(in_array(auth()->user()->role, ['admin', 'manager', 'editor', 'staff', 'super_admin']) || auth()->user()->custom_role)
+                            <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded-lg text-xs font-bold text-brand-green-700 bg-brand-green-50">
+                                Go to Admin Panel
+                            </a>
+                        @endif
+
+                        <a href="{{ route('account.dashboard') }}" class="block px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-brand-green-50">
+                            My Account
+                        </a>
+                        <a href="{{ route('account.orders') }}" class="block px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-brand-green-50">
+                            My Orders
+                        </a>
+                        <a href="{{ route('account.addresses') }}" class="block px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-brand-green-50">
+                            My Addresses
+                        </a>
+                        <a href="{{ route('account.profile') }}" class="block px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-brand-green-50">
+                            Personal Profile
+                        </a>
+                        <a href="{{ route('account.settings') }}" class="block px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-brand-green-50">
+                            Security & Password
+                        </a>
+                        <a href="{{ route('account.email') }}" class="block px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-brand-green-50">
+                            Email Preferences
+                        </a>
+
+                        <form action="{{ route('logout') }}" method="POST" class="pt-2 border-t border-slate-100">
+                            @csrf
+                            <button type="submit" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50">
+                                Logout
+                            </button>
+                        </form>
+                    @else
+                        <div class="p-2 space-y-2">
+                            <a href="{{ route('login') }}" class="block w-full text-center py-2 px-4 rounded-xl bg-brand-green-600 text-white text-xs font-bold shadow-sm">
+                                Sign In
+                            </a>
+                            <a href="{{ route('register') }}" class="block w-full text-center py-2 px-4 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50">
+                                Register Account
+                            </a>
+                        </div>
+                    @endauth
+                </div>
             </nav>
         </div>
     </div>

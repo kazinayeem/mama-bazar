@@ -77,6 +77,7 @@ $adminNavSections = [
         ['label' => 'Analytics', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'bar-chart-3'],
     ]],
     ['label' => 'Security & Access', 'items' => [
+        ['label' => 'Activity Monitor', 'route' => 'admin.activity.index', 'match' => 'admin.activity.*', 'icon' => 'activity'],
         ['label' => 'Team Members', 'route' => 'admin.members.index', 'match' => 'admin.members.*', 'icon' => 'user-check'],
         ['label' => 'Backup & Restore', 'route' => 'admin.backup.index', 'match' => 'admin.backup.*', 'icon' => 'database-backup'],
     ]],

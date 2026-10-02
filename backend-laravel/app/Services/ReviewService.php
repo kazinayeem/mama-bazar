@@ -18,7 +18,9 @@ use Illuminate\Support\Facades\DB;
 class ReviewService
 {
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_APPROVED = 'approved';
+
     public const STATUS_REJECTED = 'rejected';
 
     public const PER_PAGE = 10;
@@ -28,7 +30,7 @@ class ReviewService
      */
     public static function hasVerifiedPurchase(?int $userId, int $productId): bool
     {
-        if (!$userId || !$productId) {
+        if (! $userId || ! $productId) {
             return false;
         }
 
@@ -48,7 +50,7 @@ class ReviewService
     public static function submit(int $productId, ?User $user, int $rating, ?string $title, string $comment): Review
     {
         $product = Product::find($productId);
-        if (!$product) {
+        if (! $product) {
             throw new Exception('Product not found.', 404);
         }
         if ($rating < 1 || $rating > 5) {
@@ -187,6 +189,7 @@ class ReviewService
                     ->take($limit)
                     ->get();
             }
+
             return $featured;
         }
 
@@ -206,7 +209,7 @@ class ReviewService
      */
     public static function setStatus(Review $review, string $status, ?User $admin = null, ?string $note = null): Review
     {
-        if (!in_array($status, [self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_REJECTED], true)) {
+        if (! in_array($status, [self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_REJECTED], true)) {
             throw new Exception('Invalid review status.', 422);
         }
 
@@ -223,6 +226,7 @@ class ReviewService
     public static function setFeatured(Review $review, bool $featured): Review
     {
         $review->update(['is_featured' => $featured]);
+
         return $review->fresh();
     }
 }

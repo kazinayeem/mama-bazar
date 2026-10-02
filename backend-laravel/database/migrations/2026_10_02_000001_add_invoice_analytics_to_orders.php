@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -48,7 +48,7 @@ return new class extends Migration
         $orders = DB::table('orders')->select('id', 'order_id')->get();
         foreach ($orders as $o) {
             DB::table('orders')->where('id', $o->id)->update([
-                'invoice_number' => 'INV-' . date('Y') . '-' . str_pad((string) $o->id, 6, '0', STR_PAD_LEFT),
+                'invoice_number' => 'INV-'.date('Y').'-'.str_pad((string) $o->id, 6, '0', STR_PAD_LEFT),
                 'access_token' => bin2hex(random_bytes(16)),
             ]);
         }

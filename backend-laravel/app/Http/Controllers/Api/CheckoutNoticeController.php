@@ -15,6 +15,7 @@ class CheckoutNoticeController extends Controller
             ->orderBy('priority', 'asc')
             ->orderBy('id', 'asc')
             ->get();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -23,15 +24,17 @@ class CheckoutNoticeController extends Controller
         $data = CheckoutNotice::orderBy('priority', 'asc')
             ->orderBy('id', 'asc')
             ->get();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function getById(int $id): JsonResponse
     {
         $data = CheckoutNotice::find($id);
-        if (!$data) {
+        if (! $data) {
             return response()->json(['success' => false, 'message' => 'Checkout notice not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -61,7 +64,7 @@ class CheckoutNoticeController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $notice = CheckoutNotice::find($id);
-        if (!$notice) {
+        if (! $notice) {
             return response()->json(['success' => false, 'message' => 'Checkout notice not found'], 404);
         }
 
@@ -75,12 +78,24 @@ class CheckoutNoticeController extends Controller
         ]);
 
         $updateData = [];
-        if ($request->has('text')) $updateData['text'] = $validated['text'];
-        if ($request->has('priority')) $updateData['priority'] = $validated['priority'];
-        if ($request->has('backgroundColor')) $updateData['background_color'] = $validated['backgroundColor'];
-        if ($request->has('textColor')) $updateData['text_color'] = $validated['textColor'];
-        if ($request->has('icon')) $updateData['icon'] = $validated['icon'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
+        if ($request->has('text')) {
+            $updateData['text'] = $validated['text'];
+        }
+        if ($request->has('priority')) {
+            $updateData['priority'] = $validated['priority'];
+        }
+        if ($request->has('backgroundColor')) {
+            $updateData['background_color'] = $validated['backgroundColor'];
+        }
+        if ($request->has('textColor')) {
+            $updateData['text_color'] = $validated['textColor'];
+        }
+        if ($request->has('icon')) {
+            $updateData['icon'] = $validated['icon'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
 
         $notice->update($updateData);
 
@@ -90,6 +105,7 @@ class CheckoutNoticeController extends Controller
     public function remove(int $id): JsonResponse
     {
         CheckoutNotice::destroy($id);
+
         return response()->json(['success' => true, 'message' => 'Checkout notice deleted']);
     }
 }

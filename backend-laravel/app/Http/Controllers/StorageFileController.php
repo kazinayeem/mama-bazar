@@ -3,16 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class StorageFileController extends Controller
 {
     /**
      * Safely serve public storage files when symlink is absent or broken (e.g. on cPanel shared hosting).
      *
-     * @param Request $request
-     * @param string $path
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function show(Request $request, string $path)
     {
@@ -23,12 +22,12 @@ class StorageFileController extends Controller
         }
 
         // Candidate 1: public storage disk root (respects config/filesystems.php and test fakes)
-        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        $disk = Storage::disk('public');
         $filePath = $disk->path($normalized);
 
         // Candidate 2: direct storage/app/public
         if (! file_exists($filePath)) {
-            $storageCandidate = storage_path('app/public/' . $normalized);
+            $storageCandidate = storage_path('app/public/'.$normalized);
             if (file_exists($storageCandidate) && ! is_dir($storageCandidate)) {
                 $filePath = $storageCandidate;
             }
@@ -36,7 +35,7 @@ class StorageFileController extends Controller
 
         // Candidate 3: public/storage/... (in case real folder exists in public)
         if (! file_exists($filePath)) {
-            $publicCandidate = public_path('storage/' . $normalized);
+            $publicCandidate = public_path('storage/'.$normalized);
             if (file_exists($publicCandidate) && ! is_dir($publicCandidate)) {
                 $filePath = $publicCandidate;
             }
@@ -52,9 +51,7 @@ class StorageFileController extends Controller
     /**
      * Safely serve legacy /uploads/... files.
      *
-     * @param Request $request
-     * @param string $path
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function showUploads(Request $request, string $path)
     {
@@ -64,9 +61,9 @@ class StorageFileController extends Controller
         }
 
         $candidates = [
-            public_path('uploads/' . $normalized),
-            storage_path('app/public/' . $normalized),
-            storage_path('app/public/uploads/' . $normalized),
+            public_path('uploads/'.$normalized),
+            storage_path('app/public/'.$normalized),
+            storage_path('app/public/uploads/'.$normalized),
         ];
 
         $filePath = null;
@@ -91,14 +88,14 @@ class StorageFileController extends Controller
     {
         $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
         $extMimes = [
-            'jpg'  => 'image/jpeg',
+            'jpg' => 'image/jpeg',
             'jpeg' => 'image/jpeg',
-            'png'  => 'image/png',
+            'png' => 'image/png',
             'webp' => 'image/webp',
-            'gif'  => 'image/gif',
-            'svg'  => 'image/svg+xml',
-            'pdf'  => 'application/pdf',
-            'ico'  => 'image/x-icon',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'pdf' => 'application/pdf',
+            'ico' => 'image/x-icon',
             'avif' => 'image/avif',
         ];
 
@@ -112,7 +109,7 @@ class StorageFileController extends Controller
             'Content-Length' => (string) $size,
             'Cache-Control' => 'public, max-age=31536000, immutable',
             'ETag' => $etag,
-            'Last-Modified' => gmdate('D, d M Y H:i:s', $lastModified) . ' GMT',
+            'Last-Modified' => gmdate('D, d M Y H:i:s', $lastModified).' GMT',
             'Access-Control-Allow-Origin' => '*',
             'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
         ];

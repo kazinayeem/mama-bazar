@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 class RentalController extends Controller
 {
     private const DEFAULT_PAGE = 1;
+
     private const DEFAULT_LIMIT = 20;
 
     private function selectColumns()
@@ -63,7 +64,7 @@ class RentalController extends Controller
             $query->where('rentals.payment_status', $request->query('paymentStatus'));
         }
         if ($request->filled('search')) {
-            $query->where('rentals.customer_name', 'like', '%' . $request->query('search') . '%');
+            $query->where('rentals.customer_name', 'like', '%'.$request->query('search').'%');
         }
 
         $total = $query->count();
@@ -94,7 +95,7 @@ class RentalController extends Controller
             ->select(array_merge($this->selectColumns(), ['rentals.updated_at as updatedAt']))
             ->first();
 
-        if (!$row) {
+        if (! $row) {
             return response()->json(['success' => false, 'message' => 'Rental not found'], 404);
         }
 
@@ -161,13 +162,14 @@ class RentalController extends Controller
         ]);
 
         $created = $this->getById($rental->id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $created], 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
     {
         $rental = Rental::find($id);
-        if (!$rental) {
+        if (! $rental) {
             return response()->json(['success' => false, 'message' => 'Rental not found'], 404);
         }
 
@@ -199,45 +201,95 @@ class RentalController extends Controller
         ]);
 
         $updateData = [];
-        if ($request->has('rentalItem')) $updateData['rental_item'] = $validated['rentalItem'];
-        if ($request->has('productId')) $updateData['product_id'] = $validated['productId'];
-        if ($request->has('customerName')) $updateData['customer_name'] = $validated['customerName'];
-        if ($request->has('phone')) $updateData['phone'] = $validated['phone'];
-        if ($request->has('email')) $updateData['email'] = $validated['email'];
-        if ($request->has('userId')) $updateData['user_id'] = $validated['userId'];
-        if ($request->has('quantity')) $updateData['quantity'] = $validated['quantity'];
-        if ($request->has('startDate')) $updateData['start_date'] = $validated['startDate'];
-        if ($request->has('endDate')) $updateData['end_date'] = $validated['endDate'];
-        if ($request->has('returnDate')) $updateData['return_date'] = $validated['returnDate'];
-        if ($request->has('rateType')) $updateData['rate_type'] = $validated['rateType'];
-        if ($request->has('dailyRate')) $updateData['daily_rate'] = (string) $validated['dailyRate'];
-        if ($request->has('weeklyRate')) $updateData['weekly_rate'] = (string) $validated['weeklyRate'];
-        if ($request->has('monthlyRate')) $updateData['monthly_rate'] = (string) $validated['monthlyRate'];
-        if ($request->has('rate')) $updateData['rate'] = (string) $validated['rate'];
-        if ($request->has('durationUnits')) $updateData['duration_units'] = $validated['durationUnits'];
-        if ($request->has('securityDeposit')) $updateData['security_deposit'] = (string) $validated['securityDeposit'];
-        if ($request->has('discount')) $updateData['discount'] = (string) $validated['discount'];
-        if ($request->has('additionalCharge')) $updateData['additional_charge'] = (string) $validated['additionalCharge'];
-        if ($request->has('totalAmount')) $updateData['total_amount'] = (string) $validated['totalAmount'];
-        if ($request->has('paymentStatus')) $updateData['payment_status'] = $validated['paymentStatus'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
-        if ($request->has('notes')) $updateData['notes'] = $validated['notes'];
-        if ($request->has('attachmentUrl')) $updateData['attachment_url'] = $validated['attachmentUrl'];
+        if ($request->has('rentalItem')) {
+            $updateData['rental_item'] = $validated['rentalItem'];
+        }
+        if ($request->has('productId')) {
+            $updateData['product_id'] = $validated['productId'];
+        }
+        if ($request->has('customerName')) {
+            $updateData['customer_name'] = $validated['customerName'];
+        }
+        if ($request->has('phone')) {
+            $updateData['phone'] = $validated['phone'];
+        }
+        if ($request->has('email')) {
+            $updateData['email'] = $validated['email'];
+        }
+        if ($request->has('userId')) {
+            $updateData['user_id'] = $validated['userId'];
+        }
+        if ($request->has('quantity')) {
+            $updateData['quantity'] = $validated['quantity'];
+        }
+        if ($request->has('startDate')) {
+            $updateData['start_date'] = $validated['startDate'];
+        }
+        if ($request->has('endDate')) {
+            $updateData['end_date'] = $validated['endDate'];
+        }
+        if ($request->has('returnDate')) {
+            $updateData['return_date'] = $validated['returnDate'];
+        }
+        if ($request->has('rateType')) {
+            $updateData['rate_type'] = $validated['rateType'];
+        }
+        if ($request->has('dailyRate')) {
+            $updateData['daily_rate'] = (string) $validated['dailyRate'];
+        }
+        if ($request->has('weeklyRate')) {
+            $updateData['weekly_rate'] = (string) $validated['weeklyRate'];
+        }
+        if ($request->has('monthlyRate')) {
+            $updateData['monthly_rate'] = (string) $validated['monthlyRate'];
+        }
+        if ($request->has('rate')) {
+            $updateData['rate'] = (string) $validated['rate'];
+        }
+        if ($request->has('durationUnits')) {
+            $updateData['duration_units'] = $validated['durationUnits'];
+        }
+        if ($request->has('securityDeposit')) {
+            $updateData['security_deposit'] = (string) $validated['securityDeposit'];
+        }
+        if ($request->has('discount')) {
+            $updateData['discount'] = (string) $validated['discount'];
+        }
+        if ($request->has('additionalCharge')) {
+            $updateData['additional_charge'] = (string) $validated['additionalCharge'];
+        }
+        if ($request->has('totalAmount')) {
+            $updateData['total_amount'] = (string) $validated['totalAmount'];
+        }
+        if ($request->has('paymentStatus')) {
+            $updateData['payment_status'] = $validated['paymentStatus'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
+        if ($request->has('notes')) {
+            $updateData['notes'] = $validated['notes'];
+        }
+        if ($request->has('attachmentUrl')) {
+            $updateData['attachment_url'] = $validated['attachmentUrl'];
+        }
 
         $rental->update($updateData);
 
         $fresh = $this->getById($id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $fresh]);
     }
 
     public function remove(int $id): JsonResponse
     {
         $rental = Rental::find($id);
-        if (!$rental) {
+        if (! $rental) {
             return response()->json(['success' => false, 'message' => 'Rental not found'], 404);
         }
 
         $rental->delete();
+
         return response()->json(['success' => true]);
     }
 }

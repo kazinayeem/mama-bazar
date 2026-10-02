@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 class VerifySeedData extends Command
 {
     protected $signature = 'data:verify';
+
     protected $description = 'Verify the consistency, counts, and relational integrity of seeded e-commerce data';
 
     public function handle(): int
@@ -134,14 +135,15 @@ class VerifySeedData extends Command
         $brokenImages = 0;
         $productsWithImages = Product::all();
         foreach ($productsWithImages as $p) {
-            if (empty($p->images) || !is_array($p->images)) {
+            if (empty($p->images) || ! is_array($p->images)) {
                 $brokenImages++;
+
                 continue;
             }
             foreach ($p->images as $relPath) {
                 $cleanPath = str_replace('/storage/', '', $relPath);
-                $fullPath = storage_path('app/public/' . $cleanPath);
-                if (!file_exists($fullPath)) {
+                $fullPath = storage_path('app/public/'.$cleanPath);
+                if (! file_exists($fullPath)) {
                     $brokenImages++;
                 }
             }
@@ -155,10 +157,12 @@ class VerifySeedData extends Command
         $this->info('========================================================');
         if ($hasErrors) {
             $this->error('VALIDATION FAILED: Some consistency checks did not pass.');
+
             return 1;
         }
 
         $this->info('ALL INTEGRITY & RELATIONAL CHECKS PASSED SUCCESSFULLY!');
+
         return 0;
     }
 }

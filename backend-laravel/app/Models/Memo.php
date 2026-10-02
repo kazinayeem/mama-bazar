@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Memo extends Model
 {
     protected $table = 'memos';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

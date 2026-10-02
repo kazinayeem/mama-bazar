@@ -25,14 +25,16 @@ class TrackingController extends Controller
         $sanitized = preg_replace('/eval\s*\(/i', '', $sanitized);
         $sanitized = preg_replace('/document\.cookie/i', '', $sanitized);
         $sanitized = preg_replace('/document\.write/i', '', $sanitized);
+
         return preg_replace('/window\.location\s*=/i', '', $sanitized);
     }
 
     private function validatePixelId(string $type, string $pixelId): bool
     {
-        if (!isset(self::PIXEL_ID_PATTERNS[$type])) {
+        if (! isset(self::PIXEL_ID_PATTERNS[$type])) {
             return true;
         }
+
         return (bool) preg_match(self::PIXEL_ID_PATTERNS[$type], $pixelId);
     }
 
@@ -47,19 +49,29 @@ class TrackingController extends Controller
         foreach ($active as $row) {
             switch ($row->type) {
                 case 'google_tag_manager':
-                    if ($row->pixel_id) $config['gtmId'] = $row->pixel_id;
+                    if ($row->pixel_id) {
+                        $config['gtmId'] = $row->pixel_id;
+                    }
                     break;
                 case 'google_analytics':
-                    if ($row->pixel_id) $config['gaMeasurementId'] = $row->pixel_id;
+                    if ($row->pixel_id) {
+                        $config['gaMeasurementId'] = $row->pixel_id;
+                    }
                     break;
                 case 'facebook_pixel':
-                    if ($row->pixel_id) $config['facebookPixelId'] = $row->pixel_id;
+                    if ($row->pixel_id) {
+                        $config['facebookPixelId'] = $row->pixel_id;
+                    }
                     break;
                 case 'tiktok_pixel':
-                    if ($row->pixel_id) $config['tiktokPixelId'] = $row->pixel_id;
+                    if ($row->pixel_id) {
+                        $config['tiktokPixelId'] = $row->pixel_id;
+                    }
                     break;
                 case 'custom_script':
-                    if ($row->script_code) $config['customHeadScripts'][] = $row->script_code;
+                    if ($row->script_code) {
+                        $config['customHeadScripts'][] = $row->script_code;
+                    }
                     break;
             }
         }
@@ -70,15 +82,17 @@ class TrackingController extends Controller
     public function getAll(): JsonResponse
     {
         $data = MarketingIntegration::orderBy('created_at', 'desc')->get();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function getById(int $id): JsonResponse
     {
         $data = MarketingIntegration::find($id);
-        if (!$data) {
+        if (! $data) {
             return response()->json(['success' => false, 'message' => 'Integration not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -100,17 +114,17 @@ class TrackingController extends Controller
         $accessToken = $validated['accessToken'] ?? null;
 
         $typesNeedingPixelId = ['google_tag_manager', 'google_analytics', 'facebook_pixel', 'tiktok_pixel'];
-        if (in_array($type, $typesNeedingPixelId) && !$pixelId) {
+        if (in_array($type, $typesNeedingPixelId) && ! $pixelId) {
             return response()->json(['success' => false, 'message' => 'Pixel/Measurement ID is required'], 400);
         }
-        if ($type === 'custom_script' && !$scriptCode) {
+        if ($type === 'custom_script' && ! $scriptCode) {
             return response()->json(['success' => false, 'message' => 'Script code is required'], 400);
         }
-        if ($type === 'facebook_conversion_api' && !$accessToken) {
+        if ($type === 'facebook_conversion_api' && ! $accessToken) {
             return response()->json(['success' => false, 'message' => 'Access token is required'], 400);
         }
 
-        if ($pixelId && !$this->validatePixelId($type, $pixelId)) {
+        if ($pixelId && ! $this->validatePixelId($type, $pixelId)) {
             return response()->json(['success' => false, 'message' => "Invalid pixel ID format for {$type}"], 400);
         }
 
@@ -130,7 +144,7 @@ class TrackingController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $integration = MarketingIntegration::find($id);
-        if (!$integration) {
+        if (! $integration) {
             return response()->json(['success' => false, 'message' => 'Integration not found'], 404);
         }
 
@@ -147,20 +161,32 @@ class TrackingController extends Controller
         $type = $request->input('type', $integration->type);
         $pixelId = $request->input('pixelId', $integration->pixel_id);
 
-        if ($pixelId && !$this->validatePixelId($type, $pixelId)) {
+        if ($pixelId && ! $this->validatePixelId($type, $pixelId)) {
             return response()->json(['success' => false, 'message' => "Invalid pixel ID format for {$type}"], 400);
         }
 
         $updateData = [];
-        if ($request->has('name')) $updateData['name'] = $validated['name'];
-        if ($request->has('type')) $updateData['type'] = $validated['type'];
-        if ($request->has('pixelId')) $updateData['pixel_id'] = $validated['pixelId'];
+        if ($request->has('name')) {
+            $updateData['name'] = $validated['name'];
+        }
+        if ($request->has('type')) {
+            $updateData['type'] = $validated['type'];
+        }
+        if ($request->has('pixelId')) {
+            $updateData['pixel_id'] = $validated['pixelId'];
+        }
         if ($request->has('scriptCode')) {
             $updateData['script_code'] = $validated['scriptCode'] ? $this->sanitizeScript($validated['scriptCode']) : null;
         }
-        if ($request->has('accessToken')) $updateData['access_token'] = $validated['accessToken'];
-        if ($request->has('testEventCode')) $updateData['test_event_code'] = $validated['testEventCode'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
+        if ($request->has('accessToken')) {
+            $updateData['access_token'] = $validated['accessToken'];
+        }
+        if ($request->has('testEventCode')) {
+            $updateData['test_event_code'] = $validated['testEventCode'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
 
         $integration->update($updateData);
 
@@ -170,6 +196,7 @@ class TrackingController extends Controller
     public function remove(int $id): JsonResponse
     {
         MarketingIntegration::destroy($id);
+
         return response()->json(['success' => true, 'message' => 'Integration deleted']);
     }
 
@@ -177,6 +204,7 @@ class TrackingController extends Controller
     {
         $limit = (int) ($request->query('limit') ?: 50);
         $logs = TrackingLog::orderBy('created_at', 'desc')->limit($limit)->get();
+
         return response()->json(['success' => true, 'data' => $logs]);
     }
 }

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Coupon;
+use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
@@ -19,7 +19,7 @@ class CouponController extends Controller
         $subtotal = (float) $validated['subtotal'];
 
         $coupon = Coupon::where('code', $code)->where('status', 'active')->first();
-        if (!$coupon) {
+        if (! $coupon) {
             return response()->json(['success' => false, 'message' => 'Invalid coupon code'], 400);
         }
 
@@ -49,15 +49,17 @@ class CouponController extends Controller
     public function getAll()
     {
         $coupons = Coupon::orderBy('created_at', 'desc')->get();
+
         return response()->json(['success' => true, 'data' => $coupons]);
     }
 
     public function getById($id)
     {
         $coupon = Coupon::find($id);
-        if (!$coupon) {
+        if (! $coupon) {
             return response()->json(['success' => false, 'message' => 'Coupon not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $coupon]);
     }
 
@@ -89,30 +91,44 @@ class CouponController extends Controller
     public function update(Request $request, $id)
     {
         $coupon = Coupon::find($id);
-        if (!$coupon) {
+        if (! $coupon) {
             return response()->json(['success' => false, 'message' => 'Coupon not found'], 404);
         }
 
         $updateData = [];
-        if ($request->has('code')) $updateData['code'] = strtoupper(trim($request->input('code')));
-        if ($request->has('discountType')) $updateData['discount_type'] = $request->input('discountType');
-        if ($request->has('discountValue')) $updateData['discount_value'] = (float) $request->input('discountValue');
-        if ($request->has('minOrderAmount')) $updateData['min_order_amount'] = (float) $request->input('minOrderAmount');
-        if ($request->has('expiryDate')) $updateData['expiry_date'] = $request->input('expiryDate');
-        if ($request->has('status')) $updateData['status'] = $request->input('status');
+        if ($request->has('code')) {
+            $updateData['code'] = strtoupper(trim($request->input('code')));
+        }
+        if ($request->has('discountType')) {
+            $updateData['discount_type'] = $request->input('discountType');
+        }
+        if ($request->has('discountValue')) {
+            $updateData['discount_value'] = (float) $request->input('discountValue');
+        }
+        if ($request->has('minOrderAmount')) {
+            $updateData['min_order_amount'] = (float) $request->input('minOrderAmount');
+        }
+        if ($request->has('expiryDate')) {
+            $updateData['expiry_date'] = $request->input('expiryDate');
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $request->input('status');
+        }
 
         $coupon->update($updateData);
+
         return response()->json(['success' => true, 'data' => $coupon]);
     }
 
     public function remove($id)
     {
         $coupon = Coupon::find($id);
-        if (!$coupon) {
+        if (! $coupon) {
             return response()->json(['success' => false, 'message' => 'Coupon not found'], 404);
         }
 
         $coupon->delete();
+
         return response()->json(['success' => true, 'message' => 'Coupon deleted']);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Services\BackupService;
 use App\Services\JwtService;
 use App\Services\RbacService;
@@ -87,7 +86,7 @@ class ParityTest extends TestCase
         $loginRes = $this->postJson('/api/users/dev-login');
         $token = $loginRes->json('data.token');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/users/profile');
 
         $response->assertStatus(200)
@@ -179,7 +178,7 @@ class ParityTest extends TestCase
         $token = $loginRes->json('data.token');
 
         // Wrong PIN
-        $wrongRes = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $wrongRes = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/backup/verify-pin', ['pin' => '00000000']);
         $wrongRes->assertStatus(401)
             ->assertJson([
@@ -191,7 +190,7 @@ class ParityTest extends TestCase
         $pins = BackupService::getValidPins();
         $validPin = $pins[0];
 
-        $correctRes = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $correctRes = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/backup/verify-pin', ['pin' => $validPin]);
         $correctRes->assertStatus(200)
             ->assertJson([

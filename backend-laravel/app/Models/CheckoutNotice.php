@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class CheckoutNotice extends Model
 {
     protected $table = 'checkout_notices';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

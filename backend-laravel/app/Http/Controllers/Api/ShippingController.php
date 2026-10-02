@@ -25,6 +25,7 @@ class ShippingController extends Controller
             $arr = $m->toArray();
             $arr['charge'] = $this->toNum($m->charge);
             $arr['freeShippingMinAmount'] = $m->free_shipping_min_amount !== null ? $this->toNum($m->free_shipping_min_amount) : null;
+
             return $arr;
         });
 
@@ -56,6 +57,7 @@ class ShippingController extends Controller
                 $cost = 0;
             }
             $arr['estimatedCost'] = $cost;
+
             return $arr;
         });
 
@@ -65,15 +67,17 @@ class ShippingController extends Controller
     public function getAll(): JsonResponse
     {
         $data = ShippingMethod::orderBy('priority', 'asc')->orderBy('id', 'asc')->get();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function getById(int $id): JsonResponse
     {
         $data = ShippingMethod::find($id);
-        if (!$data) {
+        if (! $data) {
             return response()->json(['success' => false, 'message' => 'Shipping method not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -107,7 +111,7 @@ class ShippingController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $method = ShippingMethod::find($id);
-        if (!$method) {
+        if (! $method) {
             return response()->json(['success' => false, 'message' => 'Shipping method not found'], 404);
         }
 
@@ -123,14 +127,30 @@ class ShippingController extends Controller
         ]);
 
         $updateData = [];
-        if ($request->has('name')) $updateData['name'] = $validated['name'];
-        if ($request->has('charge')) $updateData['charge'] = $validated['charge'];
-        if ($request->has('estimatedDelivery')) $updateData['estimated_delivery'] = $validated['estimatedDelivery'];
-        if ($request->has('description')) $updateData['description'] = $validated['description'];
-        if ($request->has('priority')) $updateData['priority'] = $validated['priority'];
-        if ($request->has('freeShippingMinAmount')) $updateData['free_shipping_min_amount'] = $validated['freeShippingMinAmount'];
-        if ($request->has('codAvailable')) $updateData['cod_available'] = $validated['codAvailable'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
+        if ($request->has('name')) {
+            $updateData['name'] = $validated['name'];
+        }
+        if ($request->has('charge')) {
+            $updateData['charge'] = $validated['charge'];
+        }
+        if ($request->has('estimatedDelivery')) {
+            $updateData['estimated_delivery'] = $validated['estimatedDelivery'];
+        }
+        if ($request->has('description')) {
+            $updateData['description'] = $validated['description'];
+        }
+        if ($request->has('priority')) {
+            $updateData['priority'] = $validated['priority'];
+        }
+        if ($request->has('freeShippingMinAmount')) {
+            $updateData['free_shipping_min_amount'] = $validated['freeShippingMinAmount'];
+        }
+        if ($request->has('codAvailable')) {
+            $updateData['cod_available'] = $validated['codAvailable'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
 
         $method->update($updateData);
 
@@ -140,6 +160,7 @@ class ShippingController extends Controller
     public function remove(int $id): JsonResponse
     {
         ShippingMethod::destroy($id);
+
         return response()->json(['success' => true, 'message' => 'Shipping method deleted']);
     }
 }

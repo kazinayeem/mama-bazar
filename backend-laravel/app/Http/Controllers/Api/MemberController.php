@@ -43,6 +43,7 @@ class MemberController extends Controller
 
         $result = $members->map(function ($m) {
             $resolved = RbacService::resolveUserPermissions($m->id, $m->role, $m->custom_role);
+
             return [
                 'id' => $m->id,
                 'name' => $m->name,
@@ -90,7 +91,7 @@ class MemberController extends Controller
         $actor = $request->user();
         $normalizedRole = strtoupper($validated['role']);
         $legacyRole = in_array($normalizedRole, ['SUPER_ADMIN', 'ADMIN']) ? 'admin' : 'manager';
-        $permissionsJson = !empty($validated['permissions']) ? json_encode($validated['permissions']) : null;
+        $permissionsJson = ! empty($validated['permissions']) ? json_encode($validated['permissions']) : null;
 
         $member = User::create([
             'name' => $validated['name'],
@@ -103,7 +104,7 @@ class MemberController extends Controller
             'status' => $validated['status'] ?? 'active',
         ]);
 
-        if (!empty($validated['permissions'])) {
+        if (! empty($validated['permissions'])) {
             foreach ($validated['permissions'] as $perm) {
                 UserPermission::create([
                     'user_id' => $member->id,
@@ -148,14 +149,14 @@ class MemberController extends Controller
     public function updateMember(Request $request, int $id): JsonResponse
     {
         $member = User::find($id);
-        if (!$member) {
+        if (! $member) {
             return response()->json(['success' => false, 'message' => 'Member not found'], 404);
         }
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:100',
-            'phone' => 'sometimes|string|max:20|unique:users,phone,' . $id,
-            'email' => 'nullable|email|max:100|unique:users,email,' . $id,
+            'phone' => 'sometimes|string|max:20|unique:users,phone,'.$id,
+            'email' => 'nullable|email|max:100|unique:users,email,'.$id,
             'password' => 'nullable|string|min:6',
             'role' => 'sometimes|string',
             'status' => 'sometimes|in:active,inactive',
@@ -178,10 +179,18 @@ class MemberController extends Controller
         }
 
         $updateData = [];
-        if ($request->has('name')) $updateData['name'] = $validated['name'];
-        if ($request->has('phone')) $updateData['phone'] = $validated['phone'];
-        if ($request->has('email')) $updateData['email'] = $validated['email'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
+        if ($request->has('name')) {
+            $updateData['name'] = $validated['name'];
+        }
+        if ($request->has('phone')) {
+            $updateData['phone'] = $validated['phone'];
+        }
+        if ($request->has('email')) {
+            $updateData['email'] = $validated['email'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
 
         if ($request->has('role')) {
             $normalizedRole = strtoupper($validated['role']);
@@ -189,7 +198,7 @@ class MemberController extends Controller
             $updateData['role'] = in_array($normalizedRole, ['SUPER_ADMIN', 'ADMIN']) ? 'admin' : 'manager';
         }
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
 
@@ -197,7 +206,7 @@ class MemberController extends Controller
             $updateData['permissions_json'] = json_encode($validated['permissions'] ?? []);
 
             UserPermission::where('user_id', $id)->delete();
-            if (!empty($validated['permissions'])) {
+            if (! empty($validated['permissions'])) {
                 foreach ($validated['permissions'] as $perm) {
                     UserPermission::create([
                         'user_id' => $id,
@@ -251,7 +260,7 @@ class MemberController extends Controller
     public function deleteMember(Request $request, int $id): JsonResponse
     {
         $member = User::find($id);
-        if (!$member) {
+        if (! $member) {
             return response()->json(['success' => false, 'message' => 'Member not found'], 404);
         }
 
@@ -292,6 +301,7 @@ class MemberController extends Controller
     {
         $limit = min((int) ($request->query('limit') ?: 100), 500);
         $logs = AuditService::getLogs($limit);
+
         return response()->json(['success' => true, 'data' => $logs]);
     }
 }

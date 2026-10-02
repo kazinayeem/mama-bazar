@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Exception;
 
 class JwtService
 {
@@ -28,6 +28,7 @@ class JwtService
     {
         try {
             $decoded = JWT::decode($token, new Key(self::getSecret(), 'HS256'));
+
             return (array) $decoded;
         } catch (Exception $e) {
             return null;

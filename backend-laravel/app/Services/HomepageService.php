@@ -2,15 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\SiteSetting;
 use App\Models\Banner;
-use App\Models\Category;
 use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Collection;
-use App\Models\Review;
-use App\Models\Product;
 use App\Models\Newsletter;
-use Illuminate\Support\Facades\DB;
+use App\Models\Product;
+use App\Models\Review;
+use App\Models\SiteSetting;
 use Exception;
 
 class HomepageService
@@ -73,7 +72,7 @@ class HomepageService
 
     public static function mergeDeep(array $base, ?array $saved): array
     {
-        if (!$saved || !is_array($saved)) {
+        if (! $saved || ! is_array($saved)) {
             return $base;
         }
 
@@ -90,13 +89,13 @@ class HomepageService
 
         $byId = [];
         foreach ($config['sections'] as $section) {
-            if (!empty($section['id'])) {
+            if (! empty($section['id'])) {
                 $byId[$section['id']] = $section;
             }
         }
         foreach ($base['sections'] as $def) {
             $id = $def['id'] ?? null;
-            if ($id && !isset($byId[$id])) {
+            if ($id && ! isset($byId[$id])) {
                 $config['sections'][] = $def;
             }
         }
@@ -107,7 +106,7 @@ class HomepageService
     public static function getConfig(): array
     {
         $setting = SiteSetting::where('key', 'homepage_config')->first();
-        if (!$setting || empty($setting->value)) {
+        if (! $setting || empty($setting->value)) {
             return self::DEFAULT_CONFIG;
         }
 
@@ -133,6 +132,7 @@ class HomepageService
             ['key' => 'homepage_config'],
             ['value' => json_encode(self::DEFAULT_CONFIG)]
         );
+
         return self::DEFAULT_CONFIG;
     }
 
@@ -155,7 +155,7 @@ class HomepageService
                 ->orderBy('priority', 'desc')
                 ->get();
 
-            $slides = $heroBanners->map(fn($b) => [
+            $slides = $heroBanners->map(fn ($b) => [
                 'id' => (string) $b->id,
                 'title' => $b->title,
                 'subtitle' => $b->subtitle,
@@ -176,7 +176,7 @@ class HomepageService
             ->orderBy('sort_order', 'asc')
             ->take(12)
             ->get()
-            ->map(fn($c) => [
+            ->map(fn ($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
                 'slug' => $c->slug,
@@ -190,7 +190,7 @@ class HomepageService
             ->orderBy('sort_order', 'asc')
             ->take(10)
             ->get()
-            ->map(fn($b) => [
+            ->map(fn ($b) => [
                 'id' => $b->id,
                 'name' => $b->name,
                 'slug' => $b->slug,
@@ -215,7 +215,7 @@ class HomepageService
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get()
-            ->map(fn($r) => [
+            ->map(fn ($r) => [
                 'id' => $r->id,
                 'customerName' => $r->customer_name,
                 'rating' => $r->rating,
@@ -236,7 +236,8 @@ class HomepageService
                 ->take($limit)
                 ->get();
             $ratings = ProductService::fetchRatingMap($prods->pluck('id')->toArray());
-            return $prods->map(fn($p) => ProductService::formatProduct($p, $ratings[$p->id] ?? null))->toArray();
+
+            return $prods->map(fn ($p) => ProductService::formatProduct($p, $ratings[$p->id] ?? null))->toArray();
         };
 
         $flashSaleProducts = $fetchLabelProducts('is_flash_sale', 12);
@@ -260,7 +261,7 @@ class HomepageService
 
         $sections = array_map(function ($section) use (
             $slides, $categories, $brands, $collections, $promoBanners, $reviews,
-            $labelMap, $config, $fetchLabelProducts
+            $labelMap, $config
         ) {
             $data = [];
             $type = $section['type'] ?? '';
@@ -272,9 +273,10 @@ class HomepageService
                     break;
                 case 'trust_strip':
                     $data['items'] = array_map(function ($item) {
-                        if (!isset($item['text']) && isset($item['subtitle'])) {
+                        if (! isset($item['text']) && isset($item['subtitle'])) {
                             $item['text'] = $item['subtitle'];
                         }
+
                         return $item;
                     }, $config['trustStrip'] ?? []);
                     break;
@@ -299,7 +301,7 @@ class HomepageService
                     $categoryId = (int) ($section['categoryId'] ?? 0);
                     $categorySlug = trim((string) ($section['categorySlug'] ?? ''));
                     $cat = $categoryId ? Category::find($categoryId) : null;
-                    if (!$cat && $categorySlug !== '') {
+                    if (! $cat && $categorySlug !== '') {
                         $cat = Category::where('slug', $categorySlug)->first();
                     }
                     $data['category'] = $cat ? [
@@ -321,9 +323,10 @@ class HomepageService
                     break;
                 case 'why_choose_us':
                     $data['items'] = array_map(function ($item) {
-                        if (!isset($item['text']) && isset($item['description'])) {
+                        if (! isset($item['text']) && isset($item['description'])) {
                             $item['text'] = $item['description'];
                         }
+
                         return $item;
                     }, $config['whyChooseUs'] ?? []);
                     break;
@@ -340,23 +343,24 @@ class HomepageService
                     break;
             }
             $section['data'] = $data;
+
             return $section;
         }, $config['sections'] ?? []);
 
         $flashWindow = $config['flashSaleWindow'] ?? [];
         $flashSaleActive = true;
         $flashSaleEndsAt = null;
-        if (!empty($flashWindow['enabled']) && !empty($flashWindow['start']) && !empty($flashWindow['end'])) {
+        if (! empty($flashWindow['enabled']) && ! empty($flashWindow['start']) && ! empty($flashWindow['end'])) {
             $now = now()->timestamp;
             $start = strtotime($flashWindow['start']);
             $end = strtotime($flashWindow['end']);
             $flashSaleActive = $start !== false && $end !== false && $now >= $start && $now < $end;
             $flashSaleEndsAt = $flashWindow['end'];
         }
-        $flashExpired = !empty($flashWindow['enabled'])
-            && !empty($flashWindow['start'])
-            && !empty($flashWindow['end'])
-            && !$flashSaleActive;
+        $flashExpired = ! empty($flashWindow['enabled'])
+            && ! empty($flashWindow['start'])
+            && ! empty($flashWindow['end'])
+            && ! $flashSaleActive;
 
         // Hide flash deal products when a scheduled window has expired.
         if ($flashExpired) {
@@ -364,6 +368,7 @@ class HomepageService
                 if (($section['type'] ?? '') === 'flash_deals') {
                     $section['data']['items'] = [];
                 }
+
                 return $section;
             }, $sections);
         }
@@ -387,8 +392,8 @@ class HomepageService
     public static function subscribeNewsletter(string $email, ?string $source = 'homepage'): array
     {
         $normalized = strtolower(trim($email));
-        if (!filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
-            throw new Exception("A valid email address is required", 400);
+        if (! filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception('A valid email address is required', 400);
         }
 
         $existing = Newsletter::where('email', $normalized)->first();

@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 class ExpenseController extends Controller
 {
     private const DEFAULT_PAGE = 1;
+
     private const DEFAULT_LIMIT = 20;
 
     private function toNumber($v): float
@@ -27,6 +25,7 @@ class ExpenseController extends Controller
     private function normalizeDateInput(string $input): string
     {
         $trimmed = str_replace(' ', 'T', trim($input));
+
         return strlen($trimmed) <= 10 ? "{$trimmed} 00:00:00" : str_replace('T', ' ', $trimmed);
     }
 
@@ -50,7 +49,7 @@ class ExpenseController extends Controller
             $query->where('expenses.expense_date', '>=', $this->normalizeDateInput($request->query('dateFrom')));
         }
         if ($request->filled('dateTo')) {
-            $query->where('expenses.expense_date', '<=', $request->query('dateTo') . ' 23:59:59');
+            $query->where('expenses.expense_date', '<=', $request->query('dateTo').' 23:59:59');
         }
         if ($request->filled('amountMin')) {
             $query->where('expenses.amount', '>=', (float) $request->query('amountMin'));
@@ -59,7 +58,7 @@ class ExpenseController extends Controller
             $query->where('expenses.amount', '<=', (float) $request->query('amountMax'));
         }
         if ($request->filled('search')) {
-            $s = '%' . strtolower($request->query('search')) . '%';
+            $s = '%'.strtolower($request->query('search')).'%';
             $query->where(function ($q) use ($s) {
                 $q->whereRaw('LOWER(expenses.title) LIKE ?', [$s])
                     ->orWhereRaw('LOWER(expenses.description) LIKE ?', [$s])
@@ -137,7 +136,7 @@ class ExpenseController extends Controller
             ->select($this->selectColumns())
             ->first();
 
-        if (!$row) {
+        if (! $row) {
             return response()->json(['success' => false, 'message' => 'Expense not found'], 404);
         }
 
@@ -146,9 +145,14 @@ class ExpenseController extends Controller
 
     private function resolveMemberName(?int $memberId, ?string $fallback): ?string
     {
-        if ($fallback) return $fallback;
-        if (!$memberId) return null;
+        if ($fallback) {
+            return $fallback;
+        }
+        if (! $memberId) {
+            return null;
+        }
         $user = User::find($memberId);
+
         return $user ? $user->name : null;
     }
 
@@ -192,13 +196,14 @@ class ExpenseController extends Controller
         ]);
 
         $created = $this->getById($expense->id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $created], 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
     {
         $expense = Expense::find($id);
-        if (!$expense) {
+        if (! $expense) {
             return response()->json(['success' => false, 'message' => 'Expense not found'], 404);
         }
 
@@ -219,12 +224,24 @@ class ExpenseController extends Controller
         ]);
 
         $updateData = [];
-        if ($request->has('title')) $updateData['title'] = $validated['title'];
-        if ($request->has('description')) $updateData['description'] = $validated['description'];
-        if ($request->has('categoryId')) $updateData['category_id'] = $validated['categoryId'];
-        if ($request->has('amount')) $updateData['amount'] = $validated['amount'];
-        if ($request->has('paymentMethod')) $updateData['payment_method'] = $validated['paymentMethod'];
-        if ($request->has('vendor')) $updateData['vendor'] = $validated['vendor'];
+        if ($request->has('title')) {
+            $updateData['title'] = $validated['title'];
+        }
+        if ($request->has('description')) {
+            $updateData['description'] = $validated['description'];
+        }
+        if ($request->has('categoryId')) {
+            $updateData['category_id'] = $validated['categoryId'];
+        }
+        if ($request->has('amount')) {
+            $updateData['amount'] = $validated['amount'];
+        }
+        if ($request->has('paymentMethod')) {
+            $updateData['payment_method'] = $validated['paymentMethod'];
+        }
+        if ($request->has('vendor')) {
+            $updateData['vendor'] = $validated['vendor'];
+        }
         if ($request->has('memberId')) {
             $memberId = (int) $validated['memberId'] ?: null;
             $updateData['member_id'] = $memberId;
@@ -233,25 +250,35 @@ class ExpenseController extends Controller
         if ($request->has('expenseDate')) {
             $updateData['expense_date'] = $this->normalizeDateInput($validated['expenseDate']);
         }
-        if ($request->has('referenceNumber')) $updateData['reference_number'] = $validated['referenceNumber'];
-        if ($request->has('attachmentUrl')) $updateData['attachment_url'] = $validated['attachmentUrl'];
-        if ($request->has('notes')) $updateData['notes'] = $validated['notes'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
+        if ($request->has('referenceNumber')) {
+            $updateData['reference_number'] = $validated['referenceNumber'];
+        }
+        if ($request->has('attachmentUrl')) {
+            $updateData['attachment_url'] = $validated['attachmentUrl'];
+        }
+        if ($request->has('notes')) {
+            $updateData['notes'] = $validated['notes'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
 
         $expense->update($updateData);
 
         $fresh = $this->getById($id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $fresh]);
     }
 
     public function remove(int $id): JsonResponse
     {
         $expense = Expense::find($id);
-        if (!$expense) {
+        if (! $expense) {
             return response()->json(['success' => false, 'message' => 'Expense not found'], 404);
         }
 
         $expense->delete();
+
         return response()->json(['success' => true]);
     }
 
@@ -260,6 +287,7 @@ class ExpenseController extends Controller
     public function categories(): JsonResponse
     {
         $cats = ExpenseCategory::orderBy('sort_order', 'asc')->orderBy('id', 'asc')->get();
+
         return response()->json(['success' => true, 'data' => $cats]);
     }
 
@@ -285,7 +313,7 @@ class ExpenseController extends Controller
     public function updateCategory(Request $request, int $id): JsonResponse
     {
         $cat = ExpenseCategory::find($id);
-        if (!$cat) {
+        if (! $cat) {
             return response()->json(['success' => false, 'message' => 'Expense category not found'], 404);
         }
 
@@ -297,10 +325,18 @@ class ExpenseController extends Controller
         ]);
 
         $updateData = [];
-        if ($request->has('name')) $updateData['name'] = $validated['name'];
-        if ($request->has('description')) $updateData['description'] = $validated['description'];
-        if ($request->has('sortOrder')) $updateData['sort_order'] = $validated['sortOrder'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
+        if ($request->has('name')) {
+            $updateData['name'] = $validated['name'];
+        }
+        if ($request->has('description')) {
+            $updateData['description'] = $validated['description'];
+        }
+        if ($request->has('sortOrder')) {
+            $updateData['sort_order'] = $validated['sortOrder'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
 
         $cat->update($updateData);
 
@@ -310,7 +346,7 @@ class ExpenseController extends Controller
     public function removeCategory(int $id): JsonResponse
     {
         $cat = ExpenseCategory::find($id);
-        if (!$cat) {
+        if (! $cat) {
             return response()->json(['success' => false, 'message' => 'Expense category not found'], 404);
         }
 
@@ -320,6 +356,7 @@ class ExpenseController extends Controller
         }
 
         $cat->delete();
+
         return response()->json(['success' => true, 'usageCount' => 0]);
     }
 
@@ -355,7 +392,7 @@ class ExpenseController extends Controller
             $query->where('expenses.expense_date', '>=', $this->normalizeDateInput($request->query('dateFrom')));
         }
         if ($request->filled('dateTo')) {
-            $query->where('expenses.expense_date', '<=', $request->query('dateTo') . ' 23:59:59');
+            $query->where('expenses.expense_date', '<=', $request->query('dateTo').' 23:59:59');
         }
     }
 
@@ -636,7 +673,8 @@ class ExpenseController extends Controller
 
         $esc = function ($v) {
             $s = ($v === null) ? '' : (string) $v;
-            return preg_match('/[",\n]/', $s) ? '"' . str_replace('"', '""', $s) . '"' : $s;
+
+            return preg_match('/[",\n]/', $s) ? '"'.str_replace('"', '""', $s).'"' : $s;
         };
 
         $header = ['Date', 'Expense ID', 'Member', 'Category', 'Title', 'Description', 'Amount', 'Payment Method', 'Reference', 'Status'];
@@ -644,7 +682,7 @@ class ExpenseController extends Controller
 
         foreach ($rows as $r) {
             $dateStr = $r->expenseDate ? substr((string) $r->expenseDate, 0, 10) : '';
-            $idStr = 'EXP-' . str_pad($r->id, 5, '0', STR_PAD_LEFT);
+            $idStr = 'EXP-'.str_pad($r->id, 5, '0', STR_PAD_LEFT);
             $line = [
                 $dateStr,
                 $idStr,
@@ -660,12 +698,12 @@ class ExpenseController extends Controller
             $lines[] = implode(',', array_map($esc, $line));
         }
 
-        $csv = implode(',', array_map($esc, $header)) . "\n" . implode("\n", $lines);
+        $csv = implode(',', array_map($esc, $header))."\n".implode("\n", $lines);
 
         return response()->json([
             'success' => true,
             'data' => [
-                'csv' => "\xEF\xBB\xBF" . $csv,
+                'csv' => "\xEF\xBB\xBF".$csv,
                 'count' => count($rows),
             ],
         ]);

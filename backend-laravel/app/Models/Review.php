@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Review extends Model
 {
     protected $table = 'reviews';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

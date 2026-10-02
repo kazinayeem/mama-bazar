@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\PolicyPage;
+use Illuminate\Database\Seeder;
 
 class PolicyPageSeeder extends Seeder
 {

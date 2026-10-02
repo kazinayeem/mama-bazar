@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
@@ -18,7 +19,7 @@ class InvoiceGuestCheckoutVerifyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \App\Models\PaymentMethod::ensureDefaults();
+        PaymentMethod::ensureDefaults();
     }
 
     private function makeOrder(array $over = []): Order

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ExpenseCategory extends Model
 {
     protected $table = 'expense_categories';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

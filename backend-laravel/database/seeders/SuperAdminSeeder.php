@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use App\Models\AdminRole;
 use App\Models\AdminPermission;
+use App\Models\AdminRole;
 use App\Models\RolePermission;
+use App\Models\User;
 use App\Models\UserPermission;
 use App\Services\RbacService;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -24,8 +24,8 @@ class SuperAdminSeeder extends Seeder
                 AdminPermission::updateOrCreate(
                     ['code' => $perm['code']],
                     [
-                        'module'      => $perm['module'],
-                        'label'       => $perm['label'],
+                        'module' => $perm['module'],
+                        'label' => $perm['label'],
                         'description' => $perm['description'],
                     ]
                 );
@@ -36,14 +36,14 @@ class SuperAdminSeeder extends Seeder
                     ['name' => $roleName],
                     [
                         'display_name' => $preset['displayName'],
-                        'description'  => $preset['description'],
-                        'is_system'    => true,
+                        'description' => $preset['description'],
+                        'is_system' => true,
                     ]
                 );
 
                 foreach ($preset['permissions'] as $permCode) {
                     RolePermission::firstOrCreate([
-                        'role_name'       => $roleName,
+                        'role_name' => $roleName,
                         'permission_code' => $permCode,
                     ]);
                 }
@@ -51,33 +51,33 @@ class SuperAdminSeeder extends Seeder
         }
 
         // 2. Create or Update Super Admin User
-        $email    = 'mamabazar@gmail.com';
+        $email = 'mamabazar@gmail.com';
         $password = 'mamabazar@12345';
-        $phone    = '01711111111';
+        $phone = '01711111111';
 
         // Check by email or phone to avoid unique key conflicts
         $superAdmin = User::where('email', $email)
             ->orWhere('phone', $phone)
             ->first();
 
-        if (!$superAdmin) {
-            $superAdmin = new User();
+        if (! $superAdmin) {
+            $superAdmin = new User;
         }
 
-        $superAdmin->name             = 'Super Admin';
-        $superAdmin->email            = $email;
-        $superAdmin->phone            = $phone;
-        $superAdmin->password         = Hash::make($password);
-        $superAdmin->role             = 'admin';
-        $superAdmin->custom_role      = 'SUPER_ADMIN';
+        $superAdmin->name = 'Super Admin';
+        $superAdmin->email = $email;
+        $superAdmin->phone = $phone;
+        $superAdmin->password = Hash::make($password);
+        $superAdmin->role = 'admin';
+        $superAdmin->custom_role = 'SUPER_ADMIN';
         $superAdmin->permissions_json = json_encode(['*']);
-        $superAdmin->status           = 'active';
+        $superAdmin->status = 'active';
         $superAdmin->save();
 
         // 3. Grant full wildcard permission in user_permissions table
         UserPermission::updateOrCreate(
             [
-                'user_id'         => $superAdmin->id,
+                'user_id' => $superAdmin->id,
                 'permission_code' => '*',
             ],
             [

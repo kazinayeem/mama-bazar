@@ -2,13 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Admin\AdminOrderWebController;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Services\OrderService;
 use Database\Seeders\AdminSeeder;
+use Database\Seeders\PolicyPageSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,16 +22,17 @@ class InvoicePhoneAndPdfBrandingTest extends TestCase
     private function makeProduct(): Product
     {
         $cat = Category::firstOrCreate(['slug' => 't'], ['name' => 'T', 'status' => 'active']);
+
         return Product::firstOrCreate(
             ['slug' => 'tp'],
             ['title' => 'Test Product', 'price' => 500, 'category_id' => $cat->id,
-             'status' => 'active', 'product_status' => 'published', 'stock' => 50, 'sku' => 'MB-101']
+                'status' => 'active', 'product_status' => 'published', 'stock' => 50, 'sku' => 'MB-101']
         );
     }
 
     private function makeOrder(array $over = []): Order
     {
-        \App\Models\PaymentMethod::ensureDefaults();
+        PaymentMethod::ensureDefaults();
         $ship = ShippingMethod::firstOrCreate(
             ['name' => 'Test Delivery'],
             ['charge' => 60, 'status' => 'active', 'cod_available' => true]
@@ -106,7 +110,7 @@ class InvoicePhoneAndPdfBrandingTest extends TestCase
         // against the rendered invoice-pdf HTML (same view the PDF is built from).
         $pdfHtml = view(
             'admin.orders.invoice-pdf',
-            ['order' => $order->load(['items.product', 'items.variant']), 'store' => \App\Http\Controllers\Admin\AdminOrderWebController::storeInfo()]
+            ['order' => $order->load(['items.product', 'items.variant']), 'store' => AdminOrderWebController::storeInfo()]
         )->render();
         $this->assertStringContainsString('Software crafted by Bornosoft', $pdfHtml);
         $this->assertStringContainsString('https://bornosoft.bd/', $pdfHtml);
@@ -125,7 +129,7 @@ class InvoicePhoneAndPdfBrandingTest extends TestCase
     public function test_global_footer_renders_once_with_working_links_and_attribution(): void
     {
         $this->seed(AdminSeeder::class);
-        $this->seed(\Database\Seeders\PolicyPageSeeder::class);
+        $this->seed(PolicyPageSeeder::class);
         foreach (['/', '/shop', '/cart', '/checkout', '/track', '/about', '/faq', '/contact'] as $path) {
             $html = $this->get($path)->getContent();
             $this->assertEquals(1, substr_count($html, '<footer'), "footer count on {$path}");
@@ -153,15 +157,16 @@ class InvoicePhoneAndPdfBrandingTest extends TestCase
             foreach ($m[1] as $raw) {
                 $inflated = @gzinflate(substr($raw, 2));
                 if (is_string($inflated)) {
-                    $out .= "\n" . $inflated;
+                    $out .= "\n".$inflated;
                 } else {
                     $inflated = @gzuncompress($raw);
                     if (is_string($inflated)) {
-                        $out .= "\n" . $inflated;
+                        $out .= "\n".$inflated;
                     }
                 }
             }
         }
+
         return $out;
     }
 }

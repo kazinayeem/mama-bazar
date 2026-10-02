@@ -2,21 +2,17 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Order;
 use App\Models\ShippingMethod;
-use App\Models\PaymentMethod;
 use App\Services\MediaStorageService;
 use Database\Seeders\AdminSeeder;
 use Database\Seeders\AdminUserSeeder;
 use Database\Seeders\PolicyPageSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
 class FullStackIntegrationTest extends TestCase
 {
@@ -127,7 +123,7 @@ class FullStackIntegrationTest extends TestCase
                     'product_id' => $product->id,
                     'quantity' => 2,
                     'price' => 450,
-                ]
+                ],
             ],
         ];
 

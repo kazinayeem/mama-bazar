@@ -3,11 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -81,9 +76,9 @@ class AdminController extends Controller
         $salesRows = DB::table('orders')
             ->where('created_at', '>=', $since)
             ->where('created_at', '<=', $now)
-            ->selectRaw("DATE(created_at) as day, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as count")
-            ->groupBy(DB::raw("DATE(created_at)"))
-            ->orderBy(DB::raw("DATE(created_at)"))
+            ->selectRaw('DATE(created_at) as day, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as count')
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy(DB::raw('DATE(created_at)'))
             ->get();
 
         $salesByDay = [];
@@ -156,6 +151,7 @@ class AdminController extends Controller
             ->get()
             ->map(function ($p) {
                 $images = is_string($p->images) ? json_decode($p->images, true) : $p->images;
+
                 return [
                     'id' => $p->productId,
                     'title' => $p->title,
@@ -196,6 +192,7 @@ class AdminController extends Controller
             ->get()
             ->map(function ($p) {
                 $images = is_string($p->images) ? json_decode($p->images, true) : $p->images;
+
                 return [
                     'id' => $p->id,
                     'title' => $p->title,
@@ -210,7 +207,7 @@ class AdminController extends Controller
         $periodRevenue = (float) ($revenueRow->revenue ?? 0);
         $deliveredCount = (int) ($totalOrdersRow->count ?? 0);
         $avgOrderValue = $deliveredCount > 0 ? round($totalRevenue / $deliveredCount, 2) : 0;
-        $periodOrders = array_reduce($revenueChart, fn($sum, $r) => $sum + $r['orders'], 0);
+        $periodOrders = array_reduce($revenueChart, fn ($sum, $r) => $sum + $r['orders'], 0);
 
         return response()->json([
             'success' => true,

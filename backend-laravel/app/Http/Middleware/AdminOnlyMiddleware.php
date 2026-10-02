@@ -11,7 +11,7 @@ class AdminOnlyMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->attributes->get('auth_user');
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 

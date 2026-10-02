@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AdminAuditLog extends Model
 {
     protected $table = 'admin_audit_logs';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

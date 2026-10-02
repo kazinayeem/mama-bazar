@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $table = 'orders';
+
     const UPDATED_AT = null;
 
     protected $fillable = [
@@ -95,6 +96,7 @@ class Order extends Model
         if ($alt === '') {
             return null;
         }
+
         return $norm($alt) !== $norm($this->phone) ? $alt : null;
     }
 

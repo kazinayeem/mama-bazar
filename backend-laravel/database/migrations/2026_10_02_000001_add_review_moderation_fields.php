@@ -40,7 +40,7 @@ return new class extends Migration
                 SET r.is_verified_purchase = 1
                 WHERE r.user_id IS NOT NULL
             ");
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Backfill is best-effort; the flag is recomputed on future submissions.
         }
     }

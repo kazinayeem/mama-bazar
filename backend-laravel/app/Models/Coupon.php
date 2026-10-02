@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Coupon extends Model
 {
     protected $table = 'coupons';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

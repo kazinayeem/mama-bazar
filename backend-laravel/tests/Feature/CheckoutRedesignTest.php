@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Coupon;
+use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ShippingMethod;
@@ -46,6 +47,7 @@ class CheckoutRedesignTest extends TestCase
             'code' => 'SAVE50', 'discount_type' => 'fixed', 'discount_value' => 50,
             'min_order_amount' => 100, 'status' => 'active',
         ]);
+
         return compact('product', 'shipInside', 'coupon');
     }
 
@@ -181,6 +183,6 @@ class CheckoutRedesignTest extends TestCase
         ];
         $this->post('/checkout', $payload)->assertRedirect();
         $this->post('/checkout', $payload)->assertRedirect();
-        $this->assertEquals(1, \App\Models\Order::where('phone', '01812345678')->count());
+        $this->assertEquals(1, Order::where('phone', '01812345678')->count());
     }
 }

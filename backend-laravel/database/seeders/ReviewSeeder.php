@@ -22,6 +22,7 @@ class ReviewSeeder extends Seeder
     {
         if (app()->environment('production')) {
             $this->command?->warn('ReviewSeeder skipped: production environment.');
+
             return;
         }
 
@@ -31,6 +32,7 @@ class ReviewSeeder extends Seeder
         }
         if ($users->isEmpty()) {
             $this->command?->warn('ReviewSeeder skipped: no users found.');
+
             return;
         }
 
@@ -43,6 +45,7 @@ class ReviewSeeder extends Seeder
             ->get();
         if ($products->isEmpty()) {
             $this->command?->info('ReviewSeeder: every product already has reviews. Nothing to do.');
+
             return;
         }
 

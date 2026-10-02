@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendTemplatedEmailJob;
 use App\Models\User;
+use App\Services\ActivityLoggerService;
 use App\Services\EmailDispatcherService;
 use App\Services\EmailOtpService;
 use App\Services\EmailPreferenceService;
@@ -56,6 +57,13 @@ class AuthWebController extends Controller
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+
+        ActivityLoggerService::logCustomer(
+            'customer.login',
+            $user,
+            "Customer logged in: {$user->name}",
+            ['actor' => $user, 'source' => 'storefront']
+        );
 
         if ($user->isStaff()) {
             return redirect()->intended(route('admin.dashboard'));
@@ -115,6 +123,13 @@ class AuthWebController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        ActivityLoggerService::logCustomer(
+            'customer.registered',
+            $user,
+            "Customer registered: {$user->name} ({$user->phone})",
+            ['actor' => $user, 'source' => 'storefront']
+        );
 
         if ($needsVerification) {
             $sent = EmailOtpService::issueAndSend($email, EmailOtpService::TYPE_ACCOUNT, $user->name, $user->id);

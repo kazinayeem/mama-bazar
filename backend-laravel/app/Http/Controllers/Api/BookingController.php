@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 class BookingController extends Controller
 {
     private const DEFAULT_PAGE = 1;
+
     private const DEFAULT_LIMIT = 20;
 
     private function selectColumns()
@@ -56,7 +57,7 @@ class BookingController extends Controller
             $query->where('bookings.payment_status', $request->query('paymentStatus'));
         }
         if ($request->filled('search')) {
-            $query->where('bookings.customer_name', 'like', '%' . $request->query('search') . '%');
+            $query->where('bookings.customer_name', 'like', '%'.$request->query('search').'%');
         }
 
         $total = $query->count();
@@ -87,7 +88,7 @@ class BookingController extends Controller
             ->select(array_merge($this->selectColumns(), ['bookings.updated_at as updatedAt']))
             ->first();
 
-        if (!$row) {
+        if (! $row) {
             return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
         }
 
@@ -139,13 +140,14 @@ class BookingController extends Controller
         ]);
 
         $created = $this->getById($booking->id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $created], 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
         }
 
@@ -171,39 +173,77 @@ class BookingController extends Controller
         ]);
 
         $updateData = [];
-        if ($request->has('customerName')) $updateData['customer_name'] = $validated['customerName'];
-        if ($request->has('phone')) $updateData['phone'] = $validated['phone'];
-        if ($request->has('email')) $updateData['email'] = $validated['email'];
-        if ($request->has('userId')) $updateData['user_id'] = $validated['userId'];
-        if ($request->has('bookingType')) $updateData['booking_type'] = $validated['bookingType'];
-        if ($request->has('service')) $updateData['service'] = $validated['service'];
-        if ($request->has('productId')) $updateData['product_id'] = $validated['productId'];
-        if ($request->has('startDate')) $updateData['start_date'] = $validated['startDate'];
-        if ($request->has('endDate')) $updateData['end_date'] = $validated['endDate'];
-        if ($request->has('quantity')) $updateData['quantity'] = $validated['quantity'];
-        if ($request->has('price')) $updateData['price'] = (string) $validated['price'];
-        if ($request->has('discount')) $updateData['discount'] = (string) $validated['discount'];
-        if ($request->has('additionalCost')) $updateData['additional_cost'] = (string) $validated['additionalCost'];
-        if ($request->has('totalAmount')) $updateData['total_amount'] = (string) $validated['totalAmount'];
-        if ($request->has('paymentStatus')) $updateData['payment_status'] = $validated['paymentStatus'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
-        if ($request->has('notes')) $updateData['notes'] = $validated['notes'];
-        if ($request->has('attachmentUrl')) $updateData['attachment_url'] = $validated['attachmentUrl'];
+        if ($request->has('customerName')) {
+            $updateData['customer_name'] = $validated['customerName'];
+        }
+        if ($request->has('phone')) {
+            $updateData['phone'] = $validated['phone'];
+        }
+        if ($request->has('email')) {
+            $updateData['email'] = $validated['email'];
+        }
+        if ($request->has('userId')) {
+            $updateData['user_id'] = $validated['userId'];
+        }
+        if ($request->has('bookingType')) {
+            $updateData['booking_type'] = $validated['bookingType'];
+        }
+        if ($request->has('service')) {
+            $updateData['service'] = $validated['service'];
+        }
+        if ($request->has('productId')) {
+            $updateData['product_id'] = $validated['productId'];
+        }
+        if ($request->has('startDate')) {
+            $updateData['start_date'] = $validated['startDate'];
+        }
+        if ($request->has('endDate')) {
+            $updateData['end_date'] = $validated['endDate'];
+        }
+        if ($request->has('quantity')) {
+            $updateData['quantity'] = $validated['quantity'];
+        }
+        if ($request->has('price')) {
+            $updateData['price'] = (string) $validated['price'];
+        }
+        if ($request->has('discount')) {
+            $updateData['discount'] = (string) $validated['discount'];
+        }
+        if ($request->has('additionalCost')) {
+            $updateData['additional_cost'] = (string) $validated['additionalCost'];
+        }
+        if ($request->has('totalAmount')) {
+            $updateData['total_amount'] = (string) $validated['totalAmount'];
+        }
+        if ($request->has('paymentStatus')) {
+            $updateData['payment_status'] = $validated['paymentStatus'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
+        if ($request->has('notes')) {
+            $updateData['notes'] = $validated['notes'];
+        }
+        if ($request->has('attachmentUrl')) {
+            $updateData['attachment_url'] = $validated['attachmentUrl'];
+        }
 
         $booking->update($updateData);
 
         $fresh = $this->getById($id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $fresh]);
     }
 
     public function remove(int $id): JsonResponse
     {
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
         }
 
         $booking->delete();
+
         return response()->json(['success' => true]);
     }
 }

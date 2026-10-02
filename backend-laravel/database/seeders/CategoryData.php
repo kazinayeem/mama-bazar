@@ -16,7 +16,7 @@ class CategoryData
                     ['name' => 'Mid-Range Smartphones', 'slug' => 'mid-range-smartphones', 'description' => 'Great performance and camera systems with balanced pricing.'],
                     ['name' => 'Budget Smartphones', 'slug' => 'budget-smartphones', 'description' => 'Affordable mobile phones ideal for daily essentials and long battery life.'],
                     ['name' => 'Feature Phones', 'slug' => 'feature-phones', 'description' => 'Durable keypad phones with multi-day battery endurance.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Laptops & Ultrabooks',
@@ -27,7 +27,7 @@ class CategoryData
                     ['name' => 'Thin & Light Ultrabooks', 'slug' => 'thin-light-ultrabooks', 'description' => 'Ultra-portable laptops for creators and remote professionals.'],
                     ['name' => 'Business Laptops', 'slug' => 'business-laptops', 'description' => 'Reliable, secure workstations built for corporate tasks.'],
                     ['name' => '2-in-1 Convertibles', 'slug' => '2-in-1-convertibles', 'description' => 'Versatile touchscreen laptops with flexible 360-degree hinges.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Desktop Computers',
@@ -38,7 +38,7 @@ class CategoryData
                     ['name' => 'All-in-One PCs', 'slug' => 'all-in-one-pcs', 'description' => 'Sleek desktop systems with integrated high-resolution displays.'],
                     ['name' => 'Workstations', 'slug' => 'workstations', 'description' => 'Heavy-duty rendering and CAD workstations with multi-core power.'],
                     ['name' => 'Mini PCs', 'slug' => 'mini-pcs', 'description' => 'Compact form factor PCs for home theater and desk setups.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Computer Components',
@@ -49,7 +49,7 @@ class CategoryData
                     ['name' => 'Graphics Cards', 'slug' => 'graphics-cards', 'description' => 'Dedicated NVIDIA and AMD graphics cards for gaming and AI.'],
                     ['name' => 'Motherboards', 'slug' => 'motherboards', 'description' => 'ATX and mini-ITX motherboards supporting latest chipset standards.'],
                     ['name' => 'RAM & Memory', 'slug' => 'ram-memory', 'description' => 'High-speed DDR4 and DDR5 memory modules.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Computer Storage',
@@ -60,7 +60,7 @@ class CategoryData
                     ['name' => 'External Hard Drives', 'slug' => 'external-hard-drives', 'description' => 'Portable USB 3.2 drives for backups and large files.'],
                     ['name' => 'SATA SSDs', 'slug' => 'sata-ssds', 'description' => 'Standard 2.5-inch solid state drives for storage expansion.'],
                     ['name' => 'USB Flash Drives', 'slug' => 'usb-flash-drives', 'description' => 'Handy thumb drives with fast read/write speeds.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Monitors & Displays',
@@ -71,7 +71,7 @@ class CategoryData
                     ['name' => '4K Professional Displays', 'slug' => '4k-professional-displays', 'description' => 'Color-accurate IPS panels engineered for photo and video editing.'],
                     ['name' => 'Curved Monitors', 'slug' => 'curved-monitors', 'description' => 'Immersive ultrawide curved panels for seamless multitasking.'],
                     ['name' => 'Portable Displays', 'slug' => 'portable-displays', 'description' => 'Lightweight USB-C external monitors for work on the go.'],
-                ]
+                ],
             ],
             [
                 'name' => 'PC Peripherals & Accessories',
@@ -82,7 +82,7 @@ class CategoryData
                     ['name' => 'Gaming & Wireless Mice', 'slug' => 'gaming-wireless-mice', 'description' => 'Ergonomic lightweight mice with high DPI optical sensors.'],
                     ['name' => 'Desk Pads & Mousepads', 'slug' => 'desk-pads-mousepads', 'description' => 'Smooth micro-weave cloth pads for glide precision.'],
                     ['name' => 'Webcams & Microphones', 'slug' => 'webcams-microphones', 'description' => 'Crystal clear 1080p and 4K streaming accessories.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Networking & WiFi',
@@ -93,7 +93,7 @@ class CategoryData
                     ['name' => 'Mesh WiFi Systems', 'slug' => 'mesh-wifi-systems', 'description' => 'Whole-home seamless roaming coverage without dead zones.'],
                     ['name' => 'Range Extenders', 'slug' => 'range-extenders', 'description' => 'Plug-and-play signal boosters for stubborn wireless dead spots.'],
                     ['name' => 'Network Switches', 'slug' => 'network-switches', 'description' => 'Gigabit Ethernet switches for smart homes and offices.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Tablets & E-Readers',
@@ -104,7 +104,7 @@ class CategoryData
                     ['name' => 'Android Tablets', 'slug' => 'android-tablets', 'description' => 'Versatile Android tablets with AMOLED displays and stylus support.'],
                     ['name' => 'Graphic Drawing Tablets', 'slug' => 'graphic-drawing-tablets', 'description' => 'Pressure-sensitive pen displays for digital artists.'],
                     ['name' => 'E-Ink Readers', 'slug' => 'e-ink-readers', 'description' => 'Glare-free digital readers with paper-like book displays.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Smartwatches & Wearables',
@@ -115,7 +115,7 @@ class CategoryData
                     ['name' => 'Premium Smartwatches', 'slug' => 'premium-smartwatches', 'description' => 'Full-featured smartwatches with AMOLED touchscreens and ECG.'],
                     ['name' => 'Sports GPS Watches', 'slug' => 'sports-gps-watches', 'description' => 'Rugged multisport watches with offline topo maps.'],
                     ['name' => 'Smart Rings', 'slug' => 'smart-rings', 'description' => 'Discreet titanium rings tracking recovery and sleep metrics.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Headphones & Audio',
@@ -126,7 +126,7 @@ class CategoryData
                     ['name' => 'Over-Ear ANC Headphones', 'slug' => 'over-ear-anc-headphones', 'description' => 'Plush memory foam headphones blocking ambient travel noise.'],
                     ['name' => 'Gaming Headsets', 'slug' => 'gaming-headsets', 'description' => 'Surround sound spatial headsets with noise-canceling mics.'],
                     ['name' => 'In-Ear Studio Monitors', 'slug' => 'in-ear-studio-monitors', 'description' => 'Balanced armature wired earphones for audiophiles.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Speakers & Home Audio',
@@ -137,7 +137,7 @@ class CategoryData
                     ['name' => 'TV Soundbars', 'slug' => 'tv-soundbars', 'description' => 'Dolby Atmos soundbars with wireless subwoofers.'],
                     ['name' => 'Home Theater Systems', 'slug' => 'home-theater-systems', 'description' => 'Multi-channel surround speaker setups for movie nights.'],
                     ['name' => 'Party Speakers', 'slug' => 'party-speakers', 'description' => 'High-wattage speakers with dynamic strobe lighting.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Cameras & Photography',
@@ -148,7 +148,7 @@ class CategoryData
                     ['name' => 'Action & 360 Cameras', 'slug' => 'action-360-cameras', 'description' => 'Waterproof action cameras with stabilization for sports.'],
                     ['name' => 'Camera Lenses', 'slug' => 'camera-lenses', 'description' => 'Prime and telephoto lenses with wide apertures.'],
                     ['name' => 'Gimbals & Tripods', 'slug' => 'gimbals-tripods', 'description' => 'Handheld 3-axis stabilizers and carbon fiber tripods.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Smart Home & IoT',
@@ -159,7 +159,7 @@ class CategoryData
                     ['name' => 'Smart Security Cameras', 'slug' => 'smart-security-cameras', 'description' => 'WiFi indoor and outdoor cameras with night vision.'],
                     ['name' => 'Smart Plugs & Switches', 'slug' => 'smart-plugs-switches', 'description' => 'App-controlled power outlets with energy monitoring.'],
                     ['name' => 'Smart Door Locks', 'slug' => 'smart-door-locks', 'description' => 'Keyless entry locks with fingerprint and passcode access.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Televisions & Video',
@@ -170,7 +170,7 @@ class CategoryData
                     ['name' => 'Smart Android TVs', 'slug' => 'smart-android-tvs', 'description' => 'Built-in Google TV, voice search, and streaming apps.'],
                     ['name' => 'Home Theater Projectors', 'slug' => 'home-theater-projectors', 'description' => 'Laser and LED projectors for cinematic 120-inch displays.'],
                     ['name' => 'Streaming Media Players', 'slug' => 'streaming-media-players', 'description' => 'Fast 4K streaming sticks and TV boxes.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Gaming Consoles & Accessories',
@@ -181,7 +181,7 @@ class CategoryData
                     ['name' => 'Xbox Consoles & Accessories', 'slug' => 'xbox-consoles-accessories', 'description' => 'Xbox Series X/S consoles and wireless controllers.'],
                     ['name' => 'Nintendo Switch Systems', 'slug' => 'nintendo-switch-systems', 'description' => 'Portable OLED consoles and Joy-Con gamepads.'],
                     ['name' => 'Game Controllers & Wheels', 'slug' => 'game-controllers-wheels', 'description' => 'Custom pro wireless gamepads and force-feedback steering wheels.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Men\'s Formal Wear',
@@ -192,7 +192,7 @@ class CategoryData
                     ['name' => 'Men\'s Formal Shirts', 'slug' => 'mens-formal-shirts', 'description' => '100% Egyptian cotton crisp shirts in timeless patterns.'],
                     ['name' => 'Men\'s Dress Trousers', 'slug' => 'mens-dress-trousers', 'description' => 'Comfort stretch formal trousers with clean pleats.'],
                     ['name' => 'Men\'s Ties & Cufflinks', 'slug' => 'mens-ties-cufflinks', 'description' => 'Pure silk neckties, pocket squares, and metallic cufflinks.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Men\'s Casual Wear',
@@ -203,7 +203,7 @@ class CategoryData
                     ['name' => 'Men\'s Polo Shirts', 'slug' => 'mens-polo-shirts', 'description' => 'Classic pique cotton polo shirts with ribbed collars.'],
                     ['name' => 'Men\'s Denim Jeans', 'slug' => 'mens-denim-jeans', 'description' => 'Durable stretch denim in slim, straight, and relaxed fits.'],
                     ['name' => 'Men\'s Hoodies & Sweatshirts', 'slug' => 'mens-hoodies-sweatshirts', 'description' => 'Fleece-lined pullover hoodies and casual crewneck sweatshirts.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Men\'s Traditional Wear',
@@ -214,7 +214,7 @@ class CategoryData
                     ['name' => 'Men\'s Kurta Pajama', 'slug' => 'mens-kurta-pajama', 'description' => 'Comfortable linen and silk kurta sets for festive celebrations.'],
                     ['name' => 'Men\'s Traditional Lungi', 'slug' => 'mens-traditional-lungi', 'description' => 'Handloom fine cotton lungi with comfortable weave.'],
                     ['name' => 'Men\'s Koti & Waistcoats', 'slug' => 'mens-koti-waistcoats', 'description' => 'Structured Nehru jackets and embroidered ethnic waistcoats.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Women\'s Traditional Wear',
@@ -225,7 +225,7 @@ class CategoryData
                     ['name' => 'Designer Salwar Kameez', 'slug' => 'designer-salwar-kameez', 'description' => 'Three-piece embroidered georgette and lawn suits.'],
                     ['name' => 'Embroidered Kurtis & Tunics', 'slug' => 'embroidered-kurtis-tunics', 'description' => 'Contemporary ethnic kurtis for university and office wear.'],
                     ['name' => 'Bridal & Festive Lehengas', 'slug' => 'bridal-festive-lehengas', 'description' => 'Lavish velvet and organza lehenga sets with intricate zari work.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Women\'s Western Wear',
@@ -236,7 +236,7 @@ class CategoryData
                     ['name' => 'Women\'s Tops & Blouses', 'slug' => 'womens-tops-blouses', 'description' => 'Satin, chiffon, and cotton casual and formal tops.'],
                     ['name' => 'Women\'s Denim & Jeans', 'slug' => 'womens-denim-jeans', 'description' => 'High-waisted, mom-fit, and flared stretch denim pants.'],
                     ['name' => 'Women\'s Blazers & Jackets', 'slug' => 'womens-blazers-jackets', 'description' => 'Structured work blazers and cropped casual jackets.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Women\'s Activewear & Lounge',
@@ -247,7 +247,7 @@ class CategoryData
                     ['name' => 'High-Impact Sports Bras', 'slug' => 'high-impact-sports-bras', 'description' => 'Supportive moisture-wicking bras for workouts and running.'],
                     ['name' => 'Cozy Loungewear Sets', 'slug' => 'cozy-loungewear-sets', 'description' => 'Plush matching sweatpants and hoodie co-ord sets.'],
                     ['name' => 'Sleepwear & Pajamas', 'slug' => 'sleepwear-pajamas', 'description' => 'Breathable modal and cotton pajama sets for deep sleep.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Men\'s Footwear',
@@ -258,7 +258,7 @@ class CategoryData
                     ['name' => 'Men\'s Leather Loafers', 'slug' => 'mens-leather-loafers', 'description' => 'Handcrafted slip-on leather penny loafers.'],
                     ['name' => 'Men\'s Oxford Shoes', 'slug' => 'mens-oxford-shoes', 'description' => 'Polished genuine leather dress shoes for formal suits.'],
                     ['name' => 'Men\'s Casual Sandals', 'slug' => 'mens-casual-sandals', 'description' => 'Comfortable everyday leather strap sandals and slides.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Women\'s Footwear',
@@ -269,7 +269,7 @@ class CategoryData
                     ['name' => 'Women\'s Ballet Flats', 'slug' => 'womens-ballet-flats', 'description' => 'Cushioned daily walking slip-on flats.'],
                     ['name' => 'Women\'s Fashion Sneakers', 'slug' => 'womens-fashion-sneakers', 'description' => 'Platform casual sneakers for modern street style.'],
                     ['name' => 'Women\'s Ankle Boots', 'slug' => 'womens-ankle-boots', 'description' => 'Chic leather and suede zipped booties.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Watches & Horology',
@@ -280,7 +280,7 @@ class CategoryData
                     ['name' => 'Chronograph Watches', 'slug' => 'chronograph-watches', 'description' => 'Multi-dial stopwatch function timepieces with tachymeter.'],
                     ['name' => 'Minimalist Quartz Watches', 'slug' => 'minimalist-quartz-watches', 'description' => 'Ultra-thin dress watches with clean dials.'],
                     ['name' => 'Sports Digital Watches', 'slug' => 'sports-digital-watches', 'description' => 'Shock-resistant and waterproof utility sports watches.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Bags & Luggage',
@@ -291,7 +291,7 @@ class CategoryData
                     ['name' => 'Everyday Laptop Backpacks', 'slug' => 'everyday-laptop-backpacks', 'description' => 'Waterproof padded backpacks with USB charging ports.'],
                     ['name' => 'Leather Messenger Bags', 'slug' => 'leather-messenger-bags', 'description' => 'Classic briefcase cross-body bags for executives.'],
                     ['name' => 'Gym & Weekend Duffles', 'slug' => 'gym-weekend-duffles', 'description' => 'Spacious carry-on duffle bags with shoe compartments.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Eyewear & Sunglasses',
@@ -302,7 +302,7 @@ class CategoryData
                     ['name' => 'Aviator & Wayfarer Sunglasses', 'slug' => 'aviator-wayfarer-sunglasses', 'description' => 'Iconic metal and acetate retro sunglass frames.'],
                     ['name' => 'Blue Light Blocking Glasses', 'slug' => 'blue-light-blocking-glasses', 'description' => 'Protective clear lenses reducing digital screen eye strain.'],
                     ['name' => 'Sports Wraparound Sunglasses', 'slug' => 'sports-wraparound-sunglasses', 'description' => 'Impact-resistant aerodynamic shades for cycling and running.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Jewelry & Fashion Ornaments',
@@ -313,7 +313,7 @@ class CategoryData
                     ['name' => 'Sterling Silver Rings', 'slug' => 'sterling-silver-rings', 'description' => '925 silver band rings and solitaire cubic zirconia rings.'],
                     ['name' => 'Drop & Stud Earrings', 'slug' => 'drop-stud-earrings', 'description' => 'Sparkling crystal studs and festive traditional jhumkas.'],
                     ['name' => 'Chain Bracelets & Bangles', 'slug' => 'chain-bracelets-bangles', 'description' => 'Adjustable charm bracelets and engraved cuff bangles.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Kitchen Appliances',
@@ -324,7 +324,7 @@ class CategoryData
                     ['name' => 'Microwave & Convection Ovens', 'slug' => 'microwave-convection-ovens', 'description' => 'Digital microwave ovens with defrost and grill functions.'],
                     ['name' => 'Blenders & Food Processors', 'slug' => 'blenders-food-processors', 'description' => 'Multi-speed heavy duty spice grinders and smoothie makers.'],
                     ['name' => 'Electric Kettles & Rice Cookers', 'slug' => 'electric-kettles-rice-cookers', 'description' => 'Quick-boil stainless kettles and non-stick rice cookers.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Large Home Appliances',
@@ -335,7 +335,7 @@ class CategoryData
                     ['name' => 'Frost-Free Refrigerators', 'slug' => 'frost-free-refrigerators', 'description' => 'Double door and side-by-side refrigerators with fast cooling.'],
                     ['name' => 'Front Load Washing Machines', 'slug' => 'front-load-washing-machines', 'description' => 'Smart inverter washers with steam sanitization.'],
                     ['name' => 'Robot & Cordless Vacuum Cleaners', 'slug' => 'robot-cordless-vacuum-cleaners', 'description' => 'LiDAR navigation robot vacuums and stick cleaners.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Living Room Furniture',
@@ -346,7 +346,7 @@ class CategoryData
                     ['name' => 'Wooden Coffee Tables', 'slug' => 'wooden-coffee-tables', 'description' => 'Solid oak and teak center tables with lower shelf storage.'],
                     ['name' => 'TV Media Consoles', 'slug' => 'tv-media-consoles', 'description' => 'Modern entertainment units with cable management.'],
                     ['name' => 'Accent Lounge Chairs', 'slug' => 'accent-lounge-chairs', 'description' => 'Scandinavian upholstered reading and armchairs.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Bedroom Furniture',
@@ -357,7 +357,7 @@ class CategoryData
                     ['name' => 'Wardrobes & Closets', 'slug' => 'wardrobes-closets', 'description' => '3-door and 4-door wardrobes with mirror and drawer units.'],
                     ['name' => 'Bedside Nightstands', 'slug' => 'bedside-nightstands', 'description' => 'Compact 2-drawer side tables with smooth glides.'],
                     ['name' => 'Dressing Tables & Mirrors', 'slug' => 'dressing-tables-mirrors', 'description' => 'Contemporary vanity dressers with LED-lit mirrors.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Cookware & Tableware',
@@ -368,7 +368,7 @@ class CategoryData
                     ['name' => 'Stainless Steel Chef Knives', 'slug' => 'stainless-steel-chef-knives', 'description' => 'High-carbon forged kitchen knife blocks and sets.'],
                     ['name' => 'Porcelain Dinner Sets', 'slug' => 'porcelain-dinner-sets', 'description' => '32-piece microwave-safe ceramic dinnerware sets.'],
                     ['name' => 'Thermal Water Bottles', 'slug' => 'thermal-water-bottles', 'description' => 'Double-wall vacuum insulated flasks keeping drinks cold.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Home Decor & Lighting',
@@ -379,7 +379,7 @@ class CategoryData
                     ['name' => 'Nordic Floor Lamps', 'slug' => 'nordic-floor-lamps', 'description' => 'Minimalist arc and tripod standing ambient lamps.'],
                     ['name' => 'Ceramic Plant Pots', 'slug' => 'ceramic-plant-pots', 'description' => 'Handmade indoor planters with drainage saucers.'],
                     ['name' => 'Velvet Curtains & Drapes', 'slug' => 'velvet-curtains-drapes', 'description' => 'Thermal insulated blackout window curtain panels.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Bedding & Mattresses',
@@ -390,7 +390,7 @@ class CategoryData
                     ['name' => 'Pure Cotton Bedsheet Sets', 'slug' => 'pure-cotton-bedsheet-sets', 'description' => '300-thread count king size fitted sheets with pillowcases.'],
                     ['name' => 'Microfiber Comforters & Duvets', 'slug' => 'microfiber-comforters-duvets', 'description' => 'All-season hypoallergenic down-alternative quilts.'],
                     ['name' => 'Memory Foam Pillows', 'slug' => 'memory-foam-pillows', 'description' => 'Ergonomic neck contour cooling gel sleeping pillows.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Skincare & Treatments',
@@ -401,7 +401,7 @@ class CategoryData
                     ['name' => 'Vitamin C & Retinol Serums', 'slug' => 'vitamin-c-retinol-serums', 'description' => 'Anti-aging and brightening antioxidant active serums.'],
                     ['name' => 'Sunscreens SPF 50+', 'slug' => 'sunscreens-spf-50', 'description' => 'Invisible matte finish PA++++ broad-spectrum sunscreens.'],
                     ['name' => 'Barrier Repair Moisturizers', 'slug' => 'barrier-repair-moisturizers', 'description' => 'Ceramide and hyaluronic acid hydrating face creams.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Hair Care & Styling',
@@ -412,7 +412,7 @@ class CategoryData
                     ['name' => 'Deep Repair Hair Masks', 'slug' => 'deep-repair-hair-masks', 'description' => 'Keratin and argan oil intensive hair conditioning treatments.'],
                     ['name' => 'Nourishing Hair Oils', 'slug' => 'nourishing-hair-oils', 'description' => 'Cold-pressed onion and rosemary hair growth oils.'],
                     ['name' => 'Ionic Hair Dryers', 'slug' => 'ionic-hair-dryers', 'description' => 'Fast-drying ionic blowout dryers with diffuser nozzles.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Fragrances & Perfumes',
@@ -423,7 +423,7 @@ class CategoryData
                     ['name' => 'Women\'s Floral Perfumes', 'slug' => 'womens-floral-perfumes', 'description' => 'Rose, jasmine, and vanilla romantic eau de parfum.'],
                     ['name' => 'Unisex Niche Fragrances', 'slug' => 'unisex-niche-fragrances', 'description' => 'Oud, leather, and smoked incense artisanal perfumes.'],
                     ['name' => 'Long-Lasting Body Mists', 'slug' => 'long-lasting-body-mists', 'description' => 'Refreshing daily fruit and floral spritz sprays.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Men\'s Grooming & Shaving',
@@ -434,7 +434,7 @@ class CategoryData
                     ['name' => 'Foil & Rotary Shavers', 'slug' => 'foil-rotary-shavers', 'description' => 'Wet and dry close shaving electric shavers.'],
                     ['name' => 'Precision Hair Clippers', 'slug' => 'precision-hair-clippers', 'description' => 'Barber grade haircutting clippers with guide combs.'],
                     ['name' => 'Shaving Creams & Balms', 'slug' => 'shaving-creams-balms', 'description' => 'Soothing aloe vera aftershave balms and rich lather creams.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Bath & Body Care',
@@ -445,7 +445,7 @@ class CategoryData
                     ['name' => 'Shea Butter Body Lotions', 'slug' => 'shea-butter-body-lotions', 'description' => 'Rich 24-hour nourishment lotions for dry skin.'],
                     ['name' => 'Exfoliating Body Scrubs', 'slug' => 'exfoliating-body-scrubs', 'description' => 'Himalayan salt and coffee smoothing body polishers.'],
                     ['name' => 'Organic Hand Soaps', 'slug' => 'organic-hand-soaps', 'description' => 'Antibacterial liquid hand soaps with botanical extracts.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Daily Groceries & Staples',
@@ -456,7 +456,7 @@ class CategoryData
                     ['name' => 'Pure Mustard Oil', 'slug' => 'pure-mustard-oil', 'description' => 'Cold-pressed authentic mustard oil with pungent aroma.'],
                     ['name' => 'Organic Spices & Masalas', 'slug' => 'organic-spices-masalas', 'description' => 'Turmeric, chili powder, cumin, and garam masala blends.'],
                     ['name' => 'Red Lentils & Daal', 'slug' => 'red-lentils-daal', 'description' => 'Cleaned premium masoor and moong dal for everyday meals.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Beverages & Juices',
@@ -467,7 +467,7 @@ class CategoryData
                     ['name' => 'Arabica Coffee Beans', 'slug' => 'arabica-coffee-beans', 'description' => 'Medium and dark roast whole coffee beans and ground blends.'],
                     ['name' => '100% Pure Fruit Juices', 'slug' => '100-pure-fruit-juices', 'description' => 'No-sugar-added orange, apple, and mango juices.'],
                     ['name' => 'Instant Energy Drinks', 'slug' => 'instant-energy-drinks', 'description' => 'Refreshing electrolyte powders and canned energy boosters.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Snacks & Confectionery',
@@ -478,7 +478,7 @@ class CategoryData
                     ['name' => 'Gourmet Potato Crisps', 'slug' => 'gourmet-potato-crisps', 'description' => 'Kettle-cooked salted and sour cream potato chips.'],
                     ['name' => 'Roasted Cashews & Almonds', 'slug' => 'roasted-cashews-almonds', 'description' => 'Lightly salted California almonds and premium cashew nuts.'],
                     ['name' => 'Artisan Butter Biscuits', 'slug' => 'artisan-butter-biscuits', 'description' => 'Danish butter cookies and crisp digestive biscuits.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Baby Care & Maternity',
@@ -489,7 +489,7 @@ class CategoryData
                     ['name' => 'Sensitive Baby Wipes', 'slug' => 'sensitive-baby-wipes', 'description' => '99% pure water fragrance-free hypoallergenic wet wipes.'],
                     ['name' => 'Baby Skincare Lotion', 'slug' => 'baby-skincare-lotion', 'description' => 'Mild formula baby massage oil and daily moisturizing lotion.'],
                     ['name' => 'Anti-Colic Feeding Bottles', 'slug' => 'anti-colic-feeding-bottles', 'description' => 'BPA-free silicone nipple bottles preventing colic air bubbles.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Fitness & Home Gym',
@@ -500,7 +500,7 @@ class CategoryData
                     ['name' => 'Resistance Exercise Bands', 'slug' => 'resistance-exercise-bands', 'description' => 'Heavy duty loop bands for strength and mobility training.'],
                     ['name' => 'Non-Slip Yoga Mats', 'slug' => 'non-slip-yoga-mats', 'description' => 'Eco-friendly 6mm high-grip TPE pilates and yoga mats.'],
                     ['name' => 'Doorway Pull-Up Bars', 'slug' => 'doorway-pull-up-bars', 'description' => 'No-screw heavy gauge doorway chin-up bars.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Sports & Outdoor Gear',
@@ -511,7 +511,7 @@ class CategoryData
                     ['name' => 'Professional Footballs', 'slug' => 'professional-footballs', 'description' => 'FIFA-certified thermally bonded match soccer balls.'],
                     ['name' => 'Carbon Fiber Badminton Rackets', 'slug' => 'carbon-fiber-badminton-rackets', 'description' => 'Lightweight high-tension isometric head badminton rackets.'],
                     ['name' => 'Waterproof Camping Tents', 'slug' => 'waterproof-camping-tents', 'description' => '4-person double layer pop-up tents for camping expeditions.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Automotive & Motorbike',
@@ -522,7 +522,7 @@ class CategoryData
                     ['name' => 'Full Synthetic Motor Oils', 'slug' => 'full-synthetic-motor-oils', 'description' => '10W-40 and 5W-30 engine oils for high performance.'],
                     ['name' => 'Car Detailing & Wash Kits', 'slug' => 'car-detailing-wash-kits', 'description' => 'Snow foam car shampoos, microfiber towels, and ceramic wax.'],
                     ['name' => 'High-Definition Dash Cams', 'slug' => 'high-definition-dash-cams', 'description' => 'Dual front and rear 4K dashcams with parking surveillance.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Books & Stationery',
@@ -533,7 +533,7 @@ class CategoryData
                     ['name' => 'Business & Personal Growth', 'slug' => 'business-personal-growth', 'description' => 'Finance, leadership, productivity, and psychology books.'],
                     ['name' => 'Hardcover Dot-Grid Journals', 'slug' => 'hardcover-dot-grid-journals', 'description' => '120gsm bleed-proof hardcover bullet journals.'],
                     ['name' => 'Fine Fountain Pens', 'slug' => 'fine-fountain-pens', 'description' => 'Precision stainless nib fountain pens with piston converters.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Musical Instruments',
@@ -544,7 +544,7 @@ class CategoryData
                     ['name' => '61-Key Digital Keyboards', 'slug' => '61-key-digital-keyboards', 'description' => 'Touch-sensitive portable piano keyboards with learning modes.'],
                     ['name' => 'USB Condenser Microphones', 'slug' => 'usb-condenser-microphones', 'description' => 'Cardioid studio recording microphones for podcasts and music.'],
                     ['name' => 'Soprano Ukuleles', 'slug' => 'soprano-ukuleles', 'description' => 'Mahogany wood soprano ukuleles with Aquila strings.'],
-                ]
+                ],
             ],
             [
                 'name' => 'Pet Care & Supplies',
@@ -555,7 +555,7 @@ class CategoryData
                     ['name' => 'Premium Dog Kibble', 'slug' => 'premium-dog-kibble', 'description' => 'Real chicken and rice balanced kibble for active dogs.'],
                     ['name' => 'Clumping Cat Litter', 'slug' => 'clumping-cat-litter', 'description' => 'Natural bentonite fast-clumping odor control cat litter.'],
                     ['name' => 'Gentle Pet Shampoos', 'slug' => 'gentle-pet-shampoos', 'description' => 'Hypoallergenic oatmeal and aloe vera pet cleansing shampoos.'],
-                ]
+                ],
             ],
         ];
     }

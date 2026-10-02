@@ -24,7 +24,7 @@ return new class extends Migration
                     }
 
                     // Skip content that already contains rich-text HTML tags
-                    if (\App\Services\HtmlSanitizer::looksLikeHtml($desc)) {
+                    if (HtmlSanitizer::looksLikeHtml($desc)) {
                         // Still purify existing HTML to strip XSS leftovers
                         $cleaned = HtmlSanitizer::clean($desc);
                         if ($cleaned !== $desc) {
@@ -32,6 +32,7 @@ return new class extends Migration
                                 'description' => $cleaned,
                             ]);
                         }
+
                         continue;
                     }
 

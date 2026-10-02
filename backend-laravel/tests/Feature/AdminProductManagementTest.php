@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Category;
 use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use Database\Seeders\AdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class AdminProductManagementTest extends TestCase
@@ -16,7 +15,9 @@ class AdminProductManagementTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Category $category;
+
     protected Brand $brand;
 
     protected function setUp(): void

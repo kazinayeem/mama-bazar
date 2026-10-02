@@ -147,6 +147,9 @@ class RbacService
         ['code' => 'members.create', 'module' => 'administration', 'label' => 'Create Members', 'description' => 'Add new admin/team members'],
         ['code' => 'members.update', 'module' => 'administration', 'label' => 'Edit Members', 'description' => 'Update member roles and permissions'],
         ['code' => 'members.delete', 'module' => 'administration', 'label' => 'Delete Members', 'description' => 'Deactivate or remove team members'],
+        ['code' => 'activity.view', 'module' => 'administration', 'label' => 'View Activity Monitor & Audit Log', 'description' => 'View advanced activity tracking dashboard and timelines'],
+        ['code' => 'activity.export', 'module' => 'administration', 'label' => 'Export Activity Reports', 'description' => 'Export PDF, Excel, and CSV audit reports'],
+        ['code' => 'activity.manage', 'module' => 'administration', 'label' => 'Manage Scheduled Reports', 'description' => 'Configure automated scheduled activity reports'],
 
         // Backup & Restore
         ['code' => 'backup.view', 'module' => 'backup', 'label' => 'View Backups', 'description' => 'View backup history and status'],
@@ -167,7 +170,7 @@ class RbacService
             'ADMIN' => [
                 'displayName' => 'Admin',
                 'description' => 'Full administrative access to manage store catalog, sales, finance, content, settings, and team members.',
-                'permissions' => array_values(array_filter($allCodes, fn($code) => $code !== 'backup.restore')),
+                'permissions' => array_values(array_filter($allCodes, fn ($code) => $code !== 'backup.restore')),
             ],
             'MANAGER' => [
                 'displayName' => 'Store Manager',
@@ -246,6 +249,7 @@ class RbacService
         if ($role === 'admin' || $customRoleFromToken === 'SUPER_ADMIN' || $userId === 240011) {
             $result = ['permissions' => ['*'], 'customRole' => 'SUPER_ADMIN'];
             Cache::put($cacheKey, $result, 120);
+
             return $result;
         }
 
@@ -255,6 +259,7 @@ class RbacService
         if ($activeRole === 'SUPER_ADMIN' || $dbUser?->role === 'admin' || $userId === 240011) {
             $result = ['permissions' => ['*'], 'customRole' => 'SUPER_ADMIN'];
             Cache::put($cacheKey, $result, 120);
+
             return $result;
         }
 
@@ -288,6 +293,7 @@ class RbacService
         ];
 
         Cache::put($cacheKey, $result, 120);
+
         return $result;
     }
 
@@ -297,6 +303,7 @@ class RbacService
         if (in_array('*', $perms) || ($user['customRole'] ?? '') === 'SUPER_ADMIN' || ($user['role'] ?? '') === 'admin' || ($user['id'] ?? 0) === 240011) {
             return true;
         }
+
         return in_array($permission, $perms);
     }
 }

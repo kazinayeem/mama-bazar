@@ -39,11 +39,30 @@ class MemberLoginHistory extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function getLocationStringAttribute(): string
+    public function getLocationAttribute(): string
     {
+        if ($this->country === 'Local Network') {
+            return 'Local Network';
+        }
+
         $parts = array_filter([$this->city, $this->region, $this->country]);
 
-        return $parts ? implode(', ', $parts) : 'Location unavailable';
+        return $parts ? implode(', ', array_unique($parts)) : 'Location unavailable';
+    }
+
+    public function getLocationStringAttribute(): string
+    {
+        return $this->getLocationAttribute();
+    }
+
+    public function getLoggedAtAttribute()
+    {
+        return $this->login_at;
+    }
+
+    public function getPlatformAttribute(): ?string
+    {
+        return $this->os;
     }
 
     public function scopeSuccessful($query)
@@ -53,6 +72,6 @@ class MemberLoginHistory extends Model
 
     public function scopeFailed($query)
     {
-        return $query->where('status', 'failed');
+        return $query->whereIn('status', ['failure', 'failed']);
     }
 }

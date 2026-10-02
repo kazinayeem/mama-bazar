@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 class CostController extends Controller
 {
     private const DEFAULT_PAGE = 1;
+
     private const DEFAULT_LIMIT = 20;
 
     private function selectColumns()
@@ -50,7 +51,7 @@ class CostController extends Controller
             $query->where('costs.cost_type', $request->query('costType'));
         }
         if ($request->filled('search')) {
-            $query->where('costs.title', 'like', '%' . $request->query('search') . '%');
+            $query->where('costs.title', 'like', '%'.$request->query('search').'%');
         }
 
         $total = $query->count();
@@ -103,7 +104,7 @@ class CostController extends Controller
             ])
             ->first();
 
-        if (!$row) {
+        if (! $row) {
             return response()->json(['success' => false, 'message' => 'Cost not found'], 404);
         }
 
@@ -145,13 +146,14 @@ class CostController extends Controller
         ]);
 
         $created = $this->getById($cost->id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $created], 201);
     }
 
     public function update(Request $request, int $id): JsonResponse
     {
         $cost = Cost::find($id);
-        if (!$cost) {
+        if (! $cost) {
             return response()->json(['success' => false, 'message' => 'Cost not found'], 404);
         }
 
@@ -172,34 +174,62 @@ class CostController extends Controller
         ]);
 
         $updateData = [];
-        if ($request->has('title')) $updateData['title'] = $validated['title'];
-        if ($request->has('costType')) $updateData['cost_type'] = $validated['costType'];
-        if ($request->has('quantity')) $updateData['quantity'] = (string) $validated['quantity'];
-        if ($request->has('unitCost')) $updateData['unit_cost'] = (string) $validated['unitCost'];
-        if ($request->has('totalCost')) $updateData['total_cost'] = (string) $validated['totalCost'];
-        if ($request->has('supplierId')) $updateData['supplier_id'] = $validated['supplierId'];
-        if ($request->has('productId')) $updateData['product_id'] = $validated['productId'];
-        if ($request->has('orderId')) $updateData['order_id'] = $validated['orderId'];
-        if ($request->has('bookingId')) $updateData['booking_id'] = $validated['bookingId'];
-        if ($request->has('costDate')) $updateData['cost_date'] = $validated['costDate'];
-        if ($request->has('paymentMethod')) $updateData['payment_method'] = $validated['paymentMethod'];
-        if ($request->has('notes')) $updateData['notes'] = $validated['notes'];
-        if ($request->has('attachmentUrl')) $updateData['attachment_url'] = $validated['attachmentUrl'];
+        if ($request->has('title')) {
+            $updateData['title'] = $validated['title'];
+        }
+        if ($request->has('costType')) {
+            $updateData['cost_type'] = $validated['costType'];
+        }
+        if ($request->has('quantity')) {
+            $updateData['quantity'] = (string) $validated['quantity'];
+        }
+        if ($request->has('unitCost')) {
+            $updateData['unit_cost'] = (string) $validated['unitCost'];
+        }
+        if ($request->has('totalCost')) {
+            $updateData['total_cost'] = (string) $validated['totalCost'];
+        }
+        if ($request->has('supplierId')) {
+            $updateData['supplier_id'] = $validated['supplierId'];
+        }
+        if ($request->has('productId')) {
+            $updateData['product_id'] = $validated['productId'];
+        }
+        if ($request->has('orderId')) {
+            $updateData['order_id'] = $validated['orderId'];
+        }
+        if ($request->has('bookingId')) {
+            $updateData['booking_id'] = $validated['bookingId'];
+        }
+        if ($request->has('costDate')) {
+            $updateData['cost_date'] = $validated['costDate'];
+        }
+        if ($request->has('paymentMethod')) {
+            $updateData['payment_method'] = $validated['paymentMethod'];
+        }
+        if ($request->has('notes')) {
+            $updateData['notes'] = $validated['notes'];
+        }
+        if ($request->has('attachmentUrl')) {
+            $updateData['attachment_url'] = $validated['attachmentUrl'];
+        }
 
         $cost->update($updateData);
 
         $fresh = $this->getById($id)->getData()->data;
+
         return response()->json(['success' => true, 'data' => $fresh]);
     }
 
     public function remove(int $id): JsonResponse
     {
         $cost = Cost::find($id);
-        if (!$cost) {
+        if (! $cost) {
             return response()->json(['success' => false, 'message' => 'Cost not found'], 404);
         }
 
         $cost->delete();
+
         return response()->json(['success' => true, 'message' => 'Cost deleted']);
     }
 }

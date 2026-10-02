@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
-use App\Services\OrderService;
 use App\Services\JwtService;
-use Exception;
+use App\Services\OrderService;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
@@ -22,6 +21,7 @@ class OrderController extends Controller
                 return (int) $decoded['id'];
             }
         }
+
         return null;
     }
 
@@ -79,11 +79,12 @@ class OrderController extends Controller
     public function updateCourierTracking(Request $request, $id)
     {
         $order = Order::find($id);
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
         $order->courier_tracking_number = $request->input('trackingNumber');
         $order->save();
+
         return response()->json(['success' => true, 'data' => OrderService::formatOrder($order)]);
     }
 
@@ -105,7 +106,7 @@ class OrderController extends Controller
     public function getMyOrders(Request $request)
     {
         $user = $request->attributes->get('auth_user');
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Please sign in to view your orders'], 401);
         }
 
@@ -113,7 +114,8 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $formatted = $orders->map(fn($o) => OrderService::formatOrder($o))->toArray();
+        $formatted = $orders->map(fn ($o) => OrderService::formatOrder($o))->toArray();
+
         return response()->json(['success' => true, 'data' => $formatted]);
     }
 
@@ -121,7 +123,7 @@ class OrderController extends Controller
     {
         $user = $request->attributes->get('auth_user');
         $order = Order::where('id', $id)->where('user_id', $user['id'])->first();
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
@@ -142,13 +144,13 @@ class OrderController extends Controller
         }
 
         if ($search) {
-            $term = '%' . $search . '%';
+            $term = '%'.$search.'%';
             $query->where(function ($q) use ($term) {
                 $q->where('order_id', 'like', $term)
-                  ->orWhere('customer_name', 'like', $term)
-                  ->orWhere('phone', 'like', $term)
-                  ->orWhere('email', 'like', $term)
-                  ->orWhere('address', 'like', $term);
+                    ->orWhere('customer_name', 'like', $term)
+                    ->orWhere('phone', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('address', 'like', $term);
             });
         }
 
@@ -158,7 +160,7 @@ class OrderController extends Controller
             ->take($limit)
             ->get();
 
-        $formatted = $orders->map(fn($o) => OrderService::formatOrder($o))->toArray();
+        $formatted = $orders->map(fn ($o) => OrderService::formatOrder($o))->toArray();
 
         return response()->json([
             'success' => true,
@@ -193,7 +195,7 @@ class OrderController extends Controller
     public function getById($id)
     {
         $order = Order::find($id);
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
@@ -203,7 +205,7 @@ class OrderController extends Controller
     public function getInvoice($id)
     {
         $order = Order::find($id);
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
@@ -213,7 +215,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $order = Order::find($id);
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
@@ -242,7 +244,7 @@ class OrderController extends Controller
     public function verifyPayment(Request $request, $id)
     {
         $order = Order::find($id);
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
@@ -270,7 +272,7 @@ class OrderController extends Controller
     public function addAdminNote(Request $request, $id)
     {
         $order = Order::find($id);
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
@@ -283,11 +285,12 @@ class OrderController extends Controller
     public function remove($id)
     {
         $order = Order::find($id);
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
         $order->delete();
+
         return response()->json(['success' => true, 'message' => 'Order deleted']);
     }
 }

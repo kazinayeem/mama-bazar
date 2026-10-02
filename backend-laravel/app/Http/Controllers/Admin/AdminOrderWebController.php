@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailLog;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Services\ActivityLoggerService;
 use App\Services\BusinessSettingService;
 use App\Services\InvoicePdfService;
 use App\Services\OrderEmailService;
@@ -95,6 +96,13 @@ class AdminOrderWebController extends Controller
             return back()->with('error', "Could not queue invoice email for #{$order->order_id}. Duplicate or delivery disabled.");
         }
 
+        ActivityLoggerService::logOrder(
+            'order.invoice_emailed',
+            $order,
+            "Invoice email for #{$order->order_id} queued to {$order->email}",
+            ['actor' => Auth::user(), 'source' => 'admin']
+        );
+
         return back()->with('success', "Invoice email for #{$order->order_id} has been queued for delivery to {$order->email}. Status: Queued (awaiting queue worker).");
     }
 
@@ -122,6 +130,7 @@ class AdminOrderWebController extends Controller
             return back()->with('success', "Order #{$order->order_id} is already {$newStatus}. No notification sent.");
         }
 
+        $oldStatus = $order->status;
         $order->status = $newStatus;
         if ($newStatus === 'delivered') {
             $order->payment_status = 'success';
@@ -135,6 +144,18 @@ class AdminOrderWebController extends Controller
             'created_by_user_id' => Auth::id(),
         ]);
 
+        ActivityLoggerService::logOrder(
+            'order.status_changed',
+            $order,
+            "Order #{$order->order_id} status updated from '{$oldStatus}' to '{$newStatus}'",
+            [
+                'actor' => Auth::user(),
+                'source' => 'admin',
+                'oldValues' => ['status' => $oldStatus],
+                'newValues' => ['status' => $newStatus],
+            ]
+        );
+
         return back()->with('success', "Order #{$order->order_id} status updated to {$newStatus}.");
     }
 
@@ -147,6 +168,7 @@ class AdminOrderWebController extends Controller
             'note' => 'nullable|string|max:500',
         ]);
 
+        $oldPaymentStatus = $order->payment_status;
         $order->payment_status = $request->input('payment_status');
         $order->save();
 
@@ -156,6 +178,18 @@ class AdminOrderWebController extends Controller
             'note' => 'Payment: '.$request->input('payment_status').($request->input('note') ? ' — '.$request->input('note') : ''),
             'created_by_user_id' => Auth::id(),
         ]);
+
+        ActivityLoggerService::logOrder(
+            'order.payment_status_changed',
+            $order,
+            "Order #{$order->order_id} payment status changed from '{$oldPaymentStatus}' to '{$order->payment_status}'",
+            [
+                'actor' => Auth::user(),
+                'source' => 'admin',
+                'oldValues' => ['payment_status' => $oldPaymentStatus],
+                'newValues' => ['payment_status' => $order->payment_status],
+            ]
+        );
 
         return back()->with('success', "Payment status updated to {$order->payment_status}.");
     }

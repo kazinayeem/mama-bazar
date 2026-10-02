@@ -22,7 +22,7 @@ class OrderTrackingController extends Controller
                 'token' => 'nullable|string|max:64',
             ]);
             // Both order reference + phone are required (token links exempt).
-            if (!$request->filled('token') && (!$request->filled('order_id') || !$request->filled('phone'))) {
+            if (! $request->filled('token') && (! $request->filled('order_id') || ! $request->filled('phone'))) {
                 $error = 'Please enter both your Order ID and phone number.';
             } else {
                 $order = OrderService::trackOrder(
@@ -30,7 +30,7 @@ class OrderTrackingController extends Controller
                     $request->input('phone'),
                     $request->input('token')
                 );
-                if (!$order) {
+                if (! $order) {
                     // Generic message — never reveal which field mismatched.
                     $error = 'No order found matching the provided details.';
                 }

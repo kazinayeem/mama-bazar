@@ -33,8 +33,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Apple A17 Pro (3nm)',
                     'Main Camera' => '48MP + 12MP + 12MP with 5x Optical Zoom',
                     'Battery' => '4422 mAh with 20W fast charging',
-                    'OS' => 'iOS 17'
-                ]
+                    'OS' => 'iOS 17',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -61,8 +61,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Qualcomm Snapdragon 8 Gen 3',
                     'Main Camera' => '200MP + 50MP + 12MP + 10MP',
                     'Battery' => '5000 mAh 45W fast charge',
-                    'OS' => 'Android 14, One UI 6.1'
-                ]
+                    'OS' => 'Android 14, One UI 6.1',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -89,8 +89,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Google Tensor G3 (4nm)',
                     'Main Camera' => '50MP + 48MP + 48MP',
                     'Battery' => '5050 mAh 30W wired',
-                    'OS' => 'Android 14 (7 years OS updates)'
-                ]
+                    'OS' => 'Android 14 (7 years OS updates)',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -117,8 +117,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Snapdragon 8 Gen 3',
                     'RAM' => '16GB LPDDR5X',
                     'Storage' => '512GB UFS 4.0',
-                    'Battery' => '5400 mAh 100W'
-                ]
+                    'Battery' => '5400 mAh 100W',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -145,8 +145,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'MediaTek Dimensity 7200-Ultra',
                     'Camera' => '200MP OIS Ultra-Clear',
                     'Charging' => '120W HyperCharge 100% in 19 mins',
-                    'Rating' => 'IP68 Dust & Water Resistant'
-                ]
+                    'Rating' => 'IP68 Dust & Water Resistant',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -173,8 +173,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Exynos 1480 (4nm) with AMD Xclipse 530 GPU',
                     'Camera' => '50MP OIS Main + 12MP Ultra-wide',
                     'Battery' => '5000 mAh 25W',
-                    'Build' => 'Glass front/back, aluminum frame'
-                ]
+                    'Build' => 'Glass front/back, aluminum frame',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -201,8 +201,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'MediaTek Helio G85',
                     'Camera' => '50MP AI Dual Camera',
                     'Battery' => '5000 mAh 18W Type-C',
-                    'Security' => 'Side fingerprint sensor'
-                ]
+                    'Security' => 'Side fingerprint sensor',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -227,8 +227,8 @@ class ProductCatalogDataPart1
                     'Display' => '6.7-inch FHD+ 90Hz PLS LCD',
                     'Processor' => 'Qualcomm Snapdragon 680 4G',
                     'Main Camera' => '50MP + 2MP + 2MP',
-                    'Battery' => '5000 mAh 25W Fast Charge'
-                ]
+                    'Battery' => '5000 mAh 25W Fast Charge',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -253,8 +253,8 @@ class ProductCatalogDataPart1
                     'Display' => '6.53-inch FHD+ LTPS LCD',
                     'Processor' => 'Qualcomm Snapdragon 665',
                     'Camera' => '16MP Quad Rear Camera',
-                    'Battery' => '5000 mAh'
-                ]
+                    'Battery' => '5000 mAh',
+                ],
             ],
             [
                 'cat_slug' => 'smartphones-mobile-tech',
@@ -279,8 +279,8 @@ class ProductCatalogDataPart1
                     'Display' => '2.4-inch QVGA Bright Screen',
                     'Battery' => '1800 mAh Li-ion',
                     'Features' => 'Wireless FM, Audio Player, Bluetooth, Flashlight',
-                    'SIM' => 'Dual SIM Dual Standby'
-                ]
+                    'SIM' => 'Dual SIM Dual Standby',
+                ],
             ],
 
             // 2. Laptops & Ultrabooks (cat_slug: laptops-ultrabooks)
@@ -309,8 +309,8 @@ class ProductCatalogDataPart1
                     'Display' => '16.2-inch Liquid Retina XDR 120Hz ProMotion',
                     'Memory' => '48GB Unified Memory',
                     'Storage' => '1TB High Speed NVMe SSD',
-                    'Battery Life' => 'Up to 22 hours video playback'
-                ]
+                    'Battery Life' => 'Up to 22 hours video playback',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -337,8 +337,8 @@ class ProductCatalogDataPart1
                     'Display' => '13.6-inch Liquid Retina Display 500 nits',
                     'Memory' => '16GB Unified Memory',
                     'Storage' => '512GB SSD',
-                    'Weight' => '1.24 kg fanless silent design'
-                ]
+                    'Weight' => '1.24 kg fanless silent design',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -365,8 +365,8 @@ class ProductCatalogDataPart1
                     'Graphics' => 'NVIDIA GeForce RTX 4070 8GB GDDR6',
                     'Display' => '16-inch 2.5K (2560x1600) 240Hz 0.2ms OLED',
                     'RAM' => '32GB LPDDR5X 7467MHz',
-                    'Storage' => '1TB PCIe 4.0 NVMe SSD'
-                ]
+                    'Storage' => '1TB PCIe 4.0 NVMe SSD',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -392,8 +392,8 @@ class ProductCatalogDataPart1
                     'Graphics' => 'NVIDIA RTX 4080 12GB GDDR6 175W',
                     'Display' => '16-inch WQXGA 240Hz 500 nits 100% DCI-P3',
                     'RAM' => '32GB DDR5 5600MHz',
-                    'Storage' => '1TB M.2 PCIe 4.0 NVMe'
-                ]
+                    'Storage' => '1TB M.2 PCIe 4.0 NVMe',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -420,8 +420,8 @@ class ProductCatalogDataPart1
                     'Display' => '15.6-inch FHD+ (1920x1200) InfinityEdge 500 nits',
                     'RAM' => '16GB DDR5 4800MHz',
                     'Storage' => '512GB PCIe NVMe SSD',
-                    'Audio' => 'Quad-speaker design with Waves Nx 3D audio'
-                ]
+                    'Audio' => 'Quad-speaker design with Waves Nx 3D audio',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -447,8 +447,8 @@ class ProductCatalogDataPart1
                     'Display' => '14.0-inch WUXGA IPS Low Power Anti-glare',
                     'RAM' => '16GB LPDDR5 6400MHz',
                     'Weight' => 'Just 1.12 kg ultralight',
-                    'Security' => 'dTPM 2.0, Fingerprint, IR camera with shutter'
-                ]
+                    'Security' => 'dTPM 2.0, Fingerprint, IR camera with shutter',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -475,8 +475,8 @@ class ProductCatalogDataPart1
                     'Display' => '14-inch 2.8K (2880x1800) OLED 120Hz Touch',
                     'Memory' => '16GB LPDDR5X RAM',
                     'Storage' => '1TB PCIe Gen4 NVMe M.2 SSD',
-                    'Stylus' => 'HP Rechargeable MPP 2.0 Tilt Pen included'
-                ]
+                    'Stylus' => 'HP Rechargeable MPP 2.0 Tilt Pen included',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -501,8 +501,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Intel Core i7-13700H 14 Cores',
                     'Graphics' => 'NVIDIA GeForce RTX 4060 8GB',
                     'Display' => '16-inch WQXGA (2560 x 1600) 120Hz',
-                    'Storage' => '1TB PCIe NVMe SSD'
-                ]
+                    'Storage' => '1TB PCIe NVMe SSD',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -527,8 +527,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Intel Core i7-13700HX 16 Cores',
                     'Graphics' => 'NVIDIA GeForce RTX 4070 8GB GDDR6',
                     'Display' => '16-inch 2560x1600 240Hz 3ms G-SYNC',
-                    'Cooling' => 'Dual custom AeroBlade 3D metal fans'
-                ]
+                    'Cooling' => 'Dual custom AeroBlade 3D metal fans',
+                ],
             ],
             [
                 'cat_slug' => 'laptops-ultrabooks',
@@ -554,8 +554,8 @@ class ProductCatalogDataPart1
                     'Graphics' => 'NVIDIA GeForce RTX 4060 8GB GDDR6',
                     'Display' => '15.6-inch FHD 144Hz IPS-level',
                     'RAM' => '16GB DDR5 5200MHz',
-                    'Storage' => '1TB NVMe PCIe Gen4'
-                ]
+                    'Storage' => '1TB NVMe PCIe Gen4',
+                ],
             ],
 
             // 3. Desktop Computers (cat_slug: desktop-computers)
@@ -583,8 +583,8 @@ class ProductCatalogDataPart1
                     'Chip' => 'Apple M3 8-core CPU 10-core GPU',
                     'Memory' => '8GB Unified Memory',
                     'Storage' => '512GB SSD',
-                    'Accessories' => 'Color-matched Magic Keyboard with Touch ID & Magic Mouse'
-                ]
+                    'Accessories' => 'Color-matched Magic Keyboard with Touch ID & Magic Mouse',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -609,8 +609,8 @@ class ProductCatalogDataPart1
                     'Chip' => 'Apple M2 Pro 10-core CPU 16-core GPU',
                     'Memory' => '16GB Unified Memory',
                     'Storage' => '512GB High Speed SSD',
-                    'Ports' => '4x Thunderbolt 4, HDMI, 2x USB-A, Gigabit Ethernet'
-                ]
+                    'Ports' => '4x Thunderbolt 4, HDMI, 2x USB-A, Gigabit Ethernet',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -636,8 +636,8 @@ class ProductCatalogDataPart1
                     'Graphics' => 'NVIDIA GeForce RTX 4070 12GB',
                     'Memory' => '32GB DDR5 5600MHz',
                     'Storage' => '1TB M.2 NVMe PCIe 4.0 SSD',
-                    'Chassis' => 'Airflow optimized with tempered glass panel'
-                ]
+                    'Chassis' => 'Airflow optimized with tempered glass panel',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -663,8 +663,8 @@ class ProductCatalogDataPart1
                     'GPU' => 'NVIDIA RTX A2000 12GB Workstation Graphics',
                     'RAM' => '32GB DDR5 ECC memory',
                     'Storage' => '1TB NVMe Class 40 SSD + 2TB 7200RPM HDD',
-                    'ISV Certified' => 'Certified for AutoCAD, SolidWorks, Maya'
-                ]
+                    'ISV Certified' => 'Certified for AutoCAD, SolidWorks, Maya',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -689,8 +689,8 @@ class ProductCatalogDataPart1
                     'Display' => '27-inch FHD IPS three-sided micro-edge Touch',
                     'Processor' => 'Intel Core i7-13700T (16 cores)',
                     'Audio' => 'Audio by B&O with dual 5W speakers',
-                    'Accessories' => 'HP wireless white keyboard and optical mouse'
-                ]
+                    'Accessories' => 'HP wireless white keyboard and optical mouse',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -715,8 +715,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Intel Core i5-13500H 12 cores',
                     'Memory' => '16GB DDR5 4800MHz',
                     'Storage' => '512GB M.2 NVMe PCIe Gen4',
-                    'Connectivity' => 'WiFi 6E, 2.5G LAN, 2x HDMI 2.1, 1x DP 1.4'
-                ]
+                    'Connectivity' => 'WiFi 6E, 2.5G LAN, 2x HDMI 2.1, 1x DP 1.4',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -741,8 +741,8 @@ class ProductCatalogDataPart1
                     'Chip' => 'Apple M2 Max 12-core CPU 30-core GPU',
                     'Memory' => '32GB Unified Memory (400GB/s bandwidth)',
                     'Storage' => '512GB High Speed SSD',
-                    'Display Support' => 'Supports up to 5 displays simultaneously'
-                ]
+                    'Display Support' => 'Supports up to 5 displays simultaneously',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -767,8 +767,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Intel Core i5-14400F 10 cores',
                     'Graphics' => 'NVIDIA GeForce RTX 4060 8GB',
                     'RAM' => '16GB DDR5',
-                    'Storage' => '1TB M.2 PCIe NVMe SSD'
-                ]
+                    'Storage' => '1TB M.2 PCIe NVMe SSD',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -793,8 +793,8 @@ class ProductCatalogDataPart1
                     'Display' => '23.8-inch FHD (1920x1080) IPS 250 nits',
                     'Processor' => 'Intel Core i5-12450H 8 cores',
                     'Sound' => '2x 3W stereo speakers tuned by Harman',
-                    'Includes' => 'Wireless Calliope keyboard and mouse'
-                ]
+                    'Includes' => 'Wireless Calliope keyboard and mouse',
+                ],
             ],
             [
                 'cat_slug' => 'desktop-computers',
@@ -819,8 +819,8 @@ class ProductCatalogDataPart1
                     'Processor' => 'Intel Core i5-13500T 14 cores vPro',
                     'RAM' => '16GB DDR4 3200MHz',
                     'Storage' => '512GB M.2 2230 PCIe NVMe SSD',
-                    'OS' => 'Windows 11 Pro 64-bit'
-                ]
+                    'OS' => 'Windows 11 Pro 64-bit',
+                ],
             ],
         ];
     }

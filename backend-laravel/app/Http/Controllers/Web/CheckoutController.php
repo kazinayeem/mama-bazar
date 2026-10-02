@@ -5,14 +5,15 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\CheckoutNotice;
 use App\Models\Coupon;
+use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\ShippingMethod;
 use App\Models\SiteSetting;
 use App\Models\UserAddress;
 use App\Services\OrderService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class CheckoutController extends Controller
 {
@@ -21,12 +22,12 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         // Campaign attribution: persist UTM + landing page across the session (no cross-site tracking).
-        if (!$request->session()->has('landing_page')) {
+        if (! $request->session()->has('landing_page')) {
             $request->session()->put('landing_page', $request->fullUrl());
         }
         foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as $k) {
             if ($request->filled($k)) {
-                $request->session()->put('attribution.' . $k, $request->input($k));
+                $request->session()->put('attribution.'.$k, $request->input($k));
             }
         }
 
@@ -133,8 +134,9 @@ class CheckoutController extends Controller
 
         // Duplicate-submission guard: same order_key resubmitted (double-click / back button).
         $orderKey = $validated['order_key'] ?? null;
-        if ($orderKey && session()->has('checkout_order_' . $orderKey)) {
-            $existingId = session()->get('checkout_order_' . $orderKey);
+        if ($orderKey && session()->has('checkout_order_'.$orderKey)) {
+            $existingId = session()->get('checkout_order_'.$orderKey);
+
             return redirect()->route('order.success', ['orderId' => $existingId])
                 ->with('success', 'Order already placed.');
         }
@@ -212,11 +214,11 @@ class CheckoutController extends Controller
             $accessToken = $orderData['accessToken'] ?? null;
 
             if ($orderKey && $orderId) {
-                session()->put('checkout_order_' . $orderKey, $orderId);
+                session()->put('checkout_order_'.$orderKey, $orderId);
             }
             // Purchase-event dedup flag for the success page (refresh-safe).
             if ($orderId) {
-                session()->put('purchase_tracked_' . $orderId, false);
+                session()->put('purchase_tracked_'.$orderId, false);
             }
 
             $successParams = ['orderId' => $orderId];
@@ -228,6 +230,7 @@ class CheckoutController extends Controller
                 ->with('success', 'Order placed successfully!');
         } catch (Exception $e) {
             Log::warning('Checkout failed', ['error' => $e->getMessage(), 'phone' => $request->input('phone')]);
+
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -269,12 +272,13 @@ class CheckoutController extends Controller
         $token = $request->query('token');
         $order = null;
         if ($orderId) {
-            $order = \App\Models\Order::where('order_id', $orderId)->first();
+            $order = Order::where('order_id', $orderId)->first();
             // Verify token matches when an order carries one (prevents ID guessing).
-            if ($order && $order->access_token && $token && !hash_equals((string) $order->access_token, (string) $token)) {
+            if ($order && $order->access_token && $token && ! hash_equals((string) $order->access_token, (string) $token)) {
                 $order = null;
             }
         }
+
         return view('web.success', compact('orderId', 'order', 'token'));
     }
 
@@ -295,8 +299,9 @@ class CheckoutController extends Controller
             return 'This coupon has expired.';
         }
         if ($subtotal !== null && $coupon->min_order_amount && (float) $subtotal < (float) $coupon->min_order_amount) {
-            return 'Minimum order ৳' . number_format((float) $coupon->min_order_amount, 0) . ' required for this coupon.';
+            return 'Minimum order ৳'.number_format((float) $coupon->min_order_amount, 0).' required for this coupon.';
         }
+
         return null;
     }
 
@@ -309,6 +314,7 @@ class CheckoutController extends Controller
                 return $decoded;
             }
         }
+
         return ['default_district' => 'Dhaka', 'min_order_amount' => 0];
     }
 }

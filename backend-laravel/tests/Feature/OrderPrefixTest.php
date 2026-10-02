@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ShippingMethod;
+use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,7 +18,7 @@ class OrderPrefixTest extends TestCase
 
     private function orderPayload(array $over = []): array
     {
-        \App\Models\PaymentMethod::ensureDefaults();
+        PaymentMethod::ensureDefaults();
         $ship = ShippingMethod::firstOrCreate(['name' => 'Test Delivery'], ['charge' => 60, 'status' => 'active', 'cod_available' => true]);
         $cat = Category::firstOrCreate(['slug' => 't'], ['name' => 'T', 'status' => 'active']);
         $p = Product::firstOrCreate(['slug' => 'tp'], ['title' => 'Test Product', 'price' => 500, 'category_id' => $cat->id, 'status' => 'active', 'stock' => 100]);
@@ -77,7 +79,7 @@ class OrderPrefixTest extends TestCase
 
     public function test_admin_search_finds_both_prefixes(): void
     {
-        $admin = \App\Models\User::create(['name' => 'Admin', 'phone' => '01000000009', 'password' => bcrypt('x'), 'role' => 'admin', 'status' => 'active']);
+        $admin = User::create(['name' => 'Admin', 'phone' => '01000000009', 'password' => bcrypt('x'), 'role' => 'admin', 'status' => 'active']);
         Order::create([
             'order_id' => 'GHB-OLD123', 'customer_name' => 'Old', 'phone' => '01899998888',
             'address' => 'Addr', 'shipping_cost' => 60, 'subtotal' => 100, 'total_price' => 160, 'payment_method' => 'cod',
@@ -85,6 +87,6 @@ class OrderPrefixTest extends TestCase
         $new = OrderService::createOrder($this->orderPayload(['idempotency_key' => 'pfx-search']));
 
         $this->actingAs($admin)->get('/admin/orders?search=GHB-OLD')->assertSee('GHB-OLD123');
-        $this->actingAs($admin)->get('/admin/orders?search=' . substr($new['order']['orderId'], 0, 8))->assertSee($new['order']['orderId']);
+        $this->actingAs($admin)->get('/admin/orders?search='.substr($new['order']['orderId'], 0, 8))->assertSee($new['order']['orderId']);
     }
 }

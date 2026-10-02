@@ -82,8 +82,8 @@ class ShopController extends Controller
                     ->where('product_status', 'published')
                     ->where(function ($q) use ($child) {
                         $q->where('sub_category_id', $child->id)
-                          ->orWhere('category_id', $child->id)
-                          ->orWhere('child_category_id', $child->id);
+                            ->orWhere('category_id', $child->id)
+                            ->orWhere('child_category_id', $child->id);
                     })
                     ->count();
             }
@@ -166,7 +166,7 @@ class ShopController extends Controller
         // Autocomplete suggestions (server-rendered for current search term when present)
         $suggestions = ['products' => collect(), 'brands' => collect(), 'categories' => collect()];
         if (mb_strlen($search) >= 2) {
-            $like = '%' . $search . '%';
+            $like = '%'.$search.'%';
             $suggestions['products'] = Product::where('status', 'active')
                 ->where('product_status', 'published')
                 ->where(fn ($q) => $q->where('title', 'like', $like)->orWhere('sku', 'like', $like))
@@ -203,7 +203,7 @@ class ShopController extends Controller
             $activeFilters[] = ['key' => 'brand', 'label' => $selectedBrand->name, 'remove' => ['brand' => null]];
         }
         if ($minPrice !== null || $maxPrice !== null) {
-            $label = '৳' . number_format($minPrice ?? 0) . ' – ৳' . number_format($maxPrice ?? (float) ($priceBounds->max_p ?? 0));
+            $label = '৳'.number_format($minPrice ?? 0).' – ৳'.number_format($maxPrice ?? (float) ($priceBounds->max_p ?? 0));
             $activeFilters[] = ['key' => 'price', 'label' => $label, 'remove' => ['minPrice' => null, 'maxPrice' => null, 'min_price' => null, 'max_price' => null]];
         }
         if (in_array($availability, ['in_stock', 'low_stock', 'out_of_stock'], true)) {
@@ -239,7 +239,7 @@ class ShopController extends Controller
         }
 
         return view('web.products.index', [
-            'title' => ($seoTitle ?? 'Shop') . ' | Mama Bazar',
+            'title' => ($seoTitle ?? 'Shop').' | Mama Bazar',
             'products' => $products,
             'pagination' => $pagination,
             'from' => $from,
@@ -283,7 +283,7 @@ class ShopController extends Controller
             return response()->json(['products' => [], 'brands' => [], 'categories' => []]);
         }
 
-        $like = '%' . $term . '%';
+        $like = '%'.$term.'%';
 
         return response()->json([
             'products' => Product::where('status', 'active')

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Banner;
 use App\Services\MediaStorageService;
+use Illuminate\Http\Request;
 
 class BannerController extends Controller
 {
@@ -22,15 +22,17 @@ class BannerController extends Controller
         }
 
         $banners = $query->orderBy('priority', 'desc')->orderBy('created_at', 'desc')->get();
+
         return response()->json(['success' => true, 'data' => $banners]);
     }
 
     public function getById($id)
     {
         $banner = Banner::find($id);
-        if (!$banner) {
+        if (! $banner) {
             return response()->json(['success' => false, 'message' => 'Banner not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $banner]);
     }
 
@@ -56,13 +58,14 @@ class BannerController extends Controller
         }
 
         $banner = Banner::create($data);
+
         return response()->json(['success' => true, 'data' => $banner], 201);
     }
 
     public function update(Request $request, $id)
     {
         $banner = Banner::find($id);
-        if (!$banner) {
+        if (! $banner) {
             return response()->json(['success' => false, 'message' => 'Banner not found'], 404);
         }
 
@@ -82,17 +85,19 @@ class BannerController extends Controller
         }
 
         $banner->update($data);
+
         return response()->json(['success' => true, 'data' => $banner]);
     }
 
     public function remove($id)
     {
         $banner = Banner::find($id);
-        if (!$banner) {
+        if (! $banner) {
             return response()->json(['success' => false, 'message' => 'Banner not found'], 404);
         }
 
         $banner->delete();
+
         return response()->json(['success' => true, 'message' => 'Banner deleted']);
     }
 }

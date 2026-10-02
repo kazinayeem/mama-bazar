@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 class SettingsController extends Controller
 {
     private const STORE_INFO_KEY = 'store_info';
+
     private const SLIDER_KEY = 'hero_slides';
 
     private const DEFAULT_STORE_INFO = [
@@ -25,12 +26,14 @@ class SettingsController extends Controller
     public function getAll(): JsonResponse
     {
         $data = SiteSetting::all();
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function get(string $key): JsonResponse
     {
         $setting = SiteSetting::where('key', $key)->orderBy('id', 'desc')->first();
+
         return response()->json(['success' => true, 'data' => $setting]);
     }
 
@@ -45,6 +48,7 @@ class SettingsController extends Controller
             }
         }
         $info = array_merge(self::DEFAULT_STORE_INFO, $stored);
+
         return response()->json(['success' => true, 'data' => $info]);
     }
 
@@ -76,28 +80,29 @@ class SettingsController extends Controller
     {
         $setting = SiteSetting::where('key', self::SLIDER_KEY)->orderBy('id', 'desc')->first();
         $slides = ($setting && $setting->value) ? json_decode($setting->value, true) : [];
-        if (!is_array($slides)) {
+        if (! is_array($slides)) {
             $slides = [];
         }
+
         return response()->json(['success' => true, 'data' => $slides]);
     }
 
     public function addHeroSlide(Request $request): JsonResponse
     {
-        if (!$request->hasFile('image')) {
+        if (! $request->hasFile('image')) {
             return response()->json(['success' => false, 'message' => 'Image is required'], 400);
         }
 
         $file = $request->file('image');
-        $filename = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $filename = time().'-'.uniqid().'.'.$file->getClientOriginalExtension();
         $uploadDir = config('app.upload_dir', 'uploads');
         $file->move(public_path($uploadDir), $filename);
 
-        $imageUrl = url($uploadDir . '/' . $filename);
+        $imageUrl = url($uploadDir.'/'.$filename);
 
         $setting = SiteSetting::where('key', self::SLIDER_KEY)->orderBy('id', 'desc')->first();
         $slides = ($setting && $setting->value) ? json_decode($setting->value, true) : [];
-        if (!is_array($slides)) {
+        if (! is_array($slides)) {
             $slides = [];
         }
         $slides[] = $imageUrl;
@@ -115,13 +120,13 @@ class SettingsController extends Controller
     public function addHeroSlideByLink(Request $request): JsonResponse
     {
         $link = $request->input('link');
-        if (!$link || !is_string($link)) {
+        if (! $link || ! is_string($link)) {
             return response()->json(['success' => false, 'message' => 'Image link is required'], 400);
         }
 
         $setting = SiteSetting::where('key', self::SLIDER_KEY)->orderBy('id', 'desc')->first();
         $slides = ($setting && $setting->value) ? json_decode($setting->value, true) : [];
-        if (!is_array($slides)) {
+        if (! is_array($slides)) {
             $slides = [];
         }
         $slides[] = $link;
@@ -140,7 +145,7 @@ class SettingsController extends Controller
     {
         $setting = SiteSetting::where('key', self::SLIDER_KEY)->orderBy('id', 'desc')->first();
         $slides = ($setting && $setting->value) ? json_decode($setting->value, true) : [];
-        if (!is_array($slides) || $index < 0 || $index >= count($slides)) {
+        if (! is_array($slides) || $index < 0 || $index >= count($slides)) {
             return response()->json(['success' => false, 'message' => 'Invalid slide index'], 400);
         }
 

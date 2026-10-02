@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\MarketingIntegration;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
@@ -18,7 +19,7 @@ class ConsentTrackingTest extends TestCase
 
     private function makeOrder(array $over = []): Order
     {
-        \App\Models\PaymentMethod::ensureDefaults();
+        PaymentMethod::ensureDefaults();
         $ship = ShippingMethod::firstOrCreate(['name' => 'Test Delivery'], ['charge' => 60, 'status' => 'active', 'cod_available' => true]);
         $cat = Category::firstOrCreate(['slug' => 't'], ['name' => 'T', 'status' => 'active']);
         $p = Product::firstOrCreate(['slug' => 'tp'], ['title' => 'Test Product', 'price' => 500, 'category_id' => $cat->id, 'status' => 'active', 'stock' => 50, 'sku' => 'MB-101']);
@@ -67,7 +68,7 @@ class ConsentTrackingTest extends TestCase
         $this->assertStringContainsString('mb_consent', $html);
         $this->assertStringNotContainsString('src="https://connect.facebook.net', $html);
         // Empty tag config when nothing is configured.
-        $this->assertStringContainsString("window.mbTagConfig = []", $html);
+        $this->assertStringContainsString('window.mbTagConfig = []', $html);
     }
 
     public function test_product_page_emits_view_item(): void

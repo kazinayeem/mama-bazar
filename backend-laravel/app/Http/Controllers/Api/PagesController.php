@@ -13,7 +13,7 @@ class PagesController extends Controller
     public function getBySlug(string $slug): JsonResponse
     {
         $page = PolicyPage::where('slug', $slug)->first();
-        if (!$page || $page->status !== 'published') {
+        if (! $page || $page->status !== 'published') {
             return response()->json(['success' => false, 'message' => 'Page not found'], 404);
         }
 
@@ -72,7 +72,7 @@ class PagesController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $page = PolicyPage::find($id);
-        if (!$page) {
+        if (! $page) {
             return response()->json(['success' => false, 'message' => 'Policy page not found'], 404);
         }
 
@@ -86,9 +86,15 @@ class PagesController extends Controller
         $now = time();
 
         $updateData = ['last_updated' => $now, 'updated_by' => $userId];
-        if ($request->has('title')) $updateData['title'] = $validated['title'];
-        if ($request->has('content')) $updateData['content'] = $validated['content'];
-        if ($request->has('status')) $updateData['status'] = $validated['status'];
+        if ($request->has('title')) {
+            $updateData['title'] = $validated['title'];
+        }
+        if ($request->has('content')) {
+            $updateData['content'] = $validated['content'];
+        }
+        if ($request->has('status')) {
+            $updateData['status'] = $validated['status'];
+        }
 
         $page->update($updateData);
 
@@ -98,6 +104,7 @@ class PagesController extends Controller
     public function remove(int $id): JsonResponse
     {
         PolicyPage::destroy($id);
+
         return response()->json(['success' => true, 'data' => ['success' => true]]);
     }
 
@@ -128,6 +135,7 @@ class PagesController extends Controller
     public function getContactMessages(): JsonResponse
     {
         $messages = ContactMessage::orderBy('created_at', 'desc')->get();
+
         return response()->json(['success' => true, 'data' => $messages]);
     }
 
@@ -138,6 +146,7 @@ class PagesController extends Controller
         ]);
 
         ContactMessage::where('id', $id)->update(['status' => $validated['status']]);
+
         return response()->json(['success' => true, 'data' => ['success' => true]]);
     }
 }

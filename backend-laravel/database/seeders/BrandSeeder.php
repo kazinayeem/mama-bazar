@@ -31,7 +31,7 @@ class BrandSeeder extends Seeder
                         'sort_order' => $sort++,
                         'seo_title' => "{$b['name']} Official Store - Mama Bazar",
                         'seo_description' => $b['desc'],
-                        'seo_keywords' => strtolower($b['name']) . ", {$b['name']} original, official {$b['name']}",
+                        'seo_keywords' => strtolower($b['name']).", {$b['name']} original, official {$b['name']}",
                         'status' => 'active',
                     ]
                 );

@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\ShippingMethod;
@@ -20,7 +20,9 @@ class ReviewSystemTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $customer;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -45,7 +47,7 @@ class ReviewSystemTest extends TestCase
 
     private function purchaseAs(User $user): void
     {
-        \App\Models\PaymentMethod::ensureDefaults();
+        PaymentMethod::ensureDefaults();
         $ship = ShippingMethod::firstOrCreate(
             ['name' => 'Test Delivery'],
             ['charge' => 60, 'status' => 'active', 'cod_available' => true]
@@ -59,7 +61,7 @@ class ReviewSystemTest extends TestCase
         ]);
         $order = Order::where('order_id', $result['order']['orderId'])->firstOrFail();
         // Simulate a guest-checkout order linked by phone instead of user id.
-        if ($user->is($this->customer) && !$order->user_id) {
+        if ($user->is($this->customer) && ! $order->user_id) {
             $order->update(['user_id' => $user->id]);
         }
     }

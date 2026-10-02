@@ -79,7 +79,7 @@ class AdminCategoryWebController extends Controller
 
         $validated = $request->validate($this->categoryRules((int) $id));
 
-        if (!empty($validated['parent_id']) && (int) $validated['parent_id'] === (int) $category->id) {
+        if (! empty($validated['parent_id']) && (int) $validated['parent_id'] === (int) $category->id) {
             return back()->withErrors(['parent_id' => 'A category cannot be its own parent.'])->withInput();
         }
 

@@ -2,6 +2,10 @@
 
 namespace App\Support;
 
+use App\Http\Middleware\EnsureAdminPermission;
+use App\Models\EmailLog;
+use App\Models\Review;
+
 class AdminNav
 {
     public static function lucide(): array
@@ -43,6 +47,7 @@ class AdminNav
             'send' => '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
             'zap' => '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
             'scroll-text' => '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
+            'activity' => '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
         ];
     }
 
@@ -51,14 +56,14 @@ class AdminNav
     {
         $pendingReviews = 0;
         try {
-            $pendingReviews = (int) \App\Models\Review::where('status', 'pending')->count();
+            $pendingReviews = (int) Review::where('status', 'pending')->count();
         } catch (\Throwable $e) {
             $pendingReviews = 0;
         }
 
         $failedEmails = 0;
         try {
-            $failedEmails = (int) \App\Models\EmailLog::where('status', 'failed')->where('created_at', '>=', now()->subDay())->count();
+            $failedEmails = (int) EmailLog::where('status', 'failed')->where('created_at', '>=', now()->subDay())->count();
         } catch (\Throwable $e) {
             $failedEmails = 0;
         }
@@ -135,7 +140,7 @@ class AdminNav
             $sections[$i]['items'] = array_values(array_filter(
                 $section['items'],
                 fn ($item) => empty($item['permission'])
-                    || \App\Http\Middleware\EnsureAdminPermission::allows($user, explode('|', $item['permission']))
+                    || EnsureAdminPermission::allows($user, explode('|', $item['permission']))
             ));
         }
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AdminRole extends Model
 {
     protected $table = 'admin_roles';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

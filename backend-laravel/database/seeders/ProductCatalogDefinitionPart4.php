@@ -22,7 +22,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Fortune Sunlite Refined Sunflower Oil 5L Can', 'brand' => 'radhuni', 'sub' => 1, 'price' => 980, 'sale' => 899, 'stock' => 50, 'specs' => ['Vitamins' => 'Enriched with Vitamin A and Vitamin D for heart wellness', 'Clarity' => 'Light, clear, and odor-free absorbs less into food', 'Smoke Point' => 'High smoke point perfect for deep frying and sautéing', 'Container' => 'Sturdy 5-Liter ergonomic pour spout can']],
                     ['title' => 'Dano Daily Pushti Full Cream Milk Powder 1kg', 'brand' => 'pran', 'sub' => 3, 'price' => 890, 'sale' => 820, 'stock' => 60, 'specs' => ['Source' => '100% Fresh European cow milk from Arla dairy farmers', 'Nutrition' => 'Rich in calcium, protein, Vitamin A, and Vitamin D3', 'Taste' => 'Creamy rich taste dissolves instantly in hot or cold water', 'Pack' => 'Multi-layer hermetically sealed foil pouch']],
                     ['title' => 'ACI Pure Vacuum Evaporated Iodized Salt 1kg', 'brand' => 'pran', 'sub' => 2, 'price' => 45, 'sale' => 40, 'stock' => 120, 'specs' => ['Purity' => '99.9% Pure vacuum-evaporated refined table salt', 'Iodine' => 'Adequately iodized to prevent iodine deficiency disorders', 'Flow' => 'Free-flowing crystals do not cake or clump in humidity', 'Weight' => '1 kg polypack']],
-                ]
+                ],
             ],
             // 42. Beverages & Juices
             [
@@ -39,7 +39,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Twinings English Breakfast Tea Bags 50 Count', 'brand' => 'twinings', 'sub' => 0, 'price' => 780, 'sale' => 699, 'stock' => 55, 'specs' => ['Blend' => 'Hearty robust blend of Assam, Ceylon and Kenyan black teas', 'Character' => 'Full-bodied and comforting, pairs perfectly with morning milk and sugar', 'Bags' => 'Individually envelope-wrapped tag bags', 'Origin' => 'Master blended in Hampshire, United Kingdom']],
                     ['title' => 'PRAN Frooto Green Mango Juice 250ml 6-Pack', 'brand' => 'pran', 'sub' => 2, 'price' => 180, 'sale' => 160, 'stock' => 85, 'specs' => ['Flavor' => 'Tangy, refreshing sour green mango nectar drink', 'Refreshment' => 'Instant cooldown during hot tropical afternoons', 'Pack' => 'Convenient on-the-go bottles with straws', 'Volume' => '6x 250ml mini bottles']],
                     ['title' => 'Ovaltine Malt Chocolate Milk Drink Mix 400g Jar', 'brand' => 'nescafe', 'sub' => 3, 'price' => 450, 'sale' => 399, 'stock' => 70, 'specs' => ['Malt' => 'Wholesome malted barley extract and Swiss chocolate recipe', 'Nutrients' => 'Nutri-10 formula with Calcium, Iron, Zinc, and 7 Vitamins', 'Serving' => 'Mix with hot or cold milk for wholesome nutritional boost', 'Jar' => '400g reusable sealed amber glass jar']],
-                ]
+                ],
             ],
             // 43. Snacks & Confectionery
             [
@@ -56,7 +56,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Cadbury Dairy Milk Silk Chocolate Bar 150g', 'brand' => 'ferrero-rocher', 'sub' => 0, 'price' => 320, 'sale' => 280, 'stock' => 85, 'specs' => ['Silkiness' => 'Richer, smoother, and creamier than standard milk chocolate', 'Melt' => 'Indulgent curated chocolate melts luxuriously in the mouth', 'Ingredients' => '100% Sustainably sourced cocoa via Cocoa Life program', 'Weight' => '150 grams large sharing bar']],
                     ['title' => 'Tong Garden Roasted California Almonds 150g', 'brand' => 'pran', 'sub' => 2, 'price' => 450, 'sale' => 390, 'stock' => 65, 'specs' => ['Origin' => 'Imported whole California Nonpareil grade almonds', 'Roasting' => 'Hot air dry roasted without added oil', 'Fiber' => 'High dietary fiber and Vitamin E antioxidant booster', 'Pack' => 'Nitrogen flushed airtight standup pouch']],
                     ['title' => 'Britannia Good Day Butter Biscuits 6-Pack Combo', 'brand' => 'pran', 'sub' => 3, 'price' => 220, 'sale' => 190, 'stock' => 100, 'specs' => ['Smile' => 'Signature smiling cookie design with butter-rich ridges', 'Taste' => 'Rich aroma of real butter in every golden baked bite', 'Tea Time' => 'The ultimate companion for morning and evening tea', 'Combo' => 'Multipack contains 6 individual 100g fresh rolls']],
-                ]
+                ],
             ],
             // 44. Baby Care & Maternity
             [
@@ -74,7 +74,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Sudocrem Antiseptic Healing Nappy Cream 125g', 'brand' => 'cerave', 'sub' => 2, 'price' => 880, 'sale' => 780, 'stock' => 60, 'specs' => ['Zinc Oxide' => 'Zinc oxide water-repellent base forms protective barrier on skin', 'Anesthetic' => 'Mild local anesthetic eases pain and irritation of diaper rash', 'Healing' => 'Antibacterial and antifungal agents protect against infection', 'Heritage' => 'Clinically proven and trusted by mothers for over 90 years']],
                     ['title' => 'Cetaphil Baby Daily Lotion with Shea Butter 400ml', 'brand' => 'cerave', 'sub' => 2, 'price' => 1450, 'sale' => 1299, 'stock' => 45, 'specs' => ['Hydration' => 'Organic Calendula, Sweet Almond oil, Sunflower oil & Shea butter', 'Protection' => 'Protects baby\'s delicate skin barrier against roughness for 24h', 'Pediatric' => 'Hypoallergenic and non-irritating tested by pediatricians', 'Dispenser' => 'Convenient single-hand pump dispenser bottle']],
                     ['title' => 'Pampers Sensitive Baby Wipes 3-Pack Flip-Top', 'brand' => 'dove', 'sub' => 1, 'price' => 1250, 'sale' => 1099, 'stock' => 50, 'specs' => ['Balance' => 'Unique pH balancing formula restores natural skin pH better than water', 'Softness' => '20% Thicker soft grip texture cleans messes with fewer wipes', 'Fragrance' => '0% Fragrance, alcohol, phenoxyethanol, and parabens', 'Lid' => 'Plastic flip-top lid seals moisture to prevent drying out']],
-                ]
+                ],
             ],
             // 45. Fitness & Home Gym
             [
@@ -91,7 +91,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'ProForm Adjustable Incline Decline Weight Bench', 'brand' => 'wilson', 'sub' => 0, 'price' => 18500, 'sale' => 16500, 'stock' => 15, 'specs' => ['Positions' => '6 Backrest positions: Decline, flat, incline (30°, 45°, 60°, 85°)', 'Lock' => 'Quick-lock pin mechanism adjusts position securely in seconds', 'Wheels' => 'Transport wheels and front handle for easy storage in corners', 'Upholstery' => 'Sweat-resistant box-stitched vinyl upholstery']],
                     ['title' => 'SKLZ Speed & Agility Footwork Training Ladder 15ft', 'brand' => 'adidas', 'sub' => 1, 'price' => 2800, 'sale' => 2450, 'stock' => 35, 'specs' => ['Length' => '15-foot heavy-duty flat nylon webbing ladder', 'Rungs' => '11 Adjustable heavy-impact plastic flat rungs', 'Athletics' => 'Enhances foot speed, lateral quickness, balance, and coordination', 'Anchors' => 'Includes 4 ground stakes and convenient storage bag']],
                     ['title' => 'Everlast Heavy Boxing Punching Bag 70lbs Filled', 'brand' => 'nike', 'sub' => 3, 'price' => 11500, 'sale' => 9999, 'stock' => 16, 'specs' => ['Filling' => 'Custom blend of sanitized synthetic and natural fibers absorbs shock', 'Exterior' => 'Premium Nevatear synthetic leather with reinforced webbing', 'Straps' => 'Heavy-duty nylon straps provide security and quiet operation', 'Swivel' => 'Double-end loop for bottom anchoring against excessive sway']],
-                ]
+                ],
             ],
             // 46. Sports & Outdoor Gear
             [
@@ -108,7 +108,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Speedo Fastskin Elite Mirrored Swimming Goggles', 'brand' => 'nike', 'sub' => 3, 'price' => 4500, 'sale' => 3999, 'stock' => 35, 'specs' => ['IQfit' => 'IQfit 3D goggle seal fits securely without leaving facial marks', 'Lenses' => 'Hydroscopic curved mirrored lenses reduce glare and maximize 180° view', 'Straps' => 'Tensioning scale strap ensures precise fit every time', 'Anti-Fog' => 'Factory applied anti-fog coating provides crystal clear vision']],
                     ['title' => 'Campingaz Camp Bistro 2 Portable Gas Stove', 'brand' => 'wilson', 'sub' => 3, 'price' => 3800, 'sale' => 3350, 'stock' => 30, 'specs' => ['Ignition' => 'Piezo auto ignition starts flame instantly without matches', 'Power' => '2200W high-efficiency burner boils 1 Liter water in 5 minutes', 'Safety' => 'Cartridge safety locking system prevents gas leaks', 'Case' => 'Includes rugged hard plastic carrying suitcase for transport']],
                     ['title' => 'Decathlon Quechua 20L Hiking Backpack Grey', 'brand' => 'wilson', 'sub' => 3, 'price' => 2450, 'sale' => 2100, 'stock' => 50, 'specs' => ['Comfort' => 'Foam-padded back and shoulder straps with chest strap', 'Ventilation' => 'Simple back ventilation system reduces perspiration', 'Compartments' => '2 Compartments, 2 bottle holders, and pole carrier loops', 'Warranty' => 'Decathlon 10-Year warranty against fabric and zip defects']],
-                ]
+                ],
             ],
             // 47. Automotive & Motorbike
             [
@@ -126,7 +126,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Alpinestars SMX-1 Air V2 Motorcycle Gloves Black', 'brand' => 'yamaha', 'sub' => 0, 'price' => 6500, 'sale' => 5800, 'stock' => 30, 'specs' => ['Chassis' => 'Full-grain leather chassis and breathable air mesh zones', 'Knuckles' => 'Hard polymer knuckle guard for superior impact and abrasion defense', 'Touchscreen' => 'Touchscreen compatible fingertip for smartphones and GPS', 'Closure' => 'Ergonomic stretch wrist cuff with velcro tab closure']],
                     ['title' => 'Michelin Digital High Power Tire Inflator Pump', 'brand' => 'yamaha', 'sub' => 3, 'price' => 5400, 'sale' => 4800, 'stock' => 25, 'specs' => ['Speed' => 'Inflates a standard car tire from 0 to 35 PSI in under 3 minutes', 'Display' => 'Backlit digital gauge accurate to +/- 1 PSI with auto shut-off', 'Power' => '12V DC auxiliary car plug with 3-meter reach cable', 'LED' => 'Integrated bright white LED inspection light for nighttime flats']],
                     ['title' => 'Meguiar\'s Ultimate Microfiber Wash Mitt & Towel Kit', 'brand' => 'yamaha', 'sub' => 2, 'price' => 1450, 'sale' => 1250, 'stock' => 50, 'specs' => ['Fibers' => 'Deep pile plush microfiber lifts and traps dirt away from paintwork', 'Absorption' => 'Absorbs 10x its weight in soapy water for lubricated washing', 'Towel' => 'Includes Water Magnet waffle-weave 1200 GSM drying towel', 'Machine Wash' => 'Lint-free and machine washable for hundreds of washes']],
-                ]
+                ],
             ],
             // 48. Books & Stationery
             [
@@ -143,7 +143,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Faber-Castell 48 Classic Colour Pencils Tin', 'brand' => 'casio', 'sub' => 2, 'price' => 1250, 'sale' => 1050, 'stock' => 45, 'specs' => ['Lead' => 'SV bonding technology prevents lead breakage during sharpening', 'Colors' => '48 Vibrant, rich pigment hexagonal colored pencils', 'Wood' => '100% Sustainably managed plantation cedar wood', 'Tin' => 'Durable two-tier metal storage tin container']],
                     ['title' => 'Rich Dad Poor Dad by Robert T. Kiyosaki', 'brand' => 'apple', 'sub' => 1, 'price' => 820, 'sale' => 720, 'stock' => 55, 'specs' => ['Author' => 'Robert T. Kiyosaki', 'Topic' => 'What the rich teach their kids about money that poor do not', 'Milestone' => '25th Anniversary expanded edition with study guide', 'Pages' => '336 Pages English paperback']],
                     ['title' => 'Midori MD Notebook Journal Blank A5 Japanese Paper', 'brand' => 'casio', 'sub' => 2, 'price' => 1850, 'sale' => 1599, 'stock' => 35, 'specs' => ['Paper' => 'Authentic Japanese MD Paper engineered not to feather with wet fountain ink', 'Binding' => 'Thread-stitched lay-flat binding opens full 180 degrees', 'Cover' => 'Glassine wax paper protective wrapper with index label stickers', 'Sheets' => '176 Blank unruled pages for writers and sketch artists']],
-                ]
+                ],
             ],
             // 49. Musical Instruments
             [
@@ -160,7 +160,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Focusrite Scarlett 2i2 4th Gen USB Audio Interface', 'brand' => 'sony', 'sub' => 2, 'price' => 24500, 'sale' => 22999, 'stock' => 16, 'specs' => ['Preamps' => 'Dual ultra-low-noise 4th Gen mic preamps with 69dB gain range', 'Air Mode' => 'Re-engineered Air mode adds high-end presence and harmonic drive', 'Converters' => 'Studio-grade 24-bit/192kHz converters with 120dB dynamic range', 'Software' => 'Includes Pro Tools Artist, Ableton Live Lite, and Hitmaker bundle']],
                     ['title' => 'Yamaha YRS-24B Soprano Recorder Instrument', 'brand' => 'yamaha', 'sub' => 3, 'price' => 650, 'sale' => 550, 'stock' => 60, 'specs' => ['Fingering' => 'Baroque fingering system accurate in pitch throughout scale', 'Resin' => 'Durable ABS resin body cleans easily under running tap', 'Windway' => 'Straight windway produces soft pure tone for music students', 'Case' => 'Includes protective cotton cloth bag and fingering chart']],
                     ['title' => 'Dunlop Cry Baby GCB95 Standard Wah Guitar Pedal', 'brand' => 'yamaha', 'sub' => 0, 'price' => 12000, 'sale' => 10800, 'stock' => 15, 'specs' => ['Heritage' => 'The original classic wah pedal created in late 1960s', 'Inductor' => 'Red Fasel inductor for legendary vintage sweep tone', 'Chassis' => 'Heavy-duty die-cast zinc housing built for road touring', 'Power' => 'Operates on 9V battery or optional Dunlop ECB003 AC adapter']],
-                ]
+                ],
             ],
             // 50. Pet Care & Supplies
             [
@@ -177,7 +177,7 @@ class ProductCatalogDefinitionPart4
                     ['title' => 'Trixie Soft Slicker Grooming Brush with Cleaner', 'brand' => 'whiskas', 'sub' => 3, 'price' => 750, 'sale' => 650, 'stock' => 50, 'specs' => ['Pins' => 'Fine curved wire pins with protective rubber safety tips', 'Cleaning' => 'One-touch push button retracts pins for instant hair clump disposal', 'Handle' => 'Ergonomic soft-grip rubber handle prevents hand strain', 'Coat' => 'Gently removes loose undercoat hair and detangles knots']],
                     ['title' => 'JerHigh Real Chicken Meat Dog Treats 400g Pouch', 'brand' => 'pedigree', 'sub' => 1, 'price' => 880, 'sale' => 760, 'stock' => 55, 'specs' => ['Protein' => 'Prepared from 100% human-grade pure chicken breast meat', 'Nutrients' => 'Packed with Vitamin E, Inulin, and essential amino acids', 'Texture' => 'Tender chewy jerky sticks ideal for obedience training rewards', 'Origin' => 'Manufactured in Thailand under international ISO standards']],
                     ['title' => 'Bentonite Fresh Lavender Scented Cat Litter 10L', 'brand' => 'whiskas', 'sub' => 2, 'price' => 1450, 'sale' => 1250, 'stock' => 60, 'specs' => ['Scent' => 'Subtle calming lavender aroma releases only when moisture is detected', 'Clumping' => 'Instant tight round clumps within 3 seconds', 'Absorption' => 'High moisture absorption capacity keeps tray bottom dry', 'Eco' => '100% Natural non-toxic chemical-free mineral formula']],
-                ]
+                ],
             ],
         ];
     }

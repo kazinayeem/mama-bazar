@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendTemplatedEmailJob;
-use App\Models\PolicyPage;
 use App\Models\ContactMessage;
-use App\Models\SiteSetting;
+use App\Models\PolicyPage;
 use App\Services\EmailSettingService;
 use App\Support\EmailQueue;
 use Illuminate\Http\Request;
@@ -16,7 +15,7 @@ class PageWebController extends Controller
     public function show($slug)
     {
         $page = PolicyPage::where('slug', $slug)->first();
-        if (!$page) {
+        if (! $page) {
             abort(404, 'Page not found');
         }
 

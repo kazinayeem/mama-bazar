@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminProductRequest extends FormRequest
@@ -68,7 +67,7 @@ class AdminProductRequest extends FormRequest
         ];
 
         foreach ($mappings as $camel => $snake) {
-            if (!$this->has($snake) && $this->has($camel)) {
+            if (! $this->has($snake) && $this->has($camel)) {
                 $this->merge([$snake => $this->input($camel)]);
             }
         }
@@ -84,10 +83,11 @@ class AdminProductRequest extends FormRequest
         ];
 
         foreach ($booleanFields as $field) {
-            if (!$this->has($field)) {
+            if (! $this->has($field)) {
                 if ($isWebForm) {
                     $this->merge([$field => 0]);
                 }
+
                 continue;
             }
 
@@ -99,11 +99,13 @@ class AdminProductRequest extends FormRequest
                 } else {
                     $this->merge([$field => null]);
                 }
+
                 continue;
             }
 
             if (is_bool($val)) {
                 $this->merge([$field => $val ? 1 : 0]);
+
                 continue;
             }
 
@@ -112,6 +114,7 @@ class AdminProductRequest extends FormRequest
                 if ($intVal === 0 || $intVal === 1) {
                     $this->merge([$field => $intVal]);
                 }
+
                 // Invalid numbers like 2, 99, or -1 remain as-is so Laravel boolean validator catches them
                 continue;
             }
@@ -145,7 +148,7 @@ class AdminProductRequest extends FormRequest
         // 4. Sanitize images array
         if ($this->has('images') && is_array($this->input('images'))) {
             $cleanedImages = array_values(array_filter($this->input('images'), function ($img) {
-                return is_string($img) && trim($img) !== '' && !str_starts_with($img, 'blob:') && !str_starts_with($img, 'data:');
+                return is_string($img) && trim($img) !== '' && ! str_starts_with($img, 'blob:') && ! str_starts_with($img, 'data:');
             }));
             $this->merge(['images' => $cleanedImages]);
         }
@@ -155,7 +158,7 @@ class AdminProductRequest extends FormRequest
             'category_id', 'sub_category_id', 'child_category_id', 'brand_id',
             'collection_id', 'vendor_id', 'supplier_id',
             'max_order', 'sale_price', 'flash_sale_price',
-            'wholesale_price', 'dealer_price'
+            'wholesale_price', 'dealer_price',
         ] as $nullableField) {
             if ($this->has($nullableField) && ($this->input($nullableField) === '' || $this->input($nullableField) === null || $this->input($nullableField) === 'null')) {
                 $this->merge([$nullableField => null]);

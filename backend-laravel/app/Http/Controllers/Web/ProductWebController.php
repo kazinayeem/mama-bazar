@@ -15,7 +15,7 @@ class ProductWebController extends Controller
     {
         $product = ProductService::getBySlug($slug);
 
-        if (!$product) {
+        if (! $product) {
             abort(404, 'Product not found');
         }
 

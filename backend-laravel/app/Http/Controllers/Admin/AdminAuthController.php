@@ -39,7 +39,7 @@ class AdminAuthController extends Controller
             })
             ->first();
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             LoginTrackingService::recordFailure($request, $login, 'Invalid credentials provided.');
 
             throw ValidationException::withMessages([
@@ -49,7 +49,7 @@ class AdminAuthController extends Controller
 
         // Authorization check: User must be an admin, manager, editor, staff, or have custom_role
         $allowedRoles = ['admin', 'manager', 'editor', 'staff', 'super_admin'];
-        if (!in_array($user->role, $allowedRoles) && empty($user->custom_role)) {
+        if (! in_array($user->role, $allowedRoles) && empty($user->custom_role)) {
             LoginTrackingService::recordFailure($request, $login, 'Access denied: Insufficient privileges.');
 
             throw ValidationException::withMessages([

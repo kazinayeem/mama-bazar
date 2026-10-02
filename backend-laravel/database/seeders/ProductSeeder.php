@@ -30,7 +30,7 @@ class ProductSeeder extends Seeder
                 $catSlug = $catData['cat_slug'];
                 $parentCat = $categories->get($catSlug);
 
-                if (!$parentCat) {
+                if (! $parentCat) {
                     continue;
                 }
 
@@ -51,14 +51,14 @@ class ProductSeeder extends Seeder
 
                     $title = $item['title'];
                     $slug = Str::slug($title);
-                    
+
                     // Generate clean, deterministic unique SKU
                     $brandPrefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $brand->name), 0, 3));
                     $titlePrefix = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $title), 0, 6));
                     $baseSku = sprintf('%s-%s-%03d', $brandPrefix, $titlePrefix, $globalProductIndex);
 
                     if (isset($skuRegistry[$baseSku])) {
-                        $baseSku .= '-' . $globalProductIndex;
+                        $baseSku .= '-'.$globalProductIndex;
                     }
                     $skuRegistry[$baseSku] = true;
 
@@ -332,7 +332,7 @@ class ProductSeeder extends Seeder
         foreach ($variantList as $vData) {
             $sku = $vData['sku'];
             if (isset($skuRegistry[$sku])) {
-                $sku .= '-' . rand(10, 99);
+                $sku .= '-'.rand(10, 99);
             }
             $skuRegistry[$sku] = true;
 

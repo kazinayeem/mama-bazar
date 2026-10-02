@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AdminOnlyMiddleware;
 use App\Http\Middleware\EnsureAdminAccess;
+use App\Http\Middleware\EnsureAdminPasswordChanged;
 use App\Http\Middleware\EnsureAdminPermission;
 use App\Http\Middleware\EnsureEmailSchemaReady;
 use App\Http\Middleware\EnsureEmailVerified;

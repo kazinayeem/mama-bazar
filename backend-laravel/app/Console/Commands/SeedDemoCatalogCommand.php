@@ -54,24 +54,27 @@ class SeedDemoCatalogCommand extends Command
         $isLocalDb = in_array(strtolower($dbHost), ['localhost', '127.0.0.1', '::1'], true)
             || config('database.default') === 'sqlite';
 
-        if (!$isLocalDb && !($force && $confirmProd)) {
+        if (! $isLocalDb && ! ($force && $confirmProd)) {
             $this->error("SAFETY STOP: DB host is '{$dbHost}' (database '{$dbName}', APP_ENV={$appEnv}).");
             $this->error('This does not look like a local development database.');
             $this->line('To proceed you must pass BOTH --force and --confirm-production,');
             $this->line('acknowledging that demo products on this database will be replaced.');
             $this->line('Orders, customers and payment records are never deleted by this command.');
+
             return 1;
         }
 
-        if ($appEnv === 'production' && !($force && $confirmProd)) {
+        if ($appEnv === 'production' && ! ($force && $confirmProd)) {
             $this->error('SAFETY STOP: APP_ENV=production. Pass --force --confirm-production to proceed.');
+
             return 1;
         }
 
-        if (!$force) {
+        if (! $force) {
             $this->warn('Dry run: pass --force to actually clean and seed.');
-            $this->line('Products now: ' . Product::count() . ' | variants: ' . ProductVariant::count()
-                . ' | orders: ' . Order::count() . ' (orders are always preserved)');
+            $this->line('Products now: '.Product::count().' | variants: '.ProductVariant::count()
+                .' | orders: '.Order::count().' (orders are always preserved)');
+
             return 0;
         }
 
@@ -79,7 +82,7 @@ class SeedDemoCatalogCommand extends Command
         $orderItemCount = OrderItem::count();
         $this->info("Preserving {$orderCount} orders / {$orderItemCount} order items (never deleted).");
 
-        if (!$this->option('skip-backup')) {
+        if (! $this->option('skip-backup')) {
             $this->backupProductData();
         }
 
@@ -103,11 +106,11 @@ class SeedDemoCatalogCommand extends Command
         while ($created < $count) {
             $bp = $blueprints[$i % count($blueprints)];
             $i++;
-            $suffix = $created >= count($blueprints) ? ' ' . $this->packSuffix($created) : '';
-            $title = $bp['title'] . $suffix;
+            $suffix = $created >= count($blueprints) ? ' '.$this->packSuffix($created) : '';
+            $title = $bp['title'].$suffix;
             $slug = SlugService::toAsciiSlug($title);
             if (isset($usedSlugs[$slug]) || Product::where('slug', $slug)->exists()) {
-                $slug .= '-' . ($created + 1);
+                $slug .= '-'.($created + 1);
             }
             $usedSlugs[$slug] = true;
 
@@ -120,12 +123,14 @@ class SeedDemoCatalogCommand extends Command
         }
 
         $this->info("Seeded {$created} parent products with {$variantTotal} variants.");
+
         return $this->verify($count);
     }
 
     protected function packSuffix(int $n): string
     {
         $packs = ['Family Pack', 'Value Pack', 'Combo Offer', 'Plus Edition', 'New Pack', 'Special Edition'];
+
         return $packs[$n % count($packs)];
     }
 
@@ -154,7 +159,7 @@ class SeedDemoCatalogCommand extends Command
     {
         // Delete reviews tied to products first (preserve order/customer history).
         $productIds = Product::pluck('id')->all();
-        if (!empty($productIds)) {
+        if (! empty($productIds)) {
             Review::whereIn('product_id', $productIds)->delete();
             ProductRelation::whereIn('product_id', $productIds)->orWhereIn('related_product_id', $productIds)->delete();
             ProductSpec::whereIn('product_id', $productIds)->delete();
@@ -237,7 +242,7 @@ class SeedDemoCatalogCommand extends Command
      */
     protected function blueprints(): array
     {
-        $B = fn($cat, $brand, $title, $min, $max, $variant, $tags = [], $specs = []) => [
+        $B = fn ($cat, $brand, $title, $min, $max, $variant, $tags = [], $specs = []) => [
             'cat' => $cat, 'brand' => $brand, 'title' => $title,
             'min' => $min, 'max' => $max, 'variant' => $variant, 'tags' => $tags, 'specs' => $specs,
         ];
@@ -340,11 +345,11 @@ class SeedDemoCatalogCommand extends Command
         $salePrice = $onSale ? (int) ($price * (mt_rand(85, 95) / 100)) : null;
         $costPrice = (int) ($price * 0.68);
 
-        $baseSku = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bp['brand']), 0, 3)) . '-'
-            . strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bp['cat']), 0, 3)) . '-'
-            . str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT);
+        $baseSku = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bp['brand']), 0, 3)).'-'
+            .strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bp['cat']), 0, 3)).'-'
+            .str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT);
         if (isset($usedSkus[$baseSku])) {
-            $baseSku .= '-' . ($index + 1);
+            $baseSku .= '-'.($index + 1);
         }
         $usedSkus[$baseSku] = true;
 
@@ -389,7 +394,7 @@ class SeedDemoCatalogCommand extends Command
             'supplier_id' => $supplier?->id,
             'country_of_origin' => 'Bangladesh',
             'sku' => $baseSku,
-            'barcode' => '890' . str_pad((string) mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT),
+            'barcode' => '890'.str_pad((string) mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT),
             'tags' => array_merge($bp['tags'], ['demo-catalog', strtolower($bp['cat'])]),
             'features' => $this->features($title, $catName),
             'seo_title' => mb_substr("{$title} - Best price in Bangladesh | Mama Bazar (Demo)", 0, 255),
@@ -439,6 +444,7 @@ class SeedDemoCatalogCommand extends Command
                     'product_id' => $product->id, 'label' => $label, 'value' => $value, 'sort_order' => $sort++,
                 ]);
             }
+
             return $created;
         });
     }
@@ -449,13 +455,14 @@ class SeedDemoCatalogCommand extends Command
         $out = [];
         $mk = function (string $name, array $options, int $priceDelta, int $stock, string $skuSuffix) use ($baseSku, $price, $salePrice, $img) {
             $vp = $price + $priceDelta;
+
             return [
                 'name' => $name,
                 'options' => $options,
                 'price' => $vp,
                 'discount_price' => $salePrice !== null ? max(1, $vp - ($price - $salePrice)) : null,
-                'sku' => $baseSku . $skuSuffix,
-                'barcode' => '890' . str_pad((string) mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT),
+                'sku' => $baseSku.$skuSuffix,
+                'barcode' => '890'.str_pad((string) mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT),
                 'stock' => $stock,
                 'image' => $img,
             ];
@@ -491,7 +498,7 @@ class SeedDemoCatalogCommand extends Command
                 break;
             case 'phone-storage':
                 foreach ([['128GB', 0], ['256GB', 2500], ['512GB', 6000]] as [$stor, $delta]) {
-                    $out[] = $mk($stor, ['Storage' => $stor], $delta, mt_rand(10, 30), '-' . str_replace('GB', '', $stor));
+                    $out[] = $mk($stor, ['Storage' => $stor], $delta, mt_rand(10, 30), '-'.str_replace('GB', '', $stor));
                 }
                 break;
             case 'accessory-color':
@@ -502,7 +509,7 @@ class SeedDemoCatalogCommand extends Command
             case 'watch':
                 foreach ([['Black Silicone', 'BLK'], ['Brown Leather', 'BRN'], ['Blue Silicone', 'BLU']] as [$c, $cc]) {
                     $parts = explode(' ', $c);
-                    $out[] = $mk($c, ['Color' => $parts[0], 'Strap' => ($parts[1] ?? 'Silicone') . ' Strap'], mt_rand(0, 500), mt_rand(10, 25), "-{$cc}");
+                    $out[] = $mk($c, ['Color' => $parts[0], 'Strap' => ($parts[1] ?? 'Silicone').' Strap'], mt_rand(0, 500), mt_rand(10, 25), "-{$cc}");
                 }
                 break;
             case 'home-capacity':
@@ -527,20 +534,21 @@ class SeedDemoCatalogCommand extends Command
 
         // Cap variants per product to keep total sane (apparel 16 -> keep 8 sampled deterministically)
         if (count($out) > 12) {
-            $out = array_values(array_filter($out, fn($_, $k) => $k % 2 === 0, ARRAY_FILTER_USE_BOTH));
+            $out = array_values(array_filter($out, fn ($_, $k) => $k % 2 === 0, ARRAY_FILTER_USE_BOTH));
             $out = array_slice($out, 0, 12);
         }
+
         return $out;
     }
 
     protected function description(string $title, string $brand, string $cat): string
     {
         return "<p><strong>{$title}</strong> from {$brand} - a popular {$cat} pick for customers across Bangladesh.</p>"
-            . "<p>Demo catalog entry: specifications below describe a representative product. "
-            . "Cash on delivery available in Dhaka and nationwide courier delivery.</p>"
-            . "<ul><li>Genuine demo stock checked before dispatch</li>"
-            . "<li>Easy 7-day exchange for manufacturing issues (demo policy)</li>"
-            . "<li>Pay via bKash, Nagad, Rocket or cash on delivery</li></ul>";
+            .'<p>Demo catalog entry: specifications below describe a representative product. '
+            .'Cash on delivery available in Dhaka and nationwide courier delivery.</p>'
+            .'<ul><li>Genuine demo stock checked before dispatch</li>'
+            .'<li>Easy 7-day exchange for manufacturing issues (demo policy)</li>'
+            .'<li>Pay via bKash, Nagad, Rocket or cash on delivery</li></ul>';
     }
 
     protected function features(string $title, string $cat): array
@@ -569,9 +577,11 @@ class SeedDemoCatalogCommand extends Command
 
         if ($products !== $expected || $dupSlugs > 0 || $badPrices > 0 || $negStock > 0 || $orphanVariants > 0) {
             $this->error('Verification FAILED - see counts above.');
+
             return 1;
         }
         $this->info('Verification PASSED: 200 active demo products with consistent variants, prices and inventory.');
+
         return 0;
     }
 }

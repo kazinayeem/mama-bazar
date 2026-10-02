@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Admin\AdminOrderWebController;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ShippingMethod;
-use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\BusinessSettingService;
 use App\Services\OrderService;
@@ -19,6 +20,7 @@ class BusinessSettingsTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $customer;
 
     protected function setUp(): void
@@ -43,7 +45,7 @@ class BusinessSettingsTest extends TestCase
 
     private function makeOrder(): Order
     {
-        \App\Models\PaymentMethod::ensureDefaults();
+        PaymentMethod::ensureDefaults();
         $ship = ShippingMethod::firstOrCreate(
             ['name' => 'Standard Delivery'],
             ['charge' => 60, 'status' => 'active', 'cod_available' => true]
@@ -192,7 +194,7 @@ class BusinessSettingsTest extends TestCase
         $res->assertSee('Block C, Banani');
         $res->assertSee('https://wa.me/8801799887766');
         $res->assertSee('Fastest groceries across Dhaka.');
-        $res->assertSee('© ' . date('Y') . ' Mama Bazar Global Corp.');
+        $res->assertSee('© '.date('Y').' Mama Bazar Global Corp.');
 
         // Bornosoft software attribution remains strictly intact and clickable
         $res->assertSee('https://bornosoft.bd/');
@@ -274,7 +276,7 @@ class BusinessSettingsTest extends TestCase
         // PDF Invoice View
         $pdfHtml = view(
             'admin.orders.invoice-pdf',
-            ['order' => $order->load(['items.product', 'items.variant']), 'store' => \App\Http\Controllers\Admin\AdminOrderWebController::storeInfo()]
+            ['order' => $order->load(['items.product', 'items.variant']), 'store' => AdminOrderWebController::storeInfo()]
         )->render();
         $this->assertStringContainsString('Mama Bazar Enterprise', $pdfHtml);
         $this->assertStringContainsString('01300-998877', $pdfHtml);

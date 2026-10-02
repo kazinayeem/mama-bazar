@@ -116,6 +116,17 @@ class EmailDispatcherService
                 'message_id' => $sent instanceof SentMessage ? mb_substr((string) $sent->getMessageId(), 0, 255) : null,
             ]);
 
+            ActivityLoggerService::logEmail(
+                'email.sent',
+                "Email successfully dispatched to {$to}: {$loggedSubject}",
+                [
+                    'status' => 'success',
+                    'subjectType' => 'EmailLog',
+                    'subjectId' => (string) $log->id,
+                    'metadata' => ['to' => $to, 'subject' => $loggedSubject, 'type' => $emailType, 'order_id' => $orderId],
+                ]
+            );
+
             return ['success' => true, 'log_id' => $log->id, 'error' => null];
         } catch (Throwable $e) {
             $error = self::redact(EmailSettingService::sanitizeError($e->getMessage()), $redact);
@@ -125,6 +136,17 @@ class EmailDispatcherService
             if ($e instanceof TransportExceptionInterface) {
                 EmailSettingService::recordSendFailure($error);
             }
+
+            ActivityLoggerService::logEmail(
+                'email.failed',
+                "Email delivery to {$to} failed: {$error}",
+                [
+                    'status' => 'failure',
+                    'subjectType' => 'EmailLog',
+                    'subjectId' => (string) $log->id,
+                    'metadata' => ['to' => $to, 'subject' => $loggedSubject, 'error' => $error],
+                ]
+            );
 
             return ['success' => false, 'log_id' => $log->id, 'error' => $error];
         }
@@ -174,7 +196,20 @@ class EmailDispatcherService
         }
 
         try {
-            return EmailLog::create($attributes);
+            $created = EmailLog::create($attributes);
+
+            ActivityLoggerService::logEmail(
+                'email.queued',
+                "Email queued for delivery to {$to}: {$attributes['subject']}",
+                [
+                    'status' => 'pending',
+                    'subjectType' => 'EmailLog',
+                    'subjectId' => (string) $created->id,
+                    'metadata' => ['to' => $to, 'template' => $templateKey, 'order_id' => $orderId],
+                ]
+            );
+
+            return $created;
         } catch (QueryException $e) {
             return $dedupeKey ? EmailLog::where('dedupe_key', $dedupeKey)->first() : null;
         }

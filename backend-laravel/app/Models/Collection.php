@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Collection extends Model
 {
     protected $table = 'collections';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

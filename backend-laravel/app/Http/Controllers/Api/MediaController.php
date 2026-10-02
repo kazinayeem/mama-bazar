@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\MediaAsset;
 use App\Services\MediaStorageService;
+use Illuminate\Http\Request;
 
 class MediaController extends Controller
 {
@@ -89,7 +89,7 @@ class MediaController extends Controller
             $s = $request->input('search');
             $query->where(function ($q) use ($s) {
                 $q->where('filename', 'like', "%{$s}%")
-                  ->orWhere('alt', 'like', "%{$s}%");
+                    ->orWhere('alt', 'like', "%{$s}%");
             });
         }
 
@@ -135,21 +135,26 @@ class MediaController extends Controller
     public function getById($id)
     {
         $asset = MediaAsset::find($id);
-        if (!$asset) {
+        if (! $asset) {
             return response()->json(['success' => false, 'message' => 'Asset not found'], 404);
         }
+
         return response()->json(['success' => true, 'data' => $asset]);
     }
 
     public function update(Request $request, $id)
     {
         $asset = MediaAsset::find($id);
-        if (!$asset) {
+        if (! $asset) {
             return response()->json(['success' => false, 'message' => 'Asset not found'], 404);
         }
 
-        if ($request->has('alt')) $asset->alt = $request->input('alt');
-        if ($request->has('folder')) $asset->folder = $request->input('folder');
+        if ($request->has('alt')) {
+            $asset->alt = $request->input('alt');
+        }
+        if ($request->has('folder')) {
+            $asset->folder = $request->input('folder');
+        }
         $asset->save();
 
         return response()->json(['success' => true, 'data' => $asset]);
@@ -158,7 +163,7 @@ class MediaController extends Controller
     public function remove($id)
     {
         $asset = MediaAsset::find($id);
-        if (!$asset) {
+        if (! $asset) {
             return response()->json(['success' => false, 'message' => 'Asset not found'], 404);
         }
 

@@ -23,7 +23,7 @@ class ProductCatalogDefinitionPart2
                     ['title' => 'Zara Minimalist Flap Laptop Backpack Black', 'brand' => 'zara', 'sub' => 1, 'price' => 5800, 'sale' => 4999, 'stock' => 28, 'specs' => ['Exterior' => 'Smooth matte technical rubberized polyurethane', 'Flap' => 'Magnetic foldover flap with double snap clasps', 'Pocket' => 'Back zip anti-theft security pocket for passport', 'Interior' => 'Reinforced 15.6" laptop compartment']],
                     ['title' => 'Apex Handcrafted Leather Travel Weekend Duffle', 'brand' => 'apex', 'sub' => 3, 'price' => 12500, 'sale' => 10999, 'stock' => 15, 'specs' => ['Leather' => 'Vegetable-tanned rich oily pull-up leather', 'Zippers' => 'Heavy-duty YKK antique brass dual zippers', 'Studs' => 'Reinforced base with 5 protective brass metal feet', 'Lining' => 'Tough cotton twill striped lining']],
                     ['title' => 'Fossil Defender Leather Top Zip Briefcase', 'brand' => 'fossil', 'sub' => 2, 'price' => 21000, 'sale' => 18999, 'stock' => 12, 'specs' => ['Construction' => 'Distressed vintage brown leather gets better with age', 'Pass-Through' => 'Rear trolley sleeve slides over rolling luggage handles', 'Pockets' => 'Organizer panel with pen loops, card slots, and key leash', 'Size' => 'Fits up to 15" MacBook Pro comfortably']],
-                ]
+                ],
             ],
             // 27. Eyewear & Sunglasses
             [
@@ -41,7 +41,7 @@ class ProductCatalogDefinitionPart2
                     ['title' => 'Nike Show X3 Elite Wraparound Sports Sunglasses', 'brand' => 'nike', 'sub' => 3, 'price' => 14500, 'sale' => 13200, 'stock' => 15, 'specs' => ['Optics' => 'Nike Elite one-piece shield lens for uninterrupted field of view', 'Ventilation' => 'Anti-fogging ventilation holes in top frame', 'Nosebridge' => 'Floating rubber nose pad optimizes airflow', 'Temples' => 'Pro-contour silicone grip temples']],
                     ['title' => 'H&M Blue Light Blocking Retro Clear Glasses', 'brand' => 'hm', 'sub' => 2, 'price' => 1450, 'sale' => 1250, 'stock' => 50, 'specs' => ['Lenses' => 'Clear acrylic lenses with blue light filter', 'Frame' => 'Clear transparent acetate rectangular frames', 'Look' => 'Intellectual chic look for office screen work', 'Protection' => 'UVA and UVB 400 protection']],
                     ['title' => 'Zara Retro Aviator Metal Sunglasses Silver', 'brand' => 'zara', 'sub' => 1, 'price' => 3200, 'sale' => 2799, 'stock' => 38, 'specs' => ['Frame' => 'Silver-tone stainless steel dual top brow bar', 'Lenses' => 'Smoke gradient tinted lenses', 'Comfort' => 'Clear silicone adjustable nose pads', 'Style' => 'Classic 70s pilot luxury']],
-                ]
+                ],
             ],
             // 28. Jewelry & Luxury Ornaments
             [
@@ -59,7 +59,7 @@ class ProductCatalogDefinitionPart2
                     ['title' => 'Fossil Heritage D-Link Rose Gold Steel Ring', 'brand' => 'fossil', 'sub' => 1, 'price' => 4200, 'sale' => 3700, 'stock' => 24, 'specs' => ['Inspiration' => 'Iconic Fossil D-link purse hardware motif', 'Material' => 'Solid stainless steel with durable rose gold ion plating', 'Band' => 'Interlocking bold curb link silhouette', 'Width' => '8mm statement band']],
                     ['title' => 'Aarong Traditional Nakshi Meenakari Choker Set', 'brand' => 'apex', 'sub' => 0, 'price' => 7500, 'sale' => 6700, 'stock' => 18, 'specs' => ['Technique' => 'Enamel Meenakari hand-painted detailing on reverse', 'Stones' => 'Faux kundan stones with faux pearl droplet fringe', 'Set' => 'Includes adjustable dori choker necklace and matching earrings', 'Style' => 'Royal Mughal heritage wedding ornament']],
                     ['title' => 'Zara Textured Chunky C-Shape Bangle Bracelet', 'brand' => 'zara', 'sub' => 3, 'price' => 2800, 'sale' => 2400, 'stock' => 32, 'specs' => ['Design' => 'Sculptural organic melted-metal textured finish', 'Profile' => 'C-shape cuff slips easily over wrist', 'Plating' => 'Warm vintage brushed gold tone', 'Weight' => 'Lightweight hollow construction for daily wear']],
-                ]
+                ],
             ],
             // 29. Kitchen Appliances
             [
@@ -76,7 +76,7 @@ class ProductCatalogDefinitionPart2
                     ['title' => 'Philips Daily Collection Hand Blender Chopper Set', 'brand' => 'philips', 'sub' => 2, 'price' => 4500, 'sale' => 3999, 'stock' => 38, 'specs' => ['Power' => '550W reliable motor with ProMix triangular blade head', 'Accessory' => 'Includes compact chopper for onions and herbs, and beaker', 'Grip' => 'Slim ergonomic handle with single speed trigger switch', 'Release' => '2-button easy release system for dishwasher cleaning']],
                     ['title' => 'Tefal Express Compact Food Processor 800W', 'brand' => 'tefal', 'sub' => 2, 'price' => 12500, 'sale' => 11200, 'stock' => 20, 'specs' => ['Bowl' => '2.4L main bowl and 1.5L dedicated blender jar', 'Attachments' => 'Reversible slicing, shredding discs, dough kneader, emulsifier', 'Speeds' => '2 pulse speed settings plus turbo pulse', 'Storage' => 'In-bowl blade storage system saves counter space']],
                     ['title' => 'Walton Electric Oven 28L Grill Rotisserie', 'brand' => 'walton', 'sub' => 1, 'price' => 7800, 'sale' => 6999, 'stock' => 26, 'specs' => ['Chamber' => '28 Liters with motorized rotisserie spit rod', 'Heating' => '4 stainless steel heating elements with convection fan', 'Timer' => '60-minute mechanical timer with bell ring signal', 'Thermostat' => 'Adjustable temperature control from 100°C to 250°C']],
-                ]
+                ],
             ],
             // 30. Large Home Appliances
             [
@@ -93,7 +93,7 @@ class ProductCatalogDefinitionPart2
                     ['title' => 'Walton 380L Non-Frost Inverter Refrigerator', 'brand' => 'walton', 'sub' => 1, 'price' => 54000, 'sale' => 49999, 'stock' => 18, 'specs' => ['Capacity' => '380 Liters gross storage capacity', 'Refrigerant' => 'Eco-friendly R600a hydrocarbon refrigerant', 'Deodorizer' => 'Nano silver ion active anti-bacterial air filtration', 'Deals' => '12-Year Walton replacement guarantee on compressor']],
                     ['title' => 'Singer 2.0 Ton Inverter Split Air Conditioner', 'brand' => 'singer', 'sub' => 0, 'price' => 79000, 'sale' => 74500, 'stock' => 10, 'specs' => ['Capacity' => '24000 BTU 2.0 Ton rapid ambient cooling', 'Coil' => 'Golden Fin anti-corrosive gold hydrophilic fin coating', 'Display' => 'Hidden digital temperature LED display', 'Features' => 'Turbo Cool, Sleep Mode, Auto Restart with memory']],
                     ['title' => 'Xiaomi Robot Vacuum S10 LiDAR Navigation', 'brand' => 'xiaomi', 'sub' => 3, 'price' => 28500, 'sale' => 25999, 'stock' => 20, 'specs' => ['Navigation' => '360° LDS laser radar mapping with obstacle avoidance', 'Suction' => '4000Pa powerful suction blower sweeps deep carpet dirt', 'Mopping' => 'Smart electronically controlled water tank with 3 flow levels', 'App' => 'Mi Home app custom zone cleaning and virtual no-go walls']],
-                ]
+                ],
             ],
         ];
     }

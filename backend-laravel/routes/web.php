@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminActivityController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminCatalogWebController;
 use App\Http\Controllers\Admin\AdminCategoryWebController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminEmailCampaignController;
 use App\Http\Controllers\Admin\AdminEmailController;
 use App\Http\Controllers\Admin\AdminEmailTemplateController;
+use App\Http\Controllers\Admin\AdminInvitationController;
 use App\Http\Controllers\Admin\AdminModuleWebController;
 use App\Http\Controllers\Admin\AdminOrderWebController;
 use App\Http\Controllers\Admin\AdminProductWebController;
@@ -19,6 +21,7 @@ use App\Http\Controllers\Web\AccountEmailController;
 use App\Http\Controllers\Web\AuthWebController;
 use App\Http\Controllers\Web\CartController;
 use App\Http\Controllers\Web\CheckoutController;
+use App\Http\Controllers\Web\CustomerAccountController;
 use App\Http\Controllers\Web\CustomerInvoiceController;
 use App\Http\Controllers\Web\EmailUnsubscribeController;
 use App\Http\Controllers\Web\HomeController;
@@ -83,6 +86,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/account/email/preferences', [AccountEmailController::class, 'updatePreferences'])->middleware('throttle:10,1')->name('account.email.preferences');
     Route::post('/account/email/change', [AccountEmailController::class, 'requestChange'])->middleware('throttle:5,1')->name('account.email.change');
     Route::post('/account/email/confirm', [AccountEmailController::class, 'confirmChange'])->middleware('throttle:10,1')->name('account.email.confirm');
+
+    // Customer Account Management
+    Route::get('/account', [CustomerAccountController::class, 'dashboard'])->name('account.dashboard');
+    Route::get('/account/orders', [CustomerAccountController::class, 'orders'])->name('account.orders');
+    Route::get('/account/orders/{order}', [CustomerAccountController::class, 'showOrder'])->name('account.orders.show');
+    Route::get('/account/profile', [CustomerAccountController::class, 'profile'])->name('account.profile');
+    Route::match(['post', 'put'], '/account/profile', [CustomerAccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::get('/account/addresses', [CustomerAccountController::class, 'addresses'])->name('account.addresses');
+    Route::post('/account/addresses', [CustomerAccountController::class, 'storeAddress'])->name('account.addresses.store');
+    Route::match(['put', 'patch'], '/account/addresses/{id}', [CustomerAccountController::class, 'updateAddress'])->name('account.addresses.update');
+    Route::delete('/account/addresses/{id}', [CustomerAccountController::class, 'deleteAddress'])->name('account.addresses.destroy');
+    Route::post('/account/addresses/{id}/default', [CustomerAccountController::class, 'setDefaultAddress'])->name('account.addresses.default');
+    Route::get('/account/settings', [CustomerAccountController::class, 'settings'])->name('account.settings');
+    Route::post('/account/settings/password', [CustomerAccountController::class, 'updatePassword'])->middleware('throttle:10,1')->name('account.settings.password');
 });
 Route::get('/forgot-password', [AuthWebController::class, 'showForgotPassword'])->name('auth.forgot-password');
 Route::post('/forgot-password', [AuthWebController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('auth.forgot-password.submit');
@@ -124,10 +141,16 @@ Route::get('/warranty-policy', fn () => app(PageWebController::class)->show('war
 Route::get('/admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+Route::get('/admin/setup-password/{token}', [AdminInvitationController::class, 'showSetup'])->name('admin.setup-password');
+Route::post('/admin/setup-password/{token}', [AdminInvitationController::class, 'processSetup'])->middleware('throttle:10,1')->name('admin.setup-password.submit');
 
-Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.changed'])->group(function () {
     Route::get('/', fn () => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
+    // Mandatory Password Change
+    Route::get('/password/change', [AdminInvitationController::class, 'showChangePassword'])->name('admin.password.change');
+    Route::post('/password/change', [AdminInvitationController::class, 'processChangePassword'])->middleware('throttle:10,1')->name('admin.password.change.submit');
 
     // Products
     Route::get('/products', [AdminProductWebController::class, 'index'])->name('admin.products.index');
@@ -258,9 +281,20 @@ Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () 
     Route::put('/coupons/{id}', [AdminCouponWebController::class, 'update'])->name('admin.coupons.update');
     Route::delete('/coupons/{id}', [AdminCouponWebController::class, 'destroy'])->name('admin.coupons.destroy');
 
-    // Customers
+    // Customers (Customer 360 Management)
     Route::get('/customers', [AdminCustomerWebController::class, 'index'])->name('admin.customers.index');
+    Route::get('/customers/export', [AdminCustomerWebController::class, 'exportList'])->name('admin.customers.export-list');
+    Route::get('/customers/{id}', [AdminCustomerWebController::class, 'show'])->name('admin.customers.show');
+    Route::put('/customers/{id}', [AdminCustomerWebController::class, 'update'])->name('admin.customers.update');
     Route::post('/customers/{id}/toggle', [AdminCustomerWebController::class, 'toggleStatus'])->name('admin.customers.toggle');
+    Route::get('/customers/{id}/export', [AdminCustomerWebController::class, 'export'])->name('admin.customers.export');
+    Route::post('/customers/{id}/notes', [AdminCustomerWebController::class, 'storeNote'])->name('admin.customers.notes.store');
+    Route::delete('/customers/{id}/notes/{noteId}', [AdminCustomerWebController::class, 'deleteNote'])->name('admin.customers.notes.destroy');
+    Route::post('/customers/{id}/addresses', [AdminCustomerWebController::class, 'storeAddress'])->name('admin.customers.addresses.store');
+    Route::put('/customers/{id}/addresses/{addressId}', [AdminCustomerWebController::class, 'updateAddress'])->name('admin.customers.addresses.update');
+    Route::delete('/customers/{id}/addresses/{addressId}', [AdminCustomerWebController::class, 'deleteAddress'])->name('admin.customers.addresses.destroy');
+    Route::post('/customers/{id}/addresses/{addressId}/default', [AdminCustomerWebController::class, 'setDefaultAddress'])->name('admin.customers.addresses.default');
+    Route::post('/customers/{id}/email', [AdminCustomerWebController::class, 'sendEmail'])->name('admin.customers.email.send');
 
     // Marketing
     Route::get('/marketing', [AdminModuleWebController::class, 'marketing'])->name('admin.marketing.index');
@@ -315,11 +349,20 @@ Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () 
     // Insights
     Route::get('/analytics', [AdminModuleWebController::class, 'analytics'])->name('admin.analytics.index');
 
-    // Security
-    Route::get('/members', [AdminModuleWebController::class, 'members'])->name('admin.members.index');
-    Route::post('/members', [AdminModuleWebController::class, 'storeMember'])->name('admin.members.store');
-    Route::put('/members/{id}', [AdminModuleWebController::class, 'updateMember'])->name('admin.members.update');
-    Route::delete('/members/{id}', [AdminModuleWebController::class, 'destroyMember'])->name('admin.members.destroy');
+    // Security, Team Members & Activity Monitoring
+    Route::get('/activity-monitor', [AdminActivityController::class, 'index'])->middleware('admin.can:activity.view')->name('admin.activity.index');
+    Route::get('/activity-monitor/export', [AdminActivityController::class, 'export'])->middleware('admin.can:activity.export')->name('admin.activity.export');
+    Route::get('/activity-monitor/entry/{uuid}', [AdminActivityController::class, 'show'])->middleware('admin.can:activity.view')->name('admin.activity.show');
+    Route::post('/activity-monitor/scheduled-reports', [AdminActivityController::class, 'storeScheduledReport'])->middleware('admin.can:activity.manage')->name('admin.activity.scheduled.store');
+    Route::post('/activity-monitor/scheduled-reports/{id}/toggle', [AdminActivityController::class, 'toggleScheduledReport'])->middleware('admin.can:activity.manage')->name('admin.activity.scheduled.toggle');
+    Route::delete('/activity-monitor/scheduled-reports/{id}', [AdminActivityController::class, 'destroyScheduledReport'])->middleware('admin.can:activity.manage')->name('admin.activity.scheduled.destroy');
+    Route::post('/activity-monitor/scheduled-reports/{id}/run', [AdminActivityController::class, 'runScheduledReportNow'])->middleware('admin.can:activity.manage')->name('admin.activity.scheduled.run');
+    Route::get('/members', [AdminModuleWebController::class, 'members'])->middleware('admin.can:members.view')->name('admin.members.index');
+    Route::post('/members', [AdminModuleWebController::class, 'storeMember'])->middleware('admin.can:members.create')->name('admin.members.store');
+    Route::get('/members/{id}', [AdminModuleWebController::class, 'showMember'])->middleware('admin.can:members.view')->name('admin.members.show');
+    Route::put('/members/{id}', [AdminModuleWebController::class, 'updateMember'])->middleware('admin.can:members.update')->name('admin.members.update');
+    Route::delete('/members/{id}', [AdminModuleWebController::class, 'destroyMember'])->middleware('admin.can:members.delete')->name('admin.members.destroy');
+    Route::post('/members/{id}/resend-invitation', [AdminModuleWebController::class, 'resendInvitation'])->middleware('admin.can:members.create|members.update')->name('admin.members.resend-invitation');
     Route::get('/backup', [AdminSettingWebController::class, 'backup'])->name('admin.backup.index');
     Route::post('/backup', [AdminSettingWebController::class, 'createBackup'])->name('admin.backup.create');
     Route::get('/backup/{id}/download', [AdminSettingWebController::class, 'downloadBackup'])->name('admin.backup.download');

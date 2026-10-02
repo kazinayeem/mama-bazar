@@ -2,33 +2,33 @@
 
 namespace App\Services;
 
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\Coupon;
 use App\Models\ShippingMethod;
-use App\Models\PaymentMethod;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserAddress;
-use App\Models\SiteSetting;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use App\Support\DeviceDetector;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
     const ORDER_PROGRESS_FLOW = [
-        "pending",
-        "payment_pending",
-        "payment_verification",
-        "confirmed",
-        "processing",
-        "packed",
-        "shipped",
-        "out_for_delivery",
-        "delivered",
+        'pending',
+        'payment_pending',
+        'payment_verification',
+        'confirmed',
+        'processing',
+        'packed',
+        'shipped',
+        'out_for_delivery',
+        'delivered',
     ];
 
     /** Prefix for newly generated order numbers (Bornosoft). Legacy `GHB-` orders remain valid. */
@@ -36,25 +36,27 @@ class OrderService
 
     public static function generateOrderId(): string
     {
-        $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         for ($attempt = 0; $attempt < 10; $attempt++) {
-            $code = "";
+            $code = '';
             for ($i = 0; $i < 6; $i++) {
                 $code .= $chars[random_int(0, strlen($chars) - 1)];
             }
-            $candidate = self::ORDER_NUMBER_PREFIX . "-" . $code;
-            if (!Order::where('order_id', $candidate)->exists()) {
+            $candidate = self::ORDER_NUMBER_PREFIX.'-'.$code;
+            if (! Order::where('order_id', $candidate)->exists()) {
                 return $candidate;
             }
         }
+
         // Astronomically unlikely fallback: timestamp-suffixed unique id.
-        return self::ORDER_NUMBER_PREFIX . "-" . strtoupper(substr(md5(uniqid((string) random_int(0, PHP_INT_MAX), true)), 0, 6));
+        return self::ORDER_NUMBER_PREFIX.'-'.strtoupper(substr(md5(uniqid((string) random_int(0, PHP_INT_MAX), true)), 0, 6));
     }
 
     public static function generateInvoiceNumber(?int $sequence = null): string
     {
-        $seq = $sequence ?? ((int) (\App\Models\Order::max('id') ?? 0) + 1);
-        return 'INV-' . date('Y') . '-' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
+        $seq = $sequence ?? ((int) (Order::max('id') ?? 0) + 1);
+
+        return 'INV-'.date('Y').'-'.str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -64,6 +66,7 @@ class OrderService
     public static function normalizePhone(mixed $value): string
     {
         $clean = preg_replace('/[\s\-]/', '', trim((string) $value));
+
         return is_string($clean) ? $clean : '';
     }
 
@@ -80,16 +83,17 @@ class OrderService
                 $result[] = [
                     'id' => $index + 1,
                     'status' => $status,
-                    'note' => $index === 0 ? "Order created" : "Backfilled {$status} step",
+                    'note' => $index === 0 ? 'Order created' : "Backfilled {$status} step",
                     'createdAt' => $order->created_at->addMinutes($index * 20)->toIso8601String(),
                     'createdByUserId' => null,
                 ];
             }
+
             return $result;
         }
 
         if ($logs->isNotEmpty()) {
-            return $logs->map(fn($log) => [
+            return $logs->map(fn ($log) => [
                 'id' => $log->id,
                 'status' => $log->status,
                 'note' => $log->note,
@@ -122,7 +126,10 @@ class OrderService
         }
 
         $index = array_search($status, self::ORDER_PROGRESS_FLOW);
-        if ($index === false) return [$status];
+        if ($index === false) {
+            return [$status];
+        }
+
         return array_slice(self::ORDER_PROGRESS_FLOW, 0, $index + 1);
     }
 
@@ -230,7 +237,7 @@ class OrderService
         return DB::transaction(function () use ($input, $idempotencyKey) {
             $items = $input['items'] ?? [];
             if (empty($items)) {
-                throw new Exception("Order must contain at least one item", 400);
+                throw new Exception('Order must contain at least one item', 400);
             }
 
             // Normalize contact phones once so delivery phone / alt phone can never
@@ -244,7 +251,7 @@ class OrderService
             $subtotal = 0;
             $itemsWithPrice = [];
 
-            $productIds = array_unique(array_filter(array_map(fn($it) => $it['productId'] ?? $it['product_id'] ?? null, $items)));
+            $productIds = array_unique(array_filter(array_map(fn ($it) => $it['productId'] ?? $it['product_id'] ?? null, $items)));
             $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
 
             foreach ($items as $item) {
@@ -252,7 +259,7 @@ class OrderService
                 $quantity = (int) ($item['quantity'] ?? 1);
                 $product = $products->get($productId);
 
-                if (!$product) {
+                if (! $product) {
                     throw new Exception("Product {$productId} not found", 400);
                 }
 
@@ -261,29 +268,38 @@ class OrderService
 
                 if ($variantId) {
                     $variant = ProductVariant::where('id', $variantId)->where('product_id', $productId)->lockForUpdate()->first();
-                    if (!$variant) throw new Exception("Variant not found for product {$product->title}", 400);
-                    if (!$variant->availability || $variant->status === 'inactive') {
+                    if (! $variant) {
+                        throw new Exception("Variant not found for product {$product->title}", 400);
+                    }
+                    if (! $variant->availability || $variant->status === 'inactive') {
                         throw new Exception("Variant \"{$variant->name}\" is not available", 400);
                     }
-                    if (!$product->unlimited_stock && $variant->stock < $quantity) {
+                    if (! $product->unlimited_stock && $variant->stock < $quantity) {
                         throw new Exception("Insufficient stock for {$product->title} - {$variant->name}", 400);
                     }
                     $itemPrice = $variant->discount_price ?: ($variant->price ?: (float) $product->price);
-                } elseif (!empty($item['size']) || !empty($item['color'])) {
+                } elseif (! empty($item['size']) || ! empty($item['color'])) {
                     $size = $item['size'] ?? null;
                     $color = $item['color'] ?? null;
 
                     $variants = ProductVariant::where('product_id', $productId)->where('status', 'active')->lockForUpdate()->get();
                     $matchedVariant = $variants->first(function ($v) use ($size, $color) {
                         $opts = (array) $v->options;
-                        $sizeMatch = !$size || collect($opts)->contains(fn($val) => strcasecmp($val, $size) === 0);
-                        $colorMatch = !$color || collect($opts)->contains(fn($val) => strcasecmp($val, $color) === 0);
+                        $sizeMatch = ! $size || collect($opts)->contains(fn ($val) => strcasecmp($val, $size) === 0);
+                        $colorMatch = ! $color || collect($opts)->contains(fn ($val) => strcasecmp($val, $color) === 0);
+
                         return $sizeMatch && $colorMatch;
                     });
 
-                    if (!$matchedVariant) throw new Exception("Variant ({$size}, {$color}) not found for {$product->title}", 400);
-                    if (!$matchedVariant->availability) throw new Exception("Variant \"{$matchedVariant->name}\" is not available", 400);
-                    if ($matchedVariant->stock < $quantity) throw new Exception("Insufficient stock for {$product->title} - {$matchedVariant->name}", 400);
+                    if (! $matchedVariant) {
+                        throw new Exception("Variant ({$size}, {$color}) not found for {$product->title}", 400);
+                    }
+                    if (! $matchedVariant->availability) {
+                        throw new Exception("Variant \"{$matchedVariant->name}\" is not available", 400);
+                    }
+                    if ($matchedVariant->stock < $quantity) {
+                        throw new Exception("Insufficient stock for {$product->title} - {$matchedVariant->name}", 400);
+                    }
 
                     $itemPrice = $matchedVariant->discount_price ?: ($matchedVariant->price ?: (float) $product->price);
                     $variantId = $matchedVariant->id;
@@ -295,7 +311,7 @@ class OrderService
                     if ($hasVariants) {
                         throw new Exception("Please select a variant for {$product->title}", 400);
                     }
-                    if (!$product->unlimited_stock && $product->stock < $quantity) {
+                    if (! $product->unlimited_stock && $product->stock < $quantity) {
                         throw new Exception("Insufficient stock for {$product->title}", 400);
                     }
                     $salePrice = (float) ($product->sale_price ?: 0);
@@ -324,7 +340,7 @@ class OrderService
                     'color' => $item['color'] ?? null,
                     'price' => $itemPrice,
                     'productTitle' => $product->title,
-                    'productSku' => $product->sku ?? ('MB-' . $product->id),
+                    'productSku' => $product->sku ?? ('MB-'.$product->id),
                     'variantName' => $matchedVariantName,
                 ];
             }
@@ -333,14 +349,14 @@ class OrderService
             $customerDistrict = $input['district'] ?? $input['District'] ?? null;
             $shippingMethodId = $input['shippingMethodId'] ?? $input['shipping_method_id'] ?? null;
             if (empty($shippingMethodId)) {
-                throw new Exception("Please select a delivery method", 400);
+                throw new Exception('Please select a delivery method', 400);
             }
             $method = ShippingMethod::where('id', $shippingMethodId)->where('status', 'active')->first();
             if (! $method) {
-                throw new Exception("Selected delivery method is unavailable", 400);
+                throw new Exception('Selected delivery method is unavailable', 400);
             }
             if (! $method->isApplicableTo($customerDistrict)) {
-                throw new Exception("\"{$method->name}\" is not available for " . ($customerDistrict ?: 'your area'), 400);
+                throw new Exception("\"{$method->name}\" is not available for ".($customerDistrict ?: 'your area'), 400);
             }
             $shippingMethodId = $method->id;
             $shippingMethodName = $method->name;
@@ -358,7 +374,7 @@ class OrderService
             $paymentMethodCode = strtolower($input['paymentMethod'] ?? $input['payment_method'] ?? 'cod');
             $paymentMethod = PaymentMethod::where('code', $paymentMethodCode)->first();
             if (! $paymentMethod) {
-                throw new Exception("Selected payment method is unavailable", 400);
+                throw new Exception('Selected payment method is unavailable', 400);
             }
             if (! $paymentMethod->enabled || $paymentMethod->maintenance_mode) {
                 throw new Exception("{$paymentMethod->name} is currently unavailable", 400);
@@ -375,10 +391,10 @@ class OrderService
                     ->where('status', 'active')
                     ->first();
                 if (! $coupon) {
-                    throw new Exception("Invalid or expired coupon code", 400);
+                    throw new Exception('Invalid or expired coupon code', 400);
                 }
                 if ($coupon->expiry_date && $coupon->expiry_date->isPast()) {
-                    throw new Exception("Coupon has expired", 400);
+                    throw new Exception('Coupon has expired', 400);
                 }
                 if ($coupon->min_order_amount && $subtotal < (float) $coupon->min_order_amount) {
                     throw new Exception("Minimum order amount is {$coupon->min_order_amount} Tk", 400);
@@ -398,7 +414,7 @@ class OrderService
             $taxSettingsRow = SiteSetting::where('key', 'tax_settings')->first();
             $taxSettings = $taxSettingsRow ? json_decode($taxSettingsRow->value, true) : null;
             $taxRate = min(max((float) ($taxSettings['taxRate'] ?? 0), 0), 25);
-            $applyTaxToShipping = !empty($taxSettings['applyTaxToShipping']);
+            $applyTaxToShipping = ! empty($taxSettings['applyTaxToShipping']);
             $taxable = $subtotal - $discount + ($applyTaxToShipping ? $shippingCost : 0);
             $tax = max(0, round(max(0, $taxable) * ($taxRate / 100)));
 
@@ -408,9 +424,9 @@ class OrderService
             if ($paymentMethodCode === 'cod') {
                 $paymentStatus = 'success';
                 $orderStatus = 'pending';
-            } elseif (!empty($input['paymentScreenshot']) || !empty($input['payment_screenshot'])
-                || !empty($input['transactionId']) || !empty($input['transaction_id'])
-                || !empty($input['senderNumber']) || !empty($input['sender_number'])) {
+            } elseif (! empty($input['paymentScreenshot']) || ! empty($input['payment_screenshot'])
+                || ! empty($input['transactionId']) || ! empty($input['transaction_id'])
+                || ! empty($input['senderNumber']) || ! empty($input['sender_number'])) {
                 $paymentStatus = 'payment_verification';
                 $orderStatus = 'payment_verification';
             } else {
@@ -420,7 +436,7 @@ class OrderService
 
             // Resolve user
             $resolvedUserId = $input['userId'] ?? null;
-            if (!$resolvedUserId && !empty($input['phone'])) {
+            if (! $resolvedUserId && ! empty($input['phone'])) {
                 $existingUser = User::where('phone', $input['phone'])->first();
                 if ($existingUser) {
                     $resolvedUserId = $existingUser->id;
@@ -439,7 +455,7 @@ class OrderService
                     return $a->address === ($input['address'] ?? '') && $a->phone === ($input['phone'] ?? '');
                 });
 
-                if (!$alreadyExists && $existingAddresses->count() < 5) {
+                if (! $alreadyExists && $existingAddresses->count() < 5) {
                     UserAddress::create([
                         'user_id' => $resolvedUserId,
                         'recipient_name' => $input['name'] ?? '',
@@ -463,7 +479,7 @@ class OrderService
             // Privacy-conscious analytics metadata (hashed/truncated IP only)
             $rawIp = $input['_client_ip'] ?? null;
             $uaString = $input['_user_agent'] ?? null;
-            $parsed = \App\Support\DeviceDetector::parse($uaString);
+            $parsed = DeviceDetector::parse($uaString);
             $nextSeq = ((int) (Order::max('id') ?? 0)) + 1;
 
             // Create Order
@@ -472,8 +488,8 @@ class OrderService
                 'invoice_number' => self::generateInvoiceNumber($nextSeq),
                 'access_token' => bin2hex(random_bytes(16)),
                 'idempotency_key' => $idempotencyKey,
-                'ip_hash' => \App\Support\DeviceDetector::hashIp($rawIp),
-                'ip_truncated' => \App\Support\DeviceDetector::truncateIp($rawIp),
+                'ip_hash' => DeviceDetector::hashIp($rawIp),
+                'ip_truncated' => DeviceDetector::truncateIp($rawIp),
                 'user_agent' => $uaString ? mb_substr($uaString, 0, 1000) : null,
                 'browser' => $parsed['browser'],
                 'os_platform' => $parsed['os'],
@@ -486,8 +502,8 @@ class OrderService
                 'utm_content' => $input['utm_content'] ?? null,
                 'utm_term' => $input['utm_term'] ?? null,
                 'order_source' => $input['order_source'] ?? 'web',
-                'marketing_consent' => !empty($input['marketing_consent']),
-                'fb_event_id' => $input['fb_event_id'] ?? ('order-' . time() . '-' . $nextSeq),
+                'marketing_consent' => ! empty($input['marketing_consent']),
+                'fb_event_id' => $input['fb_event_id'] ?? ('order-'.time().'-'.$nextSeq),
                 'user_id' => $resolvedUserId,
                 'customer_name' => $input['customer_name'] ?? $input['customerName'] ?? $input['name'] ?? 'Customer',
                 'phone' => $input['phone'] ?? '',
@@ -523,10 +539,10 @@ class OrderService
             ]);
 
             $historyNote = implode(' ', array_filter([
-                "Order created",
+                'Order created',
                 $discount > 0 ? "with discount Tk {$discount}" : null,
-                $orderStatus === 'payment_pending' ? "- awaiting payment" : null,
-                $orderStatus === 'payment_verification' ? "- payment submitted, awaiting verification" : null,
+                $orderStatus === 'payment_pending' ? '- awaiting payment' : null,
+                $orderStatus === 'payment_verification' ? '- payment submitted, awaiting verification' : null,
             ]));
 
             OrderStatusHistory::create([
@@ -555,7 +571,7 @@ class OrderService
                 $parent = $products->get($item['productId']);
                 $isUnlimited = $parent && (bool) $parent->unlimited_stock;
 
-                if (!$isUnlimited) {
+                if (! $isUnlimited) {
                     $affected = Product::where('id', $item['productId'])
                         ->where('stock', '>=', $item['quantity'])
                         ->decrement('stock', $item['quantity']);
@@ -574,6 +590,27 @@ class OrderService
                 }
             }
 
+            // Record activity log
+            ActivityLoggerService::logOrder(
+                'order.created',
+                $order,
+                "Order #{$order->order_id} created for ".($order->customer_name ?: 'Customer')." (Tk {$order->total_amount})",
+                [
+                    'actor' => $resolvedUserId ? User::find($resolvedUserId) : null,
+                    'actorType' => $resolvedUserId ? 'customer' : 'guest',
+                    'actorName' => $order->customer_name ?: 'Guest Customer',
+                    'source' => $input['order_source'] ?? 'storefront',
+                    'metadata' => [
+                        'order_id' => $order->order_id,
+                        'customer_name' => $order->customer_name,
+                        'total_amount' => $order->total_amount,
+                        'payment_method' => $order->payment_method,
+                        'status' => $order->status,
+                        'items_count' => count($itemsWithPrice),
+                    ],
+                ]
+            );
+
             return [
                 'order' => self::formatOrder($order),
                 'auth' => null,
@@ -584,12 +621,14 @@ class OrderService
     public static function getOrderById(int $id): ?array
     {
         $order = Order::find($id);
+
         return $order ? self::formatOrder($order) : null;
     }
 
     public static function getOrderByOrderId(string $orderId): ?array
     {
         $order = Order::where('order_id', $orderId)->first();
+
         return $order ? self::formatOrder($order) : null;
     }
 
@@ -605,12 +644,12 @@ class OrderService
 
         $orderId = trim($orderId);
         $order = Order::whereRaw('LOWER(order_id) = ?', [strtolower($orderId)])->first();
-        if (!$order) {
+        if (! $order) {
             return null;
         }
 
         // Secure token bypass (e.g. link from confirmation SMS/email)
-        if (!empty($token) && $order->access_token && hash_equals((string) $order->access_token, (string) $token)) {
+        if (! empty($token) && $order->access_token && hash_equals((string) $order->access_token, (string) $token)) {
             return self::formatOrder($order);
         }
 
@@ -628,4 +667,3 @@ class OrderService
         return self::formatOrder($order);
     }
 }
-

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Vendor extends Model
 {
     protected $table = 'vendors';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

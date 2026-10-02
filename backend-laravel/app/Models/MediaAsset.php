@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class MediaAsset extends Model
 {
     protected $table = 'media_assets';
+
     const UPDATED_AT = null;
 
     protected $fillable = [

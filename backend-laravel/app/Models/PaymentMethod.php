@@ -65,6 +65,7 @@ class PaymentMethod extends Model
         $config = $this->config;
         if (is_string($config)) {
             $decoded = json_decode($config, true);
+
             return is_array($decoded) ? $decoded : [];
         }
 
