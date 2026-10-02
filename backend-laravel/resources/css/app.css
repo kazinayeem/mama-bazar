@@ -186,6 +186,32 @@
   .store-container { padding-inline: 2rem; }
 }
 
+/* ---------- Customer Account Layout ---------- */
+.account-layout {
+  display: grid;
+  grid-template-columns: 100%;
+  gap: 1.5rem;
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .account-layout {
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+}
+
+.account-sidebar {
+  width: 100%;
+  min-width: 0;
+}
+
+.account-main {
+  width: 100%;
+  min-width: 0;
+}
+
 .store-section {
   padding-block: var(--store-section-y);
 }

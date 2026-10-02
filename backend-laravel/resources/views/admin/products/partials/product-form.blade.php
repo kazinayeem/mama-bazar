@@ -1991,7 +1991,10 @@
         <!-- SEO Metadata Fields -->
         <div class="grid gap-4 sm:grid-cols-2 pt-2">
             <div class="sm:col-span-2 space-y-1.5">
-                <label for="field_seo_title" class="text-xs font-bold text-slate-800">SEO Title</label>
+                <div class="flex items-center justify-between">
+                    <label for="field_seo_title" class="text-xs font-bold text-slate-800">SEO Title</label>
+                    <span class="text-[11px] text-slate-400 font-medium" x-text="(form.seoTitle ? form.seoTitle.length : 0) + ' chars (recommended 50-60)'"></span>
+                </div>
                 <input
                     type="text"
                     id="field_seo_title"
@@ -2009,7 +2012,10 @@
             </div>
 
             <div class="sm:col-span-2 space-y-1.5">
-                <label for="field_seo_description" class="text-xs font-bold text-slate-800">SEO Description</label>
+                <div class="flex items-center justify-between">
+                    <label for="field_seo_description" class="text-xs font-bold text-slate-800">SEO Description</label>
+                    <span class="text-[11px] text-slate-400 font-medium" x-text="(form.seoDescription ? form.seoDescription.length : 0) + ' chars (recommended 140-160)'"></span>
+                </div>
                 <textarea
                     id="field_seo_description"
                     name="seo_description"
@@ -2024,6 +2030,14 @@
                         <span>{{ $message }}</span>
                     </p>
                 @enderror
+            </div>
+
+            {{-- Live Search Engine Snippet Preview --}}
+            <div class="sm:col-span-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-1">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Search Engine Snippet Preview</p>
+                <p class="text-xs text-emerald-700 font-mono truncate" x-text="form.canonicalUrl || ('{{ url('/products') }}/' + (form.slug || 'product-slug'))"></p>
+                <p class="text-sm font-semibold text-blue-700 truncate" x-text="(form.seoTitle || form.title || 'Product Title') + ' | Mama Bazar'"></p>
+                <p class="text-xs text-slate-600 line-clamp-2" x-text="form.seoDescription || form.shortDescription || 'Shop ' + (form.title || 'this product') + ' at Mama Bazar. Fast delivery across Bangladesh.'"></p>
             </div>
 
             <div class="sm:col-span-2 space-y-1.5">
