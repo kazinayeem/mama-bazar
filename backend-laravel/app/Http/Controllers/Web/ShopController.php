@@ -238,8 +238,11 @@ class ShopController extends Controller
             $seoDescription = "Shop {$selectedBrand->name} products at Mama Bazar.";
         }
 
+        $seo = \App\Services\SeoService::getForShop($request, $selectedCategory, $selectedBrand, $selectedSubcategory);
+
         return view('web.products.index', [
-            'title' => ($seoTitle ?? 'Shop').' | Mama Bazar',
+            'title' => $seo['title'],
+            'seo' => $seo,
             'products' => $products,
             'pagination' => $pagination,
             'from' => $from,

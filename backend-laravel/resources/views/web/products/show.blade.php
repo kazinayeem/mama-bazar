@@ -77,6 +77,9 @@
                         alt="{{ $product['title'] }} - Mama Bazar"
                         class="aspect-square w-full object-contain"
                         loading="eager"
+                        fetchpriority="high"
+                        width="600"
+                        height="600"
                         onerror="this.onerror=null;this.src='/brandlogo.png';"
                     >
                     <span class="pointer-events-none absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-700 opacity-0 shadow-sm transition group-hover:opacity-100">

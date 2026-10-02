@@ -44,6 +44,9 @@ class AdminCategoryWebController extends Controller
             'sort_order' => 'nullable|integer|min:0|max:100000',
             'featured' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string|max:1000',
+            'seo_keywords' => 'nullable|string|max:500',
         ];
     }
 
@@ -61,6 +64,9 @@ class AdminCategoryWebController extends Controller
             'status' => $validated['status'] ?? 'active',
             'sort_order' => $validated['sort_order'] ?? 0,
             'featured' => $request->boolean('featured', false),
+            'seo_title' => $validated['seo_title'] ?? null,
+            'seo_description' => $validated['seo_description'] ?? null,
+            'seo_keywords' => $validated['seo_keywords'] ?? null,
         ];
 
         if ($request->hasFile('image')) {
@@ -69,6 +75,7 @@ class AdminCategoryWebController extends Controller
         }
 
         Category::create($data);
+        \App\Http\Controllers\Web\SeoController::clearCache();
 
         return back()->with('success', 'Category created successfully.');
     }
@@ -90,6 +97,9 @@ class AdminCategoryWebController extends Controller
             'status' => $validated['status'] ?? $category->status,
             'sort_order' => $validated['sort_order'] ?? 0,
             'featured' => $request->boolean('featured', (bool) $category->featured),
+            'seo_title' => $validated['seo_title'] ?? null,
+            'seo_description' => $validated['seo_description'] ?? null,
+            'seo_keywords' => $validated['seo_keywords'] ?? null,
         ];
         if ($request->filled('slug')) {
             $data['slug'] = trim(strtolower($request->input('slug')));
@@ -104,6 +114,7 @@ class AdminCategoryWebController extends Controller
         }
 
         $category->update($data);
+        \App\Http\Controllers\Web\SeoController::clearCache();
 
         return back()->with('success', 'Category updated successfully.');
     }

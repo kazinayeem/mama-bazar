@@ -73,6 +73,25 @@
                     <input type="checkbox" name="featured" value="1" class="rounded text-brand-green-600 focus:ring-brand-green-500">
                     <span>Feature this category</span>
                 </label>
+
+                <details class="rounded-lg border border-slate-200 p-2.5 text-xs">
+                    <summary class="font-bold text-slate-700 cursor-pointer select-none">SEO Metadata (Optional)</summary>
+                    <div class="mt-2.5 space-y-2">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">SEO Title</label>
+                            <input type="text" name="seo_title" placeholder="Meta title (50-60 chars)" class="admin-control w-full text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">SEO Description</label>
+                            <textarea name="seo_description" rows="2" placeholder="Meta description (140-160 chars)" class="admin-control w-full text-xs"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">SEO Keywords</label>
+                            <input type="text" name="seo_keywords" placeholder="keyword1, keyword2" class="admin-control w-full text-xs">
+                        </div>
+                    </div>
+                </details>
+
                 <x-admin.button type="submit" class="w-full" size="sm">Create Category</x-admin.button>
             </form>
         </div>
@@ -215,6 +234,24 @@
                 <input type="checkbox" name="featured" value="1" :checked="Boolean(editCat?.featured)" class="rounded text-brand-green-600 focus:ring-brand-green-500">
                 <span>Featured Category</span>
             </label>
+
+            <details class="rounded-lg border border-slate-200 p-2.5 text-xs">
+                <summary class="font-bold text-slate-700 cursor-pointer select-none">SEO Metadata (Optional)</summary>
+                <div class="mt-2.5 space-y-2">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">SEO Title</label>
+                        <input type="text" name="seo_title" :value="editCat?.seo_title || ''" placeholder="Meta title" class="admin-control w-full text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">SEO Description</label>
+                        <textarea name="seo_description" rows="2" :value="editCat?.seo_description || ''" placeholder="Meta description" class="admin-control w-full text-xs"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">SEO Keywords</label>
+                        <input type="text" name="seo_keywords" :value="editCat?.seo_keywords || ''" placeholder="keyword1, keyword2" class="admin-control w-full text-xs">
+                    </div>
+                </div>
+            </details>
 
             <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <x-admin.button type="button" variant="outline" size="sm" @click="editOpen = false">Cancel</x-admin.button>

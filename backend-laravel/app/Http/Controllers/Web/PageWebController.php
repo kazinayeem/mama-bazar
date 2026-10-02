@@ -19,22 +19,55 @@ class PageWebController extends Controller
             abort(404, 'Page not found');
         }
 
-        return view('web.page', compact('page'));
+        $cleanDesc = trim(preg_replace('/\s+/', ' ', strip_tags($page->content ?? '')));
+        $seo = \App\Services\SeoService::getForPage(
+            $page->title,
+            \Illuminate\Support\Str::limit($cleanDesc, 155),
+            url('/pages/' . $slug),
+            'index, follow',
+            [$page->title => url('/pages/' . $slug)]
+        );
+
+        return view('web.page', compact('page', 'seo'));
     }
 
     public function about()
     {
-        return view('web.about');
+        $seo = \App\Services\SeoService::getForPage(
+            'About Us',
+            'Learn more about Mama Bazar, your trusted online shopping partner for grocery and lifestyle essentials in Bangladesh.',
+            route('about'),
+            'index, follow',
+            ['About Us' => route('about')]
+        );
+
+        return view('web.about', compact('seo'));
     }
 
     public function faq()
     {
-        return view('web.faq');
+        $seo = \App\Services\SeoService::getForPage(
+            'Frequently Asked Questions',
+            'Find answers to common questions about orders, delivery, payments, returns, and warranty at Mama Bazar.',
+            route('faq'),
+            'index, follow',
+            ['FAQ' => route('faq')]
+        );
+
+        return view('web.faq', compact('seo'));
     }
 
     public function contact()
     {
-        return view('web.contact');
+        $seo = \App\Services\SeoService::getForPage(
+            'Contact Us',
+            'Get in touch with Mama Bazar customer support. We are available via phone, email, and live messaging across Bangladesh.',
+            route('contact'),
+            'index, follow',
+            ['Contact Us' => route('contact')]
+        );
+
+        return view('web.contact', compact('seo'));
     }
 
     public function submitContact(Request $request)

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminModuleWebController;
 use App\Http\Controllers\Admin\AdminOrderWebController;
 use App\Http\Controllers\Admin\AdminProductWebController;
 use App\Http\Controllers\Admin\AdminReviewWebController;
+use App\Http\Controllers\Admin\AdminSeoController;
 use App\Http\Controllers\Admin\AdminSettingWebController;
 use App\Http\Controllers\StorageFileController;
 use App\Http\Controllers\Web\AccountEmailController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\OrderTrackingController;
 use App\Http\Controllers\Web\PageWebController;
 use App\Http\Controllers\Web\ProductWebController;
+use App\Http\Controllers\Web\SeoController;
 use App\Http\Controllers\Web\ShopController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -67,6 +69,21 @@ Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCo
 Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
 Route::get('/track', [OrderTrackingController::class, 'index'])->name('track');
 Route::post('/newsletter/subscribe', [HomeController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
+
+// Technical SEO & Sitemaps
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemapIndex'])->name('seo.sitemap');
+Route::get('/sitemap-products.xml', [SeoController::class, 'sitemapProducts'])->name('seo.sitemap.products');
+Route::get('/sitemap-categories.xml', [SeoController::class, 'sitemapCategories'])->name('seo.sitemap.categories');
+Route::get('/sitemap-brands.xml', [SeoController::class, 'sitemapBrands'])->name('seo.sitemap.brands');
+Route::get('/sitemap-pages.xml', [SeoController::class, 'sitemapPages'])->name('seo.sitemap.pages');
+
+// Canonical redirects for category/brand/collection friendly aliases
+Route::get('/category/{slug}', fn ($slug) => redirect()->route('shop', ['category' => $slug], 301))->name('category.show');
+Route::get('/categories/{slug}', fn ($slug) => redirect()->route('shop', ['category' => $slug], 301));
+Route::get('/brand/{slug}', fn ($slug) => redirect()->route('shop', ['brand' => $slug], 301))->name('brand.show');
+Route::get('/brands/{slug}', fn ($slug) => redirect()->route('shop', ['brand' => $slug], 301));
+Route::get('/collection/{slug}', fn ($slug) => redirect()->route('shop', ['collection' => $slug], 301))->name('collection.show');
 
 Route::get('/login', [AuthWebController::class, 'showLogin'])->name('login');
 Route::get('/auth/login', [AuthWebController::class, 'showLogin']);
@@ -377,6 +394,14 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::get('/settings', [AdminSettingWebController::class, 'settings'])->name('admin.settings.index');
     Route::post('/settings', [AdminSettingWebController::class, 'updateSettings'])->name('admin.settings.update');
     Route::match(['get', 'post'], '/fix-storage', [AdminSettingWebController::class, 'fixStorageWeb'])->name('admin.fix-storage');
+
+    // SEO Optimization & Catalog Audit
+    Route::get('/seo', [AdminSeoController::class, 'index'])->name('admin.seo.index');
+    Route::post('/seo/route', [AdminSeoController::class, 'updateRouteSeo'])->name('admin.seo.update-route');
+    Route::post('/seo/generate-drafts', [AdminSeoController::class, 'generateDrafts'])->name('admin.seo.generate-drafts');
+    Route::post('/seo/refresh-sitemap', [AdminSeoController::class, 'refreshSitemap'])->name('admin.seo.refresh-sitemap');
+    Route::get('/seo/export/csv', [AdminSeoController::class, 'exportCsv'])->name('admin.seo.export-csv');
+    Route::get('/seo/export/pdf', [AdminSeoController::class, 'exportPdf'])->name('admin.seo.export-pdf');
 });
 
 // Storage and upload fallbacks for cPanel / shared hosting environments where symlink may be broken or disabled

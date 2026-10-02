@@ -37,6 +37,8 @@ class OrderTrackingController extends Controller
             }
         }
 
-        return view('web.track', compact('order', 'searched', 'error'));
+        $seo = \App\Services\SeoService::getForPrivate('Track Your Order');
+
+        return view('web.track', compact('order', 'searched', 'error', 'seo'));
     }
 }

@@ -8,6 +8,8 @@ class CartController extends Controller
 {
     public function index()
     {
-        return view('web.cart');
+        return view('web.cart', [
+            'seo' => \App\Services\SeoService::getForPrivate('Shopping Cart'),
+        ]);
     }
 }

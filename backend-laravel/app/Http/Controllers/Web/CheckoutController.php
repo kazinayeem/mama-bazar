@@ -64,6 +64,7 @@ class CheckoutController extends Controller
         }
 
         return view('web.checkout', [
+            'seo' => \App\Services\SeoService::getForPrivate('Checkout'),
             'shippingMethods' => $shippingMethods,
             'paymentMethods' => $paymentMethods,
             'checkoutNotices' => $notices,
@@ -279,7 +280,9 @@ class CheckoutController extends Controller
             }
         }
 
-        return view('web.success', compact('orderId', 'order', 'token'));
+        $seo = \App\Services\SeoService::getForPrivate('Order Placed Successfully');
+
+        return view('web.success', compact('orderId', 'order', 'token', 'seo'));
     }
 
     protected function findCoupon(string $code): ?Coupon

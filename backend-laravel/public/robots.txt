@@ -1,2 +1,26 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /shop
+Allow: /products/
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /pages/
+
+# Private & administrative areas
+Disallow: /admin/
+Disallow: /account/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order/success
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /email/
+Disallow: /invoice/
+Disallow: /api/
+Disallow: /storage/temp/
+
+Sitemap: https://mama-bazar.com/sitemap.xml

@@ -31,7 +31,10 @@ class AuthWebController extends Controller
             return redirect()->route('home');
         }
 
-        return view('auth.login', ['loginOtpEnabled' => EmailSettingService::isAutomationEnabled('login_otp')]);
+        return view('auth.login', [
+            'loginOtpEnabled' => EmailSettingService::isAutomationEnabled('login_otp'),
+            'seo' => \App\Services\SeoService::getForPrivate('Login'),
+        ]);
     }
 
     public function login(Request $request)
@@ -83,7 +86,10 @@ class AuthWebController extends Controller
             return redirect()->route('home');
         }
 
-        return view('auth.register', ['emailRequired' => EmailSettingService::requiresRegistrationEmail()]);
+        return view('auth.register', [
+            'emailRequired' => EmailSettingService::requiresRegistrationEmail(),
+            'seo' => \App\Services\SeoService::getForPrivate('Create Account'),
+        ]);
     }
 
     public function register(Request $request)
@@ -167,6 +173,7 @@ class AuthWebController extends Controller
             'codeLength' => EmailOtpService::length(),
             'expiresMinutes' => EmailOtpService::expiresMinutes(),
             'canSkip' => ! EmailSettingService::verificationEnforced(),
+            'seo' => \App\Services\SeoService::getForPrivate('Verify Email'),
         ]);
     }
 
@@ -216,7 +223,9 @@ class AuthWebController extends Controller
 
     public function showForgotPassword()
     {
-        return view('auth.forgot-password');
+        return view('auth.forgot-password', [
+            'seo' => \App\Services\SeoService::getForPrivate('Forgot Password'),
+        ]);
     }
 
     public function sendResetLink(Request $request)
@@ -263,6 +272,7 @@ class AuthWebController extends Controller
         return view('auth.reset-password', [
             'token' => $user ? $token : null,
             'invalid' => $user === null,
+            'seo' => \App\Services\SeoService::getForPrivate('Reset Password'),
         ]);
     }
 
@@ -305,6 +315,7 @@ class AuthWebController extends Controller
             'email' => session('login_otp_email'),
             'codeLength' => EmailOtpService::length(),
             'cooldown' => $this->loginOtpCooldown(),
+            'seo' => \App\Services\SeoService::getForPrivate('Sign In with Email Code'),
         ]);
     }
 

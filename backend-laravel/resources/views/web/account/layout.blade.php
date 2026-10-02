@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    $seo = \App\Services\SeoService::getForPrivate('Customer Account');
+@endphp
+
 @section('content')
 <div class="bg-slate-50/60 min-h-screen py-8">
     <div class="store-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">

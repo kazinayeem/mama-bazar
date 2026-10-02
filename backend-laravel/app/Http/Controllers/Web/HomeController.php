@@ -12,10 +12,12 @@ class HomeController extends Controller
     {
         $homepageData = HomepageService::getHomepage();
         $config = HomepageService::getConfig();
+        $seo = \App\Services\SeoService::getForHome();
 
         return view('web.home', [
             'homepageData' => $homepageData,
             'config' => $config,
+            'seo' => $seo,
         ]);
     }
 

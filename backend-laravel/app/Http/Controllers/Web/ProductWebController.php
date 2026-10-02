@@ -38,9 +38,11 @@ class ProductWebController extends Controller
             $isVerifiedBuyer = ReviewService::hasVerifiedPurchase(auth()->id(), (int) $product['id']);
         }
 
+        $seo = \App\Services\SeoService::getForProduct($product);
+
         return view('web.products.show', compact(
             'product', 'relatedProducts', 'reviews',
-            'reviewSummary', 'userReview', 'canReview', 'isVerifiedBuyer'
+            'reviewSummary', 'userReview', 'canReview', 'isVerifiedBuyer', 'seo'
         ));
     }
 

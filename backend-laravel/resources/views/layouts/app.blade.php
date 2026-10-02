@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? ($business['site_name'] . ' - ' . $business['tagline']) }}</title>
+    <x-seo-head :seo="$seo ?? null" />
     <link rel="icon" type="image/png" href="{{ $business['favicon_url'] ?: '/brandlogo.png' }}">
     
     <!-- Fonts -->
