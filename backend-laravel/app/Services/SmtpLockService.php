@@ -15,11 +15,11 @@ class SmtpLockService
     {
         $pin = config('email_system.smtp_pin');
 
-        if (($pin === null || $pin === '') && ! app()->environment('production')) {
+        if ($pin === null || $pin === '') {
             return '6969';
         }
 
-        return $pin !== null ? (string) $pin : null;
+        return (string) $pin;
     }
 
     /**

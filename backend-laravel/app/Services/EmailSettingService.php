@@ -253,17 +253,29 @@ class EmailSettingService
     }
 
     /**
-     * Normalized encryption mode: "ssl" (implicit TLS), "tls" (STARTTLS) or "none".
+     * Normalized encryption mode: "ssl" (implicit TLS on port 465), "tls" (STARTTLS on port 587/25) or "none".
      */
     public static function normalizeEncryption(?string $value, int $port): string
     {
         $value = strtolower(trim((string) $value));
 
-        return match (true) {
-            $value === 'ssl', $port === 465 && $value !== 'none' => 'ssl',
-            in_array($value, ['tls', 'starttls'], true) => 'tls',
-            default => 'none',
-        };
+        if ($port === 465) {
+            return $value === 'none' ? 'none' : 'ssl';
+        }
+
+        if ($port === 587) {
+            return $value === 'none' ? 'none' : 'tls';
+        }
+
+        if (in_array($value, ['tls', 'starttls'], true)) {
+            return 'tls';
+        }
+
+        if ($value === 'ssl') {
+            return 'ssl';
+        }
+
+        return 'none';
     }
 
     /**
@@ -292,13 +304,43 @@ class EmailSettingService
     }
 
     /**
-     * Probe the SMTP server: TCP/TLS handshake + authentication, without sending.
+     * Probe the mail server: TCP/TLS handshake + authentication for SMTP, or binary check for Sendmail.
      *
      * @param  array<string, mixed>|null  $customConfig
      * @return array{success: bool, latency_ms: int, message: string, error_type?: string, diagnostic?: string}
      */
     public static function testConnection(?array $customConfig = null): array
     {
+        $driver = (string) self::get('mail_mailer', 'smtp');
+
+        if ($driver === 'log') {
+            return [
+                'success' => true,
+                'latency_ms' => 0,
+                'message' => 'Mail driver is set to "log". Outgoing emails are recorded in Laravel logs without opening network connections.',
+            ];
+        }
+
+        if ($driver === 'sendmail') {
+            $path = config('mail.mailers.sendmail.path') ?: '/usr/sbin/sendmail -bs';
+            $binary = explode(' ', trim($path))[0];
+            if (! file_exists($binary) || ! is_executable($binary)) {
+                return [
+                    'success' => false,
+                    'latency_ms' => 0,
+                    'error_type' => 'binary_missing',
+                    'diagnostic' => "Sendmail binary not found or not executable at '{$binary}'.",
+                    'message' => "Sendmail binary not found or not executable at '{$binary}'.",
+                ];
+            }
+
+            return [
+                'success' => true,
+                'latency_ms' => 1,
+                'message' => "Sendmail binary is available and executable at '{$binary}'. Emails will route locally via system MTA.",
+            ];
+        }
+
         $config = self::smtpConfig();
         if (! empty($customConfig)) {
             $config = array_merge($config, $customConfig);
@@ -306,15 +348,13 @@ class EmailSettingService
             $encryption = self::normalizeEncryption($customConfig['encryption'] ?? ($port === 587 ? 'tls' : 'ssl'), $port);
             $config['port'] = $port;
             $config['scheme'] = $encryption === 'ssl' ? 'smtps' : 'smtp';
+            $config['encryption'] = $encryption === 'none' ? null : $encryption;
             $config['require_tls'] = $encryption === 'tls';
             $config['auto_tls'] = $encryption !== 'none';
         }
         $startTime = microtime(true);
 
         try {
-            if ((string) self::get('mail_mailer', 'smtp') !== 'smtp') {
-                throw new \RuntimeException('Mail driver is not SMTP; nothing to probe.');
-            }
             if (empty($config['host'])) {
                 throw new \RuntimeException('SMTP host is not configured.');
             }
@@ -379,19 +419,24 @@ class EmailSettingService
 
         if (stripos($rawError, 'Connection refused') !== false || stripos($rawError, 'ECONNREFUSED') !== false) {
             $type = 'connection_refused';
-            $diagnostic = "The host {$host}:{$port} actively rejected the TCP connection. On cPanel / WHM or VPS servers, this usually means: (1) cPanel WHM 'SMTP Restrictions' or CSF firewall (SMTP_BLOCK = 1) is blocking non-root outbound SMTP connections; (2) The server does not allow external loopback to its own public IP (try host 'localhost' or '127.0.0.1'); (3) Port {$port} is blocked by hosting firewall (try port 587 with STARTTLS/TLS).";
+            $isGoogle = str_contains(strtolower($host), 'gmail') || str_contains(strtolower($host), 'google');
+            $diagnostic = "The host {$host}:{$port} actively rejected the TCP connection. On cPanel / WHM or VPS servers, this usually means: (1) cPanel WHM 'SMTP Restrictions' or CSF firewall (SMTP_BLOCK = 1) is blocking non-root outbound SMTP connections to external ports 25, 465, and 587. To fix: In WHM, go to 'Security Center › SMTP Restrictions' and disable it, or in CSF add your cPanel user to SMTP_ALLOWUSER; (2) Alternatively, set Mail Driver to 'sendmail' in Email Settings to send through local Exim without network socket blocks; (3) If connecting to the local server, try host 'localhost' or '127.0.0.1'.";
         } elseif (stripos($rawError, 'timed out') !== false || stripos($rawError, 'Operation timed out') !== false || stripos($rawError, 'ETIMEDOUT') !== false) {
             $type = 'connection_timeout';
-            $diagnostic = "Connection to {$host}:{$port} timed out without response. Your cloud or hosting provider firewall/security group is likely dropping outbound packets on port {$port}. Ask your host to unblock port {$port} or test port 587.";
+            $diagnostic = "Connection to {$host}:{$port} timed out without response. Your cloud or hosting provider firewall/security group is likely dropping outbound packets on port {$port}. Ask your host to unblock port {$port}, test port 587, or switch driver to 'sendmail'.";
         } elseif (stripos($rawError, 'getaddrinfo failed') !== false || stripos($rawError, 'Name or service not known') !== false || stripos($rawError, 'php_network_getaddresses') !== false) {
             $type = 'dns_failure';
             $diagnostic = "Server DNS failed to resolve '{$host}'. Check /etc/resolv.conf and server DNS configuration.";
         } elseif (stripos($rawError, 'certificate verify failed') !== false || stripos($rawError, 'SSL') !== false || stripos($rawError, 'handshake') !== false) {
             $type = 'tls_failure';
-            $diagnostic = "TLS/SSL negotiation failed with {$host}:{$port}. Check that the SSL certificate covers {$host} and system CA certificates are up to date.";
+            $diagnostic = "TLS/SSL negotiation failed with {$host}:{$port}. Check that the SSL certificate covers {$host}, the correct port is selected (465 for SSL, 587 for TLS), and system CA certificates are up to date.";
         } elseif (stripos($rawError, '535') !== false || stripos($rawError, 'authentication failed') !== false || stripos($rawError, 'incorrect authentication') !== false) {
             $type = 'auth_failure';
-            $diagnostic = "SMTP authentication was rejected. Ensure the username is the full email address ('{$config['username']}') and the password is correct.";
+            $isGoogle = str_contains(strtolower($host), 'gmail') || str_contains(strtolower($host), 'google');
+            $extra = $isGoogle
+                ? " For Google / Gmail: You MUST generate a 16-character 'App Password' from myaccount.google.com (requires 2-Step Verification) instead of your regular Gmail password."
+                : '';
+            $diagnostic = "SMTP authentication was rejected. Ensure the username is the full email address ('{$config['username']}') and the password is correct.{$extra}";
         }
 
         return [

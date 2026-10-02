@@ -74,7 +74,7 @@ return [
     | Defaults to '6969' in development/local.
     |
     */
-    'smtp_pin' => env('SMTP_SETTINGS_PIN'),
+    'smtp_pin' => env('SMTP_SETTINGS_PIN', '6969'),
 
     'smtp_unlock_duration_minutes' => (int) env('SMTP_SETTINGS_UNLOCK_MINUTES', 15),
 
