@@ -86,11 +86,11 @@
                    class="whitespace-nowrap rounded-xl px-3.5 py-2 transition shrink-0 {{ request()->routeIs('account.dashboard') ? 'bg-brand-green-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                     Dashboard
                 </a>
-                <a href="{{ route('account.orders*') }}"
+                <a href="{{ route('account.orders') }}"
                    class="whitespace-nowrap rounded-xl px-3.5 py-2 transition shrink-0 {{ request()->routeIs('account.orders*') ? 'bg-brand-green-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                     My Orders
                 </a>
-                <a href="{{ route('account.addresses*') }}"
+                <a href="{{ route('account.addresses') }}"
                    class="whitespace-nowrap rounded-xl px-3.5 py-2 transition shrink-0 {{ request()->routeIs('account.addresses*') ? 'bg-brand-green-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                     Saved Addresses
                 </a>
@@ -102,7 +102,7 @@
                    class="whitespace-nowrap rounded-xl px-3.5 py-2 transition shrink-0 {{ request()->routeIs('account.settings') ? 'bg-brand-green-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                     Security
                 </a>
-                <a href="{{ route('account.email*') }}"
+                <a href="{{ route('account.email') }}"
                    class="whitespace-nowrap rounded-xl px-3.5 py-2 transition shrink-0 {{ request()->routeIs('account.email*') ? 'bg-brand-green-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' }}">
                     Email Preferences
                 </a>
