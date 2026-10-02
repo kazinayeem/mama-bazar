@@ -74,6 +74,91 @@ Artisan::command('email:prune', function () {
     $this->line("Pruned {$logs} email logs older than {$days} days and {$otps} expired OTP records.");
 })->purpose('Delete old email logs and expired OTP records');
 
+Artisan::command('email:diagnose-smtp {--host=} {--port=} {--encryption=}', function () {
+    $this->info('=== Mama Bazar Production SMTP Diagnostics ===');
+
+    // 1. PHP Environment
+    $this->line("\n<info>1. PHP Environment:</info>");
+    $this->line('  PHP Version: '.PHP_VERSION);
+    $this->line('  OpenSSL Extension: '.(extension_loaded('openssl') ? '<info>LOADED</info>' : '<error>MISSING</error>'));
+    $this->line('  Sockets Extension: '.(extension_loaded('sockets') ? '<info>LOADED</info>' : '<comment>NOT LOADED (stream sockets fallback active)</comment>'));
+
+    // 2. Active Configuration
+    $settings = EmailSettingService::all();
+    $host = (string) ($this->option('host') ?: ($settings['mail_host'] ?: config('mail.mailers.smtp.host', 'mail.mama-bazar.com')));
+    $port = (int) ($this->option('port') ?: ($settings['mail_port'] ?? config('mail.mailers.smtp.port', 465)));
+    $encryption = (string) ($this->option('encryption') ?: ($settings['mail_encryption'] ?? config('mail.mailers.smtp.encryption', 'ssl')));
+    $username = (string) ($settings['mail_username'] ?: config('mail.mailers.smtp.username', ''));
+    $hasPassword = EmailSettingService::passwordSource() !== 'none';
+
+    $this->line("\n<info>2. Active SMTP Target:</info>");
+    $this->line("  Host: {$host}");
+    $this->line("  Port: {$port}");
+    $this->line("  Encryption: {$encryption}");
+    $this->line("  Username: {$username}");
+    $this->line('  Password Configured: '.($hasPassword ? '<info>YES ('.EmailSettingService::passwordSource().')</info>' : '<error>NO</error>'));
+
+    // 3. DNS Resolution
+    $this->line("\n<info>3. DNS Resolution:</info>");
+    $t0 = microtime(true);
+    $ip = gethostbyname($host);
+    $dnsTime = round((microtime(true) - $t0) * 1000, 2);
+    if ($ip === $host && ! filter_var($host, FILTER_VALIDATE_IP)) {
+        $this->error("  FAILED: Could not resolve '{$host}' to an IP address ({$dnsTime} ms).");
+    } else {
+        $this->info("  RESOLVED: '{$host}' -> {$ip} ({$dnsTime} ms)");
+    }
+
+    // 4. Low-Level TCP Port Checks
+    $this->line("\n<info>4. Outbound TCP Port Checks:</info>");
+    $testPorts = array_values(array_unique([$port, 465, 587, 25]));
+    foreach ($testPorts as $p) {
+        $t0 = microtime(true);
+        $errno = 0;
+        $errstr = '';
+        $fp = @fsockopen($host, $p, $errno, $errstr, 4);
+        $elapsed = round((microtime(true) - $t0) * 1000);
+        if ($fp) {
+            fclose($fp);
+            $this->info("  [+] {$host}:{$p} - OPEN and reachable ({$elapsed} ms)");
+        } else {
+            $errDetail = trim("{$errstr} (errno: {$errno})");
+            $this->warn("  [-] {$host}:{$p} - BLOCKED / REFUSED: {$errDetail} ({$elapsed} ms)");
+        }
+    }
+
+    // 5. Test Localhost / Loopback if applicable
+    $this->line("\n<info>5. Localhost (127.0.0.1) Port Checks (if local mail server):</info>");
+    foreach ([25, 587, 465] as $p) {
+        $errno = 0;
+        $errstr = '';
+        $fp = @fsockopen('127.0.0.1', $p, $errno, $errstr, 2);
+        if ($fp) {
+            fclose($fp);
+            $this->info("  [+] 127.0.0.1:{$p} - LISTENING locally on this server");
+        } else {
+            $this->line("  [-] 127.0.0.1:{$p} - Not listening / refused");
+        }
+    }
+
+    // 6. Full SMTP Test via EmailSettingService
+    $this->line("\n<info>6. Live SMTP Handshake & Authentication Probe:</info>");
+    $res = EmailSettingService::testConnection([
+        'host' => $host,
+        'port' => $port,
+        'encryption' => $encryption,
+    ]);
+    if ($res['success']) {
+        $this->info("  SUCCESS: {$res['message']}");
+    } else {
+        $this->error("  FAILED: {$res['message']}");
+        if (! empty($res['diagnostic'])) {
+            $this->line("\n  <comment>RECOMMENDATION / ACTION PLAN:</comment>");
+            $this->line('  '.$res['diagnostic']);
+        }
+    }
+})->purpose('Diagnose production SMTP connectivity, DNS, firewall, and authentication');
+
 Schedule::command('email:dispatch-scheduled-campaigns')->everyMinute()->withoutOverlapping();
 Schedule::command('email:send-review-invitations')->hourly()->withoutOverlapping();
 Schedule::command('email:prune')->dailyAt('03:15');

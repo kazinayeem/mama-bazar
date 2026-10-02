@@ -1,16 +1,20 @@
 <?php
 
+use App\Http\Middleware\AdminOnlyMiddleware;
+use App\Http\Middleware\EnsureAdminAccess;
+use App\Http\Middleware\EnsureAdminPermission;
+use App\Http\Middleware\EnsureEmailSchemaReady;
+use App\Http\Middleware\EnsureEmailVerified;
+use App\Http\Middleware\EnsureSmtpUnlocked;
+use App\Http\Middleware\JwtAuthMiddleware;
+use App\Http\Middleware\RequirePermissionMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use App\Http\Middleware\JwtAuthMiddleware;
-use App\Http\Middleware\RequirePermissionMiddleware;
-use App\Http\Middleware\AdminOnlyMiddleware;
-use App\Http\Middleware\EnsureAdminAccess;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,9 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'require.permission' => RequirePermissionMiddleware::class,
             'admin.only' => AdminOnlyMiddleware::class,
             'admin.access' => EnsureAdminAccess::class,
-            'admin.can' => \App\Http\Middleware\EnsureAdminPermission::class,
-            'email.verified' => \App\Http\Middleware\EnsureEmailVerified::class,
-            'email.schema' => \App\Http\Middleware\EnsureEmailSchemaReady::class,
+            'admin.can' => EnsureAdminPermission::class,
+            'email.verified' => EnsureEmailVerified::class,
+            'email.schema' => EnsureEmailSchemaReady::class,
+            'smtp.unlocked' => EnsureSmtpUnlocked::class,
         ]);
 
         // RFC 8058 one-click unsubscribe is POSTed by mail clients without a CSRF token (route is signed).
@@ -46,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
                         $allMessages[] = $msg;
                     }
                 }
+
                 return response()->json([
                     'success' => false,
                     'message' => implode(', ', $allMessages),
@@ -69,7 +75,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $e->getStatusCode());
         });
 
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*')) {
                 $status = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
                 $message = (config('app.env') === 'production' && $status === 500)

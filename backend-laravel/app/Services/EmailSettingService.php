@@ -52,17 +52,22 @@ class EmailSettingService
      */
     public static function defaults(): array
     {
+        $defaultHost = config('mail.mailers.smtp.host');
+        $defaultPort = config('mail.mailers.smtp.port');
+        $defaultEncryption = config('mail.mailers.smtp.encryption');
+        $defaultUsername = config('mail.mailers.smtp.username');
+
         return array_merge([
-            'mail_mailer' => 'smtp',
-            'mail_host' => 'mail.mama-bazar.com',
-            'mail_port' => 465,
-            'mail_encryption' => 'ssl',
-            'mail_username' => 'contact@mama-bazar.com',
+            'mail_mailer' => config('mail.default', 'smtp'),
+            'mail_host' => ($defaultHost && $defaultHost !== '127.0.0.1') ? $defaultHost : 'mail.mama-bazar.com',
+            'mail_port' => (int) ($defaultPort ?: 465),
+            'mail_encryption' => $defaultEncryption ?: ((int) $defaultPort === 587 ? 'tls' : 'ssl'),
+            'mail_username' => $defaultUsername ?: 'contact@mama-bazar.com',
             'mail_password' => '',
-            'mail_from_address' => 'contact@mama-bazar.com',
-            'mail_from_name' => 'Mama Bazar',
+            'mail_from_address' => config('mail.from.address') ?: 'contact@mama-bazar.com',
+            'mail_from_name' => config('mail.from.name') ?: 'Mama Bazar',
             'mail_reply_to' => '',
-            'mail_timeout' => 30,
+            'mail_timeout' => (int) (config('mail.mailers.smtp.timeout') ?: 30),
             'mail_enabled' => 1,
 
             'mail_last_tested_at' => null,
@@ -230,17 +235,17 @@ class EmailSettingService
     public static function smtpConfig(): array
     {
         $settings = self::all();
-        $port = (int) ($settings['mail_port'] ?? 465);
-        $encryption = self::normalizeEncryption($settings['mail_encryption'] ?? 'ssl', $port);
+        $port = (int) ($settings['mail_port'] ?? config('mail.mailers.smtp.port', 465));
+        $encryption = self::normalizeEncryption($settings['mail_encryption'] ?? config('mail.mailers.smtp.encryption', 'ssl'), $port);
 
         return [
             'transport' => 'smtp',
             'scheme' => $encryption === 'ssl' ? 'smtps' : 'smtp',
-            'host' => (string) $settings['mail_host'],
+            'host' => (string) ($settings['mail_host'] ?: config('mail.mailers.smtp.host', 'mail.mama-bazar.com')),
             'port' => $port,
-            'username' => $settings['mail_username'] ?: null,
+            'username' => ($settings['mail_username'] ?: config('mail.mailers.smtp.username')) ?: null,
             'password' => self::getDecryptedPassword() ?: null,
-            'timeout' => (int) ($settings['mail_timeout'] ?? 30),
+            'timeout' => (int) ($settings['mail_timeout'] ?? config('mail.mailers.smtp.timeout', 30)),
             'require_tls' => $encryption === 'tls',
             'auto_tls' => $encryption !== 'none',
             'local_domain' => parse_url((string) config('app.url'), PHP_URL_HOST) ?: null,
@@ -289,11 +294,21 @@ class EmailSettingService
     /**
      * Probe the SMTP server: TCP/TLS handshake + authentication, without sending.
      *
-     * @return array{success: bool, latency_ms: int, message: string}
+     * @param  array<string, mixed>|null  $customConfig
+     * @return array{success: bool, latency_ms: int, message: string, error_type?: string, diagnostic?: string}
      */
-    public static function testConnection(): array
+    public static function testConnection(?array $customConfig = null): array
     {
         $config = self::smtpConfig();
+        if (! empty($customConfig)) {
+            $config = array_merge($config, $customConfig);
+            $port = (int) ($config['port'] ?? 465);
+            $encryption = self::normalizeEncryption($customConfig['encryption'] ?? ($port === 587 ? 'tls' : 'ssl'), $port);
+            $config['port'] = $port;
+            $config['scheme'] = $encryption === 'ssl' ? 'smtps' : 'smtp';
+            $config['require_tls'] = $encryption === 'tls';
+            $config['auto_tls'] = $encryption !== 'none';
+        }
         $startTime = microtime(true);
 
         try {
@@ -322,14 +337,67 @@ class EmailSettingService
         } catch (Throwable $e) {
             $latency = (int) round((microtime(true) - $startTime) * 1000);
             $safe = self::sanitizeError($e->getMessage());
-            self::recordStatus('failed', $safe, $latency);
+            $analysis = self::diagnoseError($e->getMessage(), $config);
+
+            $detailedError = $safe;
+            if (! empty($analysis['diagnostic'])) {
+                $detailedError .= "\n[Hint: {$analysis['diagnostic']}]";
+            }
+
+            self::recordStatus('failed', $detailedError, $latency);
+
+            Log::warning('SMTP probe failed', [
+                'host' => $config['host'],
+                'port' => $config['port'],
+                'scheme' => $config['scheme'],
+                'error_type' => $analysis['type'],
+                'error' => $safe,
+            ]);
 
             return [
                 'success' => false,
                 'latency_ms' => $latency,
-                'message' => 'SMTP connection failed: '.$safe,
+                'error_type' => $analysis['type'],
+                'diagnostic' => $analysis['diagnostic'],
+                'message' => 'SMTP connection failed: '.$safe.(! empty($analysis['diagnostic']) ? ' (Hint: '.$analysis['diagnostic'].')' : ''),
             ];
         }
+    }
+
+    /**
+     * Diagnose common SMTP connection failures and return actionable troubleshooting hints.
+     *
+     * @param  array<string, mixed>  $config
+     * @return array{type: string, diagnostic: string}
+     */
+    public static function diagnoseError(string $rawError, array $config): array
+    {
+        $host = $config['host'] ?? 'unknown';
+        $port = (int) ($config['port'] ?? 0);
+        $type = 'unknown';
+        $diagnostic = '';
+
+        if (stripos($rawError, 'Connection refused') !== false || stripos($rawError, 'ECONNREFUSED') !== false) {
+            $type = 'connection_refused';
+            $diagnostic = "The host {$host}:{$port} actively rejected the TCP connection. On cPanel / WHM or VPS servers, this usually means: (1) cPanel WHM 'SMTP Restrictions' or CSF firewall (SMTP_BLOCK = 1) is blocking non-root outbound SMTP connections; (2) The server does not allow external loopback to its own public IP (try host 'localhost' or '127.0.0.1'); (3) Port {$port} is blocked by hosting firewall (try port 587 with STARTTLS/TLS).";
+        } elseif (stripos($rawError, 'timed out') !== false || stripos($rawError, 'Operation timed out') !== false || stripos($rawError, 'ETIMEDOUT') !== false) {
+            $type = 'connection_timeout';
+            $diagnostic = "Connection to {$host}:{$port} timed out without response. Your cloud or hosting provider firewall/security group is likely dropping outbound packets on port {$port}. Ask your host to unblock port {$port} or test port 587.";
+        } elseif (stripos($rawError, 'getaddrinfo failed') !== false || stripos($rawError, 'Name or service not known') !== false || stripos($rawError, 'php_network_getaddresses') !== false) {
+            $type = 'dns_failure';
+            $diagnostic = "Server DNS failed to resolve '{$host}'. Check /etc/resolv.conf and server DNS configuration.";
+        } elseif (stripos($rawError, 'certificate verify failed') !== false || stripos($rawError, 'SSL') !== false || stripos($rawError, 'handshake') !== false) {
+            $type = 'tls_failure';
+            $diagnostic = "TLS/SSL negotiation failed with {$host}:{$port}. Check that the SSL certificate covers {$host} and system CA certificates are up to date.";
+        } elseif (stripos($rawError, '535') !== false || stripos($rawError, 'authentication failed') !== false || stripos($rawError, 'incorrect authentication') !== false) {
+            $type = 'auth_failure';
+            $diagnostic = "SMTP authentication was rejected. Ensure the username is the full email address ('{$config['username']}') and the password is correct.";
+        }
+
+        return [
+            'type' => $type,
+            'diagnostic' => $diagnostic,
+        ];
     }
 
     protected static function buildTransport(array $config): EsmtpTransport

@@ -1,31 +1,33 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\HomeController;
-use App\Http\Controllers\Web\ShopController;
-use App\Http\Controllers\Web\ProductWebController;
-use App\Http\Controllers\Web\CartController;
-use App\Http\Controllers\Web\CheckoutController;
-use App\Http\Controllers\Web\OrderTrackingController;
-use App\Http\Controllers\Web\AuthWebController;
-use App\Http\Controllers\Web\AccountEmailController;
-use App\Http\Controllers\Web\CustomerInvoiceController;
-use App\Http\Controllers\Web\EmailUnsubscribeController;
-use App\Http\Controllers\Web\PageWebController;
 use App\Http\Controllers\Admin\AdminAuthController;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminProductWebController;
-use App\Http\Controllers\Admin\AdminOrderWebController;
-use App\Http\Controllers\Admin\AdminCategoryWebController;
-use App\Http\Controllers\Admin\AdminCustomerWebController;
-use App\Http\Controllers\Admin\AdminCouponWebController;
-use App\Http\Controllers\Admin\AdminSettingWebController;
 use App\Http\Controllers\Admin\AdminCatalogWebController;
-use App\Http\Controllers\Admin\AdminModuleWebController;
-use App\Http\Controllers\Admin\AdminReviewWebController;
+use App\Http\Controllers\Admin\AdminCategoryWebController;
+use App\Http\Controllers\Admin\AdminCouponWebController;
+use App\Http\Controllers\Admin\AdminCustomerWebController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminEmailCampaignController;
 use App\Http\Controllers\Admin\AdminEmailController;
 use App\Http\Controllers\Admin\AdminEmailTemplateController;
-use App\Http\Controllers\Admin\AdminEmailCampaignController;
+use App\Http\Controllers\Admin\AdminModuleWebController;
+use App\Http\Controllers\Admin\AdminOrderWebController;
+use App\Http\Controllers\Admin\AdminProductWebController;
+use App\Http\Controllers\Admin\AdminReviewWebController;
+use App\Http\Controllers\Admin\AdminSettingWebController;
+use App\Http\Controllers\StorageFileController;
+use App\Http\Controllers\Web\AccountEmailController;
+use App\Http\Controllers\Web\AuthWebController;
+use App\Http\Controllers\Web\CartController;
+use App\Http\Controllers\Web\CheckoutController;
+use App\Http\Controllers\Web\CustomerInvoiceController;
+use App\Http\Controllers\Web\EmailUnsubscribeController;
+use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\OrderTrackingController;
+use App\Http\Controllers\Web\PageWebController;
+use App\Http\Controllers\Web\ProductWebController;
+use App\Http\Controllers\Web\ShopController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,7 +35,7 @@ use App\Http\Controllers\Admin\AdminEmailCampaignController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function (\Illuminate\Http\Request $request) {
+Route::get('/', function (Request $request) {
     if ($request->wantsJson()) {
         return response()->json([
             'success' => true,
@@ -43,6 +45,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
             'timestamp' => now()->toIso8601String(),
         ]);
     }
+
     return app(HomeController::class)->index();
 })->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
@@ -55,7 +58,7 @@ Route::put('/products/{slug}/reviews/{id}', [ProductWebController::class, 'updat
     ->middleware(['auth', 'email.verified'])
     ->name('products.review.update');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.coupon');
 Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
@@ -163,10 +166,16 @@ Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () 
 
         Route::middleware('admin.can:email.settings.manage')->group(function () {
             Route::get('/settings', [AdminEmailController::class, 'settings'])->name('settings');
-            Route::post('/settings', [AdminEmailController::class, 'updateSettings'])->name('settings.update');
-            Route::post('/settings/test-connection', [AdminEmailController::class, 'testConnection'])->middleware('throttle:6,1')->name('settings.test-connection');
-            Route::post('/settings/send-test', [AdminEmailController::class, 'sendTestEmail'])->middleware('throttle:6,1')->name('settings.send-test');
-            Route::post('/settings/check-dns', [AdminEmailController::class, 'checkDns'])->middleware('throttle:6,1')->name('settings.check-dns');
+            Route::post('/settings/unlock', [AdminEmailController::class, 'unlockSettings'])->middleware('throttle:10,1')->name('settings.unlock');
+            Route::post('/settings/lock', [AdminEmailController::class, 'lockSettings'])->name('settings.lock');
+
+            Route::middleware('smtp.unlocked')->group(function () {
+                Route::post('/settings', [AdminEmailController::class, 'updateSettings'])->name('settings.update');
+                Route::post('/settings/test-connection', [AdminEmailController::class, 'testConnection'])->middleware('throttle:6,1')->name('settings.test-connection');
+                Route::post('/settings/send-test', [AdminEmailController::class, 'sendTestEmail'])->middleware('throttle:6,1')->name('settings.send-test');
+                Route::post('/settings/check-dns', [AdminEmailController::class, 'checkDns'])->middleware('throttle:6,1')->name('settings.check-dns');
+            });
+
             Route::get('/automation', [AdminEmailController::class, 'automation'])->name('automation');
             Route::post('/automation', [AdminEmailController::class, 'updateAutomation'])->name('automation.update');
         });
@@ -235,9 +244,9 @@ Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () 
     foreach ($catalogResources as $resource) {
         Route::get("/{$resource}", fn () => app(AdminCatalogWebController::class)->index($resource))
             ->name("admin.{$resource}.index");
-        Route::post("/{$resource}", fn (\Illuminate\Http\Request $r) => app(AdminCatalogWebController::class)->store($r, $resource))
+        Route::post("/{$resource}", fn (Request $r) => app(AdminCatalogWebController::class)->store($r, $resource))
             ->name("admin.{$resource}.store");
-        Route::put("/{$resource}/{id}", fn (\Illuminate\Http\Request $r, $id) => app(AdminCatalogWebController::class)->update($r, $resource, (int) $id))
+        Route::put("/{$resource}/{id}", fn (Request $r, $id) => app(AdminCatalogWebController::class)->update($r, $resource, (int) $id))
             ->name("admin.{$resource}.update");
         Route::delete("/{$resource}/{id}", fn ($id) => app(AdminCatalogWebController::class)->destroy($resource, (int) $id))
             ->name("admin.{$resource}.destroy");
@@ -328,5 +337,5 @@ Route::prefix('admin')->middleware(['auth', 'admin.access'])->group(function () 
 });
 
 // Storage and upload fallbacks for cPanel / shared hosting environments where symlink may be broken or disabled
-Route::get('/storage/{path}', [\App\Http\Controllers\StorageFileController::class, 'show'])->where('path', '.*');
-Route::get('/uploads/{path}', [\App\Http\Controllers\StorageFileController::class, 'showUploads'])->where('path', '.*');
+Route::get('/storage/{path}', [StorageFileController::class, 'show'])->where('path', '.*');
+Route::get('/uploads/{path}', [StorageFileController::class, 'showUploads'])->where('path', '.*');
