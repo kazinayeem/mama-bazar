@@ -429,7 +429,7 @@
 
             <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row">
                 <p class="text-center sm:text-left">{{ $business['copyright_rendered'] }} · <button type="button" onclick="window.mbConsentShow && window.mbConsentShow()" class="underline hover:text-slate-600">Cookie settings</button><br class="sm:hidden">
-                    <span class="mt-1 inline-block sm:ml-1 sm:mt-0">Developed by <a href="https://bornosoft.bd" target="_blank" rel="noopener" class="font-semibold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-brand-green-700 transition">Bornosoft</a></span></p>
+                    <span class="mt-1 inline-block sm:ml-1 sm:mt-0">Crafted by &amp; Developed by <a href="https://bornosoft.bd/" target="_blank" rel="noopener noreferrer" class="font-semibold text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-brand-green-700 transition">Bornosoft</a></span></p>
                 <div class="flex flex-wrap items-center justify-center gap-2">
                     <span class="mr-1 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">We Accept</span>
                     @forelse(($footerPaymentMethods ?? collect())->reject(fn ($m) => $m->code === 'cod') as $pm)
