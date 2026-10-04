@@ -46,6 +46,7 @@ class TeamManagementTest extends TestCase
             'position' => 'Former Specialist',
             'is_active' => false,
             'is_public' => true,
+            'show_in_footer' => false,
         ]);
 
         $hiddenMember = TeamMember::factory()->create([
@@ -53,6 +54,7 @@ class TeamManagementTest extends TestCase
             'position' => 'Internal Auditor',
             'is_active' => true,
             'is_public' => false,
+            'show_in_footer' => false,
         ]);
 
         $response = $this->get(route('team'));
@@ -72,6 +74,7 @@ class TeamManagementTest extends TestCase
             'position' => 'Chief Technology Officer',
             'is_active' => true,
             'is_public' => true,
+            'show_in_footer' => false,
         ]);
 
         TeamMember::factory()->create([
@@ -79,6 +82,7 @@ class TeamManagementTest extends TestCase
             'position' => 'Head of Brand Marketing',
             'is_active' => true,
             'is_public' => true,
+            'show_in_footer' => false,
         ]);
 
         $response = $this->get(route('team', ['q' => 'Fahim']));

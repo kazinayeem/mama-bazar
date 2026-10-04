@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * TeamMember Model
@@ -24,8 +25,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $show_in_footer
  * @property bool $show_email_publicly
  * @property array|null $social_links
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class TeamMember extends Model
 {

@@ -6,7 +6,7 @@ use App\Models\TeamMember;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TeamMember>
+ * @extends Factory<TeamMember>
  */
 class TeamMemberFactory extends Factory
 {
@@ -44,9 +44,9 @@ class TeamMemberFactory extends Factory
             'show_in_footer' => fake()->boolean(40),
             'show_email_publicly' => fake()->boolean(60),
             'social_links' => [
-                'linkedin' => 'https://linkedin.com/in/' . fake()->userName(),
-                'twitter' => 'https://twitter.com/' . fake()->userName(),
-                'github' => 'https://github.com/' . fake()->userName(),
+                'linkedin' => 'https://linkedin.com/in/'.fake()->userName(),
+                'twitter' => 'https://twitter.com/'.fake()->userName(),
+                'github' => 'https://github.com/'.fake()->userName(),
             ],
         ];
     }

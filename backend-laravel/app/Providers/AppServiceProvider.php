@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\Order;
 use App\Models\PaymentMethod;
+use App\Models\SiteSetting;
+use App\Models\TeamMember;
 use App\Services\BusinessSettingService;
 use App\Services\HomepageService;
 use App\Services\OrderEmailService;
@@ -75,11 +77,11 @@ class AppServiceProvider extends ServiceProvider
 
             // Dynamic footer team members & settings
             try {
-                $footerTeamSetting = \App\Models\SiteSetting::where('key', 'footer_team_enabled')->value('value');
+                $footerTeamSetting = SiteSetting::where('key', 'footer_team_enabled')->value('value');
                 $footerTeamEnabled = $footerTeamSetting === null ? true : in_array((string) $footerTeamSetting, ['1', 'true', 'yes'], true);
-                $footerTeamTitle = \App\Models\SiteSetting::where('key', 'footer_team_title')->value('value') ?: 'Leadership & Core Team';
+                $footerTeamTitle = SiteSetting::where('key', 'footer_team_title')->value('value') ?: 'Leadership & Core Team';
                 $footerTeamMembers = $footerTeamEnabled
-                    ? \App\Models\TeamMember::query()->active()->public()->inFooter()->ordered()->get()
+                    ? TeamMember::query()->active()->public()->inFooter()->ordered()->get()
                     : collect();
 
                 $view->with('footerTeamEnabled', $footerTeamEnabled);

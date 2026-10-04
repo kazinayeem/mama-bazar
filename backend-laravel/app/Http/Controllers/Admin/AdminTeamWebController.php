@@ -304,7 +304,7 @@ class AdminTeamWebController extends Controller
             return response()->json([
                 'success' => true,
                 'is_active' => $member->is_active,
-                'message' => "'{$member->name}' is now " . ($member->is_active ? 'active' : 'inactive') . '.',
+                'message' => "'{$member->name}' is now ".($member->is_active ? 'active' : 'inactive').'.',
             ]);
         }
 
@@ -324,7 +324,7 @@ class AdminTeamWebController extends Controller
             return response()->json([
                 'success' => true,
                 'show_in_footer' => $member->show_in_footer,
-                'message' => "'{$member->name}' " . ($member->show_in_footer ? 'added to' : 'removed from') . ' website footer.',
+                'message' => "'{$member->name}' ".($member->show_in_footer ? 'added to' : 'removed from').' website footer.',
             ]);
         }
 

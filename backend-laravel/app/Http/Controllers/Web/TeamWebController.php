@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\TeamMember;
-use App\Services\BusinessSettingService;
-use App\Support\SeoMetadata;
+use App\Services\SeoService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -14,7 +14,7 @@ class TeamWebController extends Controller
     /**
      * Display the public Team showcase page.
      */
-    public function index(Request $request): View|\Illuminate\Http\JsonResponse
+    public function index(Request $request): View|JsonResponse
     {
         $query = TeamMember::query()
             ->active()
@@ -47,16 +47,7 @@ class TeamWebController extends Controller
             ]);
         }
 
-        $business = BusinessSettingService::all();
-        $businessName = $business['business_name'] ?? 'Mama Bazar';
-
-        $seo = new SeoMetadata(
-            title: "Meet Our Team — {$businessName}",
-            description: "Discover the passionate leadership, software engineers, designers, and operations specialists powering {$businessName} across Bangladesh.",
-            canonical: route('team'),
-            ogType: 'website',
-            keywords: ['mama bazar team', 'leadership', 'executives', 'engineers', 'management team', 'bangladesh e-commerce']
-        );
+        $seo = SeoService::getForTeam();
 
         return view('web.team', compact('members', 'seo'));
     }

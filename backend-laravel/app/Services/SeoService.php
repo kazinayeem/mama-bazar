@@ -555,6 +555,47 @@ class SeoService
     }
 
     /**
+     * Get SEO metadata for Team page with AboutPage / Team schema.
+     */
+    public static function getForTeam(): array
+    {
+        $business = app(BusinessSettingService::class)->all();
+        $siteName = $business['site_name'] ?? 'Mama Bazar';
+        $fullTitle = "Our Leadership & Team | {$siteName}";
+        $desc = "Meet the passionate leadership, software engineers, designers, and operations specialists powering {$siteName} across Bangladesh.";
+        $canon = route('team');
+        $ogImage = url($business['logo_url'] ?? '/brandlogo.png');
+
+        $breadcrumbs = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Our Team', 'item' => $canon],
+            ],
+        ];
+
+        return [
+            'title' => $fullTitle,
+            'meta_title' => $fullTitle,
+            'meta_description' => $desc,
+            'meta_keywords' => 'mama bazar team, leadership, executives, software engineers, management team, bangladesh e-commerce',
+            'canonical_url' => $canon,
+            'robots' => 'index, follow',
+            'og_type' => 'website',
+            'og_title' => $fullTitle,
+            'og_description' => $desc,
+            'og_image' => $ogImage,
+            'og_url' => $canon,
+            'twitter_card' => 'summary_large_image',
+            'twitter_title' => $fullTitle,
+            'twitter_description' => $desc,
+            'twitter_image' => $ogImage,
+            'schemas' => [$breadcrumbs],
+        ];
+    }
+
+    /**
      * Get SEO metadata for FAQ page with FAQPage schema.
      */
     public static function getForFaq(): array

@@ -28,7 +28,7 @@ class TeamController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('position', 'like', '%' . $request->input('role') . '%');
+            $query->where('position', 'like', '%'.$request->input('role').'%');
         }
 
         $members = $query->get();
@@ -142,34 +142,64 @@ class TeamController extends Controller
             'social_links' => 'nullable|array',
         ]);
 
-        if (isset($validated['name'])) $member->name = $validated['name'];
-        if (isset($validated['email'])) $member->email = $validated['email'];
-        if (isset($validated['position'])) $member->position = $validated['position'];
-        if (array_key_exists('bio', $validated)) $member->bio = $validated['bio'];
+        if (isset($validated['name'])) {
+            $member->name = $validated['name'];
+        }
+        if (isset($validated['email'])) {
+            $member->email = $validated['email'];
+        }
+        if (isset($validated['position'])) {
+            $member->position = $validated['position'];
+        }
+        if (array_key_exists('bio', $validated)) {
+            $member->bio = $validated['bio'];
+        }
 
-        if ($request->has('display_order')) $member->display_order = $request->input('display_order');
-        elseif ($request->has('displayOrder')) $member->display_order = $request->input('displayOrder');
+        if ($request->has('display_order')) {
+            $member->display_order = $request->input('display_order');
+        } elseif ($request->has('displayOrder')) {
+            $member->display_order = $request->input('displayOrder');
+        }
 
-        if ($request->has('is_active')) $member->is_active = $request->boolean('is_active');
-        elseif ($request->has('isActive')) $member->is_active = $request->boolean('isActive');
+        if ($request->has('is_active')) {
+            $member->is_active = $request->boolean('is_active');
+        } elseif ($request->has('isActive')) {
+            $member->is_active = $request->boolean('isActive');
+        }
 
-        if ($request->has('is_public')) $member->is_public = $request->boolean('is_public');
-        elseif ($request->has('isPublic')) $member->is_public = $request->boolean('isPublic');
+        if ($request->has('is_public')) {
+            $member->is_public = $request->boolean('is_public');
+        } elseif ($request->has('isPublic')) {
+            $member->is_public = $request->boolean('isPublic');
+        }
 
-        if ($request->has('show_in_footer')) $member->show_in_footer = $request->boolean('show_in_footer');
-        elseif ($request->has('showInFooter')) $member->show_in_footer = $request->boolean('showInFooter');
+        if ($request->has('show_in_footer')) {
+            $member->show_in_footer = $request->boolean('show_in_footer');
+        } elseif ($request->has('showInFooter')) {
+            $member->show_in_footer = $request->boolean('showInFooter');
+        }
 
-        if ($request->has('show_email_publicly')) $member->show_email_publicly = $request->boolean('show_email_publicly');
-        elseif ($request->has('showEmailPublicly')) $member->show_email_publicly = $request->boolean('showEmailPublicly');
+        if ($request->has('show_email_publicly')) {
+            $member->show_email_publicly = $request->boolean('show_email_publicly');
+        } elseif ($request->has('showEmailPublicly')) {
+            $member->show_email_publicly = $request->boolean('showEmailPublicly');
+        }
 
-        if ($request->has('social_links')) $member->social_links = $request->input('social_links');
-        elseif ($request->has('socialLinks')) $member->social_links = $request->input('socialLinks');
+        if ($request->has('social_links')) {
+            $member->social_links = $request->input('social_links');
+        } elseif ($request->has('socialLinks')) {
+            $member->social_links = $request->input('socialLinks');
+        }
 
         if ($request->boolean('removeImage')) {
-            if ($member->image) MediaStorageService::deleteFile($member->image);
+            if ($member->image) {
+                MediaStorageService::deleteFile($member->image);
+            }
             $member->image = null;
         } elseif ($request->hasFile('image')) {
-            if ($member->image) MediaStorageService::deleteFile($member->image);
+            if ($member->image) {
+                MediaStorageService::deleteFile($member->image);
+            }
             $upload = MediaStorageService::uploadFile($request->file('image'), 'team');
             $member->image = $upload['url'];
         } elseif ($request->filled('imageUrl')) {
