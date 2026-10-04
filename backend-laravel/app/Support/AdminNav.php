@@ -107,6 +107,7 @@ class AdminNav
             ]],
             ['label' => 'Content', 'items' => [
                 ['label' => 'Homepage Builder', 'route' => 'admin.homepage.index', 'match' => 'admin.homepage.*', 'icon' => 'panels-top-left'],
+                ['label' => 'Team Management', 'route' => 'admin.team.index', 'match' => 'admin.team.*', 'icon' => 'users'],
                 ['label' => 'Policies & Messages', 'route' => 'admin.policies.index', 'match' => 'admin.policies.*', 'icon' => 'file-text'],
                 ['label' => 'Media Library', 'route' => 'admin.media.index', 'match' => 'admin.media.*', 'icon' => 'image'],
                 ['label' => 'Banners', 'route' => 'admin.banners.index', 'match' => 'admin.banners.*', 'icon' => 'megaphone'],

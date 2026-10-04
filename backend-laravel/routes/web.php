@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\AdminProductWebController;
 use App\Http\Controllers\Admin\AdminReviewWebController;
 use App\Http\Controllers\Admin\AdminSeoController;
 use App\Http\Controllers\Admin\AdminSettingWebController;
+use App\Http\Controllers\Admin\AdminTeamWebController;
 use App\Http\Controllers\StorageFileController;
 use App\Http\Controllers\Web\AccountEmailController;
 use App\Http\Controllers\Web\AuthWebController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Web\PageWebController;
 use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\SeoController;
 use App\Http\Controllers\Web\ShopController;
+use App\Http\Controllers\Web\TeamWebController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -132,6 +134,9 @@ Route::post('/email/unsubscribe', [EmailUnsubscribeController::class, 'update'])
 Route::post('/email/unsubscribe/one-click', [EmailUnsubscribeController::class, 'oneClick'])->middleware(['signed', 'throttle:20,1'])->name('email.unsubscribe.one-click');
 
 Route::get('/invoice/{orderId}', [CustomerInvoiceController::class, 'download'])->middleware('throttle:30,1')->name('order.invoice');
+
+Route::get('/team', [TeamWebController::class, 'index'])->name('team');
+Route::get('/our-team', fn () => redirect()->route('team'));
 
 Route::get('/about', [PageWebController::class, 'about'])->name('about');
 Route::get('/faq', [PageWebController::class, 'faq'])->name('faq');
@@ -380,6 +385,19 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::put('/members/{id}', [AdminModuleWebController::class, 'updateMember'])->middleware('admin.can:members.update')->name('admin.members.update');
     Route::delete('/members/{id}', [AdminModuleWebController::class, 'destroyMember'])->middleware('admin.can:members.delete')->name('admin.members.destroy');
     Route::post('/members/{id}/resend-invitation', [AdminModuleWebController::class, 'resendInvitation'])->middleware('admin.can:members.create|members.update')->name('admin.members.resend-invitation');
+
+    // Team Management
+    Route::get('/team', [AdminTeamWebController::class, 'index'])->name('admin.team.index');
+    Route::post('/team', [AdminTeamWebController::class, 'store'])->name('admin.team.store');
+    Route::get('/team/{id}', [AdminTeamWebController::class, 'show'])->name('admin.team.show');
+    Route::put('/team/{id}', [AdminTeamWebController::class, 'update'])->name('admin.team.update');
+    Route::delete('/team/{id}', [AdminTeamWebController::class, 'destroy'])->name('admin.team.destroy');
+    Route::post('/team/reorder', [AdminTeamWebController::class, 'reorder'])->name('admin.team.reorder');
+    Route::post('/team/{id}/toggle-status', [AdminTeamWebController::class, 'toggleStatus'])->name('admin.team.toggle-status');
+    Route::post('/team/{id}/toggle-footer', [AdminTeamWebController::class, 'toggleFooter'])->name('admin.team.toggle-footer');
+    Route::post('/team/{id}/toggle-public', [AdminTeamWebController::class, 'togglePublic'])->name('admin.team.toggle-public');
+    Route::post('/team/settings', [AdminTeamWebController::class, 'updateSettings'])->name('admin.team.settings.update');
+
     Route::get('/backup', [AdminSettingWebController::class, 'backup'])->name('admin.backup.index');
     Route::post('/backup', [AdminSettingWebController::class, 'createBackup'])->name('admin.backup.create');
     Route::get('/backup/{id}/download', [AdminSettingWebController::class, 'downloadBackup'])->name('admin.backup.download');

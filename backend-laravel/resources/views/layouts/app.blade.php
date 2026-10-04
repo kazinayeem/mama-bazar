@@ -359,6 +359,32 @@
     <!-- Footer -->
     <footer class="mt-12 border-t border-brand-green-100 bg-white pb-8 pt-12 text-slate-600">
         <div class="store-container">
+            @if(!empty($footerTeamEnabled) && !empty($footerTeamMembers) && $footerTeamMembers->isNotEmpty())
+                <div class="mb-10 pb-8 border-b border-brand-green-100/80">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                        <div>
+                            <span class="inline-block rounded-full bg-brand-green-50 border border-brand-green-200/80 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-green-700">Company Leadership</span>
+                            <h3 class="mt-1 text-base font-extrabold text-slate-900 tracking-tight">{{ $footerTeamTitle ?? 'Leadership & Core Team' }}</h3>
+                        </div>
+                        <a href="{{ route('team') }}" class="inline-flex items-center gap-1 text-xs font-bold text-brand-green-700 hover:text-brand-green-800 transition group">
+                            <span>View All Team Members</span>
+                            <svg class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                        @foreach($footerTeamMembers as $member)
+                            <a href="{{ route('team') }}" class="group block rounded-2xl border border-slate-100 bg-slate-50/70 p-3 text-center transition duration-200 hover:-translate-y-0.5 hover:border-brand-green-200 hover:bg-white hover:shadow-xs">
+                                <div class="relative mx-auto h-13 w-13 overflow-hidden rounded-full ring-2 ring-white shadow-2xs">
+                                    <img src="{{ $member->avatar_url }}" alt="{{ $member->name }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-108" loading="lazy">
+                                </div>
+                                <h4 class="mt-2 truncate text-xs font-bold text-slate-800 group-hover:text-brand-green-700 transition">{{ $member->name }}</h4>
+                                <p class="truncate text-[10px] font-medium text-slate-500">{{ $member->position }}</p>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4 lg:grid-cols-5">
                 <div class="col-span-2">
                     <div class="flex items-center gap-2">
@@ -407,6 +433,7 @@
                     <h4 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-900">About</h4>
                     <ul class="space-y-1 text-xs">
                         <li><a href="{{ route('about') }}" class="inline-block py-1 transition hover:text-brand-green-600">About Mama Bazar</a></li>
+                        <li><a href="{{ route('team') }}" class="inline-block py-1 transition hover:text-brand-green-600 font-semibold text-brand-green-700">Our Team</a></li>
                         <li><a href="{{ route('contact') }}" class="inline-block py-1 transition hover:text-brand-green-600">Contact Us</a></li>
                         <li><a href="{{ route('faq') }}" class="inline-block py-1 transition hover:text-brand-green-600">Help Center</a></li>
                     </ul>

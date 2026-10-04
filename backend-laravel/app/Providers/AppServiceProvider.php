@@ -72,6 +72,24 @@ class AppServiceProvider extends ServiceProvider
             } catch (\Throwable $e) {
                 $view->with('footerSocials', []);
             }
+
+            // Dynamic footer team members & settings
+            try {
+                $footerTeamSetting = \App\Models\SiteSetting::where('key', 'footer_team_enabled')->value('value');
+                $footerTeamEnabled = $footerTeamSetting === null ? true : in_array((string) $footerTeamSetting, ['1', 'true', 'yes'], true);
+                $footerTeamTitle = \App\Models\SiteSetting::where('key', 'footer_team_title')->value('value') ?: 'Leadership & Core Team';
+                $footerTeamMembers = $footerTeamEnabled
+                    ? \App\Models\TeamMember::query()->active()->public()->inFooter()->ordered()->get()
+                    : collect();
+
+                $view->with('footerTeamEnabled', $footerTeamEnabled);
+                $view->with('footerTeamTitle', $footerTeamTitle);
+                $view->with('footerTeamMembers', $footerTeamMembers);
+            } catch (\Throwable $e) {
+                $view->with('footerTeamEnabled', false);
+                $view->with('footerTeamTitle', 'Leadership & Core Team');
+                $view->with('footerTeamMembers', collect());
+            }
         });
     }
 }

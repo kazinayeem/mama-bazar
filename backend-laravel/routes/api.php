@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\RentalController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\ShippingController;
+use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UploadController;
 use Illuminate\Http\Request;
@@ -427,4 +428,19 @@ Route::prefix('backup')->middleware('jwt.auth')->group(function () {
 // ==================== CHAT ====================
 Route::prefix('chat')->group(function () {
     Route::post('/', [ChatController::class, 'handleChat']);
+});
+
+// ==================== TEAM (PUBLIC & ADMIN) ====================
+Route::prefix('team')->group(function () {
+    Route::get('/', [TeamController::class, 'getAll']);
+    Route::get('/{id}', [TeamController::class, 'getById']);
+
+    Route::middleware('jwt.auth')->group(function () {
+        Route::post('/', [TeamController::class, 'create'])->middleware('require.permission:members.create');
+        Route::put('/{id}', [TeamController::class, 'update'])->middleware('require.permission:members.update');
+        Route::delete('/{id}', [TeamController::class, 'remove'])->middleware('require.permission:members.delete');
+        Route::post('/reorder', [TeamController::class, 'reorder'])->middleware('require.permission:members.update');
+        Route::post('/upload-image', [TeamController::class, 'uploadImage'])->middleware('require.permission:members.create');
+        Route::post('/settings', [TeamController::class, 'updateSettings'])->middleware('require.permission:settings.update');
+    });
 });

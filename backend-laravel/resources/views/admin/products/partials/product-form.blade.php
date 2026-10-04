@@ -478,7 +478,7 @@
                 @enderror
             </div>
 
-            <!-- Full Description (Tiptap rich HTML) -->
+            <!-- Full Description (Quill Snow rich HTML) -->
             <div
                 class="sm:col-span-2 space-y-1.5"
                 x-data="productRichEditor({
@@ -489,7 +489,7 @@
             >
                 <label class="text-xs font-bold text-slate-800">Full Description</label>
                 <div class="mb-rte">
-                    <div class="mb-rte-toolbar" x-show="!sourceMode">
+                    <div class="hidden" aria-hidden="true">
                         <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('bold') }" @click="run(e => e.chain().focus().toggleBold().run())" title="Bold (Ctrl+B)"><span class="font-bold">B</span></button>
                         <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('italic') }" @click="run(e => e.chain().focus().toggleItalic().run())" title="Italic (Ctrl+I)"><span class="italic">I</span></button>
                         <button type="button" class="mb-rte-btn" :class="{ 'is-active': isActive('underline') }" @click="run(e => e.chain().focus().toggleUnderline().run())" title="Underline (Ctrl+U)"><span class="underline">U</span></button>
@@ -542,7 +542,7 @@
                         <button type="button" class="mb-rte-btn ml-auto text-[10px] font-mono" @click="toggleSource()" title="HTML source">HTML</button>
                         <input type="file" class="hidden" x-ref="imageInput" accept="image/jpeg,image/png,image/webp" @change="uploadImages($event.target.files)">
                     </div>
-                    <div x-show="!sourceMode" x-ref="editorMount" class="min-h-[180px]"></div>
+                    <div x-ref="editorMount" class="min-h-[180px]" aria-label="Full product description"></div>
                     <textarea
                         x-cloak
                         x-show="sourceMode"
@@ -555,7 +555,7 @@
                 </div>
                 <p class="text-[11px] text-slate-400">Rich HTML is sanitized on save. Images upload to local storage only (JPG/PNG/WebP).</p>
                 {{-- Local descriptionHtml is the source of truth for submit (parent form is also synced). --}}
-                <input type="hidden" name="description" :value="descriptionHtml">
+                <input type="hidden" name="description" x-ref="descriptionInput" :value="descriptionHtml">
             </div>
         </div>
 

@@ -1,69 +1,25 @@
-/**
- * MamaBazar product description rich text editor (Tiptap + Alpine).
- * Toolbar styled to match admin slate design system.
- */
-import { Editor } from '@tiptap/core';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import TextAlign from '@tiptap/extension-text-align';
-import Placeholder from '@tiptap/extension-placeholder';
-import { TextStyle } from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
-import { TableKit } from '@tiptap/extension-table';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 
-const COLORS = [
-    { label: 'Default', value: '' },
-    { label: 'Slate', value: '#0f172a' },
-    { label: 'Green', value: '#0F4D2C' },
-    { label: 'Orange', value: '#F47B20' },
-    { label: 'Red', value: '#dc2626' },
-    { label: 'Blue', value: '#2563eb' },
-];
-
-const HIGHLIGHTS = [
-    { label: 'None', value: '' },
-    { label: 'Yellow', value: '#fef08a' },
-    { label: 'Green', value: '#bbf7d0' },
-    { label: 'Orange', value: '#fed7aa' },
-    { label: 'Blue', value: '#bfdbfe' },
-];
-
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const UPLOAD_FOLDER = 'products/descriptions';
 
-function isSafeHttpUrl(url) {
-    if (!url) return false;
-    try {
-        const u = new URL(url, window.location.origin);
-        return u.protocol === 'http:' || u.protocol === 'https:';
-    } catch {
-        return false;
-    }
+function normalizeHtml(html) {
+    if (!html || html === '<p><br></p>' || html === '<p></p>') return '';
+    return html;
 }
 
 function isLocalStorageImage(src) {
     if (!src) return false;
-    if (src.startsWith('/storage/') || src.startsWith('/uploads/')) return true;
     try {
-        const u = new URL(src, window.location.origin);
-        return u.origin === window.location.origin
-            && (u.pathname.startsWith('/storage/') || u.pathname.startsWith('/uploads/'));
+        const url = new URL(src, window.location.origin);
+        return url.origin === window.location.origin
+            && (url.pathname.startsWith('/storage/') || url.pathname.startsWith('/uploads/'));
     } catch {
         return false;
     }
 }
 
-function normalizeHtml(html) {
-    if (!html || html === '<p></p>') return '';
-    return html;
-}
-
-/**
- * Nested Alpine scopes: `this.form` is undefined on the child.
- * Walk the DOM for the parent productForm's `form` object.
- */
 function resolveParentForm(el) {
     if (!el || !window.Alpine) return null;
     let node = el.parentElement;
@@ -76,7 +32,7 @@ function resolveParentForm(el) {
                 }
             }
         } catch {
-            // continue walking
+            // Continue through nested Alpine scopes.
         }
         node = node.parentElement;
     }
@@ -87,97 +43,68 @@ export function registerRichEditor(Alpine) {
     Alpine.data('productRichEditor', (config = {}) => ({
         editor: null,
         sourceMode: false,
-        sourceHtml: '',
-        /** Local mirror so the hidden input always posts the latest HTML. */
+        uploading: false,
+        colors: [],
+        highlights: [],
         descriptionHtml: normalizeHtml(config.initial || ''),
         uploadUrl: config.uploadUrl || '',
         csrfToken: config.csrfToken || '',
-        uploading: false,
-        colors: COLORS,
-        highlights: HIGHLIGHTS,
         _parentForm: null,
 
         init() {
             this._parentForm = resolveParentForm(this.$el);
-            if (this._parentForm && !this.descriptionHtml && this._parentForm.description) {
+            if (this._parentForm?.description && !this.descriptionHtml) {
                 this.descriptionHtml = normalizeHtml(this._parentForm.description);
             }
-
-            this.$nextTick(() => this.mountEditor(this.descriptionHtml));
-
-            this.$watch(
-                () => this._parentForm?.description,
-                (val) => {
-                    if (!this.editor || this.sourceMode) return;
-                    const incoming = normalizeHtml(val || '');
-                    const current = normalizeHtml(this.editor.isEmpty ? '' : this.editor.getHTML());
-                    if (incoming !== current) {
-                        this.descriptionHtml = incoming;
-                        this.editor.commands.setContent(incoming || '', { emitUpdate: false });
-                    }
-                }
-            );
-
-            // Alpine cleanup when the component is removed
+            this.$nextTick(() => this.mountEditor());
             return () => this.destroy();
         },
 
-        mountEditor(content) {
-            if (this.editor) {
-                this.editor.destroy();
-                this.editor = null;
-            }
+        mountEditor() {
             if (!this.$refs.editorMount) return;
 
-            this.editor = new Editor({
-                element: this.$refs.editorMount,
-                extensions: [
-                    StarterKit.configure({
-                        heading: { levels: [1, 2, 3] },
-                    }),
-                    Underline,
-                    TextStyle,
-                    Color,
-                    Highlight.configure({ multicolor: true }),
-                    TextAlign.configure({ types: ['heading', 'paragraph'] }),
-                    Link.configure({
-                        openOnClick: false,
-                        autolink: true,
-                        HTMLAttributes: {
-                            rel: 'noopener noreferrer',
-                            target: '_blank',
+            const toolbarOptions = [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ color: [] }, { background: [] }],
+                [{ align: [] }],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ indent: '-1' }, { indent: '+1' }],
+                ['blockquote', 'link', 'image', 'video'],
+                ['clean'],
+            ];
+
+            this.editor = new Quill(this.$refs.editorMount, {
+                theme: 'snow',
+                placeholder: 'Write a detailed product description...',
+                modules: {
+                    toolbar: {
+                        container: toolbarOptions,
+                        handlers: {
+                            image: () => this.selectImage(),
                         },
-                        isAllowedUri: (url) => isSafeHttpUrl(url),
-                    }),
-                    Placeholder.configure({
-                        placeholder: 'Write a detailed product description…',
-                    }),
-                    Image.configure({
-                        inline: false,
-                        allowBase64: false,
-                        HTMLAttributes: { class: 'product-desc-img' },
-                    }),
-                    TableKit.configure({
-                        table: { resizable: false },
-                    }),
-                ],
-                content: content || '',
-                editorProps: {
-                    attributes: {
-                        class: 'mb-rte-content prose prose-sm max-w-none focus:outline-none min-h-[180px] px-3 py-2 text-xs text-slate-800',
-                        spellcheck: 'true',
                     },
                 },
-                onUpdate: ({ editor }) => {
-                    this.syncToForm(editor.getHTML());
-                },
+                formats: [
+                    'header', 'bold', 'italic', 'underline', 'strike', 'color', 'background',
+                    'align', 'list', 'indent', 'blockquote', 'link', 'image', 'video',
+                ],
             });
+
+            if (this.descriptionHtml) {
+                this.editor.clipboard.dangerouslyPasteHTML(this.descriptionHtml, 'silent');
+            }
+            this.syncToForm();
+            this.editor.on('text-change', () => this.syncToForm());
         },
 
-        syncToForm(html) {
-            const value = normalizeHtml(html);
+        syncToForm() {
+            if (!this.editor) return;
+            const value = normalizeHtml(this.editor.root.innerHTML);
             this.descriptionHtml = value;
-
+            if (this.$refs.descriptionInput) {
+                this.$refs.descriptionInput.value = value;
+            }
             if (!this._parentForm) {
                 this._parentForm = resolveParentForm(this.$el);
             }
@@ -186,133 +113,74 @@ export function registerRichEditor(Alpine) {
             }
         },
 
-        run(fn) {
-            if (!this.editor || this.sourceMode) return;
-            fn(this.editor);
+        selectImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = IMAGE_TYPES.join(',');
+            input.addEventListener('change', () => {
+                const file = input.files?.[0];
+                if (file) this.uploadImage(file);
+            }, { once: true });
+            input.click();
         },
 
-        isActive(name, attrs = {}) {
-            return this.editor ? this.editor.isActive(name, attrs) : false;
-        },
-
-        setLink() {
-            this.run((editor) => {
-                const prev = editor.getAttributes('link').href || '';
-                const url = window.prompt('Enter URL (https://…)', prev || 'https://');
-                if (url === null) return;
-                if (url === '') {
-                    editor.chain().focus().extendMarkRange('link').unsetLink().run();
-                    return;
-                }
-                if (!isSafeHttpUrl(url)) {
-                    alert('Only http(s) links are allowed.');
-                    return;
-                }
-                editor.chain().focus().extendMarkRange('link').setLink({
-                    href: url,
-                    target: '_blank',
-                    rel: 'noopener noreferrer',
-                }).run();
-            });
-        },
-
-        setColor(value) {
-            this.run((editor) => {
-                if (!value) {
-                    editor.chain().focus().unsetColor().run();
-                } else {
-                    editor.chain().focus().setColor(value).run();
-                }
-            });
-        },
-
-        setHighlight(value) {
-            this.run((editor) => {
-                if (!value) {
-                    editor.chain().focus().unsetHighlight().run();
-                } else {
-                    editor.chain().focus().toggleHighlight({ color: value }).run();
-                }
-            });
-        },
-
-        clearFormat() {
-            this.run((editor) => {
-                editor.chain().focus().clearNodes().unsetAllMarks().run();
-            });
-        },
-
-        async uploadImages(files) {
-            const list = Array.from(files || []).filter((f) =>
-                ['image/jpeg', 'image/png', 'image/webp'].includes(f.type)
-            );
-            if (!list.length) {
-                alert('Only JPG, PNG, or WebP images are allowed.');
-                return;
-            }
+        async uploadImage(file) {
             if (!this.uploadUrl) {
                 alert('Upload URL is not configured.');
+                return;
+            }
+            if (!IMAGE_TYPES.includes(file.type)) {
+                alert('Only JPG, PNG, or WebP images are allowed.');
                 return;
             }
 
             this.uploading = true;
             try {
-                for (const file of list) {
-                    const alt = window.prompt('Image alt text (accessibility)', file.name.replace(/\.[^.]+$/, '')) || '';
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('alt', alt);
-                    formData.append('folder', UPLOAD_FOLDER);
-                    formData.append('_token', this.csrfToken);
+                const formData = new FormData();
+                formData.append('file', file, file.name);
+                formData.append('alt', file.name.replace(/\.[^.]+$/, ''));
+                formData.append('folder', UPLOAD_FOLDER);
+                formData.append('_token', this.csrfToken);
 
-                    const res = await fetch(this.uploadUrl, {
-                        method: 'POST',
-                        body: formData,
-                        headers: { Accept: 'application/json' },
-                        credentials: 'same-origin',
-                    });
-                    const data = await res.json();
-                    if (!res.ok || !data.url) {
-                        throw new Error(data.message || 'Upload failed');
-                    }
-                    if (!isLocalStorageImage(data.url)) {
-                        throw new Error('Only local storage images are allowed');
-                    }
-                    this.run((editor) => {
-                        editor.chain().focus().setImage({ src: data.url, alt: data.alt || alt }).run();
-                    });
+                const response = await fetch(this.uploadUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.url || !isLocalStorageImage(data.url)) {
+                    throw new Error(data.message || 'Image upload failed.');
                 }
-            } catch (err) {
-                alert(err instanceof Error ? err.message : 'Image upload failed');
+
+                const range = this.editor.getSelection(true);
+                this.editor.insertEmbed(range?.index || 0, 'image', data.url, 'user');
+                this.editor.setSelection((range?.index || 0) + 1, 0, 'silent');
+            } catch (error) {
+                alert(error instanceof Error ? error.message : 'Image upload failed.');
             } finally {
                 this.uploading = false;
-                if (this.$refs.imageInput) this.$refs.imageInput.value = '';
             }
-        },
-
-        toggleSource() {
-            if (!this.editor) return;
-            if (!this.sourceMode) {
-                this.sourceHtml = this.editor.getHTML();
-                this.sourceMode = true;
-                this.editor.setEditable(false);
-            } else {
-                this.sourceMode = false;
-                this.editor.setEditable(true);
-                this.editor.commands.setContent(this.sourceHtml || '', { emitUpdate: true });
-                this.syncToForm(this.editor.getHTML());
-            }
-        },
-
-        onSourceInput() {
-            this.syncToForm(this.sourceHtml);
         },
 
         destroy() {
             if (this.editor) {
-                this.editor.destroy();
+                this.editor.off('text-change');
                 this.editor = null;
             }
         },
+
+        isActive() {
+            return false;
+        },
+
+        run() {},
+        setLink() {},
+        setColor() {},
+        setHighlight() {},
+        clearFormat() {},
+        uploadImages() {},
+        toggleSource() {},
+        onSourceInput() {},
     }));
 }
