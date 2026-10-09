@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Services\IncompleteOrderService;
+use App\Services\RbacService;
 use Database\Seeders\AdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -273,7 +274,7 @@ class IncompleteOrderTrackingTest extends TestCase
     {
         // 1. Guest is redirected to login
         $this->get(route('admin.incomplete-orders.index'))
-            ->assertRedirect(route('admin.login'));
+            ->assertRedirect(route('login'));
 
         // 2. Staff without incomplete_orders.view is forbidden (403)
         $unauthorizedStaff = User::create([
@@ -316,6 +317,7 @@ class IncompleteOrderTrackingTest extends TestCase
         // 4. Staff with incomplete_orders.view_ip sees Client IP
         $authorizedStaff->permissions_json = ['incomplete_orders.view', 'incomplete_orders.view_ip'];
         $authorizedStaff->save();
+        RbacService::invalidateUserPermissionCache($authorizedStaff->id);
 
         $resIp = $this->actingAs($authorizedStaff)
             ->get(route('admin.incomplete-orders.index'));
@@ -346,6 +348,7 @@ class IncompleteOrderTrackingTest extends TestCase
         // Allowed with export permission
         $staffNoExport->permissions_json = ['incomplete_orders.view', 'incomplete_orders.export'];
         $staffNoExport->save();
+        RbacService::invalidateUserPermissionCache($staffNoExport->id);
 
         CheckoutSession::create([
             'session_id' => 'cs_for_export_1',
