@@ -44,4 +44,8 @@ return [
         'timeout' => (int) env('GEOLOCATION_TIMEOUT', 3),
     ],
 
+    'google_analytics' => [
+        'id' => env('GOOGLE_ANALYTICS_ID', env('GA_MEASUREMENT_ID', 'G-MAMABAZAR01')),
+    ],
+
 ];

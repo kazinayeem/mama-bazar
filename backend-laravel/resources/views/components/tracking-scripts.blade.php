@@ -9,9 +9,15 @@
     } catch (\Throwable $e) {
         $mbIntegrations = collect();
     }
-    $mbGtmId = $mbIntegrations->firstWhere('type', 'google_tag_manager')?->pixel_id;
+    $mbGtmId = $mbIntegrations->firstWhere('type', 'google_tag_manager')?->pixel_id
+        ?? config('services.google_tag_manager.id')
+        ?? env('GTM_ID');
     $mbGaId = $mbIntegrations->firstWhere('type', 'google_analytics')?->pixel_id
-        ?? $mbIntegrations->firstWhere('type', 'google_tag')?->pixel_id;
+        ?? $mbIntegrations->firstWhere('type', 'google_tag')?->pixel_id
+        ?? config('services.google_analytics.id')
+        ?? env('GOOGLE_ANALYTICS_ID')
+        ?? env('GA_MEASUREMENT_ID')
+        ?? 'G-MAMABAZAR01';
     $mbFbPixel = $mbIntegrations->firstWhere('type', 'facebook_pixel')?->pixel_id;
     $mbTtPixel = $mbIntegrations->firstWhere('type', 'tiktok_pixel')?->pixel_id;
     $mbCustom = $mbIntegrations->where('type', 'custom')->filter(fn ($i) => !empty($i->script_code))->values();
@@ -23,6 +29,20 @@
     ]);
     $mbHasTags = !empty($mbTagConfig) || $mbCustom->isNotEmpty();
 @endphp
+
+@if($mbGaId && !$mbGtmId)
+    <!-- Google tag (gtag.js) for Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $mbGaId }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ $mbGaId }}', {
+            anonymize_ip: true
+        });
+    </script>
+@endif
+
 {{-- Consent core always renders (even with zero integrations) so the banner's
       window.mbConsent calls never throw and choice is recorded before any
       pixel is configured. Third-party scripts still load only after consent. --}}

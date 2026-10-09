@@ -8,8 +8,15 @@
     // Fallbacks if $seo is not passed or only partial
     $pageTitle = $seo['title'] ?? ($seo['meta_title'] ?? ($title ?? ($siteName . ' - ' . $tagline)));
     $metaDescription = $seo['meta_description'] ?? ($biz['business_description'] ?? '');
-    $metaKeywords = $seo['meta_keywords'] ?? 'mama bazar, ecommerce, online shopping bangladesh';
-    $canonicalUrl = $seo['canonical_url'] ?? url()->current();
+    $rawUrl = $seo['canonical_url'] ?? url()->current();
+    if (config('app.env') === 'production' || str_contains($rawUrl, 'mama-bazar.com')) {
+        $parsed = parse_url($rawUrl);
+        $host = preg_replace('/^www\./i', '', $parsed['host'] ?? 'mama-bazar.com');
+        $path = $parsed['path'] ?? '/';
+        $canonicalUrl = 'https://' . $host . (empty($path) || $path === '/' ? '/' : rtrim($path, '/'));
+    } else {
+        $canonicalUrl = $rawUrl;
+    }
     $robots = $seo['robots'] ?? 'index, follow';
     
     $ogType = $seo['og_type'] ?? 'website';

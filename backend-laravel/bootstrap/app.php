@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureEmailVerified;
 use App\Http\Middleware\EnsureSmtpUnlocked;
 use App\Http\Middleware\JwtAuthMiddleware;
 use App\Http\Middleware\RequirePermissionMiddleware;
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -45,10 +46,14 @@ return Application::configure(basePath: dirname(__DIR__))
         if ($trustedProxies !== null && $trustedProxies !== '') {
             $middleware->trustProxies(at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
         }
+
+        $middleware->web(append: [
+            SecurityHeadersMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->is('/') || $request->expectsJson(),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
         $exceptions->render(function (ValidationException $e, Request $request) {
@@ -68,7 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            if ($request->is('api/*')) {
+            if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => "Cannot {$request->method()} /{$request->path()}",
@@ -77,10 +82,12 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (HttpException $e, Request $request) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage() ?: 'An error occurred',
-            ], $e->getStatusCode());
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage() ?: 'An error occurred',
+                ], $e->getStatusCode());
+            }
         });
 
         $exceptions->render(function (Throwable $e, Request $request) {

@@ -6,10 +6,31 @@
     <x-seo-head :seo="$seo ?? null" />
     <link rel="icon" type="image/png" href="{{ $business['favicon_url'] ?: '/brandlogo.png' }}">
     
-    <!-- Fonts -->
+    <!-- DNS Prefetch & Preconnect for Fast LCP & FCP -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Critical Responsive Media Queries (Solves Responsive Checkup) -->
+    <style>
+        @media (min-width: 640px) {
+            .store-container { padding-left: 1.5rem; padding-right: 1.5rem; }
+        }
+        @media (min-width: 1024px) {
+            .store-container { padding-left: 2rem; padding-right: 2rem; }
+        }
+        @media (max-width: 639px) {
+            .store-container { padding-left: 1rem; padding-right: 1rem; }
+        }
+        img { max-width: 100%; height: auto; }
+    </style>
+
+    <!-- Non-render-blocking Web Fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;600;700&display=swap">
+    </noscript>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <x-tracking-scripts />
