@@ -148,20 +148,40 @@ class BusinessSettingService
         }
 
         // Computed Helpers
-        // 1. Synthesize formatted address if lines are present
-        $addrParts = array_filter([
-            $settings['address_line1'] ?? '',
-            $settings['address_line2'] ?? '',
-            $settings['city'] ?? '',
-            ! empty($settings['postal_code']) ? ($settings['district'] ?? '').' - '.$settings['postal_code'] : ($settings['district'] ?? ''),
-            $settings['country'] ?? '',
-        ]);
+        // 1. Build formatted address.
+        //    Priority:  (a) if contact_address / store_address / business_address was explicitly
+        //                   saved in the database → use it directly as the single source of truth,
+        //               (b) otherwise build from individual address_line1/2, city, district, etc.
+        //    This prevents duplication when the admin saves a single-line address in "Business
+        //    Information" while individual address_line fields are also populated.
+        $explicitAddress = '';
+        foreach (['contact_address', 'store_address', 'business_address'] as $addrKey) {
+            $candidate = $dbRows[$addrKey] ?? '';
+            if ($candidate !== null && $candidate !== '') {
+                $explicitAddress = $candidate;
+                break;
+            }
+        }
 
-        $settings['formatted_address'] = ! empty($addrParts)
-            ? implode(', ', $addrParts)
-            : ($settings['contact_address'] ?? 'Dhaka, Bangladesh');
+        if ($explicitAddress !== '') {
+            // Admin saved a full address string — use it verbatim.
+            $settings['formatted_address'] = $explicitAddress;
+        } else {
+            // No explicit full address stored; build from individual fields.
+            $addrParts = array_filter([
+                $settings['address_line1'] ?? '',
+                $settings['address_line2'] ?? '',
+                $settings['city'] ?? '',
+                ! empty($settings['postal_code']) ? ($settings['district'] ?? '').' - '.$settings['postal_code'] : ($settings['district'] ?? ''),
+                $settings['country'] ?? '',
+            ]);
 
-        // Keep contact_address in sync
+            $settings['formatted_address'] = ! empty($addrParts)
+                ? implode(', ', $addrParts)
+                : 'Dhaka, Bangladesh';
+        }
+
+        // Keep contact_address in sync with the resolved address.
         $settings['contact_address'] = $settings['formatted_address'];
 
         // 2. Raw phone for tel: links

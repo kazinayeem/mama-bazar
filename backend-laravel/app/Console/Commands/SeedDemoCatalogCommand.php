@@ -148,7 +148,7 @@ class SeedDemoCatalogCommand extends Command
                 'relations' => ProductRelation::count(),
                 'reviews' => Review::count(),
             ],
-            'products' => Product::orderBy('id')->limit(5000)->get()->toArray(),
+            'products' => Product::orderBy('id')->limit(5000)->get()->makeVisible(['cost_price', 'profit_margin'])->toArray(),
             'variants' => ProductVariant::orderBy('id')->limit(20000)->get()->toArray(),
         ];
         file_put_contents("{$dir}/products-backup-{$stamp}.json", json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));

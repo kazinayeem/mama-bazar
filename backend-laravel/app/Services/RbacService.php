@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserPermission;
+use App\Support\FinancialDataAccess;
 use Illuminate\Support\Facades\Cache;
 
 class RbacService
@@ -98,6 +99,15 @@ class RbacService
 
         ['code' => 'reports.view', 'module' => 'finance', 'label' => 'View Reports', 'description' => 'View financial and profit reports'],
         ['code' => 'reports.export', 'module' => 'finance', 'label' => 'Export Reports', 'description' => 'Export financial reports to CSV/PDF'],
+
+        // Financial & Cost Data (sensitive — never implied by product, analytics, or report access)
+        ['code' => FinancialDataAccess::VIEW_COST_PRICE, 'module' => 'financial', 'label' => 'View Buying Price', 'description' => 'See product and variant buying (purchase) prices'],
+        ['code' => FinancialDataAccess::EDIT_COST_PRICE, 'module' => 'financial', 'label' => 'Edit Buying Price', 'description' => 'Set or change buying price and product profit margin'],
+        ['code' => FinancialDataAccess::VIEW_PROFIT_MARGIN, 'module' => 'financial', 'label' => 'View Profit Margin', 'description' => 'See gross profit, COGS, and margin figures in reports'],
+        ['code' => FinancialDataAccess::VIEW_COST_VALUATION, 'module' => 'financial', 'label' => 'View Inventory Valuation at Cost', 'description' => 'See stock value calculated at buying price'],
+        ['code' => FinancialDataAccess::VIEW_SUPPLIER_COST, 'module' => 'financial', 'label' => 'View Supplier Purchase Prices', 'description' => 'See amounts paid on supplier-linked cost records'],
+        ['code' => FinancialDataAccess::VIEW_COST_HISTORY, 'module' => 'financial', 'label' => 'View Purchase History & Cost Records', 'description' => 'See product purchase costs and buying-price change history'],
+        ['code' => FinancialDataAccess::EXPORT_COST_REPORTS, 'module' => 'financial', 'label' => 'Export Cost & Profit Reports', 'description' => 'Include cost and profit columns in CSV/PDF exports'],
 
         // Checkout
         ['code' => 'shipping.view', 'module' => 'checkout', 'label' => 'View Shipping Methods', 'description' => 'View shipping methods'],
@@ -447,6 +457,24 @@ class RbacService
                 ],
             ],
         ];
+    }
+
+    /**
+     * Financial & Cost Data permissions for the member editor, kept out of the
+     * generic matrix so "Select All Actions" never grants cost visibility.
+     *
+     * @return list<array{code: string, label: string, description: string}>
+     */
+    public static function getFinancialPermissionGroup(): array
+    {
+        return array_values(array_map(
+            fn (array $perm): array => [
+                'code' => $perm['code'],
+                'label' => $perm['label'],
+                'description' => $perm['description'],
+            ],
+            array_filter(self::ALL_PERMISSIONS, fn (array $perm): bool => $perm['module'] === 'financial')
+        ));
     }
 
     public static function isSuperAdmin(?object $user): bool

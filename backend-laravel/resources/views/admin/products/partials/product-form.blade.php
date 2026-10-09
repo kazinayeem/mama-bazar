@@ -171,6 +171,25 @@
         'specs' => $existingSpecs,
         'relations' => $existingRelations,
     ];
+
+    // Buying price / margin field modes: edit, write_only (edit without view), read, or hidden.
+    // Values the user cannot view never enter the embedded form state.
+    $financialAccess = $financialAccess ?? \App\Support\FinancialDataAccess::forUser(auth()->user());
+    $resolveCostFieldMode = function (bool $canView) use ($financialAccess, $isEditing): string {
+        if ($financialAccess->canEditCostPrice) {
+            return ($canView || ! $isEditing) ? 'edit' : 'write_only';
+        }
+
+        return $canView ? 'read' : 'hidden';
+    };
+    $costPriceMode = $resolveCostFieldMode($financialAccess->canViewCostPrice);
+    $profitMarginMode = $resolveCostFieldMode($financialAccess->canViewProfitMargin);
+    if ($costPriceMode === 'hidden') {
+        unset($initialForm['costPrice']);
+    }
+    if ($profitMarginMode === 'hidden') {
+        unset($initialForm['profitMargin']);
+    }
 @endphp
 
 <form

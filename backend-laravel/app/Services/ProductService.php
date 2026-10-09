@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Color;
 use App\Models\Product;
+use App\Support\FinancialDataAccess;
 use App\Models\ProductRelation;
 use App\Models\ProductSpec;
 use App\Models\ProductVariant;
@@ -63,7 +64,11 @@ class ProductService
         }
     }
 
-    public static function formatProduct(Product $product, ?array $ratingInfo = null, bool $withChildren = false): array
+    /**
+     * Cost fields are only included when $financialAccess explicitly allows them,
+     * so storefront, public API, and cached payloads never carry buying prices.
+     */
+    public static function formatProduct(Product $product, ?array $ratingInfo = null, bool $withChildren = false, ?FinancialDataAccess $financialAccess = null): array
     {
         $brandInfo = null;
         if ($product->brand_id && $product->brandRel) {
@@ -138,8 +143,6 @@ class ProductService
             'price' => (string) $product->price,
             'salePrice' => $product->sale_price !== null ? (string) $product->sale_price : null,
             'discount' => (string) $product->discount,
-            'costPrice' => (string) $product->cost_price,
-            'profitMargin' => (string) $product->profit_margin,
             'tax' => (string) $product->tax,
             'vat' => (string) $product->vat,
             'shippingCharge' => (string) $product->shipping_charge,
@@ -210,6 +213,13 @@ class ProductService
             'rating' => $ratingInfo ? $ratingInfo['rating'] : null,
             'reviewCount' => $ratingInfo ? $ratingInfo['reviewCount'] : 0,
         ];
+
+        if ($financialAccess?->canViewCostPrice) {
+            $formatted['costPrice'] = (string) $product->cost_price;
+        }
+        if ($financialAccess?->canViewProfitMargin) {
+            $formatted['profitMargin'] = (string) $product->profit_margin;
+        }
 
         if ($withChildren || $product->relationLoaded('variants')) {
             $formatted['variants'] = $product->variants->map(fn ($v) => [
@@ -433,7 +443,7 @@ class ProductService
         return $map;
     }
 
-    public static function getAll(array $query): array
+    public static function getAll(array $query, ?FinancialDataAccess $financialAccess = null): array
     {
         $page = (int) ($query['page'] ?? 1);
         $limit = (int) ($query['limit'] ?? 12);
@@ -679,7 +689,7 @@ class ProductService
 
         $ratingMap = self::fetchRatingMap($products->pluck('id')->toArray());
 
-        $formatted = $products->map(fn ($p) => self::formatProduct($p, $ratingMap[$p->id] ?? null, false))->toArray();
+        $formatted = $products->map(fn ($p) => self::formatProduct($p, $ratingMap[$p->id] ?? null, false, $financialAccess))->toArray();
 
         return [
             'data' => $formatted,
@@ -695,7 +705,7 @@ class ProductService
         ];
     }
 
-    public static function getById(int $id): ?array
+    public static function getById(int $id, ?FinancialDataAccess $financialAccess = null): ?array
     {
         $product = Product::with(self::DETAIL_RELATIONS)->find($id);
         if (! $product) {
@@ -704,7 +714,7 @@ class ProductService
 
         $ratingMap = self::fetchRatingMap([$id]);
 
-        return self::formatProduct($product, $ratingMap[$id] ?? null, true);
+        return self::formatProduct($product, $ratingMap[$id] ?? null, true, $financialAccess);
     }
 
     public static function getBySlug(string $slug): ?array
@@ -1087,14 +1097,22 @@ class ProductService
         return (bool) $product->is_featured;
     }
 
-    public static function exportCsv(array $query = []): string
+    /**
+     * The costPrice column is only written when $financialAccess allows exporting it.
+     */
+    public static function exportCsv(array $query = [], ?FinancialDataAccess $financialAccess = null): string
     {
         $query['limit'] = 10000;
         $query['page'] = 1;
-        $result = self::getAll($query);
+        $includeCost = (bool) $financialAccess?->forExport()->canViewCostPrice;
+        $result = self::getAll($query, $includeCost ? $financialAccess : null);
         $products = $result['data'];
 
-        $csvColumns = ['id', 'title', 'slug', 'sku', 'barcode', 'brand', 'category', 'price', 'salePrice', 'discount', 'costPrice', 'stock', 'stockStatus', 'productStatus', 'status', 'isFeatured', 'createdAt'];
+        $csvColumns = ['id', 'title', 'slug', 'sku', 'barcode', 'brand', 'category', 'price', 'salePrice', 'discount'];
+        if ($includeCost) {
+            $csvColumns[] = 'costPrice';
+        }
+        array_push($csvColumns, 'stock', 'stockStatus', 'productStatus', 'status', 'isFeatured', 'createdAt');
 
         $output = fopen('php://temp', 'r+');
         fputcsv($output, $csvColumns);
@@ -1102,7 +1120,7 @@ class ProductService
         foreach ($products as $p) {
             $categoryName = $p['category']['name'] ?? '';
             $brandName = $p['brandInfo']['name'] ?? ($p['brand'] ?? '');
-            fputcsv($output, [
+            $row = [
                 $p['id'],
                 $p['title'],
                 $p['slug'],
@@ -1113,14 +1131,20 @@ class ProductService
                 $p['price'],
                 $p['salePrice'] ?? '',
                 $p['discount'] ?? '0',
-                $p['costPrice'] ?? '0',
+            ];
+            if ($includeCost) {
+                $row[] = $p['costPrice'] ?? '0';
+            }
+            array_push(
+                $row,
                 $p['stock'] ?? 0,
                 $p['stockStatus'] ?? '',
                 $p['productStatus'] ?? '',
                 $p['status'] ?? '',
                 $p['isFeatured'] ? '1' : '0',
                 $p['createdAt'] ?? '',
-            ]);
+            );
+            fputcsv($output, $row);
         }
 
         rewind($output);
@@ -1130,7 +1154,10 @@ class ProductService
         return $csv ?: '';
     }
 
-    public static function importCsv(string $csvContent): array
+    /**
+     * A costprice column is ignored unless the importer may edit buying prices.
+     */
+    public static function importCsv(string $csvContent, bool $allowCostPrice = false): array
     {
         $lines = preg_split('/\r\n|\r|\n/', trim($csvContent));
         if (count($lines) < 2) {
@@ -1173,7 +1200,7 @@ class ProductService
                 'price' => (float) $price,
                 'sale_price' => ! empty($data['saleprice']) ? (float) $data['saleprice'] : null,
                 'discount' => ! empty($data['discount']) ? (float) $data['discount'] : 0,
-                'cost_price' => ! empty($data['costprice']) ? (float) $data['costprice'] : 0,
+                'cost_price' => $allowCostPrice && ! empty($data['costprice']) ? (float) $data['costprice'] : 0,
                 'sku' => ! empty($data['sku']) ? $data['sku'] : null,
                 'barcode' => ! empty($data['barcode']) ? $data['barcode'] : null,
                 'brand' => ! empty($data['brand']) ? $data['brand'] : null,
@@ -1195,7 +1222,7 @@ class ProductService
         $newTitle = 'Copy of '.$original->title;
         $newSlug = self::ensureUniqueSlug(SlugService::toAsciiSlug($newTitle), ['autoSuffix' => true]);
 
-        $productData = $original->toArray();
+        $productData = $original->makeVisible(['cost_price', 'profit_margin'])->toArray();
         unset($productData['id'], $productData['created_at']);
         $productData['title'] = $newTitle;
         $productData['slug'] = $newSlug;

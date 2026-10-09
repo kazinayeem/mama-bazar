@@ -496,6 +496,10 @@
                         <span class="rounded border border-pink-200 bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-pink-700">bKash</span>
                         <span class="rounded border border-brand-orange-200 bg-brand-orange-50 px-2 py-0.5 text-[10px] font-bold text-brand-orange-700">Nagad</span>
                     @endforelse
+                    {{-- SSLCommerz Pay With logo --}}
+                    <a href="https://www.sslcommerz.com" target="_blank" rel="noopener noreferrer" title="Secured by SSLCommerz" class="ml-1 inline-flex items-center">
+                        <img src="{{ asset('images/sslcommerz-pay-with-logo.png') }}" alt="SSLCommerz - Secure Payment Gateway" class="h-7 w-auto object-contain opacity-90 transition hover:opacity-100" loading="lazy">
+                    </a>
                 </div>
             </div>
         </div>

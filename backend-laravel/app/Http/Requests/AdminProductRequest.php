@@ -2,14 +2,29 @@
 
 namespace App\Http\Requests;
 
+use App\Support\FinancialDataAccess;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class AdminProductRequest extends FormRequest
 {
+    /**
+     * Product edit rights never imply buying-price edit rights: any submitted
+     * cost field without products.edit_cost_price is rejected with 403.
+     */
     public function authorize(): bool
     {
-        return true;
+        if (! FinancialDataAccess::containsProductCostInput($this->all())) {
+            return true;
+        }
+
+        return FinancialDataAccess::forRequest($this)->canEditCostPrice;
+    }
+
+    protected function failedAuthorization(): void
+    {
+        throw new AuthorizationException('You do not have permission to change buying price or profit margin.');
     }
 
     protected function prepareForValidation(): void

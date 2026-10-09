@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Services\MediaStorageService;
 use App\Services\ProductService;
 use App\Services\SlugService;
+use App\Support\FinancialDataAccess;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -65,8 +67,26 @@ class ProductController extends Controller
         return response()->json(['success' => true, 'data' => $related]);
     }
 
+    private function forbidsCostInput(Request $request): ?JsonResponse
+    {
+        if (FinancialDataAccess::containsProductCostInput($request->all())
+            && ! FinancialDataAccess::forRequest($request)->canEditCostPrice) {
+            return response()->json([
+                'success' => false,
+                'message' => "Access denied. Requires '".FinancialDataAccess::EDIT_COST_PRICE."' permission.",
+                'data' => ['requiredPermission' => FinancialDataAccess::EDIT_COST_PRICE],
+            ], 403);
+        }
+
+        return null;
+    }
+
     public function create(Request $request)
     {
+        if ($denied = $this->forbidsCostInput($request)) {
+            return $denied;
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
         ]);
@@ -170,6 +190,10 @@ class ProductController extends Controller
 
     public function update(Request $request, $id)
     {
+        if ($denied = $this->forbidsCostInput($request)) {
+            return $denied;
+        }
+
         $existing = Product::find($id);
         if (! $existing) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);

@@ -15,8 +15,10 @@ use App\Models\Vendor;
 use App\Services\ActivityLoggerService;
 use App\Services\HtmlSanitizer;
 use App\Services\MediaStorageService;
+use App\Services\ProductCostHistoryService;
 use App\Services\ProductService;
 use App\Services\SlugService;
+use App\Support\FinancialDataAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +32,7 @@ class AdminProductWebController extends Controller
         $params['limit'] = $params['limit'] ?? 20;
         $params['status'] = $params['status'] ?? 'all';
 
-        $result = ProductService::getAll($params);
+        $result = ProductService::getAll($params, FinancialDataAccess::forUser($request->user()));
 
         $categories = Category::orderBy('name')->get();
         $brands = Brand::orderBy('name')->get();
@@ -73,9 +75,10 @@ class AdminProductWebController extends Controller
         $suppliers = Supplier::orderBy('name')->get();
         $colors = Color::orderBy('sort_order')->orderBy('name')->get();
         $sizes = Size::orderBy('sort_order')->orderBy('name')->get();
+        $financialAccess = FinancialDataAccess::forUser(Auth::user());
 
         return view('admin.products.create', compact(
-            'categories', 'brands', 'collections', 'vendors', 'suppliers', 'colors', 'sizes'
+            'categories', 'brands', 'collections', 'vendors', 'suppliers', 'colors', 'sizes', 'financialAccess'
         ));
     }
 
@@ -135,17 +138,28 @@ class AdminProductWebController extends Controller
 
     public function show($id)
     {
-        $product = ProductService::getById((int) $id);
+        $financialAccess = FinancialDataAccess::forUser(Auth::user());
+        $product = ProductService::getById((int) $id, $financialAccess);
         if (! $product) {
             abort(404, 'Product not found');
         }
 
-        return view('admin.products.show', compact('product'));
+        $costHistory = collect();
+        if ($financialAccess->canViewCostHistory) {
+            $costHistory = ProductCostHistoryService::forProduct((int) $id)->filter(
+                fn ($entry) => $entry->field === 'cost_price'
+                    ? $financialAccess->canViewCostPrice
+                    : $financialAccess->canViewProfitMargin
+            )->values();
+        }
+
+        return view('admin.products.show', compact('product', 'financialAccess', 'costHistory'));
     }
 
     public function edit($id)
     {
-        $product = ProductService::getById((int) $id);
+        $financialAccess = FinancialDataAccess::forUser(Auth::user());
+        $product = ProductService::getById((int) $id, $financialAccess);
         if (! $product) {
             abort(404, 'Product not found');
         }
@@ -159,7 +173,7 @@ class AdminProductWebController extends Controller
         $sizes = Size::orderBy('sort_order')->orderBy('name')->get();
 
         return view('admin.products.edit', compact(
-            'product', 'categories', 'brands', 'collections', 'vendors', 'suppliers', 'colors', 'sizes'
+            'product', 'categories', 'brands', 'collections', 'vendors', 'suppliers', 'colors', 'sizes', 'financialAccess'
         ));
     }
 
@@ -311,7 +325,7 @@ class AdminProductWebController extends Controller
 
     public function exportCsv(Request $request)
     {
-        $csv = ProductService::exportCsv($request->all());
+        $csv = ProductService::exportCsv($request->all(), FinancialDataAccess::forUser($request->user()));
         $filename = 'products-'.date('Y-m-d').'.csv';
 
         return response($csv, 200, [
@@ -335,7 +349,7 @@ class AdminProductWebController extends Controller
             return response()->json(['error' => 'No CSV content provided.'], 422);
         }
 
-        $result = ProductService::importCsv($content);
+        $result = ProductService::importCsv($content, FinancialDataAccess::forUser($request->user())->canEditCostPrice);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

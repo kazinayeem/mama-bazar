@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ProductCostHistoryService;
 use App\Services\ProductService;
 use Illuminate\Database\Eloquent\Model;
 
@@ -84,6 +85,16 @@ class Product extends Model
         'status',
     ];
 
+    /**
+     * Buying price data must never reach JSON through generic model serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'cost_price',
+        'profit_margin',
+    ];
+
     protected $casts = [
         'price' => 'float',
         'sale_price' => 'float',
@@ -125,6 +136,12 @@ class Product extends Model
         'payment_methods' => 'array',
         'created_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(fn (Product $product) => ProductCostHistoryService::recordModelChanges($product, true));
+        static::updated(fn (Product $product) => ProductCostHistoryService::recordModelChanges($product, false));
+    }
 
     /**
      * Encode the given value as JSON with unescaped unicode and slashes.
