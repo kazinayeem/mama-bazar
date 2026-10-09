@@ -150,6 +150,19 @@ class EmailSettingService
             }
 
             $settings = [];
+            // Safe auto-migration: If mail_password in DB is legacy plaintext, encrypt it immediately
+            if (isset($dbRows['mail_password']) && ! empty($dbRows['mail_password']) && ! self::isCiphertextPayload((string) $dbRows['mail_password'])) {
+                try {
+                    $plain = (string) $dbRows['mail_password'];
+                    $encrypted = Crypt::encryptString($plain);
+                    SiteSetting::where('key', 'mail_password')->update(['value' => $encrypted]);
+                    $dbRows['mail_password'] = $encrypted;
+                    Log::info('Legacy plaintext SMTP password has been safely migrated to encrypted storage.');
+                } catch (Throwable $e) {
+                    // Do nothing on failure
+                }
+            }
+
             foreach ($defaults as $key => $defaultVal) {
                 $settings[$key] = array_key_exists($key, $dbRows) && $dbRows[$key] !== null && $dbRows[$key] !== ''
                     ? $dbRows[$key]
@@ -239,11 +252,88 @@ class EmailSettingService
         return ! empty(config('mail.mailers.smtp.password')) ? 'environment' : 'none';
     }
 
+    /**
+     * Check if a string has the structural signature of a Laravel encrypted payload.
+     */
+    public static function isCiphertextPayload(?string $value): bool
+    {
+        if (empty($value)) {
+            return false;
+        }
+
+        $decoded = base64_decode($value, true);
+        if (! $decoded) {
+            return false;
+        }
+
+        $json = json_decode($decoded, true);
+
+        return is_array($json) && isset($json['iv'], $json['value'], $json['mac']);
+    }
+
+    /**
+     * Verify whether a string is valid ciphertext that can be decrypted with the current APP_KEY.
+     */
+    public static function isEncrypted(?string $value): bool
+    {
+        if (! self::isCiphertextPayload($value)) {
+            return false;
+        }
+
+        try {
+            Crypt::decryptString((string) $value);
+
+            return true;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Explicit safe migration method for legacy plaintext passwords.
+     */
+    public static function migrateLegacyPlaintextPassword(): bool
+    {
+        try {
+            $row = SiteSetting::where('key', 'mail_password')->first();
+            if (! $row || empty($row->value)) {
+                return false;
+            }
+
+            if (! self::isCiphertextPayload((string) $row->value)) {
+                $row->value = Crypt::encryptString((string) $row->value);
+                $row->save();
+                self::clearCache();
+                Log::info('Legacy plaintext SMTP password migrated to encrypted storage.');
+
+                return true;
+            }
+        } catch (Throwable $e) {
+            Log::warning('Legacy plaintext SMTP password migration failed: '.$e->getMessage());
+        }
+
+        return false;
+    }
+
     public static function getDecryptedPassword(): string
     {
         $encrypted = self::get('mail_password');
         if (empty($encrypted)) {
             return (string) (config('mail.mailers.smtp.password') ?? '');
+        }
+
+        // If legacy plaintext was retrieved, migrate and return
+        if (! self::isCiphertextPayload((string) $encrypted)) {
+            try {
+                $plain = (string) $encrypted;
+                $encrypted = Crypt::encryptString($plain);
+                SiteSetting::updateOrCreate(['key' => 'mail_password'], ['value' => $encrypted]);
+                self::clearCache();
+
+                return $plain;
+            } catch (Throwable) {
+                return (string) $encrypted;
+            }
         }
 
         try {
@@ -268,7 +358,10 @@ class EmailSettingService
                 if ($val === null || $val === '') {
                     continue;
                 }
-                $val = Crypt::encryptString((string) $val);
+                // Do not blindly re-encrypt if already valid ciphertext
+                if (! self::isCiphertextPayload((string) $val)) {
+                    $val = Crypt::encryptString((string) $val);
+                }
             }
 
             $cleanVal = is_bool($val) ? ($val ? '1' : '0') : (is_string($val) ? trim($val) : (string) $val);

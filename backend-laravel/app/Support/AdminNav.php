@@ -114,6 +114,7 @@ class AdminNav
                 ['label' => 'Banners', 'route' => 'admin.banners.index', 'match' => 'admin.banners.*', 'icon' => 'megaphone'],
             ]],
             ['label' => 'Insights', 'items' => [
+                ['label' => 'Advanced Analytics', 'route' => 'admin.advanced-analytics.index', 'match' => 'admin.advanced-analytics.*', 'icon' => 'activity'],
                 ['label' => 'SEO Optimization', 'route' => 'admin.seo.index', 'match' => 'admin.seo.*', 'icon' => 'globe'],
                 ['label' => 'Analytics', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'bar-chart-3'],
                 ['label' => 'Traffic Sources', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'megaphone', 'fragment' => 'sources'],

@@ -35,7 +35,7 @@ class LoginTrackingService
                 'user_agent' => substr($userAgent, 0, 500),
                 'browser' => $parsed['browser'],
                 'os' => $parsed['os'],
-                'country' => $location['country'],
+                'country' => $location['country'] ?: ($location['is_private'] ? 'Local Network' : null),
                 'region' => $location['region'],
                 'city' => $location['city'],
                 'status' => 'success',

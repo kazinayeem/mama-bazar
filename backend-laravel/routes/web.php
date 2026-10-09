@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminActivityController;
+use App\Http\Controllers\Admin\AdminAdvancedAnalyticsController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminCatalogWebController;
 use App\Http\Controllers\Admin\AdminCategoryWebController;
@@ -370,6 +371,10 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::post('/media/picker', [AdminSettingWebController::class, 'mediaPickerUpload'])->name('admin.media.picker.upload');
 
     // Insights
+    Route::get('/advanced-analytics', [AdminAdvancedAnalyticsController::class, 'index'])->middleware('admin.can:analytics.view|inventory.view')->name('admin.advanced-analytics.index');
+    Route::get('/advanced-analytics/export/csv', [AdminAdvancedAnalyticsController::class, 'exportCsv'])->middleware('admin.can:analytics.view|inventory.view|reports.export')->name('admin.advanced-analytics.export.csv');
+    Route::post('/advanced-analytics/export/pdf', [AdminAdvancedAnalyticsController::class, 'exportPdf'])->middleware('admin.can:analytics.view|inventory.view|reports.export')->name('admin.advanced-analytics.export.pdf');
+    Route::get('/advanced-analytics/products/{id}/variants', [AdminAdvancedAnalyticsController::class, 'productVariants'])->middleware('admin.can:analytics.view|inventory.view')->name('admin.advanced-analytics.product-variants');
     Route::get('/analytics', [AdminModuleWebController::class, 'analytics'])->name('admin.analytics.index');
 
     // Security, Team Members & Activity Monitoring
