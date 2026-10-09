@@ -218,6 +218,7 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
             Route::get('/settings', [AdminEmailController::class, 'settings'])->name('settings');
             Route::post('/settings', [AdminEmailController::class, 'updateSettings'])->name('settings.update');
             Route::post('/settings/test-connection', [AdminEmailController::class, 'testConnection'])->middleware('throttle:6,1')->name('settings.test-connection');
+            Route::post('/settings/probe-ports', [AdminEmailController::class, 'probePorts'])->middleware('throttle:6,1')->name('settings.probe-ports');
             Route::post('/settings/send-test', [AdminEmailController::class, 'sendTestEmail'])->middleware('throttle:6,1')->name('settings.send-test');
             Route::post('/settings/check-dns', [AdminEmailController::class, 'checkDns'])->middleware('throttle:6,1')->name('settings.check-dns');
 

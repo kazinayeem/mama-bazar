@@ -20,6 +20,56 @@ class EmailSettingService
     /** Runtime mailer name configured from the admin SMTP settings. */
     public const RUNTIME_MAILER = 'mamabazar_smtp';
 
+    /** Standard recognized SMTP ports. */
+    public const STANDARD_PORTS = [465, 587, 25, 2525];
+
+    /**
+     * Mail provider configuration presets.
+     *
+     * @var array<string, array{name: string, description: string, default_host?: string, default_port: int, default_encryption: string, default_timeout: int, ports: array<int, array{encryption: string, label: string}>, notes: string}>
+     */
+    public const PROVIDER_PRESETS = [
+        'cpanel' => [
+            'name' => 'cPanel / Custom Domain Email',
+            'description' => 'Standard configuration for custom domain mailboxes hosted on cPanel, DirectAdmin, Plesk, or standard Linux mail servers.',
+            'default_host' => 'mail.mama-bazar.com',
+            'default_port' => 465,
+            'default_encryption' => 'ssl',
+            'default_timeout' => 15,
+            'ports' => [
+                465 => ['encryption' => 'ssl', 'label' => 'Port 465 (SSL/TLS - Implicit, Recommended)'],
+                587 => ['encryption' => 'tls', 'label' => 'Port 587 (STARTTLS - Explicit)'],
+            ],
+            'notes' => 'Requires the full email address as the username. Standard outgoing configuration matches cPanel "Connect Devices".',
+        ],
+        'gmail' => [
+            'name' => 'Gmail / Google Workspace',
+            'description' => 'For personal @gmail.com accounts and Google Workspace custom domains with SMTP relay.',
+            'default_host' => 'smtp.gmail.com',
+            'default_port' => 587,
+            'default_encryption' => 'tls',
+            'default_timeout' => 15,
+            'ports' => [
+                587 => ['encryption' => 'tls', 'label' => 'Port 587 (STARTTLS, Recommended)'],
+                465 => ['encryption' => 'ssl', 'label' => 'Port 465 (SSL/TLS)'],
+            ],
+            'notes' => 'Requires a 16-character Google App Password (requires 2-Step Verification). Normal Google account passwords will be rejected.',
+        ],
+        'other' => [
+            'name' => 'Other SMTP Provider',
+            'description' => 'For SendGrid, Mailgun, Amazon SES, Postmark, Brevo, or custom mail relays.',
+            'default_host' => '',
+            'default_port' => 587,
+            'default_encryption' => 'tls',
+            'default_timeout' => 15,
+            'ports' => [
+                587 => ['encryption' => 'tls', 'label' => 'Port 587 (STARTTLS, Standard)'],
+                465 => ['encryption' => 'ssl', 'label' => 'Port 465 (SSL/TLS)'],
+            ],
+            'notes' => 'Enter the SMTP endpoint, submission port, and credentials provided by your third-party mail service.',
+        ],
+    ];
+
     /**
      * Per-event automation toggles shown on the Email Automation page.
      *
@@ -59,6 +109,8 @@ class EmailSettingService
 
         return array_merge([
             'mail_mailer' => config('mail.default', 'smtp'),
+            'mail_config_mode' => 'auto',
+            'mail_provider' => 'cpanel',
             'mail_host' => ($defaultHost && $defaultHost !== '127.0.0.1') ? $defaultHost : 'mail.mama-bazar.com',
             'mail_port' => (int) ($defaultPort ?: 465),
             'mail_encryption' => $defaultEncryption ?: ((int) $defaultPort === 587 ? 'tls' : 'ssl'),
@@ -67,12 +119,14 @@ class EmailSettingService
             'mail_from_address' => config('mail.from.address') ?: 'contact@mama-bazar.com',
             'mail_from_name' => config('mail.from.name') ?: 'Mama Bazar',
             'mail_reply_to' => '',
-            'mail_timeout' => (int) (config('mail.mailers.smtp.timeout') ?: 30),
+            'mail_timeout' => 15,
             'mail_enabled' => 1,
 
             'mail_last_tested_at' => null,
+            'mail_last_success_at' => null,
             'mail_last_status' => null,
             'mail_last_error' => null,
+            'mail_last_error_category' => null,
             'mail_last_latency_ms' => null,
 
             // Account policy
@@ -121,6 +175,13 @@ class EmailSettingService
         $settings = self::all();
         unset($settings['mail_password']);
         $settings['password_source'] = self::passwordSource();
+
+        $port = (int) ($settings['mail_port'] ?? 465);
+        $settings['is_port_standard'] = self::isStandardPort($port);
+        $settings['is_port_typo'] = self::isTypoPort($port);
+        $settings['recommended_port'] = self::recommendedPortForEncryption($settings['mail_encryption'] ?? 'ssl');
+        $settings['recommended_encryption'] = self::recommendedEncryptionForPort($port);
+        $settings['provider_presets'] = self::PROVIDER_PRESETS;
 
         return $settings;
     }
@@ -279,6 +340,213 @@ class EmailSettingService
     }
 
     /**
+     * Standard port check.
+     */
+    public static function isStandardPort(int $port): bool
+    {
+        return in_array($port, self::STANDARD_PORTS, true);
+    }
+
+    /**
+     * Typo check: Detects if port 456 was entered instead of 465.
+     */
+    public static function isTypoPort(int $port): ?int
+    {
+        return $port === 456 ? 465 : null;
+    }
+
+    /**
+     * Recommended port given an encryption mode.
+     */
+    public static function recommendedPortForEncryption(?string $encryption): int
+    {
+        $encryption = strtolower(trim((string) $encryption));
+
+        return match ($encryption) {
+            'ssl' => 465,
+            'none' => 25,
+            default => 587,
+        };
+    }
+
+    /**
+     * Recommended encryption given a port.
+     */
+    public static function recommendedEncryptionForPort(int $port): string
+    {
+        return match ($port) {
+            465 => 'ssl',
+            587, 2525 => 'tls',
+            25 => 'none',
+            default => 'tls',
+        };
+    }
+
+    /**
+     * Check if port and encryption are compatible. Returns error message or null if valid.
+     */
+    public static function validatePortEncryptionCompatibility(int $port, string $encryption): ?string
+    {
+        $encryption = strtolower(trim($encryption));
+
+        if ($port === 465 && $encryption === 'tls') {
+            return 'Port 465 requires SSL/TLS (implicit TLS). For STARTTLS, use port 587.';
+        }
+
+        if ($port === 465 && $encryption === 'none') {
+            return 'Port 465 requires SSL/TLS encryption. Unencrypted connections are not supported on port 465.';
+        }
+
+        if ($port === 587 && $encryption === 'ssl') {
+            return 'Port 587 requires STARTTLS encryption. For implicit SSL/TLS, use port 465.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Human-readable label for connection failure or success category.
+     */
+    public static function categoryLabel(string $category): string
+    {
+        return match ($category) {
+            'connection_refused' => 'Connection refused',
+            'timed_out', 'connection_timeout' => 'Connection timed out',
+            'dns_failure' => 'DNS resolution failure',
+            'tls_failure' => 'TLS/SSL handshake failure',
+            'auth_failure' => 'SMTP authentication failure',
+            'sender_rejected' => 'Sender rejected',
+            'security_blocked' => 'Security blocked (SSRF)',
+            'success' => 'Connection successful',
+            default => 'Connection failed',
+        };
+    }
+
+    /**
+     * SSRF defense: Validate that the SMTP host is a public domain or permissible IP.
+     *
+     * @return array{allowed: bool, ip?: string, reason?: string, category?: string}
+     */
+    public static function validateHostSecurity(string $host): array
+    {
+        $clean = trim($host);
+        $clean = (string) preg_replace('#^[a-z]+://#i', '', $clean);
+        $clean = (string) preg_replace('/:[0-9]+$/', '', $clean);
+
+        if ($clean === '') {
+            return [
+                'allowed' => false,
+                'reason' => 'SMTP host cannot be empty.',
+                'category' => 'unknown',
+            ];
+        }
+
+        if (! filter_var($clean, FILTER_VALIDATE_IP) && ! preg_match('/^[a-zA-Z0-9.-]+$/', $clean)) {
+            return [
+                'allowed' => false,
+                'reason' => 'SMTP hostname contains invalid characters.',
+                'category' => 'security_blocked',
+            ];
+        }
+
+        $ip = filter_var($clean, FILTER_VALIDATE_IP) ? $clean : @gethostbyname($clean);
+        if ($ip === $clean && ! filter_var($clean, FILTER_VALIDATE_IP)) {
+            return [
+                'allowed' => false,
+                'reason' => "Server DNS could not resolve '{$clean}' to an IP address.",
+                'category' => 'dns_failure',
+            ];
+        }
+
+        $isPrivateOrReserved = ! filter_var(
+            $ip,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        );
+
+        if ($isPrivateOrReserved) {
+            $isLocalTesting = app()->environment('local', 'testing');
+            if ($isLocalTesting && in_array($clean, ['localhost', '127.0.0.1', '::1'], true)) {
+                return ['allowed' => true, 'ip' => $ip];
+            }
+
+            return [
+                'allowed' => false,
+                'reason' => "Connecting to private, internal, or reserved network addresses ({$ip}) is prohibited for security.",
+                'category' => 'security_blocked',
+            ];
+        }
+
+        return ['allowed' => true, 'ip' => $ip];
+    }
+
+    /**
+     * Probe connectivity on supported SMTP ports for a target host.
+     *
+     * @param  array<int>  $ports
+     * @return array{success: bool, host: string, error?: string, ports: array<int, array<string, mixed>>, open_ports: array<int>, recommended: array{port: int, encryption: string, label: string}|null}
+     */
+    public static function probeHostPorts(string $host, array $ports = [465, 587], int $timeout = 3): array
+    {
+        $security = self::validateHostSecurity($host);
+        if (! $security['allowed']) {
+            return [
+                'success' => false,
+                'host' => $host,
+                'error' => $security['reason'] ?? 'Host security check failed',
+                'ports' => [],
+                'open_ports' => [],
+                'recommended' => null,
+            ];
+        }
+
+        $results = [];
+        $openPorts = [];
+
+        foreach ($ports as $port) {
+            $t0 = microtime(true);
+            $errno = 0;
+            $errstr = '';
+            $fp = @fsockopen($host, (int) $port, $errno, $errstr, (float) $timeout);
+            $latency = (int) round((microtime(true) - $t0) * 1000);
+
+            if ($fp) {
+                fclose($fp);
+                $results[] = [
+                    'port' => (int) $port,
+                    'encryption' => (int) $port === 465 ? 'ssl' : 'tls',
+                    'status' => 'open',
+                    'latency_ms' => $latency,
+                ];
+                $openPorts[] = (int) $port;
+            } else {
+                $results[] = [
+                    'port' => (int) $port,
+                    'encryption' => (int) $port === 465 ? 'ssl' : 'tls',
+                    'status' => 'closed',
+                    'latency_ms' => $latency,
+                    'error' => $errstr ?: "errno: {$errno}",
+                ];
+            }
+        }
+
+        $recommended = null;
+        if (in_array(465, $openPorts, true)) {
+            $recommended = ['port' => 465, 'encryption' => 'ssl', 'label' => 'Port 465 (SSL/TLS - Verified Open)'];
+        } elseif (in_array(587, $openPorts, true)) {
+            $recommended = ['port' => 587, 'encryption' => 'tls', 'label' => 'Port 587 (STARTTLS - Verified Open)'];
+        }
+
+        return [
+            'success' => true,
+            'host' => $host,
+            'ports' => $results,
+            'open_ports' => $openPorts,
+            'recommended' => $recommended,
+        ];
+    }
+
+    /**
      * Name of the mailer to send through. Registers the admin SMTP settings
      * as a dedicated runtime mailer so environment config stays untouched.
      * In the test environment the configured (array) mailer is always used.
@@ -307,7 +575,7 @@ class EmailSettingService
      * Probe the mail server: TCP/TLS handshake + authentication for SMTP, or binary check for Sendmail.
      *
      * @param  array<string, mixed>|null  $customConfig
-     * @return array{success: bool, latency_ms: int, message: string, error_type?: string, diagnostic?: string}
+     * @return array{success: bool, latency_ms: int, message: string, error_type?: string, category?: string, category_label?: string, diagnostic?: string}
      */
     public static function testConnection(?array $customConfig = null): array
     {
@@ -317,6 +585,8 @@ class EmailSettingService
             return [
                 'success' => true,
                 'latency_ms' => 0,
+                'category' => 'success',
+                'category_label' => 'Log driver active',
                 'message' => 'Mail driver is set to "log". Outgoing emails are recorded in Laravel logs without opening network connections.',
             ];
         }
@@ -329,6 +599,8 @@ class EmailSettingService
                     'success' => false,
                     'latency_ms' => 0,
                     'error_type' => 'binary_missing',
+                    'category' => 'binary_missing',
+                    'category_label' => 'Sendmail missing',
                     'diagnostic' => "Sendmail binary not found or not executable at '{$binary}'.",
                     'message' => "Sendmail binary not found or not executable at '{$binary}'.",
                 ];
@@ -337,6 +609,8 @@ class EmailSettingService
             return [
                 'success' => true,
                 'latency_ms' => 1,
+                'category' => 'success',
+                'category_label' => 'Sendmail binary found',
                 'message' => "Sendmail binary is available and executable at '{$binary}'. Emails will route locally via system MTA.",
             ];
         }
@@ -352,12 +626,32 @@ class EmailSettingService
             $config['require_tls'] = $encryption === 'tls';
             $config['auto_tls'] = $encryption !== 'none';
         }
+        $config['timeout'] = (int) ($config['timeout'] ?: 15);
         $startTime = microtime(true);
 
         try {
             if (empty($config['host'])) {
                 throw new \RuntimeException('SMTP host is not configured.');
             }
+
+            // Security SSRF check
+            $securityCheck = self::validateHostSecurity((string) $config['host']);
+            if (! $securityCheck['allowed']) {
+                $category = $securityCheck['category'] ?? 'security_blocked';
+                $reason = $securityCheck['reason'] ?? 'Host blocked by security policy.';
+                self::recordStatus('failed', $reason, 0, $category);
+
+                return [
+                    'success' => false,
+                    'latency_ms' => 0,
+                    'error_type' => $category,
+                    'category' => $category,
+                    'category_label' => self::categoryLabel($category),
+                    'diagnostic' => 'The destination host address is blocked to prevent Server-Side Request Forgery (SSRF).',
+                    'message' => $reason,
+                ];
+            }
+
             if (! empty($config['username']) && empty($config['password'])) {
                 throw new \RuntimeException('SMTP password is not set. Enter it in Email Settings or set MAIL_PASSWORD.');
             }
@@ -367,11 +661,13 @@ class EmailSettingService
             $transport->stop();
 
             $latency = (int) round((microtime(true) - $startTime) * 1000);
-            self::recordStatus('connected', null, $latency);
+            self::recordStatus('connected', null, $latency, 'success');
 
             return [
                 'success' => true,
                 'latency_ms' => $latency,
+                'category' => 'success',
+                'category_label' => 'Connection successful',
                 'message' => "Connected and authenticated with {$config['host']}:{$config['port']} ({$latency} ms). This confirms SMTP access only, not inbox delivery.",
             ];
         } catch (Throwable $e) {
@@ -384,7 +680,7 @@ class EmailSettingService
                 $detailedError .= "\n[Hint: {$analysis['diagnostic']}]";
             }
 
-            self::recordStatus('failed', $detailedError, $latency);
+            self::recordStatus('failed', $detailedError, $latency, $analysis['type']);
 
             Log::warning('SMTP probe failed', [
                 'host' => $config['host'],
@@ -398,6 +694,8 @@ class EmailSettingService
                 'success' => false,
                 'latency_ms' => $latency,
                 'error_type' => $analysis['type'],
+                'category' => $analysis['type'],
+                'category_label' => $analysis['category_label'] ?? self::categoryLabel($analysis['type']),
                 'diagnostic' => $analysis['diagnostic'],
                 'message' => 'SMTP connection failed: '.$safe.(! empty($analysis['diagnostic']) ? ' (Hint: '.$analysis['diagnostic'].')' : ''),
             ];
@@ -408,39 +706,66 @@ class EmailSettingService
      * Diagnose common SMTP connection failures and return actionable troubleshooting hints.
      *
      * @param  array<string, mixed>  $config
-     * @return array{type: string, diagnostic: string}
+     * @return array{type: string, category: string, category_label: string, diagnostic: string}
      */
     public static function diagnoseError(string $rawError, array $config): array
     {
         $host = $config['host'] ?? 'unknown';
         $port = (int) ($config['port'] ?? 0);
+        $encryption = (string) ($config['encryption'] ?? 'ssl');
         $type = 'unknown';
+        $label = 'Connection failed';
         $diagnostic = '';
 
-        if (stripos($rawError, 'Connection refused') !== false || stripos($rawError, 'ECONNREFUSED') !== false) {
+        if (stripos($rawError, 'private, internal, or reserved') !== false || (stripos($rawError, 'security') !== false && stripos($rawError, 'prohibited') !== false)) {
+            $type = 'security_blocked';
+            $label = 'Security blocked (SSRF)';
+            $diagnostic = 'Connections to private, internal, or reserved network addresses are blocked for security.';
+        } elseif (stripos($rawError, 'Connection refused') !== false || stripos($rawError, 'ECONNREFUSED') !== false) {
             $type = 'connection_refused';
-            $isGoogle = str_contains(strtolower($host), 'gmail') || str_contains(strtolower($host), 'google');
-            $diagnostic = "The host {$host}:{$port} actively rejected the TCP connection. On cPanel / WHM or VPS servers, this usually means: (1) cPanel WHM 'SMTP Restrictions' or CSF firewall (SMTP_BLOCK = 1) is blocking non-root outbound SMTP connections to external ports 25, 465, and 587. To fix: In WHM, go to 'Security Center › SMTP Restrictions' and disable it, or in CSF add your cPanel user to SMTP_ALLOWUSER; (2) Alternatively, set Mail Driver to 'sendmail' in Email Settings to send through local Exim without network socket blocks; (3) If connecting to the local server, try host 'localhost' or '127.0.0.1'.";
+            $label = 'Connection refused';
+            if ($port === 456) {
+                $diagnostic = "The host {$host}:456 actively rejected the TCP connection. Port 456 is not a standard SMTP port and is likely a transposition typo for standard SSL/TLS port 465. Switch your port to 465.";
+            } else {
+                $isGoogle = str_contains(strtolower($host), 'gmail') || str_contains(strtolower($host), 'google');
+                $diagnostic = "The host {$host}:{$port} actively rejected the TCP connection. On cPanel / WHM or VPS servers, this usually means: (1) cPanel WHM 'SMTP Restrictions' or CSF firewall (SMTP_BLOCK = 1) is blocking non-root outbound SMTP connections to external ports 25, 465, and 587. To fix: In WHM, go to 'Security Center › SMTP Restrictions' and disable it, or in CSF add your cPanel user to SMTP_ALLOWUSER; (2) Alternatively, set Mail Driver to 'sendmail' in Email Settings to send through local Exim without network socket blocks; (3) If connecting to the local server, try host 'localhost' or '127.0.0.1'.";
+            }
         } elseif (stripos($rawError, 'timed out') !== false || stripos($rawError, 'Operation timed out') !== false || stripos($rawError, 'ETIMEDOUT') !== false) {
-            $type = 'connection_timeout';
+            $type = 'timed_out';
+            $label = 'Connection timed out';
             $diagnostic = "Connection to {$host}:{$port} timed out without response. Your cloud or hosting provider firewall/security group is likely dropping outbound packets on port {$port}. Ask your host to unblock port {$port}, test port 587, or switch driver to 'sendmail'.";
-        } elseif (stripos($rawError, 'getaddrinfo failed') !== false || stripos($rawError, 'Name or service not known') !== false || stripos($rawError, 'php_network_getaddresses') !== false) {
+        } elseif (stripos($rawError, 'getaddrinfo failed') !== false || stripos($rawError, 'Name or service not known') !== false || stripos($rawError, 'php_network_getaddresses') !== false || stripos($rawError, 'DNS resolution failed') !== false) {
             $type = 'dns_failure';
+            $label = 'DNS resolution failure';
             $diagnostic = "Server DNS failed to resolve '{$host}'. Check /etc/resolv.conf and server DNS configuration.";
-        } elseif (stripos($rawError, 'certificate verify failed') !== false || stripos($rawError, 'SSL') !== false || stripos($rawError, 'handshake') !== false) {
+        } elseif (stripos($rawError, 'certificate verify failed') !== false || stripos($rawError, 'SSL') !== false || stripos($rawError, 'handshake') !== false || stripos($rawError, 'crypto') !== false || stripos($rawError, 'wrong version number') !== false) {
             $type = 'tls_failure';
-            $diagnostic = "TLS/SSL negotiation failed with {$host}:{$port}. Check that the SSL certificate covers {$host}, the correct port is selected (465 for SSL, 587 for TLS), and system CA certificates are up to date.";
-        } elseif (stripos($rawError, '535') !== false || stripos($rawError, 'authentication failed') !== false || stripos($rawError, 'incorrect authentication') !== false) {
+            $label = 'TLS/SSL handshake failure';
+            if ($port === 465 && $encryption === 'tls') {
+                $diagnostic = 'Port 465 requires SSL/TLS (implicit TLS). STARTTLS negotiation cannot be performed on port 465. Change encryption to SSL/TLS or port to 587.';
+            } elseif ($port === 587 && $encryption === 'ssl') {
+                $diagnostic = 'Port 587 requires STARTTLS. Implicit SSL cannot be negotiated on port 587 before STARTTLS is issued. Change encryption to STARTTLS or port to 465.';
+            } else {
+                $diagnostic = "TLS/SSL negotiation failed with {$host}:{$port}. Check that the SSL certificate covers {$host}, the correct port is selected (465 for SSL, 587 for TLS), and system CA certificates are up to date.";
+            }
+        } elseif (stripos($rawError, '535') !== false || stripos($rawError, 'authentication failed') !== false || stripos($rawError, 'incorrect authentication') !== false || stripos($rawError, 'Username and Password not accepted') !== false) {
             $type = 'auth_failure';
+            $label = 'SMTP authentication failure';
             $isGoogle = str_contains(strtolower($host), 'gmail') || str_contains(strtolower($host), 'google');
             $extra = $isGoogle
-                ? " For Google / Gmail: You MUST generate a 16-character 'App Password' from myaccount.google.com (requires 2-Step Verification) instead of your regular Gmail password."
+                ? " For Google / Gmail: You MUST generate a 16-character 'App Password' from myaccount.google.com/apppasswords (requires 2-Step Verification) instead of your regular Gmail password."
                 : '';
             $diagnostic = "SMTP authentication was rejected. Ensure the username is the full email address ('{$config['username']}') and the password is correct.{$extra}";
+        } elseif (stripos($rawError, '550') !== false || stripos($rawError, '553') !== false || stripos($rawError, '554') !== false || stripos($rawError, 'relay access denied') !== false || stripos($rawError, 'Sender address rejected') !== false) {
+            $type = 'sender_rejected';
+            $label = 'Sender rejected';
+            $diagnostic = 'The SMTP server rejected the sender address or denied relaying. Ensure the sender address matches an authorized mailbox for this account.';
         }
 
         return [
             'type' => $type,
+            'category' => $type,
+            'category_label' => $label,
             'diagnostic' => $diagnostic,
         ];
     }
@@ -469,16 +794,21 @@ class EmailSettingService
 
     public static function recordSendFailure(string $message): void
     {
-        self::recordStatus('failed', self::sanitizeError($message), null);
+        self::recordStatus('failed', self::sanitizeError($message), null, 'send_failed');
     }
 
-    protected static function recordStatus(string $status, ?string $error, ?int $latency): void
+    protected static function recordStatus(string $status, ?string $error, ?int $latency, ?string $category = null): void
     {
+        $now = now()->toIso8601String();
         $values = [
-            'mail_last_tested_at' => now()->toIso8601String(),
+            'mail_last_tested_at' => $now,
             'mail_last_status' => $status,
             'mail_last_error' => $error,
+            'mail_last_error_category' => $category,
         ];
+        if ($status === 'connected') {
+            $values['mail_last_success_at'] = $now;
+        }
         if ($latency !== null) {
             $values['mail_last_latency_ms'] = (string) $latency;
         }

@@ -71,6 +71,8 @@ class AdminEmailController extends Controller
     public function updateSettings(Request $request)
     {
         $data = $request->validate([
+            'mail_config_mode' => 'nullable|string|in:auto,manual',
+            'mail_provider' => 'nullable|string|in:cpanel,gmail,other',
             'mail_mailer' => 'required|string|in:smtp,log,sendmail',
             'mail_host' => 'required_if:mail_mailer,smtp|nullable|string|max:255',
             'mail_port' => 'required_if:mail_mailer,smtp|nullable|integer|min:1|max:65535',
@@ -84,6 +86,29 @@ class AdminEmailController extends Controller
         ], [
             'mail_from_name.regex' => 'Sender name cannot contain line breaks, quotes or angle brackets.',
         ]);
+
+        $data['mail_config_mode'] = $data['mail_config_mode'] ?? 'auto';
+        $data['mail_provider'] = $data['mail_provider'] ?? 'cpanel';
+
+        // Validate port & encryption compatibility for SMTP
+        if ($data['mail_mailer'] === 'smtp') {
+            $compatError = EmailSettingService::validatePortEncryptionCompatibility(
+                (int) $data['mail_port'],
+                (string) $data['mail_encryption']
+            );
+
+            if ($compatError) {
+                if ($request->expectsJson() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $compatError,
+                        'errors' => ['mail_port' => [$compatError]],
+                    ], 422);
+                }
+
+                return back()->withErrors(['mail_port' => $compatError])->withInput();
+            }
+        }
 
         $data['mail_enabled'] = $request->boolean('mail_enabled') ? 1 : 0;
         if (! $request->filled('mail_password')) {
@@ -108,16 +133,47 @@ class AdminEmailController extends Controller
 
     public function testConnection(Request $request)
     {
-        $result = EmailSettingService::testConnection();
+        $customConfig = [];
+        if ($request->filled('mail_host')) {
+            $customConfig['host'] = (string) $request->input('mail_host');
+        }
+        if ($request->filled('mail_port')) {
+            $customConfig['port'] = (int) $request->input('mail_port');
+        }
+        if ($request->filled('mail_encryption')) {
+            $customConfig['encryption'] = (string) $request->input('mail_encryption');
+        }
+        if ($request->filled('mail_username')) {
+            $customConfig['username'] = (string) $request->input('mail_username');
+        }
+        if ($request->filled('mail_password')) {
+            $customConfig['password'] = (string) $request->input('mail_password');
+        }
+        if ($request->filled('mail_timeout')) {
+            $customConfig['timeout'] = (int) $request->input('mail_timeout');
+        }
+
+        $result = EmailSettingService::testConnection(! empty($customConfig) ? $customConfig : null);
 
         if ($request->expectsJson() || $request->wantsJson()) {
-            return response()->json([
-                'success' => $result['success'],
-                'message' => $result['message'],
-            ]);
+            return response()->json($result);
         }
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function probePorts(Request $request)
+    {
+        $request->validate([
+            'mail_host' => 'nullable|string|max:255',
+        ]);
+
+        $settings = EmailSettingService::all();
+        $host = (string) ($request->input('mail_host') ?: ($settings['mail_host'] ?: 'mail.mama-bazar.com'));
+
+        $probe = EmailSettingService::probeHostPorts($host);
+
+        return response()->json($probe);
     }
 
     public function sendTestEmail(Request $request)

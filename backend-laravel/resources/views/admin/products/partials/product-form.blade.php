@@ -860,7 +860,10 @@
                     <input
                         type="text"
                         x-model="newTag"
-                        @keydown.enter.prevent="if(newTag.trim()){ form.tags.push(newTag.trim()); newTag = ''; }"
+                        @keydown.enter.prevent="if(newTag.trim()){
+                            newTag.split(/[,;\n\r]+/).map(t => t.trim().replace(/^[\s,;।#\.]+|[\s,;।#\.]+$/g, '')).filter(t => t.length >= 2).forEach(t => { if(!form.tags.includes(t)) form.tags.push(t); });
+                            newTag = '';
+                        }"
                         placeholder="Add tag, press Enter"
                         class="flex-1 min-w-[120px] text-xs border-0 p-0 focus:outline-hidden"
                     />

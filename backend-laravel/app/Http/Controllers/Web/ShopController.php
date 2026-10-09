@@ -18,6 +18,7 @@ class ShopController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) ($request->input('search', $request->input('q', ''))));
+        $selectedTag = trim((string) $request->input('tag', ''));
         $categorySlug = $request->input('category', '');
         $subcategorySlug = $request->input('subcategory', '');
         $brandSlug = $request->input('brand', '');
@@ -42,6 +43,7 @@ class ShopController extends Controller
             'page' => $page,
             'limit' => $limit,
             'search' => $search !== '' ? $search : null,
+            'tag' => $selectedTag !== '' ? $selectedTag : null,
             'category' => $categorySlug !== '' ? $categorySlug : null,
             'subcategory' => $subcategorySlug !== '' ? $subcategorySlug : null,
             'brand' => $brandSlug !== '' ? $brandSlug : null,
@@ -194,6 +196,9 @@ class ShopController extends Controller
         if ($search !== '') {
             $activeFilters[] = ['key' => 'search', 'label' => "Search: {$search}", 'remove' => ['search' => null, 'q' => null]];
         }
+        if ($selectedTag !== '') {
+            $activeFilters[] = ['key' => 'tag', 'label' => "Tag: {$selectedTag}", 'remove' => ['tag' => null]];
+        }
         if ($selectedCategory) {
             $activeFilters[] = ['key' => 'category', 'label' => $selectedCategory->name, 'remove' => ['category' => null, 'subcategory' => null]];
         }
@@ -224,11 +229,16 @@ class ShopController extends Controller
             $activeFilters[] = ['key' => 'size', 'label' => "Size: {$size}", 'remove' => ['size' => null]];
         }
 
+        $popularTags = ProductService::getPopularTags(25);
+
         $seoTitle = 'Shop All Products';
         $seoDescription = 'Browse all products at Mama Bazar. Find the best deals on premium products.';
         if ($search !== '') {
             $seoTitle = "Search results for \"{$search}\"";
             $seoDescription = "Find products matching \"{$search}\" on Mama Bazar.";
+        } elseif ($selectedTag !== '') {
+            $seoTitle = "Products Tagged \"{$selectedTag}\"";
+            $seoDescription = "Find products tagged with {$selectedTag} on Mama Bazar.";
         } elseif ($selectedCategory && $selectedBrand) {
             $seoTitle = "{$selectedCategory->name} - {$selectedBrand->name} Products";
         } elseif ($selectedCategory) {
@@ -253,6 +263,8 @@ class ShopController extends Controller
             'selectedCategory' => $selectedCategory,
             'selectedSubcategory' => $selectedSubcategory,
             'selectedBrand' => $selectedBrand,
+            'selectedTag' => $selectedTag,
+            'popularTags' => $popularTags,
             'search' => $search,
             'currentSort' => $sort,
             'minPrice' => $minPrice,

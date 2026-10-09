@@ -7,7 +7,7 @@
     $optionGroups = is_array($product['optionGroups'] ?? null) ? $product['optionGroups'] : [];
     $specs = is_array($product['specs'] ?? null) ? $product['specs'] : [];
     $features = is_array($product['features'] ?? null) ? $product['features'] : [];
-    $tags = is_array($product['tags'] ?? null) ? $product['tags'] : [];
+    $tags = \App\Services\ProductService::normalizeTags($product['tags'] ?? []);
     $reviewsList = isset($reviews) ? $reviews : collect();
     $isLoggedIn = auth()->check();
     $reviewSummary = $reviewSummary ?? ['average' => 0, 'count' => 0, 'breakdown' => [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0]];
@@ -385,7 +385,7 @@
                     <h2 class="mb-3 text-xl font-extrabold text-slate-900">Tags</h2>
                     <div class="flex flex-wrap gap-2">
                         @foreach($tags as $tag)
-                            <a href="{{ route('shop', ['q' => $tag]) }}" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-brand-green-300 hover:text-brand-green-700">{{ $tag }}</a>
+                            <a href="{{ route('shop', ['tag' => $tag]) }}" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-brand-green-300 hover:text-brand-green-700 transition">{{ $tag }}</a>
                         @endforeach
                     </div>
                 </div>

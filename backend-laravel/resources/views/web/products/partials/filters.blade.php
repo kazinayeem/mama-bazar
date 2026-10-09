@@ -226,6 +226,48 @@
 </div>
 @endif
 
+{{-- Tags --}}
+@if(!empty($popularTags) && count($popularTags) > 0)
+<div class="{{ $sectionClass }}" x-data="{ open: true, tagSearch: '', showAllTags: false }">
+    <button type="button" class="flex w-full items-center justify-between" @click="open = !open">
+        <h3 class="{{ $titleClass }} mb-0">Tags</h3>
+        <svg class="h-4 w-4 text-slate-400 transition" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div x-show="open" class="mt-3 space-y-2.5">
+        @if(count($popularTags) > 8)
+            <input type="search" x-model="tagSearch" placeholder="Search tags…" class="w-full rounded-full border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-brand-green-500" aria-label="Search tags">
+        @endif
+        <div class="flex flex-wrap gap-1.5">
+            @foreach($popularTags as $idx => $t)
+                @php
+                    $isTagActive = ($selectedTag ?? '') !== '' && (mb_strtolower($selectedTag) === mb_strtolower($t['name']));
+                @endphp
+                <a href="{{ $isTagActive ? $shopUrl([], ['tag']) : $shopUrl(['tag' => $t['name']]) }}"
+                   x-show="(!tagSearch || {{ json_encode(mb_strtolower($t['name'])) }}.includes(tagSearch.toLowerCase())) && (showAllTags || {{ $idx }} < 12 || {{ $isTagActive ? 'true' : 'false' }})"
+                   class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition {{ $isTagActive ? 'bg-brand-green-600 text-white shadow-xs' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:border-brand-green-300 hover:text-brand-green-700 hover:bg-brand-green-50' }}">
+                    <span>{{ $t['name'] }}</span>
+                    @if($isTagActive)
+                        <span class="text-white/80 hover:text-white" aria-hidden="true">×</span>
+                    @else
+                        <span class="text-[10px] text-slate-400">({{ $t['count'] }})</span>
+                    @endif
+                </a>
+            @endforeach
+        </div>
+        @if(count($popularTags) > 12)
+            <button type="button" class="text-xs font-bold text-brand-green-600 hover:underline" @click="showAllTags = !showAllTags" x-text="showAllTags ? 'Show less tags' : 'Show more tags'"></button>
+        @endif
+        @if(($selectedTag ?? '') !== '')
+            <div class="pt-1">
+                <a href="{{ $shopUrl([], ['tag']) }}" class="text-[11px] font-bold text-slate-500 hover:text-brand-orange-600">
+                    ✕ Clear active tag
+                </a>
+            </div>
+        @endif
+    </div>
+</div>
+@endif
+
 @if(count($activeFilters ?? []))
     <a href="{{ route('shop') }}" class="block w-full rounded-full border border-slate-200 bg-white px-4 py-3 text-center text-sm font-bold text-slate-600 transition hover:border-brand-orange-400 hover:text-brand-orange-600">
         Clear all filters ({{ count($activeFilters) }})

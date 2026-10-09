@@ -75,12 +75,17 @@
                 @if($selectedCategory)
                     <span aria-hidden="true">/</span>
                     <span class="font-semibold text-brand-green-700">{{ $selectedCategory->name }}</span>
+                @elseif($selectedTag)
+                    <span aria-hidden="true">/</span>
+                    <span class="font-semibold text-brand-green-700">Tag: {{ $selectedTag }}</span>
                 @endif
             </nav>
             <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-brand-green-600">Mama Bazar</p>
             <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
                 @if($search)
                     Results for “{{ $search }}”
+                @elseif($selectedTag)
+                    Products tagged “{{ $selectedTag }}”
                 @elseif($selectedCategory)
                     {{ $selectedCategory->name }}
                 @else
@@ -161,7 +166,7 @@
     <div class="flex flex-col gap-6 lg:flex-row lg:gap-8">
         <aside class="hidden w-[270px] shrink-0 lg:block xl:w-[280px]">
             <div class="sticky top-28 max-h-[calc(100vh-8rem)] space-y-4 overflow-y-auto pr-1">
-                @include('web.products.partials.filters', compact('shopUrl', 'subcategories', 'quickRanges') + ['compact' => false])
+                @include('web.products.partials.filters', compact('shopUrl', 'subcategories', 'quickRanges', 'popularTags', 'selectedTag') + ['compact' => false])
             </div>
         </aside>
 
@@ -325,7 +330,7 @@
                 </button>
             </div>
             <div class="flex-1 space-y-4 overflow-y-auto p-4">
-                @include('web.products.partials.filters', compact('shopUrl', 'subcategories', 'quickRanges') + ['compact' => true])
+                @include('web.products.partials.filters', compact('shopUrl', 'subcategories', 'quickRanges', 'popularTags', 'selectedTag') + ['compact' => true])
             </div>
             <div class="flex gap-2 border-t border-slate-200 bg-white p-4">
                 <a href="{{ route('shop') }}" class="flex-1 rounded-full border border-slate-200 py-2.5 text-center text-sm font-bold text-slate-600">Clear</a>

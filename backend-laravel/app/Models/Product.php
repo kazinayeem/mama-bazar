@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ProductService;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
@@ -124,6 +125,42 @@ class Product extends Model
         'payment_methods' => 'array',
         'created_at' => 'datetime',
     ];
+
+    /**
+     * Encode the given value as JSON with unescaped unicode and slashes.
+     *
+     * @param  mixed  $value
+     * @param  int  $flags
+     * @return string|false
+     */
+    protected function asJson($value, $flags = 0)
+    {
+        return json_encode($value, $flags | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Accessor to guarantee tags are returned as a normalized array.
+     *
+     * @return array<int, string>
+     */
+    public function getTagsAttribute(mixed $value): array
+    {
+        if (empty($value)) {
+            return [];
+        }
+
+        $decoded = is_string($value) ? json_decode($value, true) : $value;
+
+        return ProductService::normalizeTags(is_array($decoded) ? $decoded : []);
+    }
+
+    /**
+     * Mutator to ensure tags are always stored as normalized array.
+     */
+    public function setTagsAttribute(mixed $value): void
+    {
+        $this->attributes['tags'] = $this->asJson(ProductService::normalizeTags($value));
+    }
 
     public function category()
     {

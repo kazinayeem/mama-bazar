@@ -14,6 +14,7 @@ use App\Models\Review;
 use App\Models\Supplier;
 use App\Models\Vendor;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ProductService
@@ -165,7 +166,7 @@ class ProductService
             'countryOfOrigin' => $product->country_of_origin,
             'sku' => $product->sku,
             'barcode' => $product->barcode,
-            'tags' => $product->tags ?: [],
+            'tags' => self::normalizeTags($product->tags ?: []),
             'warranty' => $product->warranty,
             'weight' => $product->weight,
             'dimensions' => $product->dimensions,
@@ -451,22 +452,15 @@ class ProductService
             $builder->where('product_status', $query['productStatus']);
         }
 
+        // Tag filter
+        if (! empty($query['tag'])) {
+            self::applyTagFilter($builder, trim((string) $query['tag']));
+        }
+
         // Search (also accept legacy `q`)
         $searchTerm = $query['search'] ?? $query['q'] ?? null;
         if (! empty($searchTerm)) {
-            $term = '%'.trim((string) $searchTerm).'%';
-            $builder->where(function ($q) use ($term) {
-                $q->where('title', 'like', $term)
-                    ->orWhere('sku', 'like', $term)
-                    ->orWhere('barcode', 'like', $term)
-                    ->orWhere('brand', 'like', $term)
-                    ->orWhere('tags', 'like', $term)
-                    ->orWhere('description', 'like', $term)
-                    ->orWhere('short_description', 'like', $term)
-                    ->orWhereHas('brandRel', fn ($bq) => $bq->where('name', 'like', $term)->orWhere('slug', 'like', $term))
-                    ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', $term)->orWhere('slug', 'like', $term))
-                    ->orWhereHas('subCategory', fn ($cq) => $cq->where('name', 'like', $term)->orWhere('slug', 'like', $term));
-            });
+            self::applySearchFilter($builder, trim((string) $searchTerm));
         }
 
         if (! empty($query['sku'])) {
@@ -924,6 +918,10 @@ class ProductService
             }
         }
 
+        if (array_key_exists('tags', $data)) {
+            $data['tags'] = self::normalizeTags($data['tags']);
+        }
+
         return $data;
     }
 
@@ -1219,5 +1217,212 @@ class ProductService
         }
 
         return self::getById($newProduct->id);
+    }
+
+    /**
+     * Normalize tags from array or string into clean, individual, deduplicated tags.
+     * Multibyte-safe for Bangla and English text.
+     *
+     * @return array<int, string>
+     */
+    public static function normalizeTags(mixed $tags): array
+    {
+        if (empty($tags)) {
+            return [];
+        }
+
+        if (is_string($tags)) {
+            $decoded = json_decode($tags, true);
+            $rawList = is_array($decoded) ? $decoded : [$tags];
+        } elseif (is_array($tags)) {
+            $rawList = $tags;
+        } else {
+            return [];
+        }
+
+        $tokens = [];
+        foreach ($rawList as $item) {
+            if (! is_scalar($item)) {
+                continue;
+            }
+            $itemStr = (string) $item;
+            $parts = preg_split('/[,;\n\r]+|(?<=\S)\s+(?=#)/u', $itemStr);
+            if (! is_array($parts)) {
+                $parts = [$itemStr];
+            }
+
+            foreach ($parts as $part) {
+                // Unicode-safe strip of whitespace, commas, semicolons, Bengali danda (।), dots, and hashtags
+                $clean = preg_replace('/^[\s,;।#\.]+|[\s,;।#\.]+$/u', '', $part);
+                $clean = trim($clean);
+                if (mb_strlen($clean) >= 2) {
+                    $tokens[] = $clean;
+                }
+            }
+        }
+
+        $seen = [];
+        $unique = [];
+        foreach ($tokens as $token) {
+            $key = mb_strtolower($token);
+            if (! isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique[] = $token;
+            }
+        }
+
+        return array_values($unique);
+    }
+
+    /**
+     * Get top popular tags across published products for shop filter sidebar.
+     *
+     * @return array<int, array{name: string, count: int}>
+     */
+    public static function getPopularTags(int $limit = 25): array
+    {
+        return Cache::remember('shop:popular_tags', 1800, function () use ($limit) {
+            $products = Product::where('status', 'active')
+                ->where('product_status', 'published')
+                ->whereNotNull('tags')
+                ->pluck('tags');
+
+            $counts = [];
+            foreach ($products as $rawTags) {
+                $tags = is_array($rawTags) ? $rawTags : (json_decode($rawTags, true) ?: []);
+                $normalized = self::normalizeTags($tags);
+                $seenInProduct = [];
+                foreach ($normalized as $tag) {
+                    $key = mb_strtolower($tag);
+                    if (! isset($seenInProduct[$key])) {
+                        $seenInProduct[$key] = true;
+                        if (! isset($counts[$key])) {
+                            $counts[$key] = ['name' => $tag, 'count' => 0];
+                        }
+                        $counts[$key]['count']++;
+                    }
+                }
+            }
+
+            uasort($counts, fn ($a, $b) => $b['count'] <=> $a['count']);
+
+            return array_values(array_slice($counts, 0, $limit));
+        });
+    }
+
+    /**
+     * Apply discrete tag filter on query builder.
+     */
+    public static function applyTagFilter($builder, string $tag): void
+    {
+        $tag = trim($tag);
+        if ($tag === '') {
+            return;
+        }
+
+        $cleanTag = preg_replace('/^[\s,;।#\.]+|[\s,;।#\.]+$/u', '', $tag);
+        $cleanTag = trim($cleanTag);
+        $escapedTag = addcslashes(trim(json_encode($tag), '"'), '\\');
+        $cleanEscaped = $cleanTag !== '' ? addcslashes(trim(json_encode($cleanTag), '"'), '\\') : '';
+        $lowerTag = mb_strtolower($tag);
+        $lowerClean = mb_strtolower($cleanTag);
+
+        $builder->where(function ($q) use ($tag, $cleanTag, $escapedTag, $cleanEscaped, $lowerTag, $lowerClean) {
+            $q->where('tags', 'like', '%"'.$tag.'"%')
+                ->orWhere('tags', 'like', '%'.$tag.'%');
+
+            if ($cleanTag !== '' && $cleanTag !== $tag) {
+                $q->orWhere('tags', 'like', '%"'.$cleanTag.'"%')
+                    ->orWhere('tags', 'like', '%'.$cleanTag.'%');
+            }
+
+            if ($escapedTag !== '' && $escapedTag !== $tag) {
+                $q->orWhereRaw('tags LIKE ?', ['%'.$escapedTag.'%']);
+            }
+            if ($cleanEscaped !== '' && $cleanEscaped !== $cleanTag) {
+                $q->orWhereRaw('tags LIKE ?', ['%'.$cleanEscaped.'%']);
+            }
+
+            $q->orWhereRaw('LOWER(CAST(tags AS CHAR)) LIKE ?', ['%'.$lowerTag.'%']);
+            if ($lowerClean !== '' && $lowerClean !== $lowerTag) {
+                $q->orWhereRaw('LOWER(CAST(tags AS CHAR)) LIKE ?', ['%'.$lowerClean.'%']);
+            }
+
+            $q->orWhereJsonContains('tags', $tag);
+            if ($cleanTag !== '' && $cleanTag !== $tag) {
+                $q->orWhereJsonContains('tags', $cleanTag);
+            }
+
+            $q->orWhere('title', 'like', '%'.$tag.'%')
+                ->orWhere('seo_keywords', 'like', '%'.$tag.'%');
+        });
+    }
+
+    /**
+     * Apply search filter, safely handling comma-separated phrases and Unicode text.
+     */
+    public static function applySearchFilter($builder, string $searchTerm): void
+    {
+        $searchTerm = trim($searchTerm);
+        if ($searchTerm === '') {
+            return;
+        }
+
+        $phrases = array_filter(array_map('trim', preg_split('/[,;\n\r]+/', $searchTerm)));
+
+        if (count($phrases) > 1) {
+            $builder->where(function ($subQ) use ($phrases) {
+                foreach ($phrases as $phrase) {
+                    $clean = preg_replace('/^[\s,;।#\.]+|[\s,;।#\.]+$/u', '', $phrase);
+                    $clean = trim($clean);
+                    if ($clean !== '') {
+                        $subQ->orWhere(function ($clause) use ($clean) {
+                            self::applySinglePhraseSearch($clause, $clean);
+                        });
+                    }
+                }
+            });
+        } else {
+            self::applySinglePhraseSearch($builder, $searchTerm);
+        }
+    }
+
+    protected static function applySinglePhraseSearch($builder, string $phrase): void
+    {
+        $phrase = trim($phrase);
+        if ($phrase === '') {
+            return;
+        }
+
+        $like = '%'.$phrase.'%';
+        $clean = preg_replace('/^[\s,;।#\.]+|[\s,;।#\.]+$/u', '', $phrase);
+        $clean = trim($clean);
+        $escaped = addcslashes(trim(json_encode($phrase), '"'), '\\');
+        $lower = mb_strtolower($phrase);
+
+        $builder->where(function ($q) use ($like, $phrase, $clean, $escaped, $lower) {
+            $q->where('title', 'like', $like)
+                ->orWhere('sku', 'like', $like)
+                ->orWhere('barcode', 'like', $like)
+                ->orWhere('brand', 'like', $like)
+                ->orWhere('tags', 'like', $like)
+                ->orWhere('description', 'like', $like)
+                ->orWhere('short_description', 'like', $like)
+                ->orWhere('seo_keywords', 'like', $like)
+                ->orWhereHas('brandRel', fn ($bq) => $bq->where('name', 'like', $like)->orWhere('slug', 'like', $like))
+                ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', $like)->orWhere('slug', 'like', $like))
+                ->orWhereHas('subCategory', fn ($cq) => $cq->where('name', 'like', $like)->orWhere('slug', 'like', $like));
+
+            if ($clean !== '' && $clean !== $phrase) {
+                $q->orWhere('tags', 'like', '%'.$clean.'%')
+                    ->orWhere('title', 'like', '%'.$clean.'%');
+            }
+
+            if ($escaped !== '' && $escaped !== $phrase) {
+                $q->orWhereRaw('tags LIKE ?', ['%'.$escaped.'%']);
+            }
+
+            $q->orWhereRaw('LOWER(CAST(tags AS CHAR)) LIKE ?', ['%'.$lower.'%']);
+        });
     }
 }
