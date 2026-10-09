@@ -569,6 +569,16 @@ class RbacService
             return true;
         }
 
+        if (str_contains($permission, '|')) {
+            foreach (explode('|', $permission) as $p) {
+                if (in_array(trim($p), $perms, true)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         return in_array($permission, $perms, true);
     }
 }

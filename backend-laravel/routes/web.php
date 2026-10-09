@@ -203,6 +203,14 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     // Orders
     Route::get('/orders', [AdminOrderWebController::class, 'index'])->middleware('admin.can:orders.view')->name('admin.orders.index');
     Route::get('/orders/{id}', [AdminOrderWebController::class, 'show'])->middleware('admin.can:orders.view')->name('admin.orders.show');
+    Route::get('/orders/{id}/edit', [AdminOrderWebController::class, 'edit'])
+        ->middleware('admin.can:orders.update|orders.edit|orders.edit_customer|orders.edit_shipping|orders.edit_items|orders.adjust_financials')
+        ->name('admin.orders.edit');
+    Route::match(['put', 'patch', 'post'], '/orders/{id}', [AdminOrderWebController::class, 'update'])
+        ->middleware('admin.can:orders.update|orders.edit|orders.edit_customer|orders.edit_shipping|orders.edit_items|orders.adjust_financials')
+        ->name('admin.orders.update');
+    Route::match(['put', 'patch', 'post'], '/orders/{id}/update', [AdminOrderWebController::class, 'update'])
+        ->middleware('admin.can:orders.update|orders.edit|orders.edit_customer|orders.edit_shipping|orders.edit_items|orders.adjust_financials');
     Route::get('/orders/{id}/invoice', [AdminOrderWebController::class, 'invoice'])->middleware('admin.can:orders.view')->name('admin.orders.invoice');
     Route::get('/orders/{id}/invoice/download', [AdminOrderWebController::class, 'downloadInvoice'])->middleware('admin.can:orders.export')->name('admin.orders.invoice.download');
     Route::get('/orders/{id}/packing-slip', [AdminOrderWebController::class, 'packingSlip'])->middleware('admin.can:orders.view')->name('admin.orders.packing-slip');
