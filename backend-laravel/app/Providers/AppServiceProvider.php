@@ -38,6 +38,18 @@ class AppServiceProvider extends ServiceProvider
             return "<?php echo \\App\\Services\\HtmlSanitizer::forDisplay($expression); ?>";
         });
 
+        Blade::if('adminCan', function ($permission) {
+            $user = auth()->user();
+            if (! $user) {
+                return false;
+            }
+
+            return \App\Http\Middleware\EnsureAdminPermission::allows(
+                $user,
+                is_array($permission) ? $permission : explode('|', (string) $permission)
+            );
+        });
+
         View::composer('*', function ($view) {
             try {
                 $view->with('business', BusinessSettingService::all());

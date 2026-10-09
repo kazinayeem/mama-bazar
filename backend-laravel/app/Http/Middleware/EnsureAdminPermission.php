@@ -29,7 +29,7 @@ class EnsureAdminPermission
             return response()->json(['success' => false, 'message' => $message], 403);
         }
 
-        return redirect()->route('admin.dashboard')->with('error', $message);
+        abort(403, $message);
     }
 
     /**
@@ -41,12 +41,16 @@ class EnsureAdminPermission
             return false;
         }
 
-        if (in_array($user->role ?? '', ['admin', 'super_admin'], true)) {
+        if (RbacService::isSuperAdmin($user)) {
             return true;
         }
 
         $resolved = RbacService::resolveUserPermissions((int) $user->id, (string) ($user->role ?? ''), $user->custom_role ?? null);
-        $context = $resolved + ['id' => (int) $user->id, 'role' => (string) ($user->role ?? '')];
+        $context = $resolved + [
+            'id' => (int) $user->id,
+            'role' => (string) ($user->role ?? ''),
+            'customRole' => $resolved['customRole'] ?? null,
+        ];
 
         foreach ($permissions as $permission) {
             if (RbacService::hasPermission($context, trim($permission))) {

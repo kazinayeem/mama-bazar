@@ -32,7 +32,9 @@ class User extends Authenticatable
         'shipping_address',
         'role',
         'custom_role',
+        'permission_mode',
         'permissions_json',
+        'sidebar_access_json',
         'status',
         'last_login_at',
         'last_login_ip',
@@ -58,6 +60,7 @@ class User extends Authenticatable
         'email_verification_required' => 'boolean',
         'marketing_opt_in' => 'boolean',
         'marketing_opt_in_at' => 'datetime',
+        'sidebar_access_json' => 'array',
         'last_login_at' => 'datetime',
         'must_change_password' => 'boolean',
         'invitation_sent_at' => 'datetime',
@@ -116,6 +119,36 @@ class User extends Authenticatable
     public function isStaff(): bool
     {
         return EnsureAdminAccess::isAdminLike($this);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return \App\Services\RbacService::isSuperAdmin($this);
+    }
+
+    public function canAdmin(string|array $permissions): bool
+    {
+        return \App\Http\Middleware\EnsureAdminPermission::allows(
+            $this,
+            is_array($permissions) ? $permissions : explode('|', $permissions)
+        );
+    }
+
+    public function hasSidebarAccess(string $routeOrLabel): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (empty($this->sidebar_access_json)) {
+            return true;
+        }
+
+        $allowed = is_array($this->sidebar_access_json)
+            ? $this->sidebar_access_json
+            : (json_decode($this->sidebar_access_json, true) ?: []);
+
+        return in_array($routeOrLabel, $allowed, true);
     }
 
     public function addresses()
