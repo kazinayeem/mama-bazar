@@ -11,11 +11,53 @@
                 <span class="font-bold {{ $order->user_id ? 'text-brand-green-700' : 'text-amber-600' }}">{{ $order->user_id ? 'Registered' : 'Guest' }}</span>
             </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+            {{-- Order Navigation Controls --}}
+            <div class="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm text-xs font-semibold text-slate-700">
+                @if(!empty($navigation['previous']))
+                    <a href="{{ $navigation['previous']['url'] }}"
+                       title="Previous Order #{{ $navigation['previous']['order_id'] }} (Alt + ←)"
+                       onclick="this.classList.add('opacity-50')"
+                       class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        <span class="hidden sm:inline">Previous</span>
+                    </a>
+                @else
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-300 cursor-not-allowed select-none">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        <span class="hidden sm:inline">Previous</span>
+                    </span>
+                @endif
+
+                <div class="px-2.5 py-1 border-x border-slate-200 text-[11px] text-slate-600 font-bold whitespace-nowrap">
+                    @if(!empty($navigation['has_active_filters']))
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-brand-green-500 mr-1 align-middle" title="Active Filter: {{ $navigation['filter_summary'] }}"></span>
+                    @endif
+                    Order {{ $navigation['position'] ?? 1 }} of {{ $navigation['total'] ?? 1 }}
+                </div>
+
+                @if(!empty($navigation['next']))
+                    <a href="{{ $navigation['next']['url'] }}"
+                       title="Next Order #{{ $navigation['next']['order_id'] }} (Alt + →)"
+                       onclick="this.classList.add('opacity-50')"
+                       class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition">
+                        <span class="hidden sm:inline">Next</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                @else
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-slate-300 cursor-not-allowed select-none">
+                        <span class="hidden sm:inline">Next</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                @endif
+            </div>
+
+            {{-- Invoice Actions Dropdown --}}
             <div class="relative">
                 <button @click="actionsOpen = !actionsOpen" @click.away="actionsOpen = false"
-                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">
-                    Invoice Actions ▾
+                    class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <span>Invoice Actions</span>
+                    <svg class="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div x-show="actionsOpen" x-cloak class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl py-1 text-xs">
                     <a href="{{ route('admin.orders.invoice', $order->id) }}" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">View Invoice</a>
@@ -26,9 +68,30 @@
                     <button type="button" @click="customerOpen = true; actionsOpen = false" class="block w-full text-left px-4 py-2.5 font-semibold hover:bg-slate-50">View Customer Details</button>
                 </div>
             </div>
-            <a href="{{ route('admin.orders.index') }}" class="text-xs font-semibold text-slate-500 hover:text-slate-800">&larr; Back</a>
+
+            {{-- Back to Filtered List or Back to Orders --}}
+            <a href="{{ $navigation['back_to_list_url'] ?? route('admin.orders.index') }}"
+               class="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 hover:text-slate-900 transition shadow-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>{{ !empty($navigation['has_active_filters']) ? 'Back to Filtered (' . ($navigation['total'] ?? 0) . ')' : 'Back to Orders' }}</span>
+            </a>
         </div>
     </div>
+
+    @if(!empty($navigation['has_active_filters']))
+        <div class="flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200/80 text-xs text-emerald-900">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                <span>Browsing filtered orders: <strong class="font-semibold">{{ $navigation['filter_summary'] ?? 'Active Filter' }}</strong></span>
+                @if(empty($navigation['matches_filter']))
+                    <span class="inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                        Current order outside filter
+                    </span>
+                @endif
+            </div>
+            <a href="{{ $navigation['back_to_list_url'] }}" class="font-bold underline hover:text-emerald-950">View all {{ $navigation['total'] }}</a>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div class="lg:col-span-2 space-y-5">
@@ -380,5 +443,29 @@ function copyOrderInfo() {
     ].join('\n');
     navigator.clipboard?.writeText(text).then(() => alert('Order information copied.'));
 }
+
+// Alt + ArrowLeft (Previous Order), Alt + ArrowRight (Next Order)
+document.addEventListener('keydown', function(e) {
+    if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+        if (['input', 'textarea', 'select'].includes(tag) || (e.target && e.target.isContentEditable)) {
+            return;
+        }
+
+        @if(!empty($navigation['previous']['url']))
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            window.location.href = @json($navigation['previous']['url']);
+        }
+        @endif
+
+        @if(!empty($navigation['next']['url']))
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            window.location.href = @json($navigation['next']['url']);
+        }
+        @endif
+    }
+});
 </script>
 @endsection

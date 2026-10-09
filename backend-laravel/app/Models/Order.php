@@ -110,4 +110,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderStatusHistory::class, 'order_id');
     }
+
+    public function emailLogs()
+    {
+        return $this->hasMany(EmailLog::class, 'order_id');
+    }
 }

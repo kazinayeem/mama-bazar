@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailLog;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Models\PaymentMethod;
+use App\Models\ShippingMethod;
 use App\Services\ActivityLoggerService;
 use App\Services\BusinessSettingService;
 use App\Services\InvoicePdfService;
 use App\Services\IpLocationService;
 use App\Services\OrderEmailService;
+use App\Services\OrderFilterService;
 use App\Support\EmailQueue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,28 +22,49 @@ class AdminOrderWebController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::query()->with('items.product');
+        $params = $request->query();
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+        // Save active filter to session so detail view can retain it even on direct clicks
+        if (OrderFilterService::hasActiveFilters($params) || ! empty($params['sort'])) {
+            session(['admin_orders_filter_query' => OrderFilterService::cleanParams($params)]);
+        } elseif ($request->has('clear')) {
+            session()->forget('admin_orders_filter_query');
         }
 
-        if ($request->filled('search')) {
-            $s = $request->input('search');
-            $query->where(function ($q) use ($s) {
-                $q->where('order_id', 'like', "%{$s}%")
-                    ->orWhere('invoice_number', 'like', "%{$s}%")
-                    ->orWhere('customer_name', 'like', "%{$s}%")
-                    ->orWhere('phone', 'like', "%{$s}%");
-            });
+        $query = Order::query()->with(['items.product', 'items.variant', 'user']);
+
+        // Apply filters & search
+        $query = OrderFilterService::applyFilters($query, $params);
+
+        // Apply deterministic sorting
+        $sort = $request->input('sort', 'newest');
+        $query = OrderFilterService::applySorting($query, $sort);
+
+        $orders = $query->paginate(20)->withQueryString();
+
+        // Calculate summary cards & active chips
+        $summaryStats = OrderFilterService::getSummaryStats($params);
+        $activeChips = OrderFilterService::getActiveFilterChips($params);
+
+        // Options for filter selects
+        $paymentMethods = PaymentMethod::where('enabled', true)->pluck('name', 'code')->toArray();
+        if (empty($paymentMethods)) {
+            $paymentMethods = OrderFilterService::VALID_PAYMENT_METHODS;
         }
 
-        $orders = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $shippingMethods = ShippingMethod::where('status', 'active')->get();
 
-        return view('admin.orders.index', compact('orders'));
+        return view('admin.orders.index', compact(
+            'orders',
+            'summaryStats',
+            'activeChips',
+            'params',
+            'paymentMethods',
+            'shippingMethods'
+        ));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $order = Order::with(['items.product', 'items.variant', 'statusHistory.user', 'user'])->findOrFail($id);
         $store = self::storeInfo();
@@ -50,7 +74,26 @@ class AdminOrderWebController extends Controller
         $ipGeolocation = IpLocationService::lookup($order->ip_address);
         $locationComparison = IpLocationService::compareLocation($ipGeolocation, $order);
 
-        return view('admin.orders.show', compact('order', 'store', 'emailLogs', 'invoiceReady', 'ipGeolocation', 'locationComparison'));
+        // Resolve active filter params from query string or session fallback
+        $filterParams = $request->query();
+        if (empty(OrderFilterService::cleanParams($filterParams))) {
+            $saved = session('admin_orders_filter_query', []);
+            if (is_array($saved) && ! empty($saved)) {
+                $filterParams = $saved;
+            }
+        }
+
+        $navigation = OrderFilterService::getNavigation($order, $filterParams);
+
+        return view('admin.orders.show', compact(
+            'order',
+            'store',
+            'emailLogs',
+            'invoiceReady',
+            'ipGeolocation',
+            'locationComparison',
+            'navigation'
+        ));
     }
 
     public function invoice($id)
