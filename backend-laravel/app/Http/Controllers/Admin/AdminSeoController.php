@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Web\SeoController;
-use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\SeoMeta;
 use App\Services\SeoService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminSeoController extends Controller
@@ -141,7 +139,7 @@ class AdminSeoController extends Controller
             $title .= ' | Mama Bazar';
 
             // Generate rich description
-            $priceText = $product->sale_price ? '৳' . number_format($product->sale_price) : '৳' . number_format($product->price);
+            $priceText = $product->sale_price ? '৳'.number_format($product->sale_price) : '৳'.number_format($product->price);
             $catText = $cat ? " in {$cat}" : '';
             $desc = "Buy {$product->title}{$catText} at Mama Bazar for {$priceText}. 100% authentic product with fast doorstep delivery across Bangladesh.";
 
@@ -185,7 +183,7 @@ class AdminSeoController extends Controller
             ->with(['category', 'brandRel'])
             ->get();
 
-        $filename = 'mama_bazar_seo_audit_' . now()->format('Y_m_d_His') . '.csv';
+        $filename = 'mama_bazar_seo_audit_'.now()->format('Y_m_d_His').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',

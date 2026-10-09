@@ -11,13 +11,11 @@ use App\Services\EmailDispatcherService;
 use App\Services\EmailRetryService;
 use App\Services\EmailSettingService;
 use App\Services\EmailTemplateService;
-use App\Services\SmtpLockService;
 use App\Support\EmailQueue;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
@@ -62,65 +60,12 @@ class AdminEmailController extends Controller
 
     public function settings()
     {
-        SmtpLockService::lock();
-
         return view('admin.email.settings', [
             'settings' => EmailSettingService::forDisplay(),
             'senderChecks' => EmailSettingService::senderChecks(),
             'dnsChecks' => Cache::get('mamabazar:email_dns_checks'),
             'appUrl' => config('app.url'),
-            'isUnlocked' => false,
         ]);
-    }
-
-    public function unlockSettings(Request $request)
-    {
-        $request->validate([
-            'pin' => 'required|string',
-        ], [
-            'pin.required' => 'Please enter your security PIN.',
-        ]);
-
-        $throttleKey = 'smtp-unlock:'.$request->ip();
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
-
-            return response()->json([
-                'success' => false,
-                'message' => "Too many incorrect PIN attempts. Please try again in {$seconds} seconds.",
-            ], 429);
-        }
-
-        if (! SmtpLockService::verifyPin($request->input('pin'))) {
-            RateLimiter::hit($throttleKey, 60);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid security PIN. Access denied.',
-            ], 422);
-        }
-
-        RateLimiter::clear($throttleKey);
-        SmtpLockService::unlock();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'SMTP Settings unlocked successfully.',
-        ]);
-    }
-
-    public function lockSettings(Request $request)
-    {
-        SmtpLockService::lock();
-
-        if ($request->expectsJson() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'SMTP Settings locked.',
-            ]);
-        }
-
-        return redirect()->route('admin.email.settings')->with('success', 'SMTP Settings locked.');
     }
 
     public function updateSettings(Request $request)

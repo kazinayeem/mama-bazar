@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Services\ProductService;
 use App\Services\ReviewService;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 
 class ProductWebController extends Controller
@@ -38,7 +39,7 @@ class ProductWebController extends Controller
             $isVerifiedBuyer = ReviewService::hasVerifiedPurchase(auth()->id(), (int) $product['id']);
         }
 
-        $seo = \App\Services\SeoService::getForProduct($product);
+        $seo = SeoService::getForProduct($product);
 
         return view('web.products.show', compact(
             'product', 'relatedProducts', 'reviews',

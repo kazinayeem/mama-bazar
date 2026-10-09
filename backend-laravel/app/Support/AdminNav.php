@@ -49,6 +49,7 @@ class AdminNav
             'scroll-text' => '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
             'activity' => '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
             'globe' => '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+            'key' => '<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/>',
         ];
     }
 
@@ -129,6 +130,7 @@ class AdminNav
             ]],
             ['label' => 'Security & Access', 'items' => [
                 ['label' => 'Team Members', 'route' => 'admin.members.index', 'match' => 'admin.members.*', 'icon' => 'user-check'],
+                ['label' => 'Change Password', 'route' => 'admin.profile.password', 'match' => 'admin.profile.password*', 'icon' => 'key'],
                 ['label' => 'Backup & Restore', 'route' => 'admin.backup.index', 'match' => 'admin.backup.*', 'icon' => 'database-backup'],
             ]],
             ['label' => 'System', 'items' => [

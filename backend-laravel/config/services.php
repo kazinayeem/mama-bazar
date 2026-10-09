@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'geolocation' => [
+        'enabled' => env('GEOLOCATION_ENABLED', true),
+        'driver' => env('GEOLOCATION_DRIVER', 'ip-api'),
+        'api_key' => env('GEOLOCATION_API_KEY', null),
+        'endpoint' => env('GEOLOCATION_ENDPOINT', null),
+        'cache_ttl' => (int) env('GEOLOCATION_CACHE_TTL', 86400),
+        'timeout' => (int) env('GEOLOCATION_TIMEOUT', 3),
+    ],
+
 ];

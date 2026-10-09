@@ -17,6 +17,7 @@ class Order extends Model
         'idempotency_key',
         'ip_hash',
         'ip_truncated',
+        'ip_address',
         'user_agent',
         'browser',
         'os_platform',

@@ -120,6 +120,133 @@
                 </div>
             </div>
 
+            <div class="admin-surface p-4 space-y-4" x-data="{ copied: false }">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-brand-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">IP Address &amp; Location</h3>
+                    </div>
+                    <div>
+                        @if(($ipGeolocation['status'] ?? '') === 'success')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {{ $ipGeolocation['status_label'] }}
+                            </span>
+                        @elseif(($ipGeolocation['status'] ?? '') === 'private')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Private Network
+                            </span>
+                        @elseif(($ipGeolocation['status'] ?? '') === 'incomplete')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Incomplete data
+                            </span>
+                        @elseif(($ipGeolocation['status'] ?? '') === 'not_recorded')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Not recorded
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> {{ $ipGeolocation['status_label'] ?? 'Unavailable' }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- IP & Location Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="col-span-2 sm:col-span-3 flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                        <div>
+                            <span class="text-slate-400 font-semibold block text-[11px]">Customer IP Address</span>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                @if($order->ip_address)
+                                    <span class="font-mono font-bold text-slate-900 text-sm select-all">{{ $order->ip_address }}</span>
+                                    @if(! empty($ipGeolocation['ip_version']))
+                                        <span class="px-1.5 py-0.2 bg-slate-200 text-slate-700 text-[10px] font-bold rounded">{{ $ipGeolocation['ip_version'] }}</span>
+                                    @endif
+                                @else
+                                    <span class="font-medium text-slate-500 italic">Not recorded</span>
+                                    @if($order->ip_truncated)
+                                        <span class="text-[11px] text-slate-400">(Truncated subnet: {{ $order->ip_truncated }})</span>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                        @if($order->ip_address)
+                            <button type="button"
+                                @click="navigator.clipboard.writeText('{{ $order->ip_address }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition shadow-xs"
+                                title="Copy IP Address">
+                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                <span x-text="copied ? 'Copied!' : 'Copy IP'">Copy IP</span>
+                            </button>
+                        @endif
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 font-semibold block">Approximate Country</span>
+                        <span class="font-bold text-slate-800">{{ $ipGeolocation['country'] ?: '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block">Region / Division</span>
+                        <span class="font-bold text-slate-800">{{ $ipGeolocation['region'] ?: '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block">City</span>
+                        <span class="font-bold text-slate-800">{{ $ipGeolocation['city'] ?: '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block">ISP / Provider</span>
+                        <span class="font-bold text-slate-800 truncate block" title="{{ $ipGeolocation['isp'] ?: '—' }}">{{ $ipGeolocation['isp'] ?: '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block">Time Zone</span>
+                        <span class="font-bold text-slate-800">{{ $ipGeolocation['timezone'] ?: '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block">Lookup Status</span>
+                        <span class="font-bold text-slate-800">{{ $ipGeolocation['status_label'] }}</span>
+                    </div>
+                </div>
+
+                <!-- Location Comparison vs Shipping Address -->
+                <div class="mt-3 p-3 rounded-xl border {{ $locationComparison['badge_class'] ?? 'bg-slate-50 border-slate-200 text-slate-800' }}">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            @if(($locationComparison['status'] ?? '') === 'likely_match')
+                                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            @elseif(($locationComparison['status'] ?? '') === 'possible_mismatch')
+                                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            @else
+                                <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            @endif
+                            <span class="font-bold text-xs uppercase tracking-wide">{{ $locationComparison['label'] }}</span>
+                        </div>
+                        <span class="text-[11px] font-medium opacity-90">{{ $locationComparison['headline'] }}</span>
+                    </div>
+                    <p class="mt-1.5 text-xs leading-relaxed opacity-95">
+                        {{ $locationComparison['description'] }}
+                    </p>
+                </div>
+
+                <!-- Accuracy & Disclaimer Note -->
+                <div class="text-[10px] text-slate-400 border-t border-slate-100 pt-2 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>IP geolocation is approximate. VPNs, cellular networks, and ISP routing can cause geographical variances; differences do not automatically indicate fraud.</span>
+                </div>
+            </div>
+
             <div class="admin-surface p-4">
                 <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Order History</h3>
                 <div class="space-y-3">

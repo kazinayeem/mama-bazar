@@ -11,6 +11,7 @@ use App\Models\ShippingMethod;
 use App\Models\SiteSetting;
 use App\Models\UserAddress;
 use App\Services\OrderService;
+use App\Services\SeoService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -64,7 +65,7 @@ class CheckoutController extends Controller
         }
 
         return view('web.checkout', [
-            'seo' => \App\Services\SeoService::getForPrivate('Checkout'),
+            'seo' => SeoService::getForPrivate('Checkout'),
             'shippingMethods' => $shippingMethods,
             'paymentMethods' => $paymentMethods,
             'checkoutNotices' => $notices,
@@ -280,7 +281,7 @@ class CheckoutController extends Controller
             }
         }
 
-        $seo = \App\Services\SeoService::getForPrivate('Order Placed Successfully');
+        $seo = SeoService::getForPrivate('Order Placed Successfully');
 
         return view('web.success', compact('orderId', 'order', 'token', 'seo'));
     }

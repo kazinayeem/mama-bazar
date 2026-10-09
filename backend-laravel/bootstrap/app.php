@@ -39,6 +39,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // RFC 8058 one-click unsubscribe is POSTed by mail clients without a CSRF token (route is signed).
         $middleware->validateCsrfTokens(except: ['email/unsubscribe/one-click']);
+
+        // Trusted proxies: Only trust forwarded headers if explicitly configured via TRUSTED_PROXIES
+        $trustedProxies = env('TRUSTED_PROXIES');
+        if ($trustedProxies !== null && $trustedProxies !== '') {
+            $middleware->trustProxies(at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

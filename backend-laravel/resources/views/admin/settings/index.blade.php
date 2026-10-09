@@ -48,6 +48,21 @@
         </div>
     </form>
 
+    <div class="rounded-xl border border-slate-200 bg-white p-5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-900">Admin Account Security</p>
+                <p class="text-[11px] text-slate-500">Update your administrator account password and credentials.</p>
+            </div>
+        </div>
+        <a href="{{ route('admin.profile.password') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+            Change Password &rarr;
+        </a>
+    </div>
+
 </div>
 </div>
 @endsection

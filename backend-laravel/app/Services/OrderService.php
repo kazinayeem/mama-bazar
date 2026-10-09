@@ -490,6 +490,7 @@ class OrderService
                 'idempotency_key' => $idempotencyKey,
                 'ip_hash' => DeviceDetector::hashIp($rawIp),
                 'ip_truncated' => DeviceDetector::truncateIp($rawIp),
+                'ip_address' => $rawIp ? mb_substr((string) $rawIp, 0, 45) : null,
                 'user_agent' => $uaString ? mb_substr($uaString, 0, 1000) : null,
                 'browser' => $parsed['browser'],
                 'os_platform' => $parsed['os'],

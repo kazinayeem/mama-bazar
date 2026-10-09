@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Web\SeoController;
 use App\Models\Category;
 use App\Services\MediaStorageService;
 use App\Services\SlugService;
@@ -75,7 +76,7 @@ class AdminCategoryWebController extends Controller
         }
 
         Category::create($data);
-        \App\Http\Controllers\Web\SeoController::clearCache();
+        SeoController::clearCache();
 
         return back()->with('success', 'Category created successfully.');
     }
@@ -114,7 +115,7 @@ class AdminCategoryWebController extends Controller
         }
 
         $category->update($data);
-        \App\Http\Controllers\Web\SeoController::clearCache();
+        SeoController::clearCache();
 
         return back()->with('success', 'Category updated successfully.');
     }

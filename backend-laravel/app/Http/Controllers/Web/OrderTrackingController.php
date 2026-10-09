@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Services\OrderService;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 
 class OrderTrackingController extends Controller
@@ -37,7 +38,7 @@ class OrderTrackingController extends Controller
             }
         }
 
-        $seo = \App\Services\SeoService::getForPrivate('Track Your Order');
+        $seo = SeoService::getForPrivate('Track Your Order');
 
         return view('web.track', compact('order', 'searched', 'error', 'seo'));
     }

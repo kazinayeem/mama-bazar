@@ -64,18 +64,4 @@ return [
 
     'review_invitation_delay_days' => (int) env('EMAIL_REVIEW_INVITATION_DELAY_DAYS', 3),
 
-    /*
-    |--------------------------------------------------------------------------
-    | SMTP Settings Security Lock PIN
-    |--------------------------------------------------------------------------
-    |
-    | Admins must enter this PIN to unlock and access SMTP settings.
-    | Can be plaintext or a bcrypt/argon2 hash.
-    | Defaults to '6969' in development/local.
-    |
-    */
-    'smtp_pin' => env('SMTP_SETTINGS_PIN', '6969'),
-
-    'smtp_unlock_duration_minutes' => (int) env('SMTP_SETTINGS_UNLOCK_MINUTES', 15),
-
 ];

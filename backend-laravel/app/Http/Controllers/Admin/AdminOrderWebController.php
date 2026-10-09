@@ -9,6 +9,7 @@ use App\Models\OrderStatusHistory;
 use App\Services\ActivityLoggerService;
 use App\Services\BusinessSettingService;
 use App\Services\InvoicePdfService;
+use App\Services\IpLocationService;
 use App\Services\OrderEmailService;
 use App\Support\EmailQueue;
 use Illuminate\Http\Request;
@@ -46,7 +47,10 @@ class AdminOrderWebController extends Controller
         $emailLogs = EmailLog::where('order_id', $order->id)->latest()->take(15)->get();
         $invoiceReady = InvoicePdfService::isInvoiceReady($order);
 
-        return view('admin.orders.show', compact('order', 'store', 'emailLogs', 'invoiceReady'));
+        $ipGeolocation = IpLocationService::lookup($order->ip_address);
+        $locationComparison = IpLocationService::compareLocation($ipGeolocation, $order);
+
+        return view('admin.orders.show', compact('order', 'store', 'emailLogs', 'invoiceReady', 'ipGeolocation', 'locationComparison'));
     }
 
     public function invoice($id)

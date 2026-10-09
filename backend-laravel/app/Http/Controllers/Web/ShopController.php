@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Models\Size;
 use App\Services\ProductService;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
@@ -238,7 +239,7 @@ class ShopController extends Controller
             $seoDescription = "Shop {$selectedBrand->name} products at Mama Bazar.";
         }
 
-        $seo = \App\Services\SeoService::getForShop($request, $selectedCategory, $selectedBrand, $selectedSubcategory);
+        $seo = SeoService::getForShop($request, $selectedCategory, $selectedBrand, $selectedSubcategory);
 
         return view('web.products.index', [
             'title' => $seo['title'],

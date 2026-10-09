@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminInvitationController;
 use App\Http\Controllers\Admin\AdminModuleWebController;
 use App\Http\Controllers\Admin\AdminOrderWebController;
 use App\Http\Controllers\Admin\AdminProductWebController;
+use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminReviewWebController;
 use App\Http\Controllers\Admin\AdminSeoController;
 use App\Http\Controllers\Admin\AdminSettingWebController;
@@ -170,9 +171,13 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::get('/', fn () => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
-    // Mandatory Password Change
+    // Mandatory Password Change (first login / forced)
     Route::get('/password/change', [AdminInvitationController::class, 'showChangePassword'])->name('admin.password.change');
     Route::post('/password/change', [AdminInvitationController::class, 'processChangePassword'])->middleware('throttle:10,1')->name('admin.password.change.submit');
+
+    // Admin Self-Service Change Password
+    Route::get('/profile/password', [AdminProfileController::class, 'showPasswordForm'])->name('admin.profile.password');
+    Route::post('/profile/password', [AdminProfileController::class, 'updatePassword'])->middleware('throttle:10,1')->name('admin.profile.password.update');
 
     // Products
     Route::get('/products', [AdminProductWebController::class, 'index'])->name('admin.products.index');
@@ -211,15 +216,10 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
 
         Route::middleware('admin.can:email.settings.manage')->group(function () {
             Route::get('/settings', [AdminEmailController::class, 'settings'])->name('settings');
-            Route::post('/settings/unlock', [AdminEmailController::class, 'unlockSettings'])->middleware('throttle:10,1')->name('settings.unlock');
-            Route::post('/settings/lock', [AdminEmailController::class, 'lockSettings'])->name('settings.lock');
-
-            Route::middleware('smtp.unlocked')->group(function () {
-                Route::post('/settings', [AdminEmailController::class, 'updateSettings'])->name('settings.update');
-                Route::post('/settings/test-connection', [AdminEmailController::class, 'testConnection'])->middleware('throttle:6,1')->name('settings.test-connection');
-                Route::post('/settings/send-test', [AdminEmailController::class, 'sendTestEmail'])->middleware('throttle:6,1')->name('settings.send-test');
-                Route::post('/settings/check-dns', [AdminEmailController::class, 'checkDns'])->middleware('throttle:6,1')->name('settings.check-dns');
-            });
+            Route::post('/settings', [AdminEmailController::class, 'updateSettings'])->name('settings.update');
+            Route::post('/settings/test-connection', [AdminEmailController::class, 'testConnection'])->middleware('throttle:6,1')->name('settings.test-connection');
+            Route::post('/settings/send-test', [AdminEmailController::class, 'sendTestEmail'])->middleware('throttle:6,1')->name('settings.send-test');
+            Route::post('/settings/check-dns', [AdminEmailController::class, 'checkDns'])->middleware('throttle:6,1')->name('settings.check-dns');
 
             Route::get('/automation', [AdminEmailController::class, 'automation'])->name('automation');
             Route::post('/automation', [AdminEmailController::class, 'updateAutomation'])->name('automation.update');

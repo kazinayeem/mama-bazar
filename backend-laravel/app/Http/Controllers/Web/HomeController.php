@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Services\HomepageService;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -12,7 +13,7 @@ class HomeController extends Controller
     {
         $homepageData = HomepageService::getHomepage();
         $config = HomepageService::getConfig();
-        $seo = \App\Services\SeoService::getForHome();
+        $seo = SeoService::getForHome();
 
         return view('web.home', [
             'homepageData' => $homepageData,
