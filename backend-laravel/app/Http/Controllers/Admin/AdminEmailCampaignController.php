@@ -277,7 +277,7 @@ class AdminEmailCampaignController extends Controller
         return [
             'name' => $data['name'],
             'subject' => trim($data['subject']),
-            'sender_name' => $data['sender_name'] ?: null,
+            'sender_name' => ($data['sender_name'] ?? null) ?: null,
             'template_key' => $data['template_key'],
             'audience_filter' => $data['audience_filter'],
             'audience_params' => $this->audienceParams($data),

@@ -26,7 +26,6 @@ class AdminEmailCampaignDraftTest extends TestCase
             'announcement_body' => 'Enjoy festive savings on groceries.',
         ]);
 
-        fwrite(STDERR, (string) ($response->exception?->getMessage().' @ '.$response->exception?->getFile().':'.$response->exception?->getLine()));
         $response->assertSessionHasNoErrors();
         $campaign = EmailCampaign::sole();
         $response->assertRedirect(route('admin.email.campaigns.show', $campaign->id));
