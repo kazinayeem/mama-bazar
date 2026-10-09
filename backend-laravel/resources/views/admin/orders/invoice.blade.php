@@ -21,7 +21,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        @page { size: A4; margin: 12mm 11mm; }
+        @page { size: A4 portrait; margin: 10mm; }
         .toolbar {
             max-width: 210mm;
             margin: 16px auto 12px;
@@ -42,6 +42,7 @@
             width: 210mm; max-width: calc(100% - 16px);
             margin: 0 auto 32px; background: #fff;
             border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
         }
         .sheet-inner { padding: 32px 36px 28px; }
         .inv-header { display: table; width: 100%; padding-bottom: 18px; border-bottom: 3px solid #0f4d2c; }
@@ -96,13 +97,124 @@
         .notes h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #0f4d2c; margin-bottom: 4px; }
         .footer { margin-top: 20px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #64748b; }
         .footer .thanks { font-size: 13px; font-weight: 800; color: #0f4d2c; }
+
         @media print {
-            body { background: #fff; }
-            .toolbar { display: none !important; }
-            .sheet { width: auto; max-width: none; margin: 0; border: none; border-radius: 0; }
-            .sheet-inner { padding: 0; }
+            html, body {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                color: #1e293b !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .toolbar, .no-print {
+                display: none !important;
+            }
+            .sheet {
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                overflow: visible !important;
+                transform: none !important;
+            }
+            .sheet-inner {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+            }
+            .inv-header {
+                display: table !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+                padding-bottom: 16px !important;
+                border-bottom: 3px solid #0f4d2c !important;
+            }
+            .inv-header > div {
+                display: table-cell !important;
+                vertical-align: top !important;
+            }
+            .inv-header > div:first-child {
+                width: 58% !important;
+            }
+            .inv-header > div:last-child {
+                width: 42% !important;
+                text-align: right !important;
+            }
+            .two-col {
+                display: table !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+                margin: 16px 0 6px !important;
+            }
+            .two-col > div {
+                display: table-cell !important;
+                width: 50% !important;
+                vertical-align: top !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            thead {
+                display: table-header-group !important;
+            }
+            tr {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            table.items {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin-top: 14px !important;
+            }
+            table.items th {
+                background: #0f4d2c !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            table.items th:nth-child(2),
+            table.items td:nth-child(2) {
+                display: table-cell !important;
+            }
+            table.totals {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin-top: 12px !important;
+            }
+            table.totals tr {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .notes {
+                display: table !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+                margin-top: 16px !important;
+            }
+            .notes > div {
+                display: table-cell !important;
+                width: 50% !important;
+                vertical-align: top !important;
+                padding-right: 16px !important;
+            }
+            .footer {
+                margin-top: 20px !important;
+                padding-top: 14px !important;
+                border-top: 1px solid #e2e8f0 !important;
+            }
         }
-        @media (max-width: 700px) {
+
+        @media screen and (max-width: 700px) {
             .toolbar { margin: 10px 8px; }
             .sheet-inner { padding: 20px 16px; }
             .inv-header > div, .two-col > div, .notes > div { display: block; width: 100%; }
@@ -252,6 +364,19 @@
 </div>
 
 <script>
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('print') === '1' || urlParams.get('print') === 'true') {
+        if (document.readyState === 'complete') {
+            setTimeout(() => window.print(), 250);
+        } else {
+            window.addEventListener('load', () => {
+                setTimeout(() => window.print(), 250);
+            });
+        }
+    }
+});
+
 function copyOrderInfo() {
     const text = [
         'Order: {{ $order->order_id }}',

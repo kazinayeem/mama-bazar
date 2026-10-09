@@ -20,7 +20,7 @@
                 <div x-show="actionsOpen" x-cloak class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl py-1 text-xs">
                     <a href="{{ route('admin.orders.invoice', $order->id) }}" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">View Invoice</a>
                     <a href="{{ route('admin.orders.invoice.download', $order->id) }}" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Download PDF</a>
-                    <a href="{{ route('admin.orders.invoice', $order->id) }}" target="_blank" onclick="event.preventDefault(); window.open(this.href,'_blank').print();" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Print Invoice</a>
+                    <a href="{{ route('admin.orders.invoice', $order->id) }}?print=1" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Print Invoice</a>
                     <a href="{{ route('admin.orders.packing-slip', $order->id) }}" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Print Packing Slip</a>
                     <button type="button" onclick="copyOrderInfo()" class="block w-full text-left px-4 py-2.5 font-semibold hover:bg-slate-50">Copy Order Info</button>
                     <button type="button" @click="customerOpen = true; actionsOpen = false" class="block w-full text-left px-4 py-2.5 font-semibold hover:bg-slate-50">View Customer Details</button>
