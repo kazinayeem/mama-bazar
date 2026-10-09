@@ -115,4 +115,9 @@ class Order extends Model
     {
         return $this->hasMany(EmailLog::class, 'order_id');
     }
+
+    public function editHistories()
+    {
+        return $this->hasMany(OrderEditHistory::class, 'order_id')->orderByDesc('created_at');
+    }
 }
