@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SslcommerzSettings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +19,12 @@ class PaymentMethod extends Model
         'maintenance_mode',
         'config',
     ];
+
+    /**
+     * Raw config may contain encrypted gateway credentials; serialize through
+     * toApiArray() / publicConfigArray() instead.
+     */
+    protected $hidden = ['config'];
 
     protected $casts = [
         'enabled' => 'boolean',
@@ -48,6 +55,53 @@ class PaymentMethod extends Model
         'paypal' => '🅿️',
     ];
 
+    /**
+     * Config keys holding gateway credentials. They are only written through
+     * SslcommerzSettings and are never returned to the browser.
+     */
+    public const PROTECTED_CONFIG_KEYS = ['gateway'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (PaymentMethod $method): void {
+            if (! $method->exists || ! $method->isDirty('config')) {
+                return;
+            }
+
+            $original = json_decode((string) ($method->getRawOriginal('config') ?? ''), true);
+            $original = is_array($original) ? $original : [];
+            $config = $method->config_array;
+
+            foreach (self::PROTECTED_CONFIG_KEYS as $key) {
+                if (array_key_exists($key, $original)) {
+                    $config[$key] = $original[$key];
+                } else {
+                    unset($config[$key]);
+                }
+            }
+
+            $method->config = $config;
+        });
+
+        static::creating(function (PaymentMethod $method): void {
+            $config = $method->config_array;
+            foreach (self::PROTECTED_CONFIG_KEYS as $key) {
+                unset($config[$key]);
+            }
+            $method->config = $config;
+        });
+    }
+
+    /**
+     * Config safe for browsers and API consumers (credentials removed).
+     *
+     * @return array<string, mixed>
+     */
+    public function publicConfigArray(): array
+    {
+        return array_diff_key($this->config_array, array_flip(self::PROTECTED_CONFIG_KEYS));
+    }
+
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order')->orderBy('id');
@@ -55,9 +109,14 @@ class PaymentMethod extends Model
 
     public function scopeActiveCheckout(Builder $query): Builder
     {
-        return $query->where('enabled', true)
-            ->where('maintenance_mode', false)
-            ->ordered();
+        $query->where('enabled', true)
+            ->where('maintenance_mode', false);
+
+        if (! SslcommerzSettings::load()->isCheckoutReady()) {
+            $query->where('code', '!=', SslcommerzSettings::METHOD_CODE);
+        }
+
+        return $query->ordered();
     }
 
     public function getConfigArrayAttribute(): array
@@ -85,7 +144,7 @@ class PaymentMethod extends Model
     /** React-compatible camelCase payload for API consumers. */
     public function toApiArray(bool $public = false): array
     {
-        $config = $this->config_array;
+        $config = $this->publicConfigArray();
 
         if ($public) {
             return [
@@ -193,11 +252,11 @@ class PaymentMethod extends Model
                 'code' => 'sslcommerz',
                 'name' => 'Card / Online Gateway',
                 'type' => 'online',
-                'enabled' => true,
+                'enabled' => false,
                 'sort_order' => 6,
-                'maintenance_mode' => true,
+                'maintenance_mode' => false,
                 'config' => [
-                    'instructions' => 'Online card payment is coming soon.',
+                    'instructions' => 'Pay securely with card, mobile banking or internet banking via SSLCOMMERZ.',
                 ],
             ],
         ];

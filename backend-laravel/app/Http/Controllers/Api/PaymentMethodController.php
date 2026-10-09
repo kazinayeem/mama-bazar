@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PaymentMethod;
+use App\Support\SslcommerzSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -85,8 +86,16 @@ class PaymentMethodController extends Controller
             'config' => 'nullable|array',
         ]);
 
+        $isGateway = $method->code === SslcommerzSettings::METHOD_CODE;
+        if ($isGateway && $request->boolean('enabled') && ! $method->enabled) {
+            $blocker = SslcommerzSettings::load()->enableBlocker($request->user());
+            if ($blocker !== null) {
+                return response()->json(['success' => false, 'message' => $blocker], 422);
+            }
+        }
+
         $updateData = [];
-        if ($request->has('code')) {
+        if ($request->has('code') && ! $isGateway) {
             $updateData['code'] = strtolower(trim($validated['code']));
         }
         if ($request->has('name')) {
@@ -121,8 +130,11 @@ class PaymentMethodController extends Controller
             'enabled' => 'required|boolean',
         ]);
 
-        PaymentMethod::whereIn('id', $request->input('ids'))
-            ->update(['enabled' => $request->boolean('enabled')]);
+        $query = PaymentMethod::whereIn('id', $request->input('ids'));
+        if ($request->boolean('enabled') && SslcommerzSettings::load()->enableBlocker($request->user()) !== null) {
+            $query->where('code', '!=', SslcommerzSettings::METHOD_CODE);
+        }
+        $query->update(['enabled' => $request->boolean('enabled')]);
 
         return response()->json(['success' => true, 'data' => ['success' => true]]);
     }
@@ -132,6 +144,9 @@ class PaymentMethodController extends Controller
         $method = PaymentMethod::find($id);
         if (! $method) {
             return response()->json(['success' => false, 'message' => 'Payment method not found'], 404);
+        }
+        if ($method->code === SslcommerzSettings::METHOD_CODE) {
+            return response()->json(['success' => false, 'message' => 'The SSLCOMMERZ gateway cannot be deleted. Disable it instead.'], 422);
         }
 
         $method->delete();

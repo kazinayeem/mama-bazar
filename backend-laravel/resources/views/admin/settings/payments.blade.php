@@ -1,7 +1,12 @@
 @extends('layouts.admin', ['headerTitle' => 'Payment Methods'])
 
 @php
-    $methodsPayload = $methods->map(function ($m) {
+    $gatewayRowStatus = [
+        'mode' => $gateway['summary']['mode'],
+        'readiness' => $gateway['summary']['readiness'],
+        'checkoutReady' => $gateway['summary']['checkoutReady'],
+    ];
+    $methodsPayload = $methods->map(function ($m) use ($gatewayRowStatus) {
         return [
             'id' => $m->id,
             'code' => $m->code,
@@ -10,7 +15,8 @@
             'enabled' => (bool) $m->enabled,
             'sortOrder' => (int) $m->sort_order,
             'maintenanceMode' => (bool) $m->maintenance_mode,
-            'config' => $m->config_array,
+            'gateway' => $m->code === \App\Support\SslcommerzSettings::METHOD_CODE ? $gatewayRowStatus : null,
+            'config' => $m->publicConfigArray(),
             'icon' => $m->icon,
             'typeLabel' => $m->type_label,
             'updateUrl' => route('admin.payment-methods.update', $m->id),
@@ -28,7 +34,7 @@
 >
     <x-admin.page-header
         title="Payment Methods"
-        subtitle="Payment options shown at checkout. Online gateways can be marked as coming soon."
+        subtitle="Payment options shown at checkout. Configure SSLCOMMERZ below; it only appears at checkout once ready."
     >
         <x-slot:actions>
             <template x-if="selected.length > 0">
@@ -69,6 +75,8 @@
         </div>
     @endif
 
+    @include('admin.settings.partials.sslcommerz-gateway', ['gateway' => $gateway])
+
     <div class="admin-table-wrap">
         <template x-if="methods.length === 0">
             <div class="p-6">
@@ -89,12 +97,16 @@
                                     <p class="truncate text-sm font-semibold text-slate-900" x-text="m.name"></p>
                                     <p class="font-mono text-[11px] text-slate-400" x-text="m.code"></p>
                                     <p class="mt-1 text-xs text-slate-500" x-text="m.typeLabel"></p>
+                                    <template x-if="m.gateway">
+                                        <p class="mt-1 text-[11px] font-semibold" :class="m.gateway.checkoutReady ? 'text-emerald-700' : 'text-amber-700'"
+                                            x-text="(m.gateway.mode === 'live' ? 'Live' : 'Sandbox') + ' · ' + gatewayReadinessLabel(m.gateway)"></p>
+                                    </template>
                                 </div>
                                 <template x-if="m.maintenanceMode">
                                     <x-admin.badge variant="warning">Maintenance</x-admin.badge>
                                 </template>
                                 <template x-if="!m.maintenanceMode">
-                                    <x-admin.badge variant="secondary">Live</x-admin.badge>
+                                    <x-admin.badge variant="secondary">Available</x-admin.badge>
                                 </template>
                             </div>
                             <div class="flex items-center justify-between gap-2">
@@ -142,6 +154,15 @@
                                             <span x-text="m.name"></span>
                                             <span class="font-mono text-[11px] font-normal text-slate-400" x-text="'(' + m.code + ')'"></span>
                                         </span>
+                                        <template x-if="m.gateway">
+                                            <span class="mt-1 flex flex-wrap items-center gap-1 pl-10">
+                                                <span class="inline-flex items-center rounded-[6px] border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                                                    :class="m.gateway.mode === 'live' ? 'bg-brand-orange-50 text-brand-orange-700 border-brand-orange-100' : 'bg-slate-100 text-slate-600 border-slate-200'"
+                                                    x-text="m.gateway.mode === 'live' ? 'Live' : 'Sandbox'"></span>
+                                                <span class="inline-flex items-center rounded-[6px] border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                                                    :class="gatewayReadinessClass(m.gateway)" x-text="gatewayReadinessLabel(m.gateway)"></span>
+                                            </span>
+                                        </template>
                                     </td>
                                     <td class="text-slate-500" x-text="m.typeLabel"></td>
                                     <td class="text-slate-500" x-text="m.sortOrder"></td>
@@ -159,7 +180,7 @@
                                             <x-admin.badge variant="warning">Maintenance</x-admin.badge>
                                         </template>
                                         <template x-if="!m.maintenanceMode">
-                                            <x-admin.badge variant="secondary">Live</x-admin.badge>
+                                            <x-admin.badge variant="secondary">Available</x-admin.badge>
                                         </template>
                                     </td>
                                     <td class="text-right">
@@ -544,6 +565,25 @@ function paymentMethodsAdmin(initialMethods) {
                 this.pickerUploading = false;
                 event.target.value = '';
             }
+        },
+
+        gatewayReadinessLabel(gateway) {
+            return {
+                not_configured: 'Not configured',
+                configured: 'Not tested',
+                sandbox_verified: 'Sandbox verified',
+                live_unverified: 'Live not verified',
+                live_verified: 'Live verified',
+            }[gateway.readiness] || 'Unknown';
+        },
+
+        gatewayReadinessClass(gateway) {
+            if (['sandbox_verified', 'live_verified'].includes(gateway.readiness)) {
+                return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+            }
+            return gateway.readiness === 'live_unverified'
+                ? 'bg-red-50 text-red-700 border-red-100'
+                : 'bg-amber-50 text-amber-800 border-amber-100';
         },
 
         confirmPicker() {

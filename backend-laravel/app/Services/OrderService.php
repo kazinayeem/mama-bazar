@@ -14,6 +14,7 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Support\DeviceDetector;
+use App\Support\SslcommerzSettings;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -382,6 +383,10 @@ class OrderService
             if ($paymentMethodCode === 'cod' && isset($method) && ! $method->cod_available) {
                 throw new Exception("Cash on Delivery is not available for {$method->name}", 400);
             }
+            $isGatewayPayment = $paymentMethodCode === SslcommerzSettings::METHOD_CODE;
+            if ($isGatewayPayment && ! SslcommerzSettings::load()->isCheckoutReady()) {
+                throw new Exception("{$paymentMethod->name} is currently unavailable", 400);
+            }
 
             // Coupon — validated server-side; invalid codes are rejected, not ignored.
             $discount = 0;
@@ -420,8 +425,18 @@ class OrderService
 
             $totalPrice = $subtotal - $discount + $tax + $shippingCost;
 
-            // Payment state
-            if ($paymentMethodCode === 'cod') {
+            if ($isGatewayPayment && ($totalPrice < SslcommerzService::MIN_AMOUNT || $totalPrice > SslcommerzService::MAX_AMOUNT)) {
+                throw new Exception('Online card payment is available for orders between Tk '.SslcommerzService::MIN_AMOUNT.' and Tk '.number_format(SslcommerzService::MAX_AMOUNT).'.', 400);
+            }
+
+            // Payment state — gateway orders stay unpaid until SSLCOMMERZ validates the transaction.
+            if ($isGatewayPayment) {
+                $paymentStatus = 'payment_pending';
+                $orderStatus = 'payment_pending';
+                foreach (['transactionId', 'transaction_id', 'senderNumber', 'sender_number', 'paymentScreenshot', 'payment_screenshot', 'amountSent'] as $clientPaymentField) {
+                    unset($input[$clientPaymentField]);
+                }
+            } elseif ($paymentMethodCode === 'cod') {
                 $paymentStatus = 'success';
                 $orderStatus = 'pending';
             } elseif (! empty($input['paymentScreenshot']) || ! empty($input['payment_screenshot'])

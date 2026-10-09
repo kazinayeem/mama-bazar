@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureAdminPermission;
 use App\Models\AdminBackup;
 use App\Models\Banner;
 use App\Models\MediaAsset;
@@ -14,6 +15,7 @@ use App\Services\ActivityLoggerService;
 use App\Services\BackupService;
 use App\Services\BusinessSettingService;
 use App\Services\MediaStorageService;
+use App\Support\SslcommerzSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -265,7 +267,35 @@ class AdminSettingWebController extends Controller
         PaymentMethod::ensureDefaults();
         $methods = PaymentMethod::ordered()->get();
 
-        return view('admin.settings.payments', compact('methods'));
+        $user = request()->user();
+        $gateway = [
+            'summary' => SslcommerzSettings::load()->summary(),
+            'unlocked' => AdminPaymentGatewayController::isUnlocked(request()),
+            'unlockExpiresAt' => AdminPaymentGatewayController::unlockExpiresAt(request()),
+            'canConfigure' => EnsureAdminPermission::allows($user, ['payment_methods.configure']),
+            'canTest' => EnsureAdminPermission::allows($user, ['payment_methods.test']),
+            'canEnableLive' => EnsureAdminPermission::allows($user, ['payment_methods.enable_live']),
+            'callbackUrls' => [
+                'success' => route('payment.sslcommerz.success'),
+                'fail' => route('payment.sslcommerz.fail'),
+                'cancel' => route('payment.sslcommerz.cancel'),
+                'ipn' => route('payment.sslcommerz.ipn'),
+            ],
+        ];
+
+        return view('admin.settings.payments', compact('methods', 'gateway'));
+    }
+
+    /**
+     * Returns an error when this change would enable SSLCOMMERZ before it is ready.
+     */
+    private function gatewayEnableError(PaymentMethod $method, bool $enabling, Request $request): ?string
+    {
+        if (! $enabling || $method->code !== SslcommerzSettings::METHOD_CODE || $method->enabled) {
+            return null;
+        }
+
+        return SslcommerzSettings::load()->enableBlocker($request->user());
     }
 
     public function storePaymentMethod(Request $request)
@@ -306,9 +336,14 @@ class AdminSettingWebController extends Controller
             'config' => 'nullable|array',
         ]);
 
+        $enableError = $this->gatewayEnableError($method, $request->boolean('enabled'), $request);
+        if ($enableError !== null) {
+            return back()->with('error', $enableError);
+        }
+
         $method->update([
             'name' => trim($validated['name']),
-            'type' => $validated['type'],
+            'type' => $method->code === SslcommerzSettings::METHOD_CODE ? 'online' : $validated['type'],
             'enabled' => $request->boolean('enabled'),
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
             'maintenance_mode' => $request->boolean('maintenance_mode'),
@@ -318,10 +353,17 @@ class AdminSettingWebController extends Controller
         return back()->with('success', 'Payment method updated.');
     }
 
-    public function togglePaymentMethod($id)
+    public function togglePaymentMethod(Request $request, $id)
     {
         $method = PaymentMethod::findOrFail($id);
+        $enableError = $this->gatewayEnableError($method, ! $method->enabled, $request);
+        if ($enableError !== null) {
+            return back()->with('error', $enableError);
+        }
         $method->enabled = ! $method->enabled;
+        if ($method->enabled && $method->code === SslcommerzSettings::METHOD_CODE) {
+            $method->maintenance_mode = false;
+        }
         $method->save();
 
         return back()->with('success', $method->enabled ? 'Payment method enabled.' : 'Payment method disabled.');
@@ -335,17 +377,31 @@ class AdminSettingWebController extends Controller
             'enabled' => 'required|boolean',
         ]);
 
-        PaymentMethod::whereIn('id', $validated['ids'])
+        $ids = $validated['ids'];
+        $skippedGateway = null;
+        if ($request->boolean('enabled')) {
+            $gateway = PaymentMethod::whereIn('id', $ids)->where('code', SslcommerzSettings::METHOD_CODE)->first();
+            if ($gateway && ($skippedGateway = $this->gatewayEnableError($gateway, true, $request)) !== null) {
+                $ids = array_values(array_diff($ids, [$gateway->id]));
+            }
+        }
+
+        PaymentMethod::whereIn('id', $ids)
             ->update(['enabled' => $request->boolean('enabled')]);
 
         $action = $request->boolean('enabled') ? 'Enabled' : 'Disabled';
+        $redirect = back()->with('success', "{$action} ".count($ids).' payment method(s).');
 
-        return back()->with('success', "{$action} ".count($validated['ids']).' payment method(s).');
+        return $skippedGateway !== null ? $redirect->with('error', 'SSLCOMMERZ was not enabled: '.$skippedGateway) : $redirect;
     }
 
     public function destroyPaymentMethod($id)
     {
-        PaymentMethod::findOrFail($id)->delete();
+        $method = PaymentMethod::findOrFail($id);
+        if ($method->code === SslcommerzSettings::METHOD_CODE) {
+            return back()->with('error', 'The SSLCOMMERZ gateway cannot be deleted. Disable it instead.');
+        }
+        $method->delete();
 
         return back()->with('success', 'Payment method deleted.');
     }

@@ -11,9 +11,11 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminEmailCampaignController;
 use App\Http\Controllers\Admin\AdminEmailController;
 use App\Http\Controllers\Admin\AdminEmailTemplateController;
+use App\Http\Controllers\Admin\AdminIncompleteOrderWebController;
 use App\Http\Controllers\Admin\AdminInvitationController;
 use App\Http\Controllers\Admin\AdminModuleWebController;
 use App\Http\Controllers\Admin\AdminOrderWebController;
+use App\Http\Controllers\Admin\AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\AdminProductWebController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminReviewWebController;
@@ -34,9 +36,13 @@ use App\Http\Controllers\Web\PageWebController;
 use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\SeoController;
 use App\Http\Controllers\Web\ShopController;
+use App\Http\Controllers\Web\SslcommerzPaymentController;
 use App\Http\Controllers\Web\TeamWebController;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +78,20 @@ Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout
 Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.coupon');
 Route::post('/checkout/track', [CheckoutController::class, 'trackProgress'])->middleware('throttle:60,1')->name('checkout.track');
 Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
+
+// SSLCOMMERZ: gateway callbacks are cross-site POSTs, so they run without session/CSRF.
+Route::prefix('payment/sslcommerz')->name('payment.sslcommerz.')->group(function () {
+    Route::withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class])
+        ->middleware('throttle:120,1')
+        ->group(function () {
+            Route::post('/success', [SslcommerzPaymentController::class, 'success'])->name('success');
+            Route::post('/fail', [SslcommerzPaymentController::class, 'fail'])->name('fail');
+            Route::post('/cancel', [SslcommerzPaymentController::class, 'cancel'])->name('cancel');
+            Route::post('/ipn', [SslcommerzPaymentController::class, 'ipn'])->name('ipn');
+        });
+    Route::get('/status', [SslcommerzPaymentController::class, 'status'])->name('status');
+    Route::post('/retry', [SslcommerzPaymentController::class, 'retry'])->middleware('throttle:6,1')->name('retry');
+});
 Route::get('/track', [OrderTrackingController::class, 'index'])->name('track');
 Route::post('/newsletter/subscribe', [HomeController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
 
@@ -222,9 +242,9 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
 
     // Incomplete Orders & Checkout Analytics
     Route::prefix('incomplete-orders')->name('admin.incomplete-orders.')->middleware('admin.can:incomplete_orders.view')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\AdminIncompleteOrderWebController::class, 'index'])->name('index');
-        Route::get('/export', [\App\Http\Controllers\Admin\AdminIncompleteOrderWebController::class, 'export'])->middleware('admin.can:incomplete_orders.export')->name('export');
-        Route::post('/prune', [\App\Http\Controllers\Admin\AdminIncompleteOrderWebController::class, 'prune'])->middleware('admin.can:incomplete_orders.manage_retention')->name('prune');
+        Route::get('/', [AdminIncompleteOrderWebController::class, 'index'])->name('index');
+        Route::get('/export', [AdminIncompleteOrderWebController::class, 'export'])->middleware('admin.can:incomplete_orders.export')->name('export');
+        Route::post('/prune', [AdminIncompleteOrderWebController::class, 'prune'])->middleware('admin.can:incomplete_orders.manage_retention')->name('prune');
     });
 
     // Email Management
@@ -388,6 +408,10 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::post('/payment-methods/bulk-status', [AdminSettingWebController::class, 'bulkPaymentMethodsStatus'])->middleware('admin.can:payment_methods.manage')->name('admin.payment-methods.bulk-status');
     Route::delete('/payment-methods/{id}', [AdminSettingWebController::class, 'destroyPaymentMethod'])->middleware('admin.can:payment_methods.manage')->name('admin.payment-methods.destroy');
     Route::get('/payments', fn () => redirect()->route('admin.payment-methods.index')); // legacy alias
+    Route::post('/payment-gateway/sslcommerz/unlock', [AdminPaymentGatewayController::class, 'unlock'])->middleware(['admin.can:payment_methods.configure', 'throttle:20,1'])->name('admin.payment-gateway.unlock');
+    Route::post('/payment-gateway/sslcommerz/lock', [AdminPaymentGatewayController::class, 'lock'])->middleware('admin.can:payment_methods.configure')->name('admin.payment-gateway.lock');
+    Route::put('/payment-gateway/sslcommerz', [AdminPaymentGatewayController::class, 'update'])->middleware('admin.can:payment_methods.configure')->name('admin.payment-gateway.update');
+    Route::post('/payment-gateway/sslcommerz/test', [AdminPaymentGatewayController::class, 'test'])->middleware(['admin.can:payment_methods.test', 'throttle:10,1'])->name('admin.payment-gateway.test');
 
     // Content
     Route::get('/homepage', [AdminModuleWebController::class, 'homepage'])->middleware('admin.can:homepage.view')->name('admin.homepage.index');

@@ -10,15 +10,22 @@ use App\Models\PaymentMethod;
 use App\Models\ShippingMethod;
 use App\Models\SiteSetting;
 use App\Models\UserAddress;
+use App\Services\IncompleteOrderService;
 use App\Services\OrderService;
 use App\Services\SeoService;
+use App\Services\SslcommerzService;
+use App\Support\SslcommerzSettings;
 use Exception;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
     public const BD_PHONE_RULE = 'regex:/^(?:\+?880|0)1[3-9]\d{8}$/';
+
+    public function __construct(private SslcommerzService $sslcommerz) {}
 
     public function index(Request $request)
     {
@@ -145,6 +152,7 @@ class CheckoutController extends Controller
 
         $paymentMethodCode = strtolower($validated['payment_method']);
         $isCod = $paymentMethodCode === 'cod';
+        $isGatewayPayment = $paymentMethodCode === SslcommerzSettings::METHOD_CODE;
 
         $activeMethod = PaymentMethod::activeCheckout()->where('code', $paymentMethodCode)->first();
         if (! $activeMethod) {
@@ -164,7 +172,7 @@ class CheckoutController extends Controller
             return back()->withInput()->with('error', 'Cash on Delivery is not available for the selected delivery method.');
         }
 
-        if (! $isCod) {
+        if (! $isCod && ! $isGatewayPayment) {
             $isMobileBanking = $activeMethod->type === 'mobile_banking';
 
             $request->validate([
@@ -219,7 +227,7 @@ class CheckoutController extends Controller
             $checkoutSessionId = $request->input('checkout_session_id');
             if ($checkoutSessionId && $orderDbId) {
                 try {
-                    \App\Services\IncompleteOrderService::markConverted($checkoutSessionId, (int) $orderDbId);
+                    IncompleteOrderService::markConverted($checkoutSessionId, (int) $orderDbId);
                 } catch (\Throwable $e) {
                     Log::warning('Failed to mark checkout session converted', ['error' => $e->getMessage()]);
                 }
@@ -238,19 +246,33 @@ class CheckoutController extends Controller
                 $successParams['token'] = $accessToken;
             }
 
+            if ($isGatewayPayment && $orderDbId) {
+                $initiation = $this->sslcommerz->initiatePayment(Order::findOrFail($orderDbId));
+                if ($initiation['success']) {
+                    return redirect()->away($initiation['redirectUrl']);
+                }
+
+                return redirect()->route('payment.sslcommerz.status', $successParams)
+                    ->with('error', $initiation['message']);
+            }
+
             return redirect()->route('order.success', $successParams)
                 ->with('success', 'Order placed successfully!');
         } catch (Exception $e) {
             Log::warning('Checkout failed', ['error' => $e->getMessage(), 'phone' => $request->input('phone')]);
 
-            return back()->withInput()->with('error', $e->getMessage());
+            $customerMessage = $e instanceof QueryException
+                ? 'We could not place your order right now. Please try again in a moment.'
+                : $e->getMessage();
+
+            return back()->withInput()->with('error', $customerMessage);
         }
     }
 
     /**
      * Smart autosave & milestone tracking endpoint for incomplete checkout sessions.
      */
-    public function trackProgress(Request $request): \Illuminate\Http\JsonResponse
+    public function trackProgress(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'checkout_session_id' => 'required|string|max:64',
@@ -269,7 +291,7 @@ class CheckoutController extends Controller
         ]);
 
         try {
-            $session = \App\Services\IncompleteOrderService::recordProgress($validated, $request);
+            $session = IncompleteOrderService::recordProgress($validated, $request);
 
             return response()->json([
                 'success' => true,

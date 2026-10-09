@@ -48,4 +48,25 @@ return [
         'id' => env('GOOGLE_ANALYTICS_ID', env('GA_MEASUREMENT_ID')),
     ],
 
+    /*
+    | SSLCOMMERZ hosted checkout. Values saved from the admin panel (encrypted
+    | in the database) take precedence; these env values are the fallback.
+    | SSLCOMMERZ_ENABLED=false acts as a server-level kill switch.
+    */
+    'sslcommerz' => [
+        'enabled' => env('SSLCOMMERZ_ENABLED', true),
+        'store_id' => env('SSLCOMMERZ_STORE_ID'),
+        'store_password' => env('SSLCOMMERZ_STORE_PASSWORD'),
+        'sandbox' => env('SSLCOMMERZ_SANDBOX', true),
+        'currency' => env('SSLCOMMERZ_CURRENCY', 'BDT'),
+        'timeout' => (int) env('SSLCOMMERZ_TIMEOUT', 30),
+        'sandbox_url' => 'https://sandbox.sslcommerz.com',
+        'live_url' => 'https://securepay.sslcommerz.com',
+    ],
+
+    'payment_settings' => [
+        'unlock_pin' => env('PAYMENT_SETTINGS_UNLOCK_PIN'),
+        'unlock_minutes' => (int) env('PAYMENT_SETTINGS_UNLOCK_MINUTES', 10),
+    ],
+
 ];

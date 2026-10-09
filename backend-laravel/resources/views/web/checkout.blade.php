@@ -329,6 +329,11 @@
                             <template x-if="selectedMethod.config?.branch"><p>Branch: <strong x-text="selectedMethod.config.branch"></strong></p></template>
                         </div>
                     </template>
+                    <template x-if="isOnlineGateway">
+                        <div class="mt-3 rounded-xl bg-slate-50 p-3.5 text-[13px] text-slate-700">
+                            After you confirm, you will be redirected to the secure SSLCOMMERZ payment page to pay with card, mobile banking or internet banking. Your order is confirmed once the payment is verified.
+                        </div>
+                    </template>
                     <template x-if="requiresVerification">
                         <div class="mt-3 space-y-3 rounded-xl border border-brand-green-200 bg-brand-green-50/60 p-4">
                             <p class="text-[13px] font-bold text-brand-green-800">Payment Verification <span class="font-normal text-slate-500">— after paying, enter details below</span></p>
@@ -430,7 +435,7 @@
                             <button type="submit" :disabled="submitting || $store.cart.items.length === 0 || !selectedShippingId || !selectedPaymentCode"
                                 class="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-brand-orange-500 px-4 py-3 text-sm font-bold text-white shadow-md transition hover:bg-brand-orange-600 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange-300">
                                 <svg x-show="submitting" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
-                                <span x-text="submitting ? 'Placing Order…' : 'Confirm Order →'"></span>
+                                <span x-text="submitting ? (isOnlineGateway ? 'Redirecting to payment…' : 'Placing Order…') : (isOnlineGateway ? 'Confirm & Pay Online →' : 'Confirm Order →')"></span>
                             </button>
                             <p class="mt-2 text-center text-[11px] text-slate-400">🔒 Secure checkout · Cash on Delivery available</p>
                         </div>
@@ -556,7 +561,8 @@ function checkoutPage(opts) {
             return this.paymentMethods.find((m) => m.code === this.selectedPaymentCode) || null;
         },
         get isCOD() { return (this.selectedMethod?.code || '').toLowerCase() === 'cod'; },
-        get requiresVerification() { return Boolean(this.selectedMethod && !this.isCOD); },
+        get isOnlineGateway() { return (this.selectedMethod?.code || '').toLowerCase() === 'sslcommerz'; },
+        get requiresVerification() { return Boolean(this.selectedMethod && !this.isCOD && !this.isOnlineGateway); },
         get isMobileBanking() { return this.selectedMethod?.type === 'mobile_banking'; },
 
         get subtotal() { return this.$store.cart.subtotal || 0; },
