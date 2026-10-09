@@ -114,6 +114,7 @@ Route::prefix('products')->group(function () {
 Route::prefix('order')->group(function () {
     Route::post('/', [OrderController::class, 'createOrder']);
     Route::get('/track/{id}', [OrderController::class, 'trackOrder']);
+    Route::post('/checkout-progress', [\App\Http\Controllers\Web\CheckoutController::class, 'trackProgress'])->middleware('throttle:60,1');
 
     Route::middleware('jwt.auth')->group(function () {
         Route::get('/admin/all', [OrderController::class, 'getAllOrders'])->middleware('require.permission:orders.view');

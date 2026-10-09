@@ -47,6 +47,7 @@
     taxRate: {{ $taxRate }},
     minOrder: {{ $minOrder }},
     couponValidateUrl: @js(route('checkout.coupon')),
+    trackUrl: @js(route('checkout.track')),
     initialCoupon: @js(old('coupon_code', '')),
     initialName: @js(old('customer_name', auth()->user()?->name ?? '')),
     initialPhone: @js(old('phone', auth()->user()?->phone ?? '')),
@@ -101,6 +102,7 @@
 
     <form id="checkoutForm" action="{{ route('checkout.process') }}" method="POST" @submit.prevent="submitForm($event)" novalidate>
         @csrf
+        <input type="hidden" name="checkout_session_id" :value="checkoutSessionId">
         <input type="hidden" name="order_key" :value="orderKey">
         <input type="hidden" name="coupon_code" :value="coupon.code">
         <input type="hidden" name="shipping_method_id" :value="selectedShippingId">
@@ -455,6 +457,14 @@ function checkoutPage(opts) {
         taxRate: parseFloat(opts.taxRate || 0),
         minOrder: parseFloat(opts.minOrder || 0),
         couponValidateUrl: opts.couponValidateUrl,
+        trackUrl: opts.trackUrl || '/checkout/track',
+        checkoutSessionId: '',
+        lastSavedStateHash: '',
+        lastSavedPercent: 0,
+        lastSaveTime: 0,
+        saveDebounceTimer: null,
+        debounceDelayMs: 3500,
+        minSaveIntervalMs: 8000,
         form: { name: opts.initialName || '', phone: opts.initialPhone || '', altPhone: opts.initialAlt || '', address: opts.initialAddress || '' },
         touch: { delivery: false },
         senderNumber: @js(old('sender_number', '')),
@@ -468,6 +478,7 @@ function checkoutPage(opts) {
         attribution: { utm_source: '', utm_medium: '', utm_campaign: '', utm_content: '', utm_term: '' },
 
         init() {
+            this.checkoutSessionId = this.getCheckoutSessionId();
             this.captureAttribution();
             this.syncDomInputs();
             if (this.coupon.code) {
@@ -475,9 +486,25 @@ function checkoutPage(opts) {
                 this.applyCoupon(true);
             }
             this.ensureValidShipping();
-            this.$watch('district', () => this.ensureValidShipping());
+
+            // Setup watches for smart autosave
+            this.$watch('district', () => { this.ensureValidShipping(); this.queueAutosave(); });
+            this.$watch('form.name', () => this.queueAutosave());
+            this.$watch('form.phone', () => this.queueAutosave());
+            this.$watch('form.address', () => this.queueAutosave());
+            this.$watch('form.altPhone', () => this.queueAutosave());
             this.$watch('$store.cart.subtotal', () => this.revalidateCoupon());
-            this.$watch('selectedPaymentCode', () => { this.senderNumber = ''; this.transactionId = ''; });
+            this.$watch('selectedShippingId', () => this.queueAutosave(true));
+            this.$watch('selectedPaymentCode', () => {
+                this.senderNumber = '';
+                this.transactionId = '';
+                this.queueAutosave(true);
+            });
+
+            // Initial session tracking beacon (opened milestone)
+            setTimeout(() => {
+                this.saveProgress('opened');
+            }, 800);
         },
 
         normalizePhone(v) {
@@ -629,6 +656,151 @@ function checkoutPage(opts) {
             await this.applyCoupon(true);
         },
 
+        getCheckoutSessionId() {
+            try {
+                let sid = sessionStorage.getItem('mb_checkout_sid');
+                if (!sid) {
+                    sid = 'cs_' + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).substring(2)));
+                    sessionStorage.setItem('mb_checkout_sid', sid);
+                }
+                return sid;
+            } catch (e) {
+                return 'cs_' + Date.now().toString(36);
+            }
+        },
+
+        getDeviceCategory() {
+            const ua = navigator.userAgent || '';
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return 'tablet';
+            if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(ua)) return 'mobile';
+            return 'desktop';
+        },
+
+        getCompletedFields() {
+            const fields = [];
+            if ((this.form.name || '').trim().length >= 2) fields.push('customer_name');
+            if (this.validBD(this.form.phone) || (this.form.phone || '').trim().length >= 8) fields.push('phone');
+            if ((this.district || '').trim().length > 0) fields.push('district');
+            if ((this.form.address || '').trim().length >= 5) fields.push('address');
+            if (this.selectedShippingId) fields.push('shipping_method');
+            if (this.selectedPaymentCode) fields.push('payment_method');
+            if ((this.form.altPhone || '').trim().length > 0) fields.push('alternative_phone');
+            return fields;
+        },
+
+        calculateProgress() {
+            const fields = this.getCompletedFields();
+            let percent = 10;
+            let step = 'opened';
+            let milestone = 'opened';
+
+            const hasName = fields.includes('customer_name');
+            const hasPhone = fields.includes('phone');
+            const hasAddress = fields.includes('address');
+            const hasDistrict = fields.includes('district');
+            const hasShipping = fields.includes('shipping_method');
+            const hasPayment = fields.includes('payment_method');
+
+            if (hasName || hasPhone) {
+                percent = Math.max(percent, 25);
+                step = 'contact_started';
+                milestone = 'started_entering_info';
+            }
+            if (hasName && hasPhone) {
+                percent = Math.max(percent, 50);
+                step = 'contact_completed';
+                milestone = 'progress_50';
+            }
+            if (hasName && hasPhone && hasAddress && hasDistrict) {
+                percent = Math.max(percent, 75);
+                step = 'shipping_started';
+                milestone = 'progress_75';
+            }
+            if (hasName && hasPhone && hasAddress && hasDistrict && hasShipping) {
+                percent = Math.max(percent, 85);
+                step = 'shipping_completed';
+                milestone = 'shipping_completed';
+            }
+            if (hasName && hasPhone && hasAddress && hasDistrict && hasShipping && hasPayment) {
+                percent = Math.max(percent, 95);
+                step = 'payment_selected';
+                milestone = 'payment_selected';
+            }
+
+            return { percent, step, milestone, fields };
+        },
+
+        queueAutosave(immediate = false) {
+            if (this.saveDebounceTimer) {
+                clearTimeout(this.saveDebounceTimer);
+                this.saveDebounceTimer = null;
+            }
+
+            const delay = immediate ? 600 : this.debounceDelayMs;
+            this.saveDebounceTimer = setTimeout(() => {
+                this.saveProgress();
+            }, delay);
+        },
+
+        saveProgress(customMilestone = null) {
+            const calc = this.calculateProgress();
+            const milestone = customMilestone || calc.milestone;
+            const cartItems = (this.$store?.cart?.items || []);
+            const cartCount = cartItems.reduce((acc, i) => acc + (parseInt(i.quantity) || 1), 0);
+            const cartTotal = this.total;
+
+            const shipName = this.selectedShipping ? this.selectedShipping.name : null;
+            const pmCode = this.selectedPaymentCode || null;
+
+            // Generate state signature to prevent duplicate requests when state has not changed
+            const stateSig = `${calc.percent}|${calc.step}|${calc.fields.sort().join(',')}|${shipName}|${pmCode}|${cartCount}|${Math.round(cartTotal)}`;
+            if (stateSig === this.lastSavedStateHash && !customMilestone) {
+                return;
+            }
+
+            // Enforce minimum interval throttle (8s), unless milestone changed meaningfully
+            const now = Date.now();
+            if (!customMilestone && (now - this.lastSaveTime < this.minSaveIntervalMs) && (calc.percent === this.lastSavedPercent)) {
+                return;
+            }
+
+            this.lastSavedStateHash = stateSig;
+            this.lastSavedPercent = calc.percent;
+            this.lastSaveTime = now;
+
+            const payload = {
+                checkout_session_id: this.checkoutSessionId,
+                progress_percent: calc.percent,
+                current_step: calc.step,
+                milestone: milestone,
+                completed_fields: calc.fields,
+                cart_item_count: cartCount,
+                cart_total: cartTotal,
+                selected_shipping_method: shipName,
+                selected_payment_method: pmCode,
+                district: this.district,
+                device_type: this.getDeviceCategory(),
+            };
+
+            const tokenEl = document.querySelector('input[name=_token]');
+            const csrfToken = tokenEl ? tokenEl.value : '';
+
+            try {
+                fetch(this.trackUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify(payload),
+                    keepalive: true,
+                }).catch(() => {});
+            } catch (e) {
+                // Non-blocking, fails gracefully
+            }
+        },
+
         submitForm(event) {
             this.formError = '';
             this.touch.delivery = true;
@@ -651,6 +823,8 @@ function checkoutPage(opts) {
                 this.formError = 'Minimum order amount is ৳' + this.minOrder.toFixed(0) + '.';
                 return;
             }
+            // Send non-blocking submitted milestone
+            this.saveProgress('submitted');
             this.syncDomInputs();
             this.submitting = true;
             event.target.submit();

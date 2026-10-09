@@ -213,7 +213,17 @@ class CheckoutController extends Controller
             $order = OrderService::createOrder($payload);
             $orderData = is_array($order) ? ($order['order'] ?? []) : [];
             $orderId = $orderData['orderId'] ?? '';
+            $orderDbId = $orderData['id'] ?? null;
             $accessToken = $orderData['accessToken'] ?? null;
+
+            $checkoutSessionId = $request->input('checkout_session_id');
+            if ($checkoutSessionId && $orderDbId) {
+                try {
+                    \App\Services\IncompleteOrderService::markConverted($checkoutSessionId, (int) $orderDbId);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to mark checkout session converted', ['error' => $e->getMessage()]);
+                }
+            }
 
             if ($orderKey && $orderId) {
                 session()->put('checkout_order_'.$orderKey, $orderId);
@@ -234,6 +244,46 @@ class CheckoutController extends Controller
             Log::warning('Checkout failed', ['error' => $e->getMessage(), 'phone' => $request->input('phone')]);
 
             return back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Smart autosave & milestone tracking endpoint for incomplete checkout sessions.
+     */
+    public function trackProgress(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'checkout_session_id' => 'required|string|max:64',
+            'progress_percent' => 'nullable|integer|min:0|max:100',
+            'current_step' => 'nullable|string|max:50',
+            'completed_fields' => 'nullable|array',
+            'completed_fields.*' => 'string|max:50',
+            'cart_item_count' => 'nullable|integer|min:0',
+            'cart_total' => 'nullable|numeric|min:0',
+            'selected_shipping_method_id' => 'nullable|integer',
+            'selected_shipping_method' => 'nullable|string|max:100',
+            'selected_payment_method' => 'nullable|string|max:50',
+            'device_type' => 'nullable|string|max:20',
+            'district' => 'nullable|string|max:100',
+            'milestone' => 'nullable|string|max:50',
+        ]);
+
+        try {
+            $session = \App\Services\IncompleteOrderService::recordProgress($validated, $request);
+
+            return response()->json([
+                'success' => true,
+                'session_id' => $session->session_id,
+                'progress' => $session->progress_percent,
+                'status' => $session->status,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Incomplete checkout tracking error', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Tracking recorded safely',
+            ], 200);
         }
     }
 

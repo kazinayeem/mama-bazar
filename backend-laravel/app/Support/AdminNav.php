@@ -72,6 +72,7 @@ class AdminNav
             ]],
             ['label' => 'Sales', 'items' => [
                 ['label' => 'Orders', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'shopping-cart', 'permission' => 'orders.view'],
+                ['label' => 'Incomplete Orders', 'route' => 'admin.incomplete-orders.index', 'match' => 'admin.incomplete-orders.*', 'icon' => 'activity', 'permission' => 'incomplete_orders.view'],
                 ['label' => 'Returns & Refunds', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'receipt-text', 'params' => ['status' => 'cancelled'], 'permission' => 'orders.view'],
                 ['label' => 'Coupons', 'route' => 'admin.coupons.index', 'match' => 'admin.coupons.*', 'icon' => 'ticket-percent', 'permission' => 'coupons.view'],
                 ['label' => 'Marketing', 'route' => 'admin.marketing.index', 'match' => 'admin.marketing.*', 'icon' => 'megaphone', 'permission' => 'marketing.view'],

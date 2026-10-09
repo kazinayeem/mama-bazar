@@ -70,6 +70,7 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.coupon');
+Route::post('/checkout/track', [CheckoutController::class, 'trackProgress'])->middleware('throttle:60,1')->name('checkout.track');
 Route::get('/order/success', [CheckoutController::class, 'success'])->name('order.success');
 Route::get('/track', [OrderTrackingController::class, 'index'])->name('track');
 Route::post('/newsletter/subscribe', [HomeController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
@@ -210,6 +211,13 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::post('/orders/{id}/notes', [AdminOrderWebController::class, 'addNote'])->middleware('admin.can:orders.update')->name('admin.orders.notes');
     Route::post('/orders/{id}/email-invoice', [AdminOrderWebController::class, 'emailInvoice'])
         ->middleware(['admin.can:orders.update', 'throttle:10,1'])->name('admin.orders.email-invoice');
+
+    // Incomplete Orders & Checkout Analytics
+    Route::prefix('incomplete-orders')->name('admin.incomplete-orders.')->middleware('admin.can:incomplete_orders.view')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminIncompleteOrderWebController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\Admin\AdminIncompleteOrderWebController::class, 'export'])->middleware('admin.can:incomplete_orders.export')->name('export');
+        Route::post('/prune', [\App\Http\Controllers\Admin\AdminIncompleteOrderWebController::class, 'prune'])->middleware('admin.can:incomplete_orders.manage_retention')->name('prune');
+    });
 
     // Email Management
     Route::prefix('email')->name('admin.email.')->middleware('email.schema')->group(function () {

@@ -63,6 +63,10 @@ class RbacService
         ['code' => 'orders.delete', 'module' => 'sales', 'label' => 'Delete Orders', 'description' => 'Cancel or delete orders'],
         ['code' => 'orders.export', 'module' => 'sales', 'label' => 'Export Orders', 'description' => 'Export order history or invoices to CSV/PDF'],
         ['code' => 'orders.approve', 'module' => 'sales', 'label' => 'Approve Orders', 'description' => 'Approve or confirm sensitive orders'],
+        ['code' => 'incomplete_orders.view', 'module' => 'sales', 'label' => 'View Incomplete Orders', 'description' => 'View abandoned checkout sessions and funnel analytics'],
+        ['code' => 'incomplete_orders.export', 'module' => 'sales', 'label' => 'Export Incomplete Orders', 'description' => 'Export abandoned checkout sessions to CSV'],
+        ['code' => 'incomplete_orders.view_ip', 'module' => 'sales', 'label' => 'View Incomplete Checkout IPs', 'description' => 'View client IP addresses for incomplete checkouts'],
+        ['code' => 'incomplete_orders.manage_retention', 'module' => 'sales', 'label' => 'Manage Checkout Retention', 'description' => 'Prune and cleanup expired checkout session data'],
 
         ['code' => 'coupons.view', 'module' => 'sales', 'label' => 'View Coupons', 'description' => 'View promotional coupons'],
         ['code' => 'coupons.create', 'module' => 'sales', 'label' => 'Create Coupons', 'description' => 'Create promotional coupons'],
@@ -191,6 +195,7 @@ class RbacService
                     'vendors.view', 'vendors.create', 'vendors.update',
                     'suppliers.view', 'suppliers.create', 'suppliers.update',
                     'orders.view', 'orders.create', 'orders.update', 'orders.export',
+                    'incomplete_orders.view', 'incomplete_orders.export',
                     'coupons.view', 'coupons.create', 'coupons.update',
                     'reviews.view', 'reviews.update',
                     'expenses.view', 'expenses.create', 'expenses.update',
@@ -303,6 +308,17 @@ class RbacService
                     'delete' => ['code' => 'orders.delete', 'label' => 'Delete / Cancel Orders'],
                     'export' => ['code' => 'orders.export', 'label' => 'Export Orders / Invoices'],
                     'approve' => ['code' => 'orders.approve', 'label' => 'Approve / Confirm Orders'],
+                ],
+            ],
+            [
+                'id' => 'incomplete_orders',
+                'name' => 'Incomplete Orders & Abandonment',
+                'module' => 'Sales',
+                'actions' => [
+                    'view' => ['code' => 'incomplete_orders.view', 'label' => 'View Incomplete Orders & Funnel'],
+                    'export' => ['code' => 'incomplete_orders.export', 'label' => 'Export Incomplete Orders CSV'],
+                    'approve' => ['code' => 'incomplete_orders.view_ip', 'label' => 'View Connection IP'],
+                    'manage' => ['code' => 'incomplete_orders.manage_retention', 'label' => 'Manage Data Retention'],
                 ],
             ],
             [
