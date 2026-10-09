@@ -18,6 +18,34 @@
             const sensitive = ['members.create', 'members.update', 'members.delete', 'smtp.manage', 'backup.manage', 'settings.manage'];
             return sensitive.some(p => this.selectedPermissions.includes(p));
         },
+        financialCodes() {
+            return (this.financialPermissions || []).map(p => p.code);
+        },
+        hasFinancialPerms() {
+            return this.financialCodes().some(c => this.selectedPermissions.includes(c));
+        },
+        isFinancialAllSelected() {
+            const codes = this.financialCodes();
+            return codes.length > 0 && codes.every(c => this.selectedPermissions.includes(c));
+        },
+        toggleFinancial(enable) {
+            const codes = this.financialCodes();
+            if (enable) {
+                this.selectedPermissions = Array.from(new Set([...this.selectedPermissions, ...codes]));
+            } else {
+                this.selectedPermissions = this.selectedPermissions.filter(c => !codes.includes(c));
+            }
+        },
+        hasEffectivePermission(code) {
+            if (this.isSuperAdminTarget === true) return true;
+            if (this.permissionMode === 'custom') return this.selectedPermissions.includes(code);
+            const preset = (this.rolePresets || {})[(this.selectedRole || 'staff').toUpperCase()];
+            const perms = (preset && preset.permissions) ? preset.permissions : [];
+            return perms.includes('*') || perms.includes(code);
+        },
+        effectiveFinancialCount() {
+            return this.financialCodes().filter(c => this.hasEffectivePermission(c)).length;
+        },
         allSidebarItems() {
             let list = [];
             (this.sidebarSections || []).forEach(sec => {
@@ -83,7 +111,8 @@
         },
         toggleAllActions(enable) {
             if (enable) {
-                this.selectedPermissions = [...this.allActionCodes()];
+                const keptFinancial = this.selectedPermissions.filter(c => this.financialCodes().includes(c));
+                this.selectedPermissions = Array.from(new Set([...this.allActionCodes(), ...keptFinancial]));
             } else {
                 this.selectedPermissions = [];
             }
@@ -185,6 +214,34 @@
         </div>
     </div>
 
+    {{-- Effective Financial Access (both modes) --}}
+    <div class="rounded-xl border border-slate-200 bg-white p-4" x-show="(financialPermissions || []).length > 0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-800">Effective Financial &amp; Cost Access</h5>
+                <p class="text-[11px] text-slate-500"
+                   x-text="isSuperAdminTarget === true
+                        ? 'Super Administrators always have full financial access.'
+                        : (permissionMode === 'custom'
+                            ? 'Resolved from the custom permissions selected below.'
+                            : 'Inherited from the ' + (selectedRole || 'staff') + ' role preset.')"></p>
+            </div>
+            <span class="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                  :class="effectiveFinancialCount() > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'"
+                  x-text="effectiveFinancialCount() + ' / ' + financialCodes().length + ' granted'"></span>
+        </div>
+        <div class="mt-2.5 flex flex-wrap gap-1.5">
+            <template x-for="perm in financialPermissions" :key="'eff-' + perm.code">
+                <span class="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold ring-1"
+                      :class="hasEffectivePermission(perm.code) ? 'bg-emerald-50 text-emerald-800 ring-emerald-200' : 'bg-slate-50 text-slate-400 ring-slate-200'"
+                      :title="perm.description">
+                    <span x-text="hasEffectivePermission(perm.code) ? '✓' : '✕'"></span>
+                    <span x-text="perm.label"></span>
+                </span>
+            </template>
+        </div>
+    </div>
+
     {{-- Option B Custom Permission Editor Panel (When Custom) --}}
     <div x-show="permissionMode === 'custom'" class="space-y-4">
         {{-- Sensitive Permissions Alert Banner --}}
@@ -195,6 +252,9 @@
             <div>
                 <strong class="font-bold">Elevated Access Alert:</strong> This configuration grants sensitive privileges (e.g. Member management, SMTP settings, or Database Backups). Verify that this team member requires administrative authority.
             </div>
+        </div>
+        <div x-show="hasFinancialPerms()" class="rounded-xl border border-amber-300 bg-amber-50/90 p-3.5 text-xs text-amber-900">
+            <strong class="font-bold">Financial Data Access:</strong> This member will be able to see or change confidential cost information (buying price, supplier cost, or profit margin).
         </div>
 
         {{-- Sub-Navigation Tabs: Action Permissions vs Sidebar Access --}}
@@ -267,8 +327,8 @@
                         <template x-for="(mod, modKey) in permissionMatrix" :key="modKey">
                             <tr class="hover:bg-slate-50/70 transition">
                                 <td class="px-3.5 py-2.5">
-                                    <div class="font-bold text-slate-800" x-text="mod.title"></div>
-                                    <div class="text-[10px] text-slate-400" x-text="mod.description"></div>
+                                    <div class="font-bold text-slate-800" x-text="mod.title || mod.name"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="mod.description || mod.module"></div>
                                 </td>
 
                                 {{-- View --}}
@@ -375,6 +435,46 @@
                         </template>
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Financial & Cost Data (never included by "Select All Actions") --}}
+            <div class="rounded-lg border border-amber-200 bg-amber-50/40" x-show="(financialPermissions || []).length > 0">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200 px-3.5 py-2.5">
+                    <div>
+                        <h5 class="text-xs font-bold uppercase tracking-wider text-slate-800">Financial &amp; Cost Data</h5>
+                        <p class="text-[11px] text-slate-500">Buying price, supplier cost, and profit margin are sensitive. Product or analytics access does not include them — grant each one explicitly.</p>
+                    </div>
+                    <button type="button"
+                            @click="toggleFinancial(!isFinancialAllSelected())"
+                            class="text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-200 bg-white hover:bg-slate-100 transition"
+                            :class="isFinancialAllSelected() ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'text-slate-600'">
+                        <span x-text="isFinancialAllSelected() ? 'Deselect Section' : 'Select All in Section'"></span>
+                    </button>
+                </div>
+                <div class="grid gap-1.5 p-3 sm:grid-cols-2">
+                    <div class="flex items-start gap-2 rounded p-1.5 text-xs">
+                        <input type="checkbox" disabled
+                               :checked="selectedPermissions.includes('products.view')"
+                               class="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-400">
+                        <span>
+                            <span class="font-semibold text-slate-700">View Selling Price</span>
+                            <span class="block text-[10px] text-slate-500">Included with “View Products” in the table above.</span>
+                        </span>
+                    </div>
+                    <template x-for="perm in financialPermissions" :key="perm.code">
+                        <label class="flex items-start gap-2 rounded p-1.5 text-xs cursor-pointer hover:bg-white">
+                            <input type="checkbox"
+                                   :value="perm.code"
+                                   x-model="selectedPermissions"
+                                   class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                            <span>
+                                <span class="font-semibold text-slate-800" x-text="perm.label"></span>
+                                <span class="block text-[10px] text-slate-500" x-text="perm.description"></span>
+                                <span class="block font-mono text-[10px] text-slate-400" x-text="perm.code"></span>
+                            </span>
+                        </label>
+                    </template>
+                </div>
             </div>
         </div>
 

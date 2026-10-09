@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\ShippingController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Web\CheckoutController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -114,7 +115,7 @@ Route::prefix('products')->group(function () {
 Route::prefix('order')->group(function () {
     Route::post('/', [OrderController::class, 'createOrder']);
     Route::get('/track/{id}', [OrderController::class, 'trackOrder']);
-    Route::post('/checkout-progress', [\App\Http\Controllers\Web\CheckoutController::class, 'trackProgress'])->middleware('throttle:60,1');
+    Route::post('/checkout-progress', [CheckoutController::class, 'trackProgress'])->middleware('throttle:60,1');
 
     Route::middleware('jwt.auth')->group(function () {
         Route::get('/admin/all', [OrderController::class, 'getAllOrders'])->middleware('require.permission:orders.view');
@@ -360,7 +361,7 @@ Route::prefix('expenses')->middleware('jwt.auth')->group(function () {
     Route::get('/monthly', [ExpenseController::class, 'monthlyReport'])->middleware('require.permission:reports.view');
     Route::get('/trends', [ExpenseController::class, 'monthlyTrend'])->middleware('require.permission:reports.view');
     Route::get('/report', [ExpenseController::class, 'rangeReport'])->middleware('require.permission:reports.view');
-    Route::get('/profit', [ExpenseController::class, 'profitOverview'])->middleware('require.permission:reports.view');
+    Route::get('/profit', [ExpenseController::class, 'profitOverview'])->middleware(['require.permission:reports.view', 'require.permission:analytics.view_profit_margin']);
     Route::get('/export/csv', [ExpenseController::class, 'exportCsv'])->middleware('require.permission:reports.export');
 
     Route::get('/', [ExpenseController::class, 'list'])->middleware('require.permission:expenses.view');

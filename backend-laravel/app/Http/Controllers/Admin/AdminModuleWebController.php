@@ -568,6 +568,7 @@ class AdminModuleWebController extends Controller
             'roleFilter' => $roleFilter,
             'statusFilter' => $statusFilter,
             'permissionMatrix' => RbacService::getPermissionMatrix(),
+            'financialPermissions' => RbacService::getFinancialPermissionGroup(),
             'rolePresets' => RbacService::getRolePresets(),
             'sidebarSections' => AdminNav::rawSections(),
         ]);

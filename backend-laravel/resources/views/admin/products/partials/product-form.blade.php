@@ -1015,18 +1015,38 @@
             </div>
 
             <!-- Cost Price -->
+            @if ($costPriceMode !== 'hidden')
             <div class="space-y-1.5">
                 <label for="field_cost_price" class="text-xs font-bold text-slate-800">Cost Price (৳)</label>
-                <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    id="field_cost_price"
-                    name="cost_price"
-                    x-model="form.costPrice"
-                    placeholder="35000"
-                    class="w-full px-3 py-2 text-xs border {{ $errors->has('cost_price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
-                />
+                @if ($costPriceMode === 'read')
+                    <input
+                        type="number"
+                        id="field_cost_price"
+                        x-model="form.costPrice"
+                        disabled
+                        class="w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed"
+                    />
+                    <p class="text-[11px] text-slate-400">Read-only — editing buying price requires a separate permission.</p>
+                @else
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        id="field_cost_price"
+                        @if ($costPriceMode === 'write_only')
+                            :name="form.costPrice !== '' && form.costPrice !== null ? 'cost_price' : null"
+                            placeholder="Hidden — enter a value to replace"
+                        @else
+                            name="cost_price"
+                            placeholder="35000"
+                        @endif
+                        x-model="form.costPrice"
+                        class="w-full px-3 py-2 text-xs border {{ $errors->has('cost_price') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
+                    />
+                    @if ($costPriceMode === 'write_only')
+                        <p class="text-[11px] text-slate-400">The current buying price is hidden. Leave blank to keep it unchanged.</p>
+                    @endif
+                @endif
                 @error('cost_price')
                     <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
@@ -1034,19 +1054,36 @@
                     </p>
                 @enderror
             </div>
+            @endif
 
             <!-- Profit Margin -->
+            @if ($profitMarginMode !== 'hidden')
             <div class="space-y-1.5">
                 <label for="field_profit_margin" class="text-xs font-bold text-slate-800">Profit Margin (%)</label>
-                <input
-                    type="number"
-                    step="0.01"
-                    id="field_profit_margin"
-                    name="profit_margin"
-                    x-model="form.profitMargin"
-                    placeholder="Auto-calculated"
-                    class="w-full px-3 py-2 text-xs border {{ $errors->has('profit_margin') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
-                />
+                @if ($profitMarginMode === 'read')
+                    <input
+                        type="number"
+                        id="field_profit_margin"
+                        x-model="form.profitMargin"
+                        disabled
+                        class="w-full px-3 py-2 text-xs border border-slate-200 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed"
+                    />
+                @else
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="field_profit_margin"
+                        @if ($profitMarginMode === 'write_only')
+                            :name="form.profitMargin !== '' && form.profitMargin !== null ? 'profit_margin' : null"
+                            placeholder="Hidden — enter a value to replace"
+                        @else
+                            name="profit_margin"
+                            placeholder="Auto-calculated"
+                        @endif
+                        x-model="form.profitMargin"
+                        class="w-full px-3 py-2 text-xs border {{ $errors->has('profit_margin') ? 'border-red-500 ring-1 ring-red-500 bg-red-50/20 is-invalid-field' : 'border-slate-300' }} rounded-lg"
+                    />
+                @endif
                 @error('profit_margin')
                     <p class="text-[11px] font-medium text-red-600 mt-1 flex items-center gap-1">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
@@ -1054,6 +1091,7 @@
                     </p>
                 @enderror
             </div>
+            @endif
 
             <!-- Flash Sale Price -->
             <div class="space-y-1.5">

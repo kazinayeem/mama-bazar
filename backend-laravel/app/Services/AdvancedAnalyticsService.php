@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\FinancialDataAccess;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -125,8 +126,9 @@ class AdvancedAnalyticsService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function getInventoryKpis(array $filters): array
+    public function getInventoryKpis(array $filters, ?FinancialDataAccess $financialAccess = null): array
     {
+        $financialAccess ??= FinancialDataAccess::none();
         $baseQuery = Product::query();
         $this->applyProductFilters($baseQuery, $filters);
 
@@ -211,7 +213,7 @@ class AdvancedAnalyticsService
         $activeVariantsCount = ProductVariant::where('status', 'active')->where('availability', 1)->count();
         $totalVariantsCount = ProductVariant::count();
 
-        return [
+        $kpis = [
             'total_products' => $totalProducts,
             'active_products' => $activeProducts,
             'active_variants' => $activeVariantsCount,
@@ -232,6 +234,19 @@ class AdvancedAnalyticsService
             'slow_moving_count' => $slowMovingCount,
             'snapshot_date' => Carbon::now()->toFormattedDateString().' '.Carbon::now()->format('h:i A'),
         ];
+
+        if (! $financialAccess->canViewCostValuation) {
+            $kpis['cost_valuation'] = null;
+            $kpis['cost_data_status'] = 'restricted';
+            $kpis['products_with_cost'] = null;
+            $kpis['cost_coverage_pct'] = null;
+            $kpis['slow_moving_cost'] = null;
+        }
+        if (! $financialAccess->canViewCostValuation || ! $financialAccess->canViewProfitMargin) {
+            $kpis['unrealized_margin'] = null;
+        }
+
+        return $kpis;
     }
 
     /**
@@ -240,10 +255,19 @@ class AdvancedAnalyticsService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function getSalesKpis(array $filters): array
+    public function getSalesKpis(array $filters, ?FinancialDataAccess $financialAccess = null): array
     {
+        $financialAccess ??= FinancialDataAccess::none();
         $currentSales = $this->aggregateSalesForPeriod($filters['start_date'], $filters['end_date'], $filters);
         $prevSales = $this->aggregateSalesForPeriod($filters['prev_start_date'], $filters['prev_end_date'], $filters);
+
+        if (! $financialAccess->canViewProfitMargin) {
+            $currentSales['gross_profit'] = null;
+            $currentSales['gross_margin_pct'] = null;
+            $currentSales['profit_status'] = 'restricted';
+            $currentSales['items_with_cost'] = null;
+            $currentSales['cogs_total'] = null;
+        }
 
         // Calculate growth percentages
         $salesGrowth = $this->calcGrowthPct($currentSales['net_sales'], $prevSales['net_sales']);
@@ -381,8 +405,9 @@ class AdvancedAnalyticsService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    public function getChartsData(array $filters): array
+    public function getChartsData(array $filters, ?FinancialDataAccess $financialAccess = null): array
     {
+        $financialAccess ??= FinancialDataAccess::none();
         $productFilterIds = $this->getMatchingProductIds($filters);
 
         // A. Sales & Revenue Trends (Daily or Monthly series)
@@ -390,6 +415,13 @@ class AdvancedAnalyticsService
 
         // B. Inventory Analysis: Stock & Retail Valuation by Category
         $inventoryByCategory = $this->buildCategoryInventoryChart($filters);
+        if (! $financialAccess->canViewCostValuation) {
+            $inventoryByCategory = array_map(function (array $row): array {
+                unset($row['cost_value']);
+
+                return $row;
+            }, $inventoryByCategory);
+        }
 
         // C. Stock Distribution by Status
         $stockDistribution = $this->buildStockDistributionChart($filters);
@@ -748,8 +780,9 @@ class AdvancedAnalyticsService
      *
      * @param  array<string, mixed>  $filters
      */
-    public function getProductStockTable(array $filters): LengthAwarePaginator
+    public function getProductStockTable(array $filters, ?FinancialDataAccess $financialAccess = null): LengthAwarePaginator
     {
+        $financialAccess ??= FinancialDataAccess::none();
         $query = Product::query()
             ->with(['category:id,name', 'brandRel:id,name', 'variants:id,product_id,name,stock,price,discount_price,sku']);
 
@@ -810,7 +843,30 @@ class AdvancedAnalyticsService
             default => $query->orderByDesc('period_revenue')->orderByDesc('stock'),
         };
 
-        return $query->paginate($filters['per_page'])->withQueryString();
+        $paginator = $query->paginate($filters['per_page'])->withQueryString();
+
+        foreach ($paginator->items() as $product) {
+            $this->redactProductCostAttributes($product, $financialAccess);
+        }
+
+        return $paginator;
+    }
+
+    /**
+     * Remove per-product cost attributes the viewer is not allowed to see, so
+     * they cannot reach Blade output, serialized JSON, or PDF rendering.
+     */
+    private function redactProductCostAttributes(Product $product, FinancialDataAccess $financialAccess): void
+    {
+        if (! $financialAccess->canViewCostPrice) {
+            $product->offsetUnset('cost_price');
+        }
+        if (! $financialAccess->canViewProfitMargin) {
+            $product->offsetUnset('profit_margin');
+        }
+        if (! $financialAccess->canViewProductCostValuation()) {
+            $product->offsetUnset('cost_valuation');
+        }
     }
 
     /**
@@ -886,8 +942,12 @@ class AdvancedAnalyticsService
      *
      * @param  array<string, mixed>  $filters
      */
-    public function exportCsv(array $filters): StreamedResponse
+    public function exportCsv(array $filters, ?FinancialDataAccess $financialAccess = null): StreamedResponse
     {
+        $exportAccess = ($financialAccess ?? FinancialDataAccess::none())->forExport();
+        $includeCostPrice = $exportAccess->canViewCostPrice;
+        $includeStockCost = $exportAccess->canViewProductCostValuation();
+        $includeProfit = $exportAccess->canViewProductProfit();
         $filename = 'MamaBazar_Analytics_'.date('Ymd_His').'.csv';
 
         $query = Product::query()
@@ -924,13 +984,12 @@ class AdvancedAnalyticsService
             'Expires' => '0',
         ];
 
-        return response()->stream(function () use ($query) {
+        return response()->stream(function () use ($query, $includeCostPrice, $includeStockCost, $includeProfit) {
             $handle = fopen('php://output', 'w');
             // Write UTF-8 BOM so Excel opens Bengali text seamlessly
             fwrite($handle, "\xEF\xBB\xBF");
 
-            // CSV Header
-            fputcsv($handle, [
+            $header = [
                 'Product ID',
                 'Product Name',
                 'SKU',
@@ -942,15 +1001,20 @@ class AdvancedAnalyticsService
                 'Regular Price (BDT)',
                 'Selling Price (BDT)',
                 'Discount %',
-                'Cost Price (BDT)',
-                'Stock Cost Value (BDT)',
-                'Potential Retail Value (BDT)',
-                'Period Units Sold',
-                'Period Revenue (BDT)',
-                'Period Profit (BDT)',
-            ]);
+            ];
+            if ($includeCostPrice) {
+                $header[] = 'Cost Price (BDT)';
+            }
+            if ($includeStockCost) {
+                $header[] = 'Stock Cost Value (BDT)';
+            }
+            array_push($header, 'Potential Retail Value (BDT)', 'Period Units Sold', 'Period Revenue (BDT)');
+            if ($includeProfit) {
+                $header[] = 'Period Profit (BDT)';
+            }
+            fputcsv($handle, $header);
 
-            $query->chunk(200, function ($products) use ($handle) {
+            $query->chunk(200, function ($products) use ($handle, $includeCostPrice, $includeStockCost, $includeProfit) {
                 foreach ($products as $p) {
                     $stock = (int) $p->stock;
                     $regPrice = (float) $p->price;
@@ -978,7 +1042,7 @@ class AdvancedAnalyticsService
                         $stockStatus = 'Overstocked';
                     }
 
-                    fputcsv($handle, [
+                    $row = [
                         $p->id,
                         $this->sanitizeCsvCell($p->title),
                         $this->sanitizeCsvCell($p->sku ?? 'N/A'),
@@ -990,13 +1054,18 @@ class AdvancedAnalyticsService
                         $regPrice,
                         $sellPrice,
                         $discountPct.'%',
-                        $costPrice > 0 ? $costPrice : 'Unavailable',
-                        $stockCostVal,
-                        $retailVal,
-                        $unitsSold,
-                        $revenue,
-                        $profit,
-                    ]);
+                    ];
+                    if ($includeCostPrice) {
+                        $row[] = $costPrice > 0 ? $costPrice : 'Unavailable';
+                    }
+                    if ($includeStockCost) {
+                        $row[] = $stockCostVal;
+                    }
+                    array_push($row, $retailVal, $unitsSold, $revenue);
+                    if ($includeProfit) {
+                        $row[] = $profit;
+                    }
+                    fputcsv($handle, $row);
                 }
             });
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cost;
+use App\Support\FinancialDataAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,9 @@ class CostController extends Controller
             'costs.quantity',
             'costs.unit_cost as unitCost',
             'costs.total_cost as totalCost',
+            'costs.supplier_id as supplierId',
             'suppliers.name as supplierName',
+            'costs.product_id as productId',
             'products.title as productName',
             'costs.order_id as orderOrderId',
             'costs.booking_id as bookingId',
@@ -33,6 +36,24 @@ class CostController extends Controller
             'costs.attachment_url as attachmentUrl',
             'costs.created_at as createdAt',
         ];
+    }
+
+    /**
+     * Supplier purchase prices and product stock-receiving costs are sensitive:
+     * amounts are nulled unless the viewer holds the matching financial permission.
+     */
+    private function redactCostAmounts(object $row, FinancialDataAccess $financialAccess): object
+    {
+        $isRestricted = (! empty($row->supplierId) && ! $financialAccess->canViewSupplierCost)
+            || (! empty($row->productId) && ! $financialAccess->canViewCostHistory);
+
+        if ($isRestricted) {
+            $row->unitCost = null;
+            $row->totalCost = null;
+        }
+        $row->costRestricted = $isRestricted;
+
+        return $row;
     }
 
     public function list(Request $request): JsonResponse
@@ -61,6 +82,9 @@ class CostController extends Controller
             ->limit($limit)
             ->offset($offset)
             ->get();
+
+        $financialAccess = FinancialDataAccess::forRequest($request);
+        $data = $data->map(fn (object $row): object => $this->redactCostAmounts($row, $financialAccess));
 
         return response()->json([
             'success' => true,
@@ -107,6 +131,8 @@ class CostController extends Controller
         if (! $row) {
             return response()->json(['success' => false, 'message' => 'Cost not found'], 404);
         }
+
+        $row = $this->redactCostAmounts($row, FinancialDataAccess::forRequest(request()));
 
         return response()->json(['success' => true, 'data' => $row]);
     }

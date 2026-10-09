@@ -212,6 +212,10 @@
         </td>
         <td style="width: 25%;">
             <div class="kpi-label">Inventory Valuation at Cost</div>
+            @if(! $financialAccess->canViewCostValuation)
+            <div class="kpi-value"><span style="font-size: 10px; color: #94a3b8;">Not included</span></div>
+            <div class="kpi-sub">Requires cost report permission</div>
+            @else
             <div class="kpi-value">
                 @if($inventoryKpis['cost_valuation'] !== null)
                     ৳{{ number_format($inventoryKpis['cost_valuation'], 0) }}
@@ -226,6 +230,7 @@
                     Coverage: {{ $inventoryKpis['cost_coverage_pct'] }}% of products
                 @endif
             </div>
+            @endif
         </td>
     </tr>
     <tr>
@@ -260,6 +265,10 @@
         </td>
         <td>
             <div class="kpi-label">Gross Profit & Margin</div>
+            @if(! $financialAccess->canViewProfitMargin)
+            <div class="kpi-value"><span style="font-size: 10px; color: #94a3b8;">Not included</span></div>
+            <div class="kpi-sub">Requires profit report permission</div>
+            @else
             <div class="kpi-value">
                 @if($salesKpis['gross_profit'] !== null)
                     ৳{{ number_format($salesKpis['gross_profit'], 0) }}
@@ -277,6 +286,7 @@
                     COGS missing on products
                 @endif
             </div>
+            @endif
         </td>
     </tr>
 </table>
@@ -291,15 +301,20 @@
             <th class="text-center">Products</th>
             <th class="text-center">Current Stock</th>
             <th class="text-right">Potential Retail Value</th>
+            @if($financialAccess->canViewCostValuation)
             <th class="text-right">Inventory Cost Value</th>
+            @endif
+            @if($financialAccess->canViewCostValuation && $financialAccess->canViewProfitMargin)
             <th class="text-right">Est. Margin</th>
+            @endif
         </tr>
     </thead>
     <tbody>
         @foreach($chartsData['category_inventory'] as $cat)
             @php
-                $margin = ($cat['retail_value'] > 0 && $cat['cost_value'] > 0)
-                    ? round((($cat['retail_value'] - $cat['cost_value']) / $cat['retail_value']) * 100, 1)
+                $costValue = (float) ($cat['cost_value'] ?? 0);
+                $margin = ($cat['retail_value'] > 0 && $costValue > 0)
+                    ? round((($cat['retail_value'] - $costValue) / $cat['retail_value']) * 100, 1)
                     : null;
             @endphp
             <tr>
@@ -307,12 +322,16 @@
                 <td class="text-center">{{ number_format($cat['products']) }}</td>
                 <td class="text-center font-bold">{{ number_format($cat['stock']) }}</td>
                 <td class="text-right">৳{{ number_format($cat['retail_value'], 0) }}</td>
+                @if($financialAccess->canViewCostValuation)
                 <td class="text-right">
-                    {{ $cat['cost_value'] > 0 ? '৳'.number_format($cat['cost_value'], 0) : '—' }}
+                    {{ $costValue > 0 ? '৳'.number_format($costValue, 0) : '—' }}
                 </td>
+                @endif
+                @if($financialAccess->canViewCostValuation && $financialAccess->canViewProfitMargin)
                 <td class="text-right">
                     {{ $margin !== null ? $margin.'%' : '—' }}
                 </td>
+                @endif
             </tr>
         @endforeach
     </tbody>
@@ -330,10 +349,14 @@
             <th class="text-center">Stock</th>
             <th>Status</th>
             <th class="text-right">Selling Price</th>
+            @if($financialAccess->canViewCostPrice)
             <th class="text-right">Cost Price</th>
+            @endif
             <th class="text-center">Units Sold</th>
             <th class="text-right">Revenue</th>
+            @if($financialAccess->canViewProductProfit())
             <th class="text-right">Profit</th>
+            @endif
         </tr>
     </thead>
     <tbody>
@@ -371,9 +394,12 @@
                 <td class="text-center"><strong>{{ $stock }}</strong></td>
                 <td><span class="badge {{ $badgeClass }}">{{ $badgeText }}</span></td>
                 <td class="text-right">৳{{ number_format($sellPrice, 0) }}</td>
+                @if($financialAccess->canViewCostPrice)
                 <td class="text-right">{{ $costPrice > 0 ? '৳'.number_format($costPrice, 0) : '—' }}</td>
+                @endif
                 <td class="text-center">{{ number_format($units) }}</td>
                 <td class="text-right">৳{{ number_format($revenue, 0) }}</td>
+                @if($financialAccess->canViewProductProfit())
                 <td class="text-right">
                     @if($profit !== null)
                         <span class="{{ $profit >= 0 ? 'text-emerald' : 'text-rose' }}">৳{{ number_format($profit, 0) }}</span>
@@ -381,6 +407,7 @@
                         <span style="color: #94a3b8;">—</span>
                     @endif
                 </td>
+                @endif
             </tr>
         @empty
             <tr>

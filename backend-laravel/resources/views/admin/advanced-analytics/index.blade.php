@@ -318,6 +318,7 @@
             </div>
 
             {{-- Inventory Cost Valuation & Margin --}}
+            @if($financialAccess->canViewCostValuation)
             <div class="admin-surface relative overflow-hidden p-4">
                 <div class="flex items-start justify-between">
                     <div>
@@ -346,6 +347,7 @@
                     @endif
                 </div>
             </div>
+            @endif
         </div>
 
         {{-- Sales & Profit Performance KPIs --}}
@@ -414,6 +416,7 @@
             </div>
 
             {{-- Gross Profit & Gross Margin --}}
+            @if($financialAccess->canViewProfitMargin)
             <div class="admin-surface p-4">
                 <div class="flex items-start justify-between">
                     <div>
@@ -443,6 +446,7 @@
                     @endif
                 </div>
             </div>
+            @endif
         </div>
     </div>
 
@@ -848,9 +852,11 @@
                         <label class="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 cursor-pointer">
                             <input type="checkbox" x-model="cols.sales" class="rounded text-emerald-600"> <span>Period Sales</span>
                         </label>
+                        @if($financialAccess->canViewProductProfit())
                         <label class="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 cursor-pointer">
                             <input type="checkbox" x-model="cols.cost" class="rounded text-emerald-600"> <span>Cost & Margin</span>
                         </label>
+                        @endif
                         <label class="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 cursor-pointer">
                             <input type="checkbox" x-model="cols.last_sale" class="rounded text-emerald-600"> <span>Last Sale Date</span>
                         </label>
@@ -881,7 +887,9 @@
                         <th x-show="cols.retail_val" class="text-right">Retail Valuation</th>
                         <th x-show="cols.sales" class="text-center">Units Sold</th>
                         <th x-show="cols.sales" class="text-right">Revenue</th>
+                        @if($financialAccess->canViewProductProfit())
                         <th x-show="cols.cost" class="text-right">Profit</th>
+                        @endif
                         <th x-show="cols.last_sale">Last Sale</th>
                         <th class="text-right">Actions</th>
                     </tr>
@@ -1004,6 +1012,7 @@
                             </td>
 
                             {{-- Profit & Margin --}}
+                            @if($financialAccess->canViewProductProfit())
                             <td x-show="cols.cost" class="text-right">
                                 @if($profit !== null)
                                     <span class="{{ $profit >= 0 ? 'text-emerald-700' : 'text-rose-700' }} font-bold">
@@ -1013,6 +1022,7 @@
                                     <span class="text-[11px] text-slate-400" title="Cost price not specified on product">Unavailable</span>
                                 @endif
                             </td>
+                            @endif
 
                             {{-- Last Sale Date --}}
                             <td x-show="cols.last_sale" class="text-xs text-slate-500">
@@ -1160,7 +1170,9 @@
                         <option value="inventory">Inventory & Stock Valuation Report</option>
                         <option value="sales">Sales & Revenue Report</option>
                         <option value="pricing">Product Pricing & Discount Report</option>
+                        @if($financialAccess->forExport()->canViewProfitMargin)
                         <option value="profitability">Profitability & Margin Report</option>
+                        @endif
                         <option value="reorder">Low Stock & Reorder Alert Report</option>
                         <option value="variants">Product & Variant Stock Report</option>
                     </select>

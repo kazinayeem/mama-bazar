@@ -75,7 +75,9 @@
                   selectedSidebar: [],
                   rolePresets: @js($rolePresets ?? []),
                   permissionMatrix: @js($permissionMatrix ?? []),
+                  financialPermissions: @js($financialPermissions ?? []),
                   sidebarSections: @js($sidebarSections ?? []),
+                  isSuperAdminTarget: false,
                   init() {
                       let all = [];
                       (this.sidebarSections || []).forEach(s => (s.items || []).forEach(i => all.push(i.label)));
@@ -149,7 +151,12 @@
                   set selectedSidebar(val) { editingMember.sidebar_access = val; },
                   rolePresets: @js($rolePresets ?? []),
                   permissionMatrix: @js($permissionMatrix ?? []),
+                  financialPermissions: @js($financialPermissions ?? []),
                   sidebarSections: @js($sidebarSections ?? []),
+                  get isSuperAdminTarget() {
+                      return editingMember.custom_role === 'SUPER_ADMIN'
+                          || (editingMember.permission_mode !== 'custom' && ! editingMember.custom_role && ['admin', 'super_admin'].includes(editingMember.role));
+                  },
               }">
             @csrf
             @method('PUT')

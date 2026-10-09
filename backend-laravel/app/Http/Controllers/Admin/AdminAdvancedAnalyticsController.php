@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\AdvancedAnalyticsReportService;
 use App\Services\AdvancedAnalyticsService;
+use App\Support\FinancialDataAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,11 +27,12 @@ class AdminAdvancedAnalyticsController extends Controller
     public function index(Request $request)
     {
         $filters = $this->analyticsService->parseFilters($request);
+        $financialAccess = FinancialDataAccess::forUser($request->user());
 
-        $inventoryKpis = $this->analyticsService->getInventoryKpis($filters);
-        $salesKpis = $this->analyticsService->getSalesKpis($filters);
-        $chartsData = $this->analyticsService->getChartsData($filters);
-        $productsPaginator = $this->analyticsService->getProductStockTable($filters);
+        $inventoryKpis = $this->analyticsService->getInventoryKpis($filters, $financialAccess);
+        $salesKpis = $this->analyticsService->getSalesKpis($filters, $financialAccess);
+        $chartsData = $this->analyticsService->getChartsData($filters, $financialAccess);
+        $productsPaginator = $this->analyticsService->getProductStockTable($filters, $financialAccess);
 
         $categories = Category::orderBy('name')->get(['id', 'name']);
         $brands = Brand::orderBy('name')->get(['id', 'name']);
@@ -46,6 +48,7 @@ class AdminAdvancedAnalyticsController extends Controller
             'categories' => $categories,
             'brands' => $brands,
             'monthlyAnalysis' => $monthlyAnalysis,
+            'financialAccess' => $financialAccess,
         ]);
     }
 
@@ -56,7 +59,7 @@ class AdminAdvancedAnalyticsController extends Controller
     {
         $filters = $this->analyticsService->parseFilters($request);
 
-        return $this->analyticsService->exportCsv($filters);
+        return $this->analyticsService->exportCsv($filters, FinancialDataAccess::forUser($request->user()));
     }
 
     /**
@@ -66,28 +69,32 @@ class AdminAdvancedAnalyticsController extends Controller
     {
         $filters = $this->analyticsService->parseFilters($request);
 
-        return $this->reportService->generatePdf($filters, $request->all());
+        return $this->reportService->generatePdf($filters, $request->all(), FinancialDataAccess::forUser($request->user()));
     }
 
     /**
      * Get variant details for product drill-down modal.
      */
-    public function productVariants(int $id): JsonResponse
+    public function productVariants(Request $request, int $id): JsonResponse
     {
         $product = Product::with(['variants', 'category:id,name'])->findOrFail($id);
 
+        $productData = [
+            'id' => $product->id,
+            'title' => $product->title,
+            'sku' => $product->sku,
+            'category' => $product->category?->name ?? 'Uncategorized',
+            'stock' => (int) $product->stock,
+            'price' => (float) $product->price,
+            'sale_price' => (float) ($product->sale_price ?: $product->price),
+        ];
+        if (FinancialDataAccess::forUser($request->user())->canViewCostPrice) {
+            $productData['cost_price'] = (float) $product->cost_price;
+        }
+
         return response()->json([
             'success' => true,
-            'product' => [
-                'id' => $product->id,
-                'title' => $product->title,
-                'sku' => $product->sku,
-                'category' => $product->category?->name ?? 'Uncategorized',
-                'stock' => (int) $product->stock,
-                'price' => (float) $product->price,
-                'sale_price' => (float) ($product->sale_price ?: $product->price),
-                'cost_price' => (float) $product->cost_price,
-            ],
+            'product' => $productData,
             'variants' => $product->variants->map(fn ($v) => [
                 'id' => $v->id,
                 'name' => $v->name,

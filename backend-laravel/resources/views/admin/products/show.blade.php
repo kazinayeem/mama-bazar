@@ -129,10 +129,18 @@
                     <span class="font-medium text-slate-500">Discount</span>
                     <span class="text-slate-700">{{ (float)($product['discount'] ?? 0) > 0 ? '-' . $product['discount'] . '%' : '—' }}</span>
                 </div>
+                @isset($product['costPrice'])
                 <div class="flex items-center justify-between py-2">
                     <span class="font-medium text-slate-500">Cost price</span>
-                    <span class="text-slate-700">{{ !empty($product['costPrice']) ? '৳' . number_format((float)$product['costPrice'], 2) : '—' }}</span>
+                    <span class="text-slate-700">{{ (float) $product['costPrice'] > 0 ? '৳' . number_format((float)$product['costPrice'], 2) : '—' }}</span>
                 </div>
+                @endisset
+                @isset($product['profitMargin'])
+                <div class="flex items-center justify-between py-2">
+                    <span class="font-medium text-slate-500">Profit margin</span>
+                    <span class="text-slate-700">{{ (float) $product['profitMargin'] != 0 ? $product['profitMargin'] . '%' : '—' }}</span>
+                </div>
+                @endisset
                 <div class="flex items-center justify-between py-2">
                     <span class="font-medium text-slate-500">Category</span>
                     <span class="text-slate-900 font-semibold">{{ $product['category']['name'] ?? '—' }}</span>
@@ -280,5 +288,46 @@
             </div>
         </div>
     </div>
+
+    @if(($financialAccess ?? null)?->canViewCostHistory && ($financialAccess->canViewCostPrice || $financialAccess->canViewProfitMargin))
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3" id="cost-history">
+            <h2 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Buying Price History</h2>
+            @if(($costHistory ?? collect())->isEmpty())
+                <p class="text-xs text-slate-400">No buying price changes recorded yet.</p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="text-left text-slate-500 border-b border-slate-100">
+                                <th class="py-2 pr-3 font-semibold">When</th>
+                                <th class="py-2 pr-3 font-semibold">Field</th>
+                                <th class="py-2 pr-3 font-semibold text-right">Old</th>
+                                <th class="py-2 pr-3 font-semibold text-right">New</th>
+                                <th class="py-2 pr-3 font-semibold">Changed by</th>
+                                <th class="py-2 font-semibold">Source</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($costHistory as $entry)
+                                @php($isMargin = $entry->field === 'profit_margin')
+                                <tr>
+                                    <td class="py-2 pr-3 text-slate-600 whitespace-nowrap">{{ $entry->created_at?->format('d M Y, h:i A') }}</td>
+                                    <td class="py-2 pr-3 text-slate-700">{{ $isMargin ? 'Profit margin' : 'Buying price' }}</td>
+                                    <td class="py-2 pr-3 text-right text-slate-500">
+                                        {{ $entry->old_value === null ? '—' : ($isMargin ? $entry->old_value.'%' : '৳'.number_format($entry->old_value, 2)) }}
+                                    </td>
+                                    <td class="py-2 pr-3 text-right font-semibold text-slate-900">
+                                        {{ $entry->new_value === null ? '—' : ($isMargin ? $entry->new_value.'%' : '৳'.number_format($entry->new_value, 2)) }}
+                                    </td>
+                                    <td class="py-2 pr-3 text-slate-700">{{ $entry->user_name ?: 'System' }}</td>
+                                    <td class="py-2 text-slate-500 capitalize">{{ $entry->source }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    @endif
 </div>
 @endsection

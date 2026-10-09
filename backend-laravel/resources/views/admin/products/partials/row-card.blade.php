@@ -58,6 +58,9 @@
                 @if((float)($product['discount'] ?? 0) > 0)
                     <span class="text-[10px] font-semibold text-red-600">-{{ $product['discount'] }}%</span>
                 @endif
+                @if(isset($product['costPrice']) && (float) $product['costPrice'] > 0)
+                    <span class="text-[10px] text-slate-500">Cost ৳{{ number_format((float) $product['costPrice'], 2) }}</span>
+                @endif
                 @if($stock <= 0)
                     <span class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">Out</span>
                 @elseif($stock <= $lowStockAlert)
