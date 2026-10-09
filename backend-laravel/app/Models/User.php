@@ -137,6 +137,11 @@ class User extends Authenticatable
         );
     }
 
+    public function hasPermission(string $permission): bool
+    {
+        return $this->canAdmin($permission);
+    }
+
     public function hasSidebarAccess(string $routeOrLabel): bool
     {
         if ($this->isSuperAdmin()) {

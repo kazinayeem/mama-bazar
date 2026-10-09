@@ -205,6 +205,7 @@ Artisan::command('email:process-queue {--limit=100}', function () {
 Schedule::command('email:dispatch-scheduled-campaigns')->everyMinute()->withoutOverlapping();
 Schedule::command('email:send-review-invitations')->hourly()->withoutOverlapping();
 Schedule::command('email:prune')->dailyAt('03:15');
+Schedule::command('checkout-sessions:prune --days=30')->dailyAt('03:30')->withoutOverlapping();
 
 // Shared-hosting friendly worker: drains the email queue every minute via cron.
 if (config('email_system.scheduler_queue_worker') && config('email_system.queue_connection') !== 'sync') {
