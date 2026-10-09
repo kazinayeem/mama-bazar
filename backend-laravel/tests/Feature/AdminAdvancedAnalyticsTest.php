@@ -9,8 +9,12 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Services\AdvancedAnalyticsReportService;
+use App\Services\AdvancedAnalyticsService;
+use App\Support\FinancialDataAccess;
 use Database\Seeders\AdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 class AdminAdvancedAnalyticsTest extends TestCase
@@ -280,6 +284,108 @@ class AdminAdvancedAnalyticsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_every_pdf_report_type_downloads_a_real_pdf_in_both_orientations(): void
+    {
+        foreach (array_keys(AdvancedAnalyticsReportService::REPORT_TITLES) as $reportType) {
+            foreach (['landscape', 'portrait'] as $orientation) {
+                $response = $this->actingAs($this->admin)
+                    ->withHeaders(['Accept' => 'application/pdf, application/json'])
+                    ->post(route('admin.advanced-analytics.export.pdf'), [
+                        'preset' => '30d',
+                        'report_type' => $reportType,
+                        'orientation' => $orientation,
+                    ]);
+
+                $response->assertOk();
+                $response->assertHeader('content-type', 'application/pdf');
+                $response->assertDownload('mamabazar-'.$reportType.'-report-'.now()->format('Y-m-d').'.pdf');
+                $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+
+                $content = $response->getContent();
+                $this->assertStringStartsWith('%PDF-', $content, "{$reportType}/{$orientation} is not a PDF.");
+                $this->assertMatchesRegularExpression('/\/MediaBox \[0(?:\.0+)? 0(?:\.0+)? ([\d.]+) ([\d.]+)\]/', $content);
+                preg_match('/\/MediaBox \[0(?:\.0+)? 0(?:\.0+)? ([\d.]+) ([\d.]+)\]/', $content, $mediaBox);
+                $isLandscape = (float) $mediaBox[1] > (float) $mediaBox[2];
+                $this->assertSame($orientation === 'landscape', $isLandscape, "{$reportType} ignored {$orientation} orientation.");
+            }
+        }
+    }
+
+    public function test_pdf_export_rejects_invalid_report_options_with_json_errors(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson(route('admin.advanced-analytics.export.pdf'), [
+                'report_type' => 'everything',
+                'orientation' => 'sideways',
+                'stock_status' => 'unknown',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['report_type', 'orientation', 'stock_status']);
+    }
+
+    public function test_pdf_export_is_forbidden_without_analytics_permissions(): void
+    {
+        $orderClerk = User::factory()->create([
+            'role' => 'staff',
+            'status' => 'active',
+            'permission_mode' => 'custom',
+            'custom_role' => 'CUSTOM',
+            'permissions_json' => ['orders.view'],
+        ]);
+
+        $this->actingAs($orderClerk)
+            ->post(route('admin.advanced-analytics.export.pdf'), ['report_type' => 'executive', 'orientation' => 'portrait'])
+            ->assertForbidden();
+    }
+
+    public function test_pdf_report_reflects_applied_filters_and_bengali_names(): void
+    {
+        $filters = app(AdvancedAnalyticsService::class)->parseFilters(Request::create('/', 'POST', [
+            'preset' => 'month_year',
+            'month' => 3,
+            'year' => 2025,
+            'category_id' => $this->category->id,
+            'stock_status' => 'low_stock',
+        ]));
+
+        $viewData = app(AdvancedAnalyticsReportService::class)->buildReportViewData(
+            $filters,
+            ['report_type' => 'inventory', 'orientation' => 'portrait'],
+            FinancialDataAccess::forUser($this->admin)
+        );
+
+        $this->assertSame('2025-03-01', $viewData['filters']['start_date']->format('Y-m-d'));
+        $this->assertSame('2025-03-31', $viewData['filters']['end_date']->format('Y-m-d'));
+        $this->assertContains('Category: Home Decor & Lighting', $viewData['appliedFilters']);
+        $this->assertContains('Stock: Low Stock', $viewData['appliedFilters']);
+        $this->assertSame(
+            ['সোনার কানের দুল ক্রিস্টাল ডোম'],
+            collect($viewData['products'])->pluck('title')->all()
+        );
+
+        $html = view('admin.advanced-analytics.pdf-report', $viewData)->render();
+        $this->assertStringContainsString('সোনার কানের দুল ক্রিস্টাল ডোম', $html);
+        $this->assertStringContainsString('Filters: Category: Home Decor &amp; Lighting | Stock: Low Stock', $html);
+    }
+
+    public function test_pdf_modal_renders_generate_button_and_forwards_all_filters(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('admin.advanced-analytics.index', [
+            'preset' => 'month_year',
+            'month' => 3,
+            'year' => 2025,
+            'sort_by' => 'price_asc',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('id="analytics-pdf-report-form"', false);
+        $response->assertSee('form="analytics-pdf-report-form"', false);
+        $response->assertSee('Generate PDF Report');
+        $response->assertSee('name="month" value="3"', false);
+        $response->assertSee('name="year" value="2025"', false);
+        $response->assertSee('name="sort_by" value="price_asc"', false);
     }
 
     public function test_variant_drilldown_endpoint_returns_json_details(): void

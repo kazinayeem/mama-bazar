@@ -100,13 +100,33 @@
             const count = labels.filter(l => this.selectedSidebar.includes(l)).length;
             return count > 0 && count < labels.length;
         },
+        matrixColumns: [
+            { key: 'view', label: 'View' },
+            { key: 'create', label: 'Create' },
+            { key: 'update', label: 'Edit' },
+            { key: 'delete', label: 'Delete' },
+            { key: 'export', label: 'Export' },
+            { key: 'import', label: 'Import' },
+            { key: 'approve', label: 'Approve' },
+        ],
+        modulePermissionCodes(module) {
+            const columnPerms = Object.values(module.permissions || {});
+            return [...columnPerms, ...(module.additional || [])].map(p => p.code).filter(Boolean);
+        },
+        relatedPages(module) {
+            return (module.pages || []).filter(page => page !== module.label);
+        },
+        isFirstInGroup(index) {
+            const matrix = this.permissionMatrix || [];
+            return index === 0 || matrix[index - 1].group !== matrix[index].group;
+        },
+        checkboxColor(columnKey) {
+            if (columnKey === 'delete') return 'text-rose-600 focus:ring-rose-500';
+            if (columnKey === 'approve') return 'text-indigo-600 focus:ring-indigo-500';
+            return 'text-brand-green-600 focus:ring-brand-green-500';
+        },
         allActionCodes() {
-            let codes = [];
-            Object.values(this.permissionMatrix || {}).forEach(mod => {
-                Object.values(mod.actions || {}).forEach(act => {
-                    if (act && act.code) codes.push(act.code);
-                });
-            });
+            const codes = (this.permissionMatrix || []).flatMap(mod => this.modulePermissionCodes(mod));
             return Array.from(new Set(codes));
         },
         toggleAllActions(enable) {
@@ -118,7 +138,7 @@
             }
         },
         toggleModuleActions(module, enable) {
-            const codes = Object.values(module.actions || {}).map(a => a.code).filter(Boolean);
+            const codes = this.modulePermissionCodes(module);
             if (enable) {
                 const set = new Set([...this.selectedPermissions, ...codes]);
                 this.selectedPermissions = Array.from(set);
@@ -127,7 +147,7 @@
             }
         },
         isModuleAllSelected(module) {
-            const codes = Object.values(module.actions || {}).map(a => a.code).filter(Boolean);
+            const codes = this.modulePermissionCodes(module);
             if (codes.length === 0) return false;
             return codes.every(c => this.selectedPermissions.includes(c));
         },
@@ -308,122 +328,57 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-lg border border-slate-200 max-h-[380px] overflow-y-auto">
-                <table class="min-w-full text-xs text-left divide-y divide-slate-200">
-                    <thead class="bg-slate-100 text-slate-700 uppercase tracking-wider text-[10px] font-bold sticky top-0 z-10">
+            <div class="overflow-auto rounded-lg border border-slate-200 max-h-[420px]">
+                <table class="w-full min-w-[760px] table-fixed border-separate border-spacing-0 text-xs">
+                    <colgroup>
+                        <col class="w-[220px]">
+                        @foreach (array_keys(\App\Services\RbacService::MATRIX_COLUMNS) as $matrixColumn)
+                            <col class="w-[60px]">
+                        @endforeach
+                        <col class="w-[104px]">
+                    </colgroup>
+                    <thead class="sticky top-0 z-20 bg-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-700">
                         <tr>
-                            <th class="px-3.5 py-2.5">Module</th>
-                            <th class="px-2.5 py-2.5 text-center">View</th>
-                            <th class="px-2.5 py-2.5 text-center">Create</th>
-                            <th class="px-2.5 py-2.5 text-center">Edit</th>
-                            <th class="px-2.5 py-2.5 text-center">Delete</th>
-                            <th class="px-2.5 py-2.5 text-center">Export</th>
-                            <th class="px-2.5 py-2.5 text-center">Import</th>
-                            <th class="px-2.5 py-2.5 text-center">Approve</th>
-                            <th class="px-3 py-2.5 text-right">Module All</th>
+                            <th scope="col" class="sticky left-0 z-30 border-b border-slate-200 bg-slate-100 px-3.5 py-2.5 text-left">Module</th>
+                            <template x-for="column in matrixColumns" :key="'head-' + column.key">
+                                <th scope="col" class="border-b border-slate-200 px-1 py-2.5 text-center" x-text="column.label"></th>
+                            </template>
+                            <th scope="col" class="border-b border-slate-200 px-3 py-2.5 text-right">Module All</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                        <template x-for="(mod, modKey) in permissionMatrix" :key="modKey">
-                            <tr class="hover:bg-slate-50/70 transition">
-                                <td class="px-3.5 py-2.5">
-                                    <div class="font-bold text-slate-800" x-text="mod.title || mod.name"></div>
-                                    <div class="text-[10px] text-slate-400" x-text="mod.description || mod.module"></div>
-                                </td>
-
-                                {{-- View --}}
-                                <td class="px-2.5 py-2.5 text-center">
-                                    <template x-if="mod.actions.view">
-                                        <input type="checkbox"
-                                               :value="mod.actions.view.code"
-                                               x-model="selectedPermissions"
-                                               class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500">
-                                    </template>
-                                    <template x-if="!mod.actions.view">
-                                        <span class="text-slate-300 font-bold">—</span>
-                                    </template>
-                                </td>
-
-                                {{-- Create --}}
-                                <td class="px-2.5 py-2.5 text-center">
-                                    <template x-if="mod.actions.create">
-                                        <input type="checkbox"
-                                               :value="mod.actions.create.code"
-                                               x-model="selectedPermissions"
-                                               class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500">
-                                    </template>
-                                    <template x-if="!mod.actions.create">
-                                        <span class="text-slate-300 font-bold">—</span>
-                                    </template>
-                                </td>
-
-                                {{-- Edit --}}
-                                <td class="px-2.5 py-2.5 text-center">
-                                    <template x-if="mod.actions.update">
-                                        <input type="checkbox"
-                                               :value="mod.actions.update.code"
-                                               x-model="selectedPermissions"
-                                               class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500">
-                                    </template>
-                                    <template x-if="!mod.actions.update">
-                                        <span class="text-slate-300 font-bold">—</span>
-                                    </template>
-                                </td>
-
-                                {{-- Delete --}}
-                                <td class="px-2.5 py-2.5 text-center">
-                                    <template x-if="mod.actions.delete">
-                                        <input type="checkbox"
-                                               :value="mod.actions.delete.code"
-                                               x-model="selectedPermissions"
-                                               class="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500">
-                                    </template>
-                                    <template x-if="!mod.actions.delete">
-                                        <span class="text-slate-300 font-bold">—</span>
-                                    </template>
-                                </td>
-
-                                {{-- Export --}}
-                                <td class="px-2.5 py-2.5 text-center">
-                                    <template x-if="mod.actions.export">
-                                        <input type="checkbox"
-                                               :value="mod.actions.export.code"
-                                               x-model="selectedPermissions"
-                                               class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500">
-                                    </template>
-                                    <template x-if="!mod.actions.export">
-                                        <span class="text-slate-300 font-bold">—</span>
-                                    </template>
-                                </td>
-
-                                {{-- Import --}}
-                                <td class="px-2.5 py-2.5 text-center">
-                                    <template x-if="mod.actions.import">
-                                        <input type="checkbox"
-                                               :value="mod.actions.import.code"
-                                               x-model="selectedPermissions"
-                                               class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500">
-                                    </template>
-                                    <template x-if="!mod.actions.import">
-                                        <span class="text-slate-300 font-bold">—</span>
-                                    </template>
-                                </td>
-
-                                {{-- Approve / Manage --}}
-                                <td class="px-2.5 py-2.5 text-center">
-                                    <template x-if="mod.actions.approve || mod.actions.manage || mod.actions.backup">
-                                        <input type="checkbox"
-                                               :value="(mod.actions.approve || mod.actions.manage || mod.actions.backup).code"
-                                               x-model="selectedPermissions"
-                                               class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                                    </template>
-                                    <template x-if="!mod.actions.approve && !mod.actions.manage && !mod.actions.backup">
-                                        <span class="text-slate-300 font-bold">—</span>
-                                    </template>
-                                </td>
-
-                                {{-- Module Toggle All --}}
-                                <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                    <template x-for="(mod, modIndex) in permissionMatrix" :key="mod.key">
+                        <tbody class="bg-white">
+                            <template x-if="isFirstInGroup(modIndex)">
+                                <tr>
+                                    <th scope="colgroup" :colspan="matrixColumns.length + 2"
+                                        class="sticky left-0 border-b border-slate-200 bg-slate-50 px-3.5 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500"
+                                        x-text="mod.group"></th>
+                                </tr>
+                            </template>
+                            <tr class="group">
+                                <th scope="row" class="sticky left-0 z-10 border-b border-slate-100 bg-white px-3.5 py-2.5 text-left align-top font-normal group-hover:bg-slate-50">
+                                    <span class="block font-bold leading-snug text-slate-800 break-words" x-text="mod.label"></span>
+                                    <span x-show="relatedPages(mod).length > 0"
+                                          class="mt-0.5 block text-[10px] leading-snug text-slate-400 break-words"
+                                          x-text="'Includes: ' + relatedPages(mod).join(', ')"></span>
+                                </th>
+                                <template x-for="column in matrixColumns" :key="mod.key + '-' + column.key">
+                                    <td class="border-b border-slate-100 px-1 py-2.5 text-center align-top group-hover:bg-slate-50">
+                                        <template x-if="mod.permissions && mod.permissions[column.key]">
+                                            <input type="checkbox"
+                                                   :value="mod.permissions[column.key].code"
+                                                   x-model="selectedPermissions"
+                                                   :title="mod.permissions[column.key].label"
+                                                   :aria-label="mod.label + ': ' + mod.permissions[column.key].label"
+                                                   class="h-4 w-4 rounded border-slate-300"
+                                                   :class="checkboxColor(column.key)">
+                                        </template>
+                                        <template x-if="!(mod.permissions && mod.permissions[column.key])">
+                                            <span class="font-bold text-slate-300" aria-hidden="true">—</span>
+                                        </template>
+                                    </td>
+                                </template>
+                                <td class="border-b border-slate-100 px-3 py-2.5 text-right align-top whitespace-nowrap group-hover:bg-slate-50">
                                     <button type="button"
                                             @click="toggleModuleActions(mod, !isModuleAllSelected(mod))"
                                             class="text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-200 hover:bg-slate-100 transition"
@@ -432,8 +387,28 @@
                                     </button>
                                 </td>
                             </tr>
-                        </template>
-                    </tbody>
+                            <template x-if="(mod.additional || []).length > 0">
+                                <tr>
+                                    <td class="sticky left-0 z-10 border-b border-slate-100 bg-white px-3.5 pb-2.5 text-left align-top text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                        Additional actions
+                                    </td>
+                                    <td :colspan="matrixColumns.length + 1" class="border-b border-slate-100 px-2 pb-2.5 align-top">
+                                        <div class="flex flex-wrap gap-x-4 gap-y-1.5">
+                                            <template x-for="perm in mod.additional" :key="perm.code">
+                                                <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-700 cursor-pointer" :title="perm.description">
+                                                    <input type="checkbox"
+                                                           :value="perm.code"
+                                                           x-model="selectedPermissions"
+                                                           class="h-3.5 w-3.5 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500">
+                                                    <span x-text="perm.label"></span>
+                                                </label>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </template>
                 </table>
             </div>
 

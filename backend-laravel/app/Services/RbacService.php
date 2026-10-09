@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserPermission;
+use App\Support\AdminNav;
 use App\Support\FinancialDataAccess;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class RbacService
 {
@@ -262,201 +264,152 @@ class RbacService
     }
 
     /**
-     * Grouped permission matrix for Add/Edit member UI.
-     * Organized with standard CRUD actions.
+     * Display metadata for the member permission matrix, in sidebar order.
+     * Keys are permission codes without their trailing action segment
+     * (e.g. "orders", "email.templates") and are never used for display.
+     *
+     * @var array<string, array{label: string, group: string}>
+     */
+    public const MATRIX_MODULES = [
+        'dashboard' => ['label' => 'Dashboard', 'group' => 'Overview'],
+        'products' => ['label' => 'Products', 'group' => 'Catalog'],
+        'categories' => ['label' => 'Categories', 'group' => 'Catalog'],
+        'brands' => ['label' => 'Brands', 'group' => 'Catalog'],
+        'collections' => ['label' => 'Collections', 'group' => 'Catalog'],
+        'colors' => ['label' => 'Colors', 'group' => 'Catalog'],
+        'sizes' => ['label' => 'Sizes', 'group' => 'Catalog'],
+        'vendors' => ['label' => 'Vendors', 'group' => 'Catalog'],
+        'suppliers' => ['label' => 'Suppliers', 'group' => 'Catalog'],
+        'orders' => ['label' => 'Orders', 'group' => 'Sales'],
+        'incomplete_orders' => ['label' => 'Incomplete Orders', 'group' => 'Sales'],
+        'coupons' => ['label' => 'Coupons', 'group' => 'Sales'],
+        'marketing' => ['label' => 'Marketing', 'group' => 'Sales'],
+        'reviews' => ['label' => 'Reviews', 'group' => 'Sales'],
+        'expenses' => ['label' => 'Expenses', 'group' => 'Finance'],
+        'costs' => ['label' => 'Operational Costs', 'group' => 'Finance'],
+        'reports' => ['label' => 'Financial Reports', 'group' => 'Finance'],
+        'shipping' => ['label' => 'Shipping Methods', 'group' => 'Checkout'],
+        'payment_methods' => ['label' => 'Payment Methods', 'group' => 'Checkout'],
+        'checkout_notices' => ['label' => 'Checkout Notices', 'group' => 'Checkout'],
+        'customers' => ['label' => 'Customers', 'group' => 'Customers'],
+        'homepage' => ['label' => 'Homepage Builder', 'group' => 'Content'],
+        'team' => ['label' => 'Team Management', 'group' => 'Content'],
+        'policies' => ['label' => 'Policies & Messages', 'group' => 'Content'],
+        'media' => ['label' => 'Media Library', 'group' => 'Content'],
+        'banners' => ['label' => 'Banners', 'group' => 'Content'],
+        'analytics' => ['label' => 'Analytics', 'group' => 'Insights'],
+        'seo' => ['label' => 'SEO Optimization', 'group' => 'Insights'],
+        'email' => ['label' => 'Email Dashboard', 'group' => 'Email Management'],
+        'email.settings' => ['label' => 'SMTP Settings', 'group' => 'Email Management'],
+        'email.templates' => ['label' => 'Email Templates', 'group' => 'Email Management'],
+        'email.campaigns' => ['label' => 'Email Campaigns', 'group' => 'Email Management'],
+        'email.logs' => ['label' => 'Email Logs', 'group' => 'Email Management'],
+        'members' => ['label' => 'Team Members', 'group' => 'Security & Access'],
+        'activity' => ['label' => 'Activity Monitor', 'group' => 'Security & Access'],
+        'backup' => ['label' => 'Backup & Restore', 'group' => 'Security & Access'],
+        'inventory' => ['label' => 'Inventory', 'group' => 'System'],
+        'settings' => ['label' => 'Settings', 'group' => 'System'],
+    ];
+
+    /**
+     * Matrix columns and the permission actions each one may hold, in priority order.
+     * Actions that do not fit a column are listed as additional actions.
+     *
+     * @var array<string, list<string>>
+     */
+    public const MATRIX_COLUMNS = [
+        'view' => ['view'],
+        'create' => ['create', 'upload'],
+        'update' => ['update', 'manage'],
+        'delete' => ['delete'],
+        'export' => ['export'],
+        'import' => ['import'],
+        'approve' => ['approve', 'restore', 'send'],
+    ];
+
+    /**
+     * Permission matrix for the Add/Edit member UI, derived from ALL_PERMISSIONS
+     * so every grantable code appears exactly once. Financial cost permissions
+     * are excluded (they have their own section).
+     *
+     * @return list<array{key: string, label: string, group: string, pages: list<string>, permissions: array<string, array{code: string, label: string, description: string}>, additional: list<array{code: string, label: string, description: string}>}>
      */
     public static function getPermissionMatrix(): array
     {
-        return [
-            [
-                'id' => 'dashboard',
-                'name' => 'Dashboard Overview',
-                'module' => 'Overview',
-                'actions' => [
-                    'view' => ['code' => 'dashboard.view', 'label' => 'View Dashboard'],
-                ],
-            ],
-            [
-                'id' => 'products',
-                'name' => 'Products Management',
-                'module' => 'Catalog',
-                'actions' => [
-                    'view' => ['code' => 'products.view', 'label' => 'View Products'],
-                    'create' => ['code' => 'products.create', 'label' => 'Create Product'],
-                    'update' => ['code' => 'products.update', 'label' => 'Edit Product'],
-                    'delete' => ['code' => 'products.delete', 'label' => 'Delete Product'],
-                    'export' => ['code' => 'products.export', 'label' => 'Export CSV'],
-                    'import' => ['code' => 'products.import', 'label' => 'Import CSV'],
-                ],
-            ],
-            [
-                'id' => 'categories',
-                'name' => 'Categories',
-                'module' => 'Catalog',
-                'actions' => [
-                    'view' => ['code' => 'categories.view', 'label' => 'View Categories'],
-                    'create' => ['code' => 'categories.create', 'label' => 'Create Category'],
-                    'update' => ['code' => 'categories.update', 'label' => 'Edit Category'],
-                    'delete' => ['code' => 'categories.delete', 'label' => 'Delete Category'],
-                    'export' => ['code' => 'categories.export', 'label' => 'Export Categories'],
-                ],
-            ],
-            [
-                'id' => 'brands_attributes',
-                'name' => 'Brands, Collections & Attributes',
-                'module' => 'Catalog',
-                'actions' => [
-                    'view' => ['code' => 'brands.view', 'label' => 'View Attributes'],
-                    'create' => ['code' => 'brands.create', 'label' => 'Create Attributes'],
-                    'update' => ['code' => 'brands.update', 'label' => 'Edit Attributes'],
-                    'delete' => ['code' => 'brands.delete', 'label' => 'Delete Attributes'],
-                ],
-            ],
-            [
-                'id' => 'orders',
-                'name' => 'Orders & Fulfillment',
-                'module' => 'Sales',
-                'actions' => [
-                    'view' => ['code' => 'orders.view', 'label' => 'View Orders'],
-                    'create' => ['code' => 'orders.create', 'label' => 'Create Orders'],
-                    'update' => ['code' => 'orders.update', 'label' => 'Update Status & Payment'],
-                    'edit' => ['code' => 'orders.edit', 'label' => 'General Order Edit'],
-                    'edit_customer' => ['code' => 'orders.edit_customer', 'label' => 'Edit Customer Info'],
-                    'edit_shipping' => ['code' => 'orders.edit_shipping', 'label' => 'Edit Shipping Details'],
-                    'edit_items' => ['code' => 'orders.edit_items', 'label' => 'Edit Items & Quantities'],
-                    'adjust_financials' => ['code' => 'orders.adjust_financials', 'label' => 'Adjust Prices & Fees'],
-                    'delete' => ['code' => 'orders.delete', 'label' => 'Delete / Cancel Orders'],
-                    'export' => ['code' => 'orders.export', 'label' => 'Export Orders / Invoices'],
-                    'approve' => ['code' => 'orders.approve', 'label' => 'Approve / Confirm Orders'],
-                ],
-            ],
-            [
-                'id' => 'incomplete_orders',
-                'name' => 'Incomplete Orders & Abandonment',
-                'module' => 'Sales',
-                'actions' => [
-                    'view' => ['code' => 'incomplete_orders.view', 'label' => 'View Incomplete Orders & Funnel'],
-                    'export' => ['code' => 'incomplete_orders.export', 'label' => 'Export Incomplete Orders CSV'],
-                    'approve' => ['code' => 'incomplete_orders.view_ip', 'label' => 'View Connection IP'],
-                    'manage' => ['code' => 'incomplete_orders.manage_retention', 'label' => 'Manage Data Retention'],
-                ],
-            ],
-            [
-                'id' => 'coupons',
-                'name' => 'Promotional Coupons',
-                'module' => 'Sales',
-                'actions' => [
-                    'view' => ['code' => 'coupons.view', 'label' => 'View Coupons'],
-                    'create' => ['code' => 'coupons.create', 'label' => 'Create Coupon'],
-                    'update' => ['code' => 'coupons.update', 'label' => 'Edit Coupon'],
-                    'delete' => ['code' => 'coupons.delete', 'label' => 'Delete Coupon'],
-                ],
-            ],
-            [
-                'id' => 'reviews',
-                'name' => 'Customer Reviews',
-                'module' => 'Sales',
-                'actions' => [
-                    'view' => ['code' => 'reviews.view', 'label' => 'View Reviews'],
-                    'update' => ['code' => 'reviews.update', 'label' => 'Moderate / Feature'],
-                    'delete' => ['code' => 'reviews.delete', 'label' => 'Delete Review'],
-                ],
-            ],
-            [
-                'id' => 'customers',
-                'name' => 'Customers Directory',
-                'module' => 'Customers',
-                'actions' => [
-                    'view' => ['code' => 'customers.view', 'label' => 'View Customers'],
-                    'create' => ['code' => 'customers.create', 'label' => 'Create Customer'],
-                    'update' => ['code' => 'customers.update', 'label' => 'Edit Customer & Notes'],
-                    'delete' => ['code' => 'customers.delete', 'label' => 'Delete Customer'],
-                    'export' => ['code' => 'customers.export', 'label' => 'Export Customer List'],
-                ],
-            ],
-            [
-                'id' => 'expenses',
-                'name' => 'Expenses & Financial Reports',
-                'module' => 'Finance',
-                'actions' => [
-                    'view' => ['code' => 'expenses.view', 'label' => 'View Expenses'],
-                    'create' => ['code' => 'expenses.create', 'label' => 'Create Expense'],
-                    'update' => ['code' => 'expenses.update', 'label' => 'Edit Expense'],
-                    'delete' => ['code' => 'expenses.delete', 'label' => 'Delete Expense'],
-                    'export' => ['code' => 'reports.export', 'label' => 'Export Financial Reports'],
-                ],
-            ],
-            [
-                'id' => 'checkout',
-                'name' => 'Shipping & Payment Gateways',
-                'module' => 'Checkout',
-                'actions' => [
-                    'view' => ['code' => 'shipping.view', 'label' => 'View Shipping/Payments'],
-                    'update' => ['code' => 'shipping.manage', 'label' => 'Manage Shipping & Gateways'],
-                ],
-            ],
-            [
-                'id' => 'content',
-                'name' => 'Homepage, Banners & Media',
-                'module' => 'Content',
-                'actions' => [
-                    'view' => ['code' => 'banners.view', 'label' => 'View Content'],
-                    'create' => ['code' => 'banners.create', 'label' => 'Create Banners/Media'],
-                    'update' => ['code' => 'homepage.manage', 'label' => 'Edit Homepage & Content'],
-                    'delete' => ['code' => 'banners.delete', 'label' => 'Delete Banners/Media'],
-                ],
-            ],
-            [
-                'id' => 'inventory',
-                'name' => 'Inventory & Stock Adjustments',
-                'module' => 'System',
-                'actions' => [
-                    'view' => ['code' => 'inventory.view', 'label' => 'View Inventory Stock'],
-                    'update' => ['code' => 'inventory.manage', 'label' => 'Adjust Stock Levels'],
-                ],
-            ],
-            [
-                'id' => 'email',
-                'name' => 'Email Management & SMTP',
-                'module' => 'Email Management',
-                'actions' => [
-                    'view' => ['code' => 'email.view', 'label' => 'View Email Dashboard & Logs'],
-                    'update' => ['code' => 'email.settings.manage', 'label' => 'Manage SMTP & Templates'],
-                    'approve' => ['code' => 'email.campaigns.send', 'label' => 'Send Bulk Campaigns'],
-                ],
-            ],
-            [
-                'id' => 'members',
-                'name' => 'Team Members & Roles',
-                'module' => 'Security & Access',
-                'actions' => [
-                    'view' => ['code' => 'members.view', 'label' => 'View Team Members'],
-                    'create' => ['code' => 'members.create', 'label' => 'Create Team Member'],
-                    'update' => ['code' => 'members.update', 'label' => 'Edit Roles & Permissions'],
-                    'delete' => ['code' => 'members.delete', 'label' => 'Delete Member'],
-                    'export' => ['code' => 'members.export', 'label' => 'Export Members List'],
-                ],
-            ],
-            [
-                'id' => 'backup',
-                'name' => 'Backup & Restore',
-                'module' => 'Security & Access',
-                'actions' => [
-                    'view' => ['code' => 'backup.view', 'label' => 'View Backups'],
-                    'create' => ['code' => 'backup.create', 'label' => 'Create Backup Archive'],
-                    'approve' => ['code' => 'backup.restore', 'label' => 'Restore Database Archive'],
-                ],
-            ],
-            [
-                'id' => 'settings',
-                'name' => 'Business Settings & SEO',
-                'module' => 'System',
-                'actions' => [
-                    'view' => ['code' => 'settings.view', 'label' => 'View Settings & SEO'],
-                    'update' => ['code' => 'settings.manage', 'label' => 'Manage Settings & SEO'],
-                ],
-            ],
-        ];
+        $actionsByModule = [];
+        foreach (self::ALL_PERMISSIONS as $perm) {
+            if ($perm['module'] === 'financial') {
+                continue;
+            }
+            $separator = strrpos($perm['code'], '.');
+            $moduleKey = substr($perm['code'], 0, $separator);
+            $action = substr($perm['code'], $separator + 1);
+            $actionsByModule[$moduleKey][$action] = [
+                'code' => $perm['code'],
+                'label' => $perm['label'],
+                'description' => $perm['description'],
+            ];
+        }
+
+        $pagesByModule = self::sidebarPagesByModule($actionsByModule);
+        $orderedKeys = array_values(array_unique(array_merge(
+            array_keys(array_intersect_key(self::MATRIX_MODULES, $actionsByModule)),
+            array_keys($actionsByModule)
+        )));
+
+        $matrix = [];
+        foreach ($orderedKeys as $moduleKey) {
+            $remaining = $actionsByModule[$moduleKey];
+            $columns = [];
+            foreach (self::MATRIX_COLUMNS as $column => $candidates) {
+                foreach ($candidates as $action) {
+                    if (isset($remaining[$action])) {
+                        $columns[$column] = $remaining[$action];
+                        unset($remaining[$action]);
+                        break;
+                    }
+                }
+            }
+
+            $matrix[] = [
+                'key' => $moduleKey,
+                'label' => self::MATRIX_MODULES[$moduleKey]['label'] ?? Str::headline(str_replace('.', ' ', $moduleKey)),
+                'group' => self::MATRIX_MODULES[$moduleKey]['group'] ?? 'Other',
+                'pages' => $pagesByModule[$moduleKey] ?? [],
+                'permissions' => $columns,
+                'additional' => array_values($remaining),
+            ];
+        }
+
+        return $matrix;
+    }
+
+    /**
+     * Sidebar page labels controlled by each matrix module, from AdminNav permission strings.
+     *
+     * @param  array<string, array<string, mixed>>  $actionsByModule
+     * @return array<string, list<string>>
+     */
+    private static function sidebarPagesByModule(array $actionsByModule): array
+    {
+        $knownCodes = array_flip(array_column(self::ALL_PERMISSIONS, 'code'));
+        $pages = [];
+        foreach (AdminNav::rawSections() as $section) {
+            foreach ($section['items'] as $item) {
+                foreach (explode('|', (string) ($item['permission'] ?? '')) as $code) {
+                    $separator = strrpos($code, '.');
+                    if (! isset($knownCodes[$code]) || $separator === false) {
+                        continue;
+                    }
+                    $moduleKey = substr($code, 0, $separator);
+                    if (isset($actionsByModule[$moduleKey]) && ! in_array($item['label'], $pages[$moduleKey] ?? [], true)) {
+                        $pages[$moduleKey][] = $item['label'];
+                    }
+                }
+            }
+        }
+
+        return $pages;
     }
 
     /**

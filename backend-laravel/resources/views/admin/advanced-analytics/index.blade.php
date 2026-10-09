@@ -1134,88 +1134,90 @@
     </div>
 
     {{-- 7. PDF Report Generator Modal --}}
-    <div x-show="pdfModalOpen" x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-         x-transition.opacity>
-        <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl"
-             @click.outside="pdfModalOpen = false">
-            <div class="flex items-start justify-between border-b pb-3">
-                <div>
-                    <h3 class="font-bold text-slate-900">Generate PDF Analytics Report</h3>
-                    <p class="text-xs text-slate-500">Configure report contents, layout, and filters</p>
-                </div>
-                <button type="button" @click="pdfModalOpen = false" class="text-slate-400 hover:text-slate-600">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+    <x-admin.modal name="pdfModalOpen" title="Generate PDF Analytics Report" subtitle="Configure report contents, layout, and filters">
+        <form id="analytics-pdf-report-form"
+              x-ref="pdfReportForm"
+              method="POST"
+              action="{{ route('admin.advanced-analytics.export.pdf') }}"
+              class="space-y-4"
+              @submit.prevent="generatePdfReport()">
+            @csrf
+            {{-- Pass through current filters --}}
+            <input type="hidden" name="preset" value="{{ $filters['preset'] }}">
+            <input type="hidden" name="start_date" value="{{ $filters['start_date']->format('Y-m-d') }}">
+            <input type="hidden" name="end_date" value="{{ $filters['end_date']->format('Y-m-d') }}">
+            <input type="hidden" name="month" value="{{ $filters['month'] }}">
+            <input type="hidden" name="year" value="{{ $filters['year'] }}">
+            <input type="hidden" name="category_id" value="{{ $filters['category_id'] }}">
+            <input type="hidden" name="brand_id" value="{{ $filters['brand_id'] }}">
+            <input type="hidden" name="product_id" value="{{ $filters['product_id'] }}">
+            <input type="hidden" name="stock_status" value="{{ $filters['stock_status'] }}">
+            <input type="hidden" name="product_status" value="{{ $filters['product_status'] }}">
+            <input type="hidden" name="sort_by" value="{{ $filters['sort_by'] }}">
+            <input type="hidden" name="search" value="{{ $filters['search'] }}">
+
+            {{-- Report Type --}}
+            <div>
+                <label for="pdf-report-type" class="block text-xs font-semibold text-slate-700">Report Type</label>
+                <select id="pdf-report-type" name="report_type" required class="admin-control mt-1 w-full text-xs" :disabled="isGeneratingPdf">
+                    <option value="complete">Complete Advanced Analytics Report</option>
+                    <option value="executive">Executive Summary Report</option>
+                    <option value="inventory">Inventory & Stock Valuation Report</option>
+                    <option value="sales">Sales & Revenue Report</option>
+                    <option value="pricing">Product Pricing & Discount Report</option>
+                    @if($financialAccess->forExport()->canViewProfitMargin)
+                    <option value="profitability">Profitability & Margin Report</option>
+                    @endif
+                    <option value="reorder">Low Stock & Reorder Alert Report</option>
+                    <option value="variants">Product & Variant Stock Report</option>
+                </select>
             </div>
 
-            <form method="POST" action="{{ route('admin.advanced-analytics.export.pdf') }}" class="mt-4 space-y-4" @submit="isGeneratingPdf = true">
-                @csrf
-                {{-- Pass through current filters --}}
-                <input type="hidden" name="preset" value="{{ $filters['preset'] }}">
-                <input type="hidden" name="start_date" value="{{ $filters['start_date']->format('Y-m-d') }}">
-                <input type="hidden" name="end_date" value="{{ $filters['end_date']->format('Y-m-d') }}">
-                <input type="hidden" name="category_id" value="{{ $filters['category_id'] }}">
-                <input type="hidden" name="brand_id" value="{{ $filters['brand_id'] }}">
-                <input type="hidden" name="stock_status" value="{{ $filters['stock_status'] }}">
-                <input type="hidden" name="product_status" value="{{ $filters['product_status'] }}">
-                <input type="hidden" name="search" value="{{ $filters['search'] }}">
-
-                {{-- Report Type --}}
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700">Report Type</label>
-                    <select name="report_type" class="admin-control mt-1 w-full text-xs">
-                        <option value="complete">Complete Advanced Analytics Report</option>
-                        <option value="executive">Executive Summary Report</option>
-                        <option value="inventory">Inventory & Stock Valuation Report</option>
-                        <option value="sales">Sales & Revenue Report</option>
-                        <option value="pricing">Product Pricing & Discount Report</option>
-                        @if($financialAccess->forExport()->canViewProfitMargin)
-                        <option value="profitability">Profitability & Margin Report</option>
-                        @endif
-                        <option value="reorder">Low Stock & Reorder Alert Report</option>
-                        <option value="variants">Product & Variant Stock Report</option>
-                    </select>
+            {{-- Page Orientation --}}
+            <fieldset>
+                <legend class="block text-xs font-semibold text-slate-700">Page Orientation</legend>
+                <div class="mt-1 flex flex-wrap gap-x-4 gap-y-2 text-xs">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="orientation" value="landscape" checked required class="text-emerald-600" :disabled="isGeneratingPdf">
+                        <span>Landscape (Recommended for wide tables)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="orientation" value="portrait" class="text-emerald-600" :disabled="isGeneratingPdf">
+                        <span>Portrait</span>
+                    </label>
                 </div>
+            </fieldset>
 
-                {{-- Page Orientation --}}
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700">Page Orientation</label>
-                    <div class="mt-1 flex gap-3 text-xs">
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="orientation" value="landscape" checked class="text-emerald-600">
-                            <span>Landscape (Recommended for wide tables)</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="orientation" value="portrait" class="text-emerald-600">
-                            <span>Portrait</span>
-                        </label>
-                    </div>
-                </div>
+            {{-- Filter Summary Box in Modal --}}
+            <div class="rounded-md bg-slate-50 p-3 text-xs text-slate-600">
+                <p class="font-semibold text-slate-800">Applied Filter Context:</p>
+                <p class="mt-1">Date Range: {{ $filters['start_date']->format('d M, Y') }} — {{ $filters['end_date']->format('d M, Y') }}</p>
+                @if($filters['category_id'])<p>Category: {{ $categories->firstWhere('id', $filters['category_id'])?->name ?? '#'.$filters['category_id'] }}</p>@endif
+                @if($filters['brand_id'])<p>Brand: {{ $brands->firstWhere('id', $filters['brand_id'])?->name ?? '#'.$filters['brand_id'] }}</p>@endif
+                @if($filters['stock_status'] !== 'all')<p>Stock Status: {{ \Illuminate\Support\Str::headline($filters['stock_status']) }}</p>@endif
+                @if($filters['product_status'] !== 'all')<p>Catalog Status: {{ ucfirst($filters['product_status']) }}</p>@endif
+                @if($filters['search'] !== '')<p>Search: “{{ $filters['search'] }}”</p>@endif
+                <p class="text-[11px] text-slate-400 mt-1">Full Bengali text support (Hind Siliguri Unicode font) included.</p>
+            </div>
 
-                {{-- Filter Summary Box in Modal --}}
-                <div class="rounded-md bg-slate-50 p-3 text-xs text-slate-600">
-                    <p class="font-semibold text-slate-800">Applied Filter Context:</p>
-                    <p class="mt-1">Date Range: {{ $filters['start_date']->format('d M, Y') }} — {{ $filters['end_date']->format('d M, Y') }}</p>
-                    @if($filters['category_id'])<p>Category ID: {{ $filters['category_id'] }}</p>@endif
-                    @if($filters['stock_status'] !== 'all')<p>Stock Status: {{ ucfirst($filters['stock_status']) }}</p>@endif
-                    <p class="text-[11px] text-slate-400 mt-1">Full Bengali text support (Hind Siliguri Unicode font) included.</p>
-                </div>
+            <p x-show="pdfError" x-cloak role="alert"
+               class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700"
+               x-text="pdfError"></p>
+        </form>
 
-                <div class="flex items-center justify-end gap-2 border-t pt-4">
-                    <button type="button" @click="pdfModalOpen = false" class="rounded-[6px] border px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                            :disabled="isGeneratingPdf"
-                            class="inline-flex items-center gap-2 rounded-[6px] bg-[#0f4d2c] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0a3820] disabled:opacity-50">
-                        <svg x-show="isGeneratingPdf" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                        <span x-text="isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+        <x-slot:footer>
+            <x-admin.button variant="outline" size="sm" @click="cancelPdfReport()">
+                Cancel
+            </x-admin.button>
+            <x-admin.button type="submit" size="sm" form="analytics-pdf-report-form"
+                            x-bind:disabled="isGeneratingPdf"
+                            x-bind:aria-busy="isGeneratingPdf ? 'true' : 'false'">
+                <svg x-show="isGeneratingPdf" x-cloak class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                <svg x-show="!isGeneratingPdf" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <span x-text="isGeneratingPdf ? 'Generating PDF...' : 'Generate PDF Report'">Generate PDF Report</span>
+            </x-admin.button>
+        </x-slot:footer>
+    </x-admin.modal>
 
     {{-- 8. Variant Drill-down Modal --}}
     <div x-show="variantModalOpen" x-cloak
@@ -1283,6 +1285,9 @@ function advancedAnalyticsDashboard() {
         preset: '{{ $filters['preset'] }}',
         pdfModalOpen: false,
         isGeneratingPdf: false,
+        pdfError: '',
+        pdfAbortController: null,
+        pdfReportTypes: @js(array_keys(\App\Services\AdvancedAnalyticsReportService::REPORT_TITLES)),
         variantModalOpen: false,
         loadingVariants: false,
         selectedProduct: null,
@@ -1295,6 +1300,111 @@ function advancedAnalyticsDashboard() {
             sales: true,
             cost: true,
             last_sale: false,
+        },
+        init() {
+            this.$watch('pdfModalOpen', (open) => {
+                if (open) {
+                    this.pdfError = '';
+                } else {
+                    this.pdfAbortController?.abort();
+                }
+            });
+        },
+        cancelPdfReport() {
+            this.pdfAbortController?.abort();
+            this.pdfModalOpen = false;
+        },
+        notify(message, type = 'success') {
+            window.dispatchEvent(new CustomEvent('admin-toast', { detail: { message, type } }));
+        },
+        async pdfErrorMessage(response) {
+            if (response.status === 419) {
+                return 'Your session has expired. Refresh the page and try again.';
+            }
+            if (response.status === 403) {
+                return 'You do not have permission to export this report.';
+            }
+            if (response.status === 422) {
+                try {
+                    const payload = await response.json();
+                    const firstError = Object.values(payload.errors || {}).flat()[0];
+                    return firstError || 'Please check the report options and try again.';
+                } catch (e) {
+                    return 'Please check the report options and try again.';
+                }
+            }
+            return 'The PDF report could not be generated. Please try again.';
+        },
+        async generatePdfReport() {
+            if (this.isGeneratingPdf) {
+                return;
+            }
+
+            const form = this.$refs.pdfReportForm;
+            const formData = new FormData(form);
+            const reportType = formData.get('report_type');
+            const orientation = formData.get('orientation');
+
+            if (!this.pdfReportTypes.includes(reportType)) {
+                this.pdfError = 'Choose a valid report type.';
+                return;
+            }
+            if (!['landscape', 'portrait'].includes(orientation)) {
+                this.pdfError = 'Choose a page orientation.';
+                return;
+            }
+
+            this.pdfError = '';
+            this.isGeneratingPdf = true;
+            const controller = new AbortController();
+            this.pdfAbortController = controller;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/pdf, application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+
+                if (!response.ok) {
+                    this.pdfError = await this.pdfErrorMessage(response);
+                    return;
+                }
+
+                const blob = await response.blob();
+                const signature = await blob.slice(0, 5).text();
+                if (!(response.headers.get('Content-Type') || '').includes('application/pdf') || signature !== '%PDF-') {
+                    this.pdfError = 'The server returned an invalid PDF. Please try again.';
+                    return;
+                }
+
+                const disposition = response.headers.get('Content-Disposition') || '';
+                const filenameMatch = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+                const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : `mamabazar-${reportType}-report.pdf`;
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+                this.pdfModalOpen = false;
+                this.notify(`PDF report download started: ${filename}`);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    this.pdfError = 'The PDF report could not be generated. Check your connection and try again.';
+                }
+            } finally {
+                if (this.pdfAbortController === controller) {
+                    this.pdfAbortController = null;
+                }
+                this.isGeneratingPdf = false;
+            }
         },
         openVariantDrilldown(productId) {
             this.variantModalOpen = true;

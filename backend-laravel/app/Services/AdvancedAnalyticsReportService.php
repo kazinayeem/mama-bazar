@@ -2,12 +2,38 @@
 
 namespace App\Services;
 
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
 use App\Support\FinancialDataAccess;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 
 class AdvancedAnalyticsReportService
 {
+    /**
+     * Supported PDF report types and their document titles.
+     *
+     * @var array<string, string>
+     */
+    public const REPORT_TITLES = [
+        'complete' => 'Comprehensive Advanced Analytics & Inventory Intelligence Report',
+        'executive' => 'Executive Analytics & Performance Summary',
+        'inventory' => 'Inventory Valuation & Stock Intelligence Report',
+        'sales' => 'Sales, Revenue & Growth Analytics Report',
+        'pricing' => 'Product Pricing & Discount Intelligence Report',
+        'profitability' => 'Gross Profit & Margin Analysis Report',
+        'reorder' => 'Low Stock & Urgent Reorder Planning Report',
+        'variants' => 'Product Variants & Stock Distribution Report',
+    ];
+
+    private const STOCK_STATUS_LABELS = [
+        'in_stock' => 'In Stock',
+        'low_stock' => 'Low Stock',
+        'out_of_stock' => 'Out of Stock',
+        'overstock' => 'Overstocked',
+    ];
+
     public function __construct(
         protected AdvancedAnalyticsService $analyticsService
     ) {}
@@ -20,7 +46,8 @@ class AdvancedAnalyticsReportService
      */
     public function generatePdf(array $filters, array $options = [], ?FinancialDataAccess $financialAccess = null): Response
     {
-        $orientation = (string) ($options['orientation'] ?? 'landscape');
+        $orientation = ($options['orientation'] ?? 'landscape') === 'portrait' ? 'portrait' : 'landscape';
+        $options['orientation'] = $orientation;
         $viewData = $this->buildReportViewData($filters, $options, $financialAccess);
 
         $pdf = Pdf::loadView('admin.advanced-analytics.pdf-report', $viewData)
@@ -34,9 +61,14 @@ class AdvancedAnalyticsReportService
         // Register Bengali Hind Siliguri font
         InvoicePdfService::registerBengaliFont($pdf->getDomPDF());
 
-        $filename = 'MamaBazar_Analytics_Report_'.$viewData['reportType'].'_'.date('Ymd_His').'.pdf';
+        return $pdf->download(self::filenameFor($viewData['reportType']))
+            ->header('Cache-Control', 'private, no-store, max-age=0')
+            ->header('X-Content-Type-Options', 'nosniff');
+    }
 
-        return $pdf->download($filename);
+    public static function filenameFor(string $reportType): string
+    {
+        return 'mamabazar-'.$reportType.'-report-'.now()->format('Y-m-d').'.pdf';
     }
 
     /**
@@ -50,6 +82,9 @@ class AdvancedAnalyticsReportService
     public function buildReportViewData(array $filters, array $options = [], ?FinancialDataAccess $financialAccess = null): array
     {
         $reportType = (string) ($options['report_type'] ?? 'complete');
+        if (! array_key_exists($reportType, self::REPORT_TITLES)) {
+            $reportType = 'complete';
+        }
         $exportAccess = ($financialAccess ?? FinancialDataAccess::none())->forExport();
 
         if ($reportType === 'profitability' && ! $exportAccess->canViewProfitMargin) {
@@ -72,22 +107,12 @@ class AdvancedAnalyticsReportService
         $productsPaginator = $this->analyticsService->getProductStockTable($filtersForPdf, $exportAccess);
         $products = $productsPaginator->items();
 
-        $titles = [
-            'complete' => 'Comprehensive Advanced Analytics & Inventory Intelligence Report',
-            'executive' => 'Executive Analytics & Performance Summary',
-            'inventory' => 'Inventory Valuation & Stock Intelligence Report',
-            'sales' => 'Sales, Revenue & Growth Analytics Report',
-            'pricing' => 'Product Pricing & Discount Intelligence Report',
-            'profitability' => 'Gross Profit & Margin Analysis Report',
-            'reorder' => 'Low Stock & Urgent Reorder Planning Report',
-            'variants' => 'Product Variants & Stock Distribution Report',
-        ];
-
         return [
-            'reportTitle' => $titles[$reportType] ?? 'Advanced Analytics Report',
+            'reportTitle' => self::REPORT_TITLES[$reportType],
             'reportType' => $reportType,
             'store' => $store,
             'filters' => $filters,
+            'appliedFilters' => $this->describeAppliedFilters($filtersForPdf),
             'inventoryKpis' => $inventoryKpis,
             'salesKpis' => $salesKpis,
             'chartsData' => $chartsData,
@@ -97,5 +122,37 @@ class AdvancedAnalyticsReportService
             'generatedBy' => auth()->user()?->name ?? 'Administrator',
             'options' => $options,
         ];
+    }
+
+    /**
+     * Human-readable list of the non-default filters a report was generated with.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return list<string>
+     */
+    private function describeAppliedFilters(array $filters): array
+    {
+        $applied = [];
+
+        if (! empty($filters['category_id'])) {
+            $applied[] = 'Category: '.(Category::whereKey($filters['category_id'])->value('name') ?? '#'.$filters['category_id']);
+        }
+        if (! empty($filters['brand_id'])) {
+            $applied[] = 'Brand: '.(Brand::whereKey($filters['brand_id'])->value('name') ?? '#'.$filters['brand_id']);
+        }
+        if (! empty($filters['product_id'])) {
+            $applied[] = 'Product: '.(Product::whereKey($filters['product_id'])->value('title') ?? '#'.$filters['product_id']);
+        }
+        if (isset(self::STOCK_STATUS_LABELS[$filters['stock_status'] ?? ''])) {
+            $applied[] = 'Stock: '.self::STOCK_STATUS_LABELS[$filters['stock_status']];
+        }
+        if (! empty($filters['product_status']) && $filters['product_status'] !== 'all') {
+            $applied[] = 'Catalog: '.ucfirst((string) $filters['product_status']);
+        }
+        if (($filters['search'] ?? '') !== '') {
+            $applied[] = 'Search: “'.$filters['search'].'”';
+        }
+
+        return $applied;
     }
 }

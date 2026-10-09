@@ -181,6 +181,11 @@
             <div class="report-badge">
                 Period: {{ $filters['start_date']->format('d M, Y') }} — {{ $filters['end_date']->format('d M, Y') }} ({{ $filters['preset'] }})
             </div>
+            @if(!empty($appliedFilters))
+                <div style="font-size: 8px; color: #334155; margin-top: 3px;">
+                    Filters: {{ implode(' | ', $appliedFilters) }}
+                </div>
+            @endif
             <div style="font-size: 8px; color: #64748b; margin-top: 3px;">
                 Generated: {{ $generatedAt }} | Admin: {{ $generatedBy }}
             </div>

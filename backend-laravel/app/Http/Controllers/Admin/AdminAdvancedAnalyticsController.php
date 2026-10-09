@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdvancedAnalyticsPdfReportRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -65,11 +66,15 @@ class AdminAdvancedAnalyticsController extends Controller
     /**
      * Generate and export branded PDF report.
      */
-    public function exportPdf(Request $request): Response
+    public function exportPdf(AdvancedAnalyticsPdfReportRequest $request): Response
     {
         $filters = $this->analyticsService->parseFilters($request);
 
-        return $this->reportService->generatePdf($filters, $request->all(), FinancialDataAccess::forUser($request->user()));
+        return $this->reportService->generatePdf(
+            $filters,
+            $request->safe()->only(['report_type', 'orientation']),
+            FinancialDataAccess::forUser($request->user())
+        );
     }
 
     /**
