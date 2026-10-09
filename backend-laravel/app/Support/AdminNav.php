@@ -53,6 +53,81 @@ class AdminNav
         ];
     }
 
+    /** Blueprint of all sections and items for sidebar & permission configuration */
+    public static function rawSections(): array
+    {
+        return [
+            ['label' => 'Overview', 'items' => [
+                ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'icon' => 'layout-dashboard', 'permission' => 'dashboard.view'],
+            ]],
+            ['label' => 'Catalog', 'items' => [
+                ['label' => 'Products', 'route' => 'admin.products.index', 'match' => 'admin.products.*', 'icon' => 'package', 'permission' => 'products.view'],
+                ['label' => 'Categories', 'route' => 'admin.categories.index', 'match' => 'admin.categories.*', 'icon' => 'tags', 'permission' => 'categories.view'],
+                ['label' => 'Brands', 'route' => 'admin.brands.index', 'match' => 'admin.brands.*', 'icon' => 'stamp', 'permission' => 'brands.view'],
+                ['label' => 'Collections', 'route' => 'admin.collections.index', 'match' => 'admin.collections.*', 'icon' => 'folder-open', 'permission' => 'collections.view'],
+                ['label' => 'Colors', 'route' => 'admin.colors.index', 'match' => 'admin.colors.*', 'icon' => 'palette', 'permission' => 'colors.view'],
+                ['label' => 'Sizes', 'route' => 'admin.sizes.index', 'match' => 'admin.sizes.*', 'icon' => 'ruler', 'permission' => 'sizes.view'],
+                ['label' => 'Vendors', 'route' => 'admin.vendors.index', 'match' => 'admin.vendors.*', 'icon' => 'store', 'permission' => 'vendors.view'],
+                ['label' => 'Suppliers', 'route' => 'admin.suppliers.index', 'match' => 'admin.suppliers.*', 'icon' => 'truck', 'permission' => 'suppliers.view'],
+            ]],
+            ['label' => 'Sales', 'items' => [
+                ['label' => 'Orders', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'shopping-cart', 'permission' => 'orders.view'],
+                ['label' => 'Returns & Refunds', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'receipt-text', 'params' => ['status' => 'cancelled'], 'permission' => 'orders.view'],
+                ['label' => 'Coupons', 'route' => 'admin.coupons.index', 'match' => 'admin.coupons.*', 'icon' => 'ticket-percent', 'permission' => 'coupons.view'],
+                ['label' => 'Marketing', 'route' => 'admin.marketing.index', 'match' => 'admin.marketing.*', 'icon' => 'megaphone', 'permission' => 'marketing.view'],
+                ['label' => 'Reviews', 'route' => 'admin.reviews.index', 'match' => 'admin.reviews.*', 'icon' => 'star', 'permission' => 'reviews.view'],
+            ]],
+            ['label' => 'Finance', 'items' => [
+                ['label' => 'Expenses', 'route' => 'admin.expenses.index', 'match' => 'admin.expenses.index', 'icon' => 'receipt-text', 'permission' => 'expenses.view'],
+                ['label' => 'Expense Categories', 'route' => 'admin.expense-categories.index', 'match' => 'admin.expense-categories.*', 'icon' => 'list-ordered', 'permission' => 'expenses.view'],
+                ['label' => 'Expense Reports', 'route' => 'admin.expenses.reports', 'match' => 'admin.expenses.reports', 'icon' => 'chart-pie', 'params' => [], 'permission' => 'reports.view'],
+                ['label' => 'Profit Overview', 'route' => 'admin.expenses.reports', 'match' => 'admin.expenses.reports', 'icon' => 'wallet', 'params' => ['tab' => 'profit'], 'permission' => 'reports.view'],
+            ]],
+            ['label' => 'Checkout', 'items' => [
+                ['label' => 'Shipping Methods', 'route' => 'admin.shipping.index', 'match' => 'admin.shipping.*', 'icon' => 'map-pin', 'permission' => 'shipping.view'],
+                ['label' => 'Payment Methods', 'route' => 'admin.payment-methods.index', 'match' => 'admin.payment-methods.*', 'icon' => 'credit-card', 'permission' => 'payment_methods.view'],
+                ['label' => 'Checkout Notices', 'route' => 'admin.checkout-notices.index', 'match' => 'admin.checkout-notices.*', 'icon' => 'bell-ring', 'permission' => 'checkout_notices.view'],
+                ['label' => 'Checkout Settings', 'route' => 'admin.checkout-settings.index', 'match' => 'admin.checkout-settings.*', 'icon' => 'settings', 'permission' => 'settings.view'],
+            ]],
+            ['label' => 'Customers', 'items' => [
+                ['label' => 'Customers', 'route' => 'admin.customers.index', 'match' => 'admin.customers.*', 'icon' => 'users', 'permission' => 'customers.view'],
+            ]],
+            ['label' => 'Content', 'items' => [
+                ['label' => 'Homepage Builder', 'route' => 'admin.homepage.index', 'match' => 'admin.homepage.*', 'icon' => 'panels-top-left', 'permission' => 'homepage.view'],
+                ['label' => 'Team Management', 'route' => 'admin.team.index', 'match' => 'admin.team.*', 'icon' => 'users', 'permission' => 'team.view'],
+                ['label' => 'Policies & Messages', 'route' => 'admin.policies.index', 'match' => 'admin.policies.*', 'icon' => 'file-text', 'permission' => 'policies.view'],
+                ['label' => 'Media Library', 'route' => 'admin.media.index', 'match' => 'admin.media.*', 'icon' => 'image', 'permission' => 'media.view'],
+                ['label' => 'Banners', 'route' => 'admin.banners.index', 'match' => 'admin.banners.*', 'icon' => 'megaphone', 'permission' => 'banners.view'],
+            ]],
+            ['label' => 'Insights', 'items' => [
+                ['label' => 'Advanced Analytics', 'route' => 'admin.advanced-analytics.index', 'match' => 'admin.advanced-analytics.*', 'icon' => 'activity', 'permission' => 'analytics.view|inventory.view'],
+                ['label' => 'SEO Optimization', 'route' => 'admin.seo.index', 'match' => 'admin.seo.*', 'icon' => 'globe', 'permission' => 'seo.view'],
+                ['label' => 'Analytics', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'bar-chart-3', 'permission' => 'analytics.view'],
+                ['label' => 'Traffic Sources', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'megaphone', 'fragment' => 'sources', 'permission' => 'analytics.view'],
+                ['label' => 'Campaigns', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'ticket-percent', 'fragment' => 'campaigns', 'permission' => 'analytics.view'],
+                ['label' => 'Conversion Events', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'chart-pie', 'fragment' => 'events', 'permission' => 'analytics.view'],
+            ]],
+            ['label' => 'Email Management', 'items' => [
+                ['label' => 'Email Dashboard', 'route' => 'admin.email.dashboard', 'match' => 'admin.email.dashboard', 'icon' => 'mail', 'permission' => 'email.view'],
+                ['label' => 'SMTP Settings', 'route' => 'admin.email.settings', 'match' => 'admin.email.settings*', 'icon' => 'server', 'permission' => 'smtp.manage|email.settings.manage'],
+                ['label' => 'Email Templates', 'route' => 'admin.email.templates.index', 'match' => 'admin.email.templates.*', 'icon' => 'layout-template', 'permission' => 'email.manage|email.templates.manage'],
+                ['label' => 'Email Campaigns', 'route' => 'admin.email.campaigns.index', 'match' => 'admin.email.campaigns.*', 'icon' => 'send', 'permission' => 'email.manage|email.campaigns.manage|email.campaigns.send'],
+                ['label' => 'Automation', 'route' => 'admin.email.automation', 'match' => 'admin.email.automation*', 'icon' => 'zap', 'permission' => 'email.manage|email.settings.manage|smtp.manage'],
+                ['label' => 'Email Logs', 'route' => 'admin.email.logs.index', 'match' => 'admin.email.logs.*', 'icon' => 'scroll-text', 'permission' => 'email.view|email.logs.view'],
+            ]],
+            ['label' => 'Security & Access', 'items' => [
+                ['label' => 'Team Members', 'route' => 'admin.members.index', 'match' => 'admin.members.*', 'icon' => 'user-check', 'permission' => 'members.view'],
+                ['label' => 'Change Password', 'route' => 'admin.profile.password', 'match' => 'admin.profile.password*', 'icon' => 'key'],
+                ['label' => 'Backup & Restore', 'route' => 'admin.backup.index', 'match' => 'admin.backup.*', 'icon' => 'database-backup', 'permission' => 'backup.manage|backup.view'],
+            ]],
+            ['label' => 'System', 'items' => [
+                ['label' => 'Inventory', 'route' => 'admin.inventory.index', 'match' => 'admin.inventory.*', 'icon' => 'boxes', 'permission' => 'inventory.view'],
+                ['label' => 'Business Information', 'route' => 'admin.settings.business', 'match' => 'admin.settings.business*', 'icon' => 'building', 'permission' => 'business.manage|settings.view'],
+                ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => 'admin.settings.index', 'icon' => 'settings', 'permission' => 'settings.manage|settings.view'],
+            ]],
+        ];
+    }
+
     /** Exact clone of frontend/src/components/admin/adminNav.ts */
     public static function sections(): array
     {
@@ -70,83 +145,47 @@ class AdminNav
             $failedEmails = 0;
         }
 
-        $sections = [
-            ['label' => 'Overview', 'items' => [
-                ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'icon' => 'layout-dashboard'],
-            ]],
-            ['label' => 'Catalog', 'items' => [
-                ['label' => 'Products', 'route' => 'admin.products.index', 'match' => 'admin.products.*', 'icon' => 'package'],
-                ['label' => 'Categories', 'route' => 'admin.categories.index', 'match' => 'admin.categories.*', 'icon' => 'tags'],
-                ['label' => 'Brands', 'route' => 'admin.brands.index', 'match' => 'admin.brands.*', 'icon' => 'stamp'],
-                ['label' => 'Collections', 'route' => 'admin.collections.index', 'match' => 'admin.collections.*', 'icon' => 'folder-open'],
-                ['label' => 'Colors', 'route' => 'admin.colors.index', 'match' => 'admin.colors.*', 'icon' => 'palette'],
-                ['label' => 'Sizes', 'route' => 'admin.sizes.index', 'match' => 'admin.sizes.*', 'icon' => 'ruler'],
-                ['label' => 'Vendors', 'route' => 'admin.vendors.index', 'match' => 'admin.vendors.*', 'icon' => 'store'],
-                ['label' => 'Suppliers', 'route' => 'admin.suppliers.index', 'match' => 'admin.suppliers.*', 'icon' => 'truck'],
-            ]],
-            ['label' => 'Sales', 'items' => [
-                ['label' => 'Orders', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'shopping-cart'],
-                ['label' => 'Returns & Refunds', 'route' => 'admin.orders.index', 'match' => 'admin.orders.*', 'icon' => 'receipt-text', 'params' => ['status' => 'cancelled']],
-                ['label' => 'Coupons', 'route' => 'admin.coupons.index', 'match' => 'admin.coupons.*', 'icon' => 'ticket-percent'],
-                ['label' => 'Marketing', 'route' => 'admin.marketing.index', 'match' => 'admin.marketing.*', 'icon' => 'megaphone'],
-                ['label' => 'Reviews', 'route' => 'admin.reviews.index', 'match' => 'admin.reviews.*', 'icon' => 'star', 'badge' => $pendingReviews],
-            ]],
-            ['label' => 'Finance', 'items' => [
-                ['label' => 'Expenses', 'route' => 'admin.expenses.index', 'match' => 'admin.expenses.index', 'icon' => 'receipt-text'],
-                ['label' => 'Expense Categories', 'route' => 'admin.expense-categories.index', 'match' => 'admin.expense-categories.*', 'icon' => 'list-ordered'],
-                ['label' => 'Expense Reports', 'route' => 'admin.expenses.reports', 'match' => 'admin.expenses.reports', 'icon' => 'chart-pie', 'params' => []],
-                ['label' => 'Profit Overview', 'route' => 'admin.expenses.reports', 'match' => 'admin.expenses.reports', 'icon' => 'wallet', 'params' => ['tab' => 'profit']],
-            ]],
-            ['label' => 'Checkout', 'items' => [
-                ['label' => 'Shipping Methods', 'route' => 'admin.shipping.index', 'match' => 'admin.shipping.*', 'icon' => 'map-pin'],
-                ['label' => 'Payment Methods', 'route' => 'admin.payment-methods.index', 'match' => 'admin.payment-methods.*', 'icon' => 'credit-card'],
-                ['label' => 'Checkout Notices', 'route' => 'admin.checkout-notices.index', 'match' => 'admin.checkout-notices.*', 'icon' => 'bell-ring'],
-                ['label' => 'Checkout Settings', 'route' => 'admin.checkout-settings.index', 'match' => 'admin.checkout-settings.*', 'icon' => 'settings'],
-            ]],
-            ['label' => 'Customers', 'items' => [
-                ['label' => 'Customers', 'route' => 'admin.customers.index', 'match' => 'admin.customers.*', 'icon' => 'users'],
-            ]],
-            ['label' => 'Content', 'items' => [
-                ['label' => 'Homepage Builder', 'route' => 'admin.homepage.index', 'match' => 'admin.homepage.*', 'icon' => 'panels-top-left'],
-                ['label' => 'Team Management', 'route' => 'admin.team.index', 'match' => 'admin.team.*', 'icon' => 'users'],
-                ['label' => 'Policies & Messages', 'route' => 'admin.policies.index', 'match' => 'admin.policies.*', 'icon' => 'file-text'],
-                ['label' => 'Media Library', 'route' => 'admin.media.index', 'match' => 'admin.media.*', 'icon' => 'image'],
-                ['label' => 'Banners', 'route' => 'admin.banners.index', 'match' => 'admin.banners.*', 'icon' => 'megaphone'],
-            ]],
-            ['label' => 'Insights', 'items' => [
-                ['label' => 'Advanced Analytics', 'route' => 'admin.advanced-analytics.index', 'match' => 'admin.advanced-analytics.*', 'icon' => 'activity'],
-                ['label' => 'SEO Optimization', 'route' => 'admin.seo.index', 'match' => 'admin.seo.*', 'icon' => 'globe'],
-                ['label' => 'Analytics', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'bar-chart-3'],
-                ['label' => 'Traffic Sources', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'megaphone', 'fragment' => 'sources'],
-                ['label' => 'Campaigns', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'ticket-percent', 'fragment' => 'campaigns'],
-                ['label' => 'Conversion Events', 'route' => 'admin.analytics.index', 'match' => 'admin.analytics.*', 'icon' => 'chart-pie', 'fragment' => 'events'],
-            ]],
-            ['label' => 'Email Management', 'items' => [
-                ['label' => 'Email Dashboard', 'route' => 'admin.email.dashboard', 'match' => 'admin.email.dashboard', 'icon' => 'mail', 'permission' => 'email.view'],
-                ['label' => 'SMTP Settings', 'route' => 'admin.email.settings', 'match' => 'admin.email.settings*', 'icon' => 'server', 'permission' => 'email.settings.manage'],
-                ['label' => 'Email Templates', 'route' => 'admin.email.templates.index', 'match' => 'admin.email.templates.*', 'icon' => 'layout-template', 'permission' => 'email.templates.manage'],
-                ['label' => 'Email Campaigns', 'route' => 'admin.email.campaigns.index', 'match' => 'admin.email.campaigns.*', 'icon' => 'send', 'permission' => 'email.campaigns.manage|email.campaigns.send'],
-                ['label' => 'Automation', 'route' => 'admin.email.automation', 'match' => 'admin.email.automation*', 'icon' => 'zap', 'permission' => 'email.settings.manage'],
-                ['label' => 'Email Logs', 'route' => 'admin.email.logs.index', 'match' => 'admin.email.logs.*', 'icon' => 'scroll-text', 'permission' => 'email.logs.view', 'badge' => $failedEmails],
-            ]],
-            ['label' => 'Security & Access', 'items' => [
-                ['label' => 'Team Members', 'route' => 'admin.members.index', 'match' => 'admin.members.*', 'icon' => 'user-check'],
-                ['label' => 'Change Password', 'route' => 'admin.profile.password', 'match' => 'admin.profile.password*', 'icon' => 'key'],
-                ['label' => 'Backup & Restore', 'route' => 'admin.backup.index', 'match' => 'admin.backup.*', 'icon' => 'database-backup'],
-            ]],
-            ['label' => 'System', 'items' => [
-                ['label' => 'Inventory', 'route' => 'admin.inventory.index', 'match' => 'admin.inventory.*', 'icon' => 'boxes'],
-                ['label' => 'Business Information', 'route' => 'admin.settings.business', 'match' => 'admin.settings.business*', 'icon' => 'building'],
-                ['label' => 'Settings', 'route' => 'admin.settings.index', 'match' => 'admin.settings.index', 'icon' => 'settings'],
-            ]],
-        ];
+        $sections = self::rawSections();
+
+        // Attach dynamic badges
+        foreach ($sections as $sIdx => $section) {
+            foreach ($section['items'] as $iIdx => $item) {
+                if ($item['route'] === 'admin.reviews.index') {
+                    $sections[$sIdx]['items'][$iIdx]['badge'] = $pendingReviews;
+                }
+                if ($item['route'] === 'admin.email.logs.index') {
+                    $sections[$sIdx]['items'][$iIdx]['badge'] = $failedEmails;
+                }
+            }
+        }
 
         $user = auth()->user();
         foreach ($sections as $i => $section) {
             $sections[$i]['items'] = array_values(array_filter(
                 $section['items'],
-                fn ($item) => empty($item['permission'])
-                    || EnsureAdminPermission::allows($user, explode('|', $item['permission']))
+                function ($item) use ($user) {
+                    // 1. Backend permission check
+                    if (! empty($item['permission']) && ! EnsureAdminPermission::allows($user, explode('|', $item['permission']))) {
+                        return false;
+                    }
+
+                    // 2. Custom sidebar access check
+                    if ($user && ! empty($user->sidebar_access_json)) {
+                        $allowedRoutes = is_array($user->sidebar_access_json)
+                            ? $user->sidebar_access_json
+                            : json_decode($user->sidebar_access_json, true);
+
+                        if (is_array($allowedRoutes)) {
+                            $routeKey = $item['route'] ?? '';
+                            $labelKey = $item['label'] ?? '';
+                            if (! in_array($routeKey, $allowedRoutes, true) && ! in_array($labelKey, $allowedRoutes, true)) {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return true;
+                }
             ));
         }
 

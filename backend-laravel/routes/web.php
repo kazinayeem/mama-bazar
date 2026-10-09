@@ -181,33 +181,33 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::post('/profile/password', [AdminProfileController::class, 'updatePassword'])->middleware('throttle:10,1')->name('admin.profile.password.update');
 
     // Products
-    Route::get('/products', [AdminProductWebController::class, 'index'])->name('admin.products.index');
-    Route::get('/products/create', [AdminProductWebController::class, 'create'])->name('admin.products.create');
-    Route::post('/products', [AdminProductWebController::class, 'store'])->name('admin.products.store');
-    Route::get('/products/export', [AdminProductWebController::class, 'exportCsv'])->name('admin.products.export');
-    Route::post('/products/import', [AdminProductWebController::class, 'importCsv'])->name('admin.products.import');
-    Route::post('/products/bulk', [AdminProductWebController::class, 'bulkAction'])->name('admin.products.bulk');
-    Route::post('/products/upload-image', [AdminProductWebController::class, 'uploadImage'])->name('admin.products.upload-image');
-    Route::post('/products/{id}/upload-image', [AdminProductWebController::class, 'uploadImage'])->name('admin.products.upload-image-product');
-    Route::post('/products/upload-editor-image', [AdminProductWebController::class, 'uploadEditorImage'])->name('admin.products.upload-editor-image');
-    Route::get('/products/{id}', [AdminProductWebController::class, 'show'])->name('admin.products.show');
-    Route::get('/products/{id}/edit', [AdminProductWebController::class, 'edit'])->name('admin.products.edit');
-    Route::put('/products/{id}', [AdminProductWebController::class, 'update'])->name('admin.products.update');
-    Route::delete('/products/{id}', [AdminProductWebController::class, 'destroy'])->name('admin.products.destroy');
-    Route::post('/products/{id}/duplicate', [AdminProductWebController::class, 'duplicate'])->name('admin.products.duplicate');
-    Route::post('/products/{id}/toggle-featured', [AdminProductWebController::class, 'toggleFeatured'])->name('admin.products.toggle-featured');
-    Route::post('/products/{id}/toggle', [AdminProductWebController::class, 'toggleStatus'])->name('admin.products.toggle');
-    Route::post('/products/{id}/delete-image', [AdminProductWebController::class, 'deleteImage'])->name('admin.products.delete-image');
+    Route::get('/products', [AdminProductWebController::class, 'index'])->middleware('admin.can:products.view')->name('admin.products.index');
+    Route::get('/products/create', [AdminProductWebController::class, 'create'])->middleware('admin.can:products.create')->name('admin.products.create');
+    Route::post('/products', [AdminProductWebController::class, 'store'])->middleware('admin.can:products.create')->name('admin.products.store');
+    Route::get('/products/export', [AdminProductWebController::class, 'exportCsv'])->middleware('admin.can:products.export')->name('admin.products.export');
+    Route::post('/products/import', [AdminProductWebController::class, 'importCsv'])->middleware('admin.can:products.import')->name('admin.products.import');
+    Route::post('/products/bulk', [AdminProductWebController::class, 'bulkAction'])->middleware('admin.can:products.delete')->name('admin.products.bulk');
+    Route::post('/products/upload-image', [AdminProductWebController::class, 'uploadImage'])->middleware('admin.can:products.update')->name('admin.products.upload-image');
+    Route::post('/products/{id}/upload-image', [AdminProductWebController::class, 'uploadImage'])->middleware('admin.can:products.update')->name('admin.products.upload-image-product');
+    Route::post('/products/upload-editor-image', [AdminProductWebController::class, 'uploadEditorImage'])->middleware('admin.can:products.update')->name('admin.products.upload-editor-image');
+    Route::get('/products/{id}', [AdminProductWebController::class, 'show'])->middleware('admin.can:products.view')->name('admin.products.show');
+    Route::get('/products/{id}/edit', [AdminProductWebController::class, 'edit'])->middleware('admin.can:products.update')->name('admin.products.edit');
+    Route::put('/products/{id}', [AdminProductWebController::class, 'update'])->middleware('admin.can:products.update')->name('admin.products.update');
+    Route::delete('/products/{id}', [AdminProductWebController::class, 'destroy'])->middleware('admin.can:products.delete')->name('admin.products.destroy');
+    Route::post('/products/{id}/duplicate', [AdminProductWebController::class, 'duplicate'])->middleware('admin.can:products.create')->name('admin.products.duplicate');
+    Route::post('/products/{id}/toggle-featured', [AdminProductWebController::class, 'toggleFeatured'])->middleware('admin.can:products.update')->name('admin.products.toggle-featured');
+    Route::post('/products/{id}/toggle', [AdminProductWebController::class, 'toggleStatus'])->middleware('admin.can:products.update')->name('admin.products.toggle');
+    Route::post('/products/{id}/delete-image', [AdminProductWebController::class, 'deleteImage'])->middleware('admin.can:products.delete')->name('admin.products.delete-image');
 
     // Orders
-    Route::get('/orders', [AdminOrderWebController::class, 'index'])->name('admin.orders.index');
-    Route::get('/orders/{id}', [AdminOrderWebController::class, 'show'])->name('admin.orders.show');
-    Route::get('/orders/{id}/invoice', [AdminOrderWebController::class, 'invoice'])->name('admin.orders.invoice');
-    Route::get('/orders/{id}/invoice/download', [AdminOrderWebController::class, 'downloadInvoice'])->name('admin.orders.invoice.download');
-    Route::get('/orders/{id}/packing-slip', [AdminOrderWebController::class, 'packingSlip'])->name('admin.orders.packing-slip');
-    Route::post('/orders/{id}/status', [AdminOrderWebController::class, 'updateStatus'])->name('admin.orders.status');
-    Route::post('/orders/{id}/payment', [AdminOrderWebController::class, 'updatePayment'])->name('admin.orders.payment');
-    Route::post('/orders/{id}/notes', [AdminOrderWebController::class, 'addNote'])->name('admin.orders.notes');
+    Route::get('/orders', [AdminOrderWebController::class, 'index'])->middleware('admin.can:orders.view')->name('admin.orders.index');
+    Route::get('/orders/{id}', [AdminOrderWebController::class, 'show'])->middleware('admin.can:orders.view')->name('admin.orders.show');
+    Route::get('/orders/{id}/invoice', [AdminOrderWebController::class, 'invoice'])->middleware('admin.can:orders.view')->name('admin.orders.invoice');
+    Route::get('/orders/{id}/invoice/download', [AdminOrderWebController::class, 'downloadInvoice'])->middleware('admin.can:orders.export')->name('admin.orders.invoice.download');
+    Route::get('/orders/{id}/packing-slip', [AdminOrderWebController::class, 'packingSlip'])->middleware('admin.can:orders.view')->name('admin.orders.packing-slip');
+    Route::post('/orders/{id}/status', [AdminOrderWebController::class, 'updateStatus'])->middleware('admin.can:orders.update')->name('admin.orders.status');
+    Route::post('/orders/{id}/payment', [AdminOrderWebController::class, 'updatePayment'])->middleware('admin.can:orders.update')->name('admin.orders.payment');
+    Route::post('/orders/{id}/notes', [AdminOrderWebController::class, 'addNote'])->middleware('admin.can:orders.update')->name('admin.orders.notes');
     Route::post('/orders/{id}/email-invoice', [AdminOrderWebController::class, 'emailInvoice'])
         ->middleware(['admin.can:orders.update', 'throttle:10,1'])->name('admin.orders.email-invoice');
 
@@ -273,109 +273,130 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     });
 
     // Reviews
-    Route::get('/reviews', [AdminReviewWebController::class, 'index'])->name('admin.reviews.index');
-    Route::get('/reviews/{id}', [AdminReviewWebController::class, 'show'])->name('admin.reviews.show');
-    Route::put('/reviews/{id}', [AdminReviewWebController::class, 'update'])->name('admin.reviews.update');
-    Route::post('/reviews/{id}/status', [AdminReviewWebController::class, 'updateStatus'])->name('admin.reviews.status');
-    Route::post('/reviews/{id}/featured', [AdminReviewWebController::class, 'toggleFeatured'])->name('admin.reviews.featured');
-    Route::delete('/reviews/{id}', [AdminReviewWebController::class, 'destroy'])->name('admin.reviews.destroy');
+    Route::get('/reviews', [AdminReviewWebController::class, 'index'])->middleware('admin.can:reviews.view')->name('admin.reviews.index');
+    Route::get('/reviews/{id}', [AdminReviewWebController::class, 'show'])->middleware('admin.can:reviews.view')->name('admin.reviews.show');
+    Route::put('/reviews/{id}', [AdminReviewWebController::class, 'update'])->middleware('admin.can:reviews.update')->name('admin.reviews.update');
+    Route::post('/reviews/{id}/status', [AdminReviewWebController::class, 'updateStatus'])->middleware('admin.can:reviews.update')->name('admin.reviews.status');
+    Route::post('/reviews/{id}/featured', [AdminReviewWebController::class, 'toggleFeatured'])->middleware('admin.can:reviews.update')->name('admin.reviews.featured');
+    Route::delete('/reviews/{id}', [AdminReviewWebController::class, 'destroy'])->middleware('admin.can:reviews.delete')->name('admin.reviews.destroy');
 
     // Categories
-    Route::get('/categories', [AdminCategoryWebController::class, 'index'])->name('admin.categories.index');
-    Route::post('/categories', [AdminCategoryWebController::class, 'store'])->name('admin.categories.store');
-    Route::put('/categories/{id}', [AdminCategoryWebController::class, 'update'])->name('admin.categories.update');
-    Route::delete('/categories/{id}', [AdminCategoryWebController::class, 'destroy'])->name('admin.categories.destroy');
+    Route::get('/categories', [AdminCategoryWebController::class, 'index'])->middleware('admin.can:categories.view')->name('admin.categories.index');
+    Route::post('/categories', [AdminCategoryWebController::class, 'store'])->middleware('admin.can:categories.create')->name('admin.categories.store');
+    Route::put('/categories/{id}', [AdminCategoryWebController::class, 'update'])->middleware('admin.can:categories.update')->name('admin.categories.update');
+    Route::delete('/categories/{id}', [AdminCategoryWebController::class, 'destroy'])->middleware('admin.can:categories.delete')->name('admin.categories.destroy');
 
     // Catalog CRUD resources (React CatalogCrudPage equivalents)
     $catalogResources = ['brands', 'collections', 'colors', 'sizes', 'vendors', 'suppliers', 'checkout-notices', 'expense-categories'];
     foreach ($catalogResources as $resource) {
+        $viewPerm = match ($resource) {
+            'checkout-notices' => 'checkout_notices.view|settings.view',
+            'expense-categories' => 'expenses.view',
+            default => "{$resource}.view|products.view",
+        };
+        $managePerm = match ($resource) {
+            'checkout-notices' => 'checkout_notices.manage|settings.manage',
+            'expense-categories' => 'expenses.update|expenses.create',
+            default => "{$resource}.update|products.update|products.create",
+        };
+        $deletePerm = match ($resource) {
+            'checkout-notices' => 'checkout_notices.manage|settings.manage',
+            'expense-categories' => 'expenses.delete',
+            default => "{$resource}.delete|products.delete",
+        };
+
         Route::get("/{$resource}", fn () => app(AdminCatalogWebController::class)->index($resource))
+            ->middleware("admin.can:{$viewPerm}")
             ->name("admin.{$resource}.index");
         Route::post("/{$resource}", fn (Request $r) => app(AdminCatalogWebController::class)->store($r, $resource))
+            ->middleware("admin.can:{$managePerm}")
             ->name("admin.{$resource}.store");
         Route::put("/{$resource}/{id}", fn (Request $r, $id) => app(AdminCatalogWebController::class)->update($r, $resource, (int) $id))
+            ->middleware("admin.can:{$managePerm}")
             ->name("admin.{$resource}.update");
         Route::delete("/{$resource}/{id}", fn ($id) => app(AdminCatalogWebController::class)->destroy($resource, (int) $id))
+            ->middleware("admin.can:{$deletePerm}")
             ->name("admin.{$resource}.destroy");
     }
 
     // Coupons
-    Route::get('/coupons', [AdminCouponWebController::class, 'index'])->name('admin.coupons.index');
-    Route::post('/coupons', [AdminCouponWebController::class, 'store'])->name('admin.coupons.store');
-    Route::put('/coupons/{id}', [AdminCouponWebController::class, 'update'])->name('admin.coupons.update');
-    Route::delete('/coupons/{id}', [AdminCouponWebController::class, 'destroy'])->name('admin.coupons.destroy');
+    Route::get('/coupons', [AdminCouponWebController::class, 'index'])->middleware('admin.can:coupons.view')->name('admin.coupons.index');
+    Route::post('/coupons', [AdminCouponWebController::class, 'store'])->middleware('admin.can:coupons.create')->name('admin.coupons.store');
+    Route::put('/coupons/{id}', [AdminCouponWebController::class, 'update'])->middleware('admin.can:coupons.update')->name('admin.coupons.update');
+    Route::delete('/coupons/{id}', [AdminCouponWebController::class, 'destroy'])->middleware('admin.can:coupons.delete')->name('admin.coupons.destroy');
 
     // Customers (Customer 360 Management)
-    Route::get('/customers', [AdminCustomerWebController::class, 'index'])->name('admin.customers.index');
-    Route::get('/customers/export', [AdminCustomerWebController::class, 'exportList'])->name('admin.customers.export-list');
-    Route::get('/customers/{id}', [AdminCustomerWebController::class, 'show'])->name('admin.customers.show');
-    Route::put('/customers/{id}', [AdminCustomerWebController::class, 'update'])->name('admin.customers.update');
-    Route::post('/customers/{id}/toggle', [AdminCustomerWebController::class, 'toggleStatus'])->name('admin.customers.toggle');
-    Route::get('/customers/{id}/export', [AdminCustomerWebController::class, 'export'])->name('admin.customers.export');
-    Route::post('/customers/{id}/notes', [AdminCustomerWebController::class, 'storeNote'])->name('admin.customers.notes.store');
-    Route::delete('/customers/{id}/notes/{noteId}', [AdminCustomerWebController::class, 'deleteNote'])->name('admin.customers.notes.destroy');
-    Route::post('/customers/{id}/addresses', [AdminCustomerWebController::class, 'storeAddress'])->name('admin.customers.addresses.store');
-    Route::put('/customers/{id}/addresses/{addressId}', [AdminCustomerWebController::class, 'updateAddress'])->name('admin.customers.addresses.update');
-    Route::delete('/customers/{id}/addresses/{addressId}', [AdminCustomerWebController::class, 'deleteAddress'])->name('admin.customers.addresses.destroy');
-    Route::post('/customers/{id}/addresses/{addressId}/default', [AdminCustomerWebController::class, 'setDefaultAddress'])->name('admin.customers.addresses.default');
-    Route::post('/customers/{id}/email', [AdminCustomerWebController::class, 'sendEmail'])->name('admin.customers.email.send');
+    Route::get('/customers', [AdminCustomerWebController::class, 'index'])->middleware('admin.can:customers.view')->name('admin.customers.index');
+    Route::get('/customers/export', [AdminCustomerWebController::class, 'exportList'])->middleware('admin.can:customers.export|customers.view')->name('admin.customers.export-list');
+    Route::get('/customers/{id}', [AdminCustomerWebController::class, 'show'])->middleware('admin.can:customers.view')->name('admin.customers.show');
+    Route::put('/customers/{id}', [AdminCustomerWebController::class, 'update'])->middleware('admin.can:customers.update')->name('admin.customers.update');
+    Route::post('/customers/{id}/toggle', [AdminCustomerWebController::class, 'toggleStatus'])->middleware('admin.can:customers.update')->name('admin.customers.toggle');
+    Route::get('/customers/{id}/export', [AdminCustomerWebController::class, 'export'])->middleware('admin.can:customers.export|customers.view')->name('admin.customers.export');
+    Route::post('/customers/{id}/notes', [AdminCustomerWebController::class, 'storeNote'])->middleware('admin.can:customers.update')->name('admin.customers.notes.store');
+    Route::delete('/customers/{id}/notes/{noteId}', [AdminCustomerWebController::class, 'deleteNote'])->middleware('admin.can:customers.delete')->name('admin.customers.notes.destroy');
+    Route::post('/customers/{id}/addresses', [AdminCustomerWebController::class, 'storeAddress'])->middleware('admin.can:customers.update')->name('admin.customers.addresses.store');
+    Route::put('/customers/{id}/addresses/{addressId}', [AdminCustomerWebController::class, 'updateAddress'])->middleware('admin.can:customers.update')->name('admin.customers.addresses.update');
+    Route::delete('/customers/{id}/addresses/{addressId}', [AdminCustomerWebController::class, 'deleteAddress'])->middleware('admin.can:customers.delete')->name('admin.customers.addresses.destroy');
+    Route::post('/customers/{id}/addresses/{addressId}/default', [AdminCustomerWebController::class, 'setDefaultAddress'])->middleware('admin.can:customers.update')->name('admin.customers.addresses.default');
+    Route::post('/customers/{id}/email', [AdminCustomerWebController::class, 'sendEmail'])->middleware('admin.can:customers.update')->name('admin.customers.email.send');
 
     // Marketing
-    Route::get('/marketing', [AdminModuleWebController::class, 'marketing'])->name('admin.marketing.index');
-    Route::post('/marketing', [AdminModuleWebController::class, 'storeMarketing'])->name('admin.marketing.store');
+    Route::get('/marketing', [AdminModuleWebController::class, 'marketing'])->middleware('admin.can:marketing.view')->name('admin.marketing.index');
+    Route::post('/marketing', [AdminModuleWebController::class, 'storeMarketing'])->middleware('admin.can:marketing.manage')->name('admin.marketing.store');
     Route::put('/marketing/{id}', [AdminModuleWebController::class, 'updateMarketing'])->name('admin.marketing.update');
     Route::delete('/marketing/{id}', [AdminModuleWebController::class, 'destroyMarketing'])->name('admin.marketing.destroy');
 
     // Finance
-    Route::get('/expenses', [AdminModuleWebController::class, 'expenses'])->name('admin.expenses.index');
-    Route::post('/expenses', [AdminModuleWebController::class, 'storeExpense'])->name('admin.expenses.store');
-    Route::put('/expenses/{id}', [AdminModuleWebController::class, 'updateExpense'])->name('admin.expenses.update');
-    Route::delete('/expenses/{id}', [AdminModuleWebController::class, 'destroyExpense'])->name('admin.expenses.destroy');
-    Route::get('/expenses/reports', [AdminModuleWebController::class, 'expenseReports'])->name('admin.expenses.reports');
+    // Finance
+    Route::get('/expenses', [AdminModuleWebController::class, 'expenses'])->middleware('admin.can:expenses.view')->name('admin.expenses.index');
+    Route::post('/expenses', [AdminModuleWebController::class, 'storeExpense'])->middleware('admin.can:expenses.create')->name('admin.expenses.store');
+    Route::put('/expenses/{id}', [AdminModuleWebController::class, 'updateExpense'])->middleware('admin.can:expenses.update')->name('admin.expenses.update');
+    Route::delete('/expenses/{id}', [AdminModuleWebController::class, 'destroyExpense'])->middleware('admin.can:expenses.delete')->name('admin.expenses.destroy');
+    Route::get('/expenses/reports', [AdminModuleWebController::class, 'expenseReports'])->middleware('admin.can:reports.view')->name('admin.expenses.reports');
     // Alias for React path /admin/expenses/categories
     Route::get('/expenses/categories', fn () => redirect()->route('admin.expense-categories.index'));
 
     // Checkout
-    Route::get('/shipping', [AdminSettingWebController::class, 'shipping'])->name('admin.shipping.index');
-    Route::post('/shipping', [AdminSettingWebController::class, 'storeShipping'])->name('admin.shipping.store');
-    Route::put('/shipping/{id}', [AdminSettingWebController::class, 'updateShipping'])->name('admin.shipping.update');
-    Route::post('/shipping/{id}/toggle', [AdminSettingWebController::class, 'toggleShipping'])->name('admin.shipping.toggle');
-    Route::post('/shipping/reorder', [AdminSettingWebController::class, 'reorderShipping'])->name('admin.shipping.reorder');
-    Route::delete('/shipping/{id}', [AdminSettingWebController::class, 'destroyShipping'])->name('admin.shipping.destroy');
-    Route::get('/checkout-settings', [AdminSettingWebController::class, 'checkoutSettings'])->name('admin.checkout-settings.index');
-    Route::post('/checkout-settings', [AdminSettingWebController::class, 'updateCheckoutSettings'])->name('admin.checkout-settings.update');
-    Route::get('/payment-methods', [AdminSettingWebController::class, 'paymentMethods'])->name('admin.payment-methods.index');
-    Route::post('/payment-methods', [AdminSettingWebController::class, 'storePaymentMethod'])->name('admin.payment-methods.store');
-    Route::put('/payment-methods/{id}', [AdminSettingWebController::class, 'updatePaymentMethod'])->name('admin.payment-methods.update');
-    Route::post('/payment-methods/{id}/toggle', [AdminSettingWebController::class, 'togglePaymentMethod'])->name('admin.payment-methods.toggle');
-    Route::post('/payment-methods/bulk-status', [AdminSettingWebController::class, 'bulkPaymentMethodsStatus'])->name('admin.payment-methods.bulk-status');
-    Route::delete('/payment-methods/{id}', [AdminSettingWebController::class, 'destroyPaymentMethod'])->name('admin.payment-methods.destroy');
+    Route::get('/shipping', [AdminSettingWebController::class, 'shipping'])->middleware('admin.can:shipping.view')->name('admin.shipping.index');
+    Route::post('/shipping', [AdminSettingWebController::class, 'storeShipping'])->middleware('admin.can:shipping.manage')->name('admin.shipping.store');
+    Route::put('/shipping/{id}', [AdminSettingWebController::class, 'updateShipping'])->middleware('admin.can:shipping.manage')->name('admin.shipping.update');
+    Route::post('/shipping/{id}/toggle', [AdminSettingWebController::class, 'toggleShipping'])->middleware('admin.can:shipping.manage')->name('admin.shipping.toggle');
+    Route::post('/shipping/reorder', [AdminSettingWebController::class, 'reorderShipping'])->middleware('admin.can:shipping.manage')->name('admin.shipping.reorder');
+    Route::delete('/shipping/{id}', [AdminSettingWebController::class, 'destroyShipping'])->middleware('admin.can:shipping.manage')->name('admin.shipping.destroy');
+    Route::get('/checkout-settings', [AdminSettingWebController::class, 'checkoutSettings'])->middleware('admin.can:settings.view')->name('admin.checkout-settings.index');
+    Route::post('/checkout-settings', [AdminSettingWebController::class, 'updateCheckoutSettings'])->middleware('admin.can:settings.manage')->name('admin.checkout-settings.update');
+    Route::get('/payment-methods', [AdminSettingWebController::class, 'paymentMethods'])->middleware('admin.can:payment_methods.view')->name('admin.payment-methods.index');
+    Route::post('/payment-methods', [AdminSettingWebController::class, 'storePaymentMethod'])->middleware('admin.can:payment_methods.manage')->name('admin.payment-methods.store');
+    Route::put('/payment-methods/{id}', [AdminSettingWebController::class, 'updatePaymentMethod'])->middleware('admin.can:payment_methods.manage')->name('admin.payment-methods.update');
+    Route::post('/payment-methods/{id}/toggle', [AdminSettingWebController::class, 'togglePaymentMethod'])->middleware('admin.can:payment_methods.manage')->name('admin.payment-methods.toggle');
+    Route::post('/payment-methods/bulk-status', [AdminSettingWebController::class, 'bulkPaymentMethodsStatus'])->middleware('admin.can:payment_methods.manage')->name('admin.payment-methods.bulk-status');
+    Route::delete('/payment-methods/{id}', [AdminSettingWebController::class, 'destroyPaymentMethod'])->middleware('admin.can:payment_methods.manage')->name('admin.payment-methods.destroy');
     Route::get('/payments', fn () => redirect()->route('admin.payment-methods.index')); // legacy alias
 
     // Content
-    Route::get('/homepage', [AdminModuleWebController::class, 'homepage'])->name('admin.homepage.index');
-    Route::post('/homepage', [AdminModuleWebController::class, 'saveHomepage'])->name('admin.homepage.save');
-    Route::post('/homepage/reset', [AdminModuleWebController::class, 'resetHomepage'])->name('admin.homepage.reset');
-    Route::get('/policies', [AdminModuleWebController::class, 'policies'])->name('admin.policies.index');
-    Route::post('/policies', [AdminModuleWebController::class, 'storePolicy'])->name('admin.policies.store');
-    Route::put('/policies/{id}', [AdminModuleWebController::class, 'updatePolicy'])->name('admin.policies.update');
-    Route::delete('/policies/{id}', [AdminModuleWebController::class, 'destroyPolicy'])->name('admin.policies.destroy');
-    Route::get('/banners', [AdminSettingWebController::class, 'banners'])->name('admin.banners.index');
-    Route::post('/banners', [AdminSettingWebController::class, 'storeBanner'])->name('admin.banners.store');
-    Route::put('/banners/{id}', [AdminSettingWebController::class, 'updateBanner'])->name('admin.banners.update');
-    Route::delete('/banners/{id}', [AdminSettingWebController::class, 'destroyBanner'])->name('admin.banners.destroy');
-    Route::get('/media', [AdminSettingWebController::class, 'media'])->name('admin.media.index');
-    Route::post('/media', [AdminSettingWebController::class, 'storeMedia'])->name('admin.media.store');
-    Route::delete('/media/{id}', [AdminSettingWebController::class, 'destroyMedia'])->name('admin.media.destroy');
-    Route::get('/media/picker', [AdminSettingWebController::class, 'mediaPicker'])->name('admin.media.picker');
-    Route::post('/media/picker', [AdminSettingWebController::class, 'mediaPickerUpload'])->name('admin.media.picker.upload');
+    Route::get('/homepage', [AdminModuleWebController::class, 'homepage'])->middleware('admin.can:homepage.view')->name('admin.homepage.index');
+    Route::post('/homepage', [AdminModuleWebController::class, 'saveHomepage'])->middleware('admin.can:homepage.manage')->name('admin.homepage.save');
+    Route::post('/homepage/reset', [AdminModuleWebController::class, 'resetHomepage'])->middleware('admin.can:homepage.manage')->name('admin.homepage.reset');
+    Route::get('/policies', [AdminModuleWebController::class, 'policies'])->middleware('admin.can:policies.view')->name('admin.policies.index');
+    Route::post('/policies', [AdminModuleWebController::class, 'storePolicy'])->middleware('admin.can:policies.manage')->name('admin.policies.store');
+    Route::put('/policies/{id}', [AdminModuleWebController::class, 'updatePolicy'])->middleware('admin.can:policies.manage')->name('admin.policies.update');
+    Route::delete('/policies/{id}', [AdminModuleWebController::class, 'destroyPolicy'])->middleware('admin.can:policies.manage')->name('admin.policies.destroy');
+    Route::get('/banners', [AdminSettingWebController::class, 'banners'])->middleware('admin.can:banners.view')->name('admin.banners.index');
+    Route::post('/banners', [AdminSettingWebController::class, 'storeBanner'])->middleware('admin.can:banners.create')->name('admin.banners.store');
+    Route::put('/banners/{id}', [AdminSettingWebController::class, 'updateBanner'])->middleware('admin.can:banners.update')->name('admin.banners.update');
+    Route::delete('/banners/{id}', [AdminSettingWebController::class, 'destroyBanner'])->middleware('admin.can:banners.delete')->name('admin.banners.destroy');
+    Route::get('/media', [AdminSettingWebController::class, 'media'])->middleware('admin.can:media.view')->name('admin.media.index');
+    Route::post('/media', [AdminSettingWebController::class, 'storeMedia'])->middleware('admin.can:media.upload')->name('admin.media.store');
+    Route::delete('/media/{id}', [AdminSettingWebController::class, 'destroyMedia'])->middleware('admin.can:media.delete')->name('admin.media.destroy');
+    Route::get('/media/picker', [AdminSettingWebController::class, 'mediaPicker'])->middleware('admin.can:media.view')->name('admin.media.picker');
+    Route::post('/media/picker', [AdminSettingWebController::class, 'mediaPickerUpload'])->middleware('admin.can:media.upload')->name('admin.media.picker.upload');
 
     // Insights
     Route::get('/advanced-analytics', [AdminAdvancedAnalyticsController::class, 'index'])->middleware('admin.can:analytics.view|inventory.view')->name('admin.advanced-analytics.index');
     Route::get('/advanced-analytics/export/csv', [AdminAdvancedAnalyticsController::class, 'exportCsv'])->middleware('admin.can:analytics.view|inventory.view|reports.export')->name('admin.advanced-analytics.export.csv');
     Route::post('/advanced-analytics/export/pdf', [AdminAdvancedAnalyticsController::class, 'exportPdf'])->middleware('admin.can:analytics.view|inventory.view|reports.export')->name('admin.advanced-analytics.export.pdf');
     Route::get('/advanced-analytics/products/{id}/variants', [AdminAdvancedAnalyticsController::class, 'productVariants'])->middleware('admin.can:analytics.view|inventory.view')->name('admin.advanced-analytics.product-variants');
-    Route::get('/analytics', [AdminModuleWebController::class, 'analytics'])->name('admin.analytics.index');
+    Route::get('/analytics', [AdminModuleWebController::class, 'analytics'])->middleware('admin.can:analytics.view')->name('admin.analytics.index');
 
     // Security, Team Members & Activity Monitoring
     Route::get('/activity-monitor', [AdminActivityController::class, 'index'])->middleware('admin.can:activity.view')->name('admin.activity.index');
@@ -393,30 +414,30 @@ Route::prefix('admin')->middleware(['auth', 'admin.access', 'admin.password.chan
     Route::post('/members/{id}/resend-invitation', [AdminModuleWebController::class, 'resendInvitation'])->middleware('admin.can:members.create|members.update')->name('admin.members.resend-invitation');
 
     // Team Management
-    Route::get('/team', [AdminTeamWebController::class, 'index'])->name('admin.team.index');
-    Route::post('/team', [AdminTeamWebController::class, 'store'])->name('admin.team.store');
-    Route::get('/team/{id}', [AdminTeamWebController::class, 'show'])->name('admin.team.show');
-    Route::put('/team/{id}', [AdminTeamWebController::class, 'update'])->name('admin.team.update');
-    Route::delete('/team/{id}', [AdminTeamWebController::class, 'destroy'])->name('admin.team.destroy');
-    Route::post('/team/reorder', [AdminTeamWebController::class, 'reorder'])->name('admin.team.reorder');
-    Route::post('/team/{id}/toggle-status', [AdminTeamWebController::class, 'toggleStatus'])->name('admin.team.toggle-status');
-    Route::post('/team/{id}/toggle-footer', [AdminTeamWebController::class, 'toggleFooter'])->name('admin.team.toggle-footer');
-    Route::post('/team/{id}/toggle-public', [AdminTeamWebController::class, 'togglePublic'])->name('admin.team.toggle-public');
-    Route::post('/team/settings', [AdminTeamWebController::class, 'updateSettings'])->name('admin.team.settings.update');
+    Route::get('/team', [AdminTeamWebController::class, 'index'])->middleware('admin.can:team.view')->name('admin.team.index');
+    Route::post('/team', [AdminTeamWebController::class, 'store'])->middleware('admin.can:team.manage')->name('admin.team.store');
+    Route::get('/team/{id}', [AdminTeamWebController::class, 'show'])->middleware('admin.can:team.view')->name('admin.team.show');
+    Route::put('/team/{id}', [AdminTeamWebController::class, 'update'])->middleware('admin.can:team.manage')->name('admin.team.update');
+    Route::delete('/team/{id}', [AdminTeamWebController::class, 'destroy'])->middleware('admin.can:team.manage')->name('admin.team.destroy');
+    Route::post('/team/reorder', [AdminTeamWebController::class, 'reorder'])->middleware('admin.can:team.manage')->name('admin.team.reorder');
+    Route::post('/team/{id}/toggle-status', [AdminTeamWebController::class, 'toggleStatus'])->middleware('admin.can:team.manage')->name('admin.team.toggle-status');
+    Route::post('/team/{id}/toggle-footer', [AdminTeamWebController::class, 'toggleFooter'])->middleware('admin.can:team.manage')->name('admin.team.toggle-footer');
+    Route::post('/team/{id}/toggle-public', [AdminTeamWebController::class, 'togglePublic'])->middleware('admin.can:team.manage')->name('admin.team.toggle-public');
+    Route::post('/team/settings', [AdminTeamWebController::class, 'updateSettings'])->middleware('admin.can:team.manage')->name('admin.team.settings.update');
 
-    Route::get('/backup', [AdminSettingWebController::class, 'backup'])->name('admin.backup.index');
-    Route::post('/backup', [AdminSettingWebController::class, 'createBackup'])->name('admin.backup.create');
-    Route::get('/backup/{id}/download', [AdminSettingWebController::class, 'downloadBackup'])->name('admin.backup.download');
-    Route::post('/backup/restore', [AdminSettingWebController::class, 'restoreBackup'])->name('admin.backup.restore');
-    Route::delete('/backup/{id}', [AdminSettingWebController::class, 'deleteBackup'])->name('admin.backup.destroy');
+    Route::get('/backup', [AdminSettingWebController::class, 'backup'])->middleware('admin.can:backup.view')->name('admin.backup.index');
+    Route::post('/backup', [AdminSettingWebController::class, 'createBackup'])->middleware('admin.can:backup.create')->name('admin.backup.create');
+    Route::get('/backup/{id}/download', [AdminSettingWebController::class, 'downloadBackup'])->middleware('admin.can:backup.view')->name('admin.backup.download');
+    Route::post('/backup/restore', [AdminSettingWebController::class, 'restoreBackup'])->middleware('admin.can:backup.restore')->name('admin.backup.restore');
+    Route::delete('/backup/{id}', [AdminSettingWebController::class, 'deleteBackup'])->middleware('admin.can:backup.delete')->name('admin.backup.destroy');
 
     // System
-    Route::get('/inventory', [AdminModuleWebController::class, 'inventory'])->name('admin.inventory.index');
-    Route::post('/inventory/{id}/adjust', [AdminModuleWebController::class, 'adjustStock'])->name('admin.inventory.adjust');
-    Route::get('/settings/business', [AdminSettingWebController::class, 'businessSettings'])->name('admin.settings.business');
-    Route::post('/settings/business', [AdminSettingWebController::class, 'updateBusinessSettings'])->name('admin.settings.business.update');
-    Route::get('/settings', [AdminSettingWebController::class, 'settings'])->name('admin.settings.index');
-    Route::post('/settings', [AdminSettingWebController::class, 'updateSettings'])->name('admin.settings.update');
+    Route::get('/inventory', [AdminModuleWebController::class, 'inventory'])->middleware('admin.can:inventory.view')->name('admin.inventory.index');
+    Route::post('/inventory/{id}/adjust', [AdminModuleWebController::class, 'adjustStock'])->middleware('admin.can:inventory.manage')->name('admin.inventory.adjust');
+    Route::get('/settings/business', [AdminSettingWebController::class, 'businessSettings'])->middleware('admin.can:settings.view')->name('admin.settings.business');
+    Route::post('/settings/business', [AdminSettingWebController::class, 'updateBusinessSettings'])->middleware('admin.can:settings.manage')->name('admin.settings.business.update');
+    Route::get('/settings', [AdminSettingWebController::class, 'settings'])->middleware('admin.can:settings.view')->name('admin.settings.index');
+    Route::post('/settings', [AdminSettingWebController::class, 'updateSettings'])->middleware('admin.can:settings.manage')->name('admin.settings.update');
     Route::match(['get', 'post'], '/fix-storage', [AdminSettingWebController::class, 'fixStorageWeb'])->name('admin.fix-storage');
 
     // SEO Optimization & Catalog Audit

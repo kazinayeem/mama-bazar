@@ -5,19 +5,40 @@
     createModalOpen: false,
     editModalOpen: false,
     editingMember: {},
+    rolePresets: @js($rolePresets ?? []),
+    permissionMatrix: @js($permissionMatrix ?? []),
+    sidebarSections: @js($sidebarSections ?? []),
     openEdit(m) {
-        this.editingMember = { ...m, password: '' };
+        let perms = [];
+        if (m.permissions_json) {
+            perms = Array.isArray(m.permissions_json) ? m.permissions_json : (JSON.parse(m.permissions_json || '[]') || []);
+        }
+        let sidebar = [];
+        if (m.sidebar_access_json) {
+            sidebar = Array.isArray(m.sidebar_access_json) ? m.sidebar_access_json : (JSON.parse(m.sidebar_access_json || '[]') || []);
+        } else {
+            (this.sidebarSections || []).forEach(s => (s.items || []).forEach(i => sidebar.push(i.label)));
+        }
+        this.editingMember = {
+            ...m,
+            password: '',
+            permission_mode: m.permission_mode || (m.custom_role === 'CUSTOM' ? 'custom' : 'role'),
+            permissions: perms,
+            sidebar_access: sidebar,
+        };
         this.editModalOpen = true;
     }
 }">
-    <x-admin.page-header title="Team Members" subtitle="Admin staff, roles, login tracking, and security audit log">
+    <x-admin.page-header title="Team Members" subtitle="Admin staff, granular RBAC permissions, sidebar access control, and security audit logs">
         <x-slot:actions>
-            <x-admin.button type="button" size="sm" @click="createModalOpen = true">
-                <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Add Member
-            </x-admin.button>
+            @adminCan('members.create')
+                <x-admin.button type="button" size="sm" @click="createModalOpen = true">
+                    <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Member
+                </x-admin.button>
+            @endadminCan
         </x-slot:actions>
     </x-admin.page-header>
 
@@ -45,8 +66,22 @@
     @endif
 
     <!-- Create Member Modal -->
-    <x-admin.modal name="createModalOpen" title="Add New Team Member" subtitle="Create an administrative account with role-based access and automated invitation email">
-        <form action="{{ route('admin.members.store') }}" method="POST" class="space-y-4">
+    <x-admin.modal name="createModalOpen" title="Add New Team Member" subtitle="Create an administrative account with role-based or custom RBAC access" maxWidth="4xl">
+        <form action="{{ route('admin.members.store') }}" method="POST" class="space-y-4"
+              x-data="{
+                  permissionMode: 'role',
+                  selectedRole: 'staff',
+                  selectedPermissions: [],
+                  selectedSidebar: [],
+                  rolePresets: @js($rolePresets ?? []),
+                  permissionMatrix: @js($permissionMatrix ?? []),
+                  sidebarSections: @js($sidebarSections ?? []),
+                  init() {
+                      let all = [];
+                      (this.sidebarSections || []).forEach(s => (s.items || []).forEach(i => all.push(i.label)));
+                      this.selectedSidebar = all;
+                  }
+              }">
             @csrf
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -62,12 +97,12 @@
                     <input type="email" name="email" value="{{ old('email') }}" required class="admin-control w-full text-sm" placeholder="member@mama-bazar.com">
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">Role *</label>
-                    <select name="role" required class="admin-control w-full text-sm">
-                        <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="manager" {{ old('role') === 'manager' ? 'selected' : '' }}>Manager</option>
-                        <option value="editor" {{ old('role') === 'editor' ? 'selected' : '' }}>Editor</option>
-                        <option value="staff" {{ old('role', 'staff') === 'staff' ? 'selected' : '' }}>Staff</option>
+                    <label class="mb-1 block text-xs font-bold text-slate-700">Role Base *</label>
+                    <select name="role" x-model="selectedRole" required class="admin-control w-full text-sm">
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="editor">Editor</option>
+                        <option value="staff" selected>Staff</option>
                     </select>
                 </div>
                 <div class="sm:col-span-2">
@@ -78,6 +113,9 @@
                     </select>
                 </div>
             </div>
+
+            {{-- Permissions & Custom Sidebar Access Section --}}
+            @include('admin.members.partials.permissions-editor', ['prefix' => 'create'])
 
             <div class="rounded-lg border border-sky-200 bg-sky-50/70 p-3 text-xs text-sky-800">
                 <div class="flex items-start gap-2">
@@ -92,14 +130,27 @@
 
             <div class="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                 <x-admin.button type="button" variant="outline" size="sm" @click="createModalOpen = false">Cancel</x-admin.button>
-                <x-admin.button type="submit" size="sm">Create Member & Send Invitation</x-admin.button>
+                <x-admin.button type="submit" size="sm">Create Member & Save Permissions</x-admin.button>
             </div>
         </form>
     </x-admin.modal>
 
     <!-- Edit Member Modal -->
-    <x-admin.modal name="editModalOpen" x-title="'Edit Member: ' + (editingMember ? editingMember.name : '')" subtitle="Update account details, role permissions, and access status">
-        <form :action="'{{ url('admin/members') }}/' + (editingMember && editingMember.id ? editingMember.id : '')" method="POST" class="space-y-4">
+    <x-admin.modal name="editModalOpen" x-title="'Edit Member: ' + (editingMember ? editingMember.name : '')" subtitle="Update account details, role permissions, and access status" maxWidth="4xl">
+        <form :action="'{{ url('admin/members') }}/' + (editingMember && editingMember.id ? editingMember.id : '')" method="POST" class="space-y-4"
+              x-data="{
+                  get permissionMode() { return editingMember.permission_mode || 'role'; },
+                  set permissionMode(val) { editingMember.permission_mode = val; },
+                  get selectedRole() { return editingMember.role || 'staff'; },
+                  set selectedRole(val) { editingMember.role = val; },
+                  get selectedPermissions() { return editingMember.permissions || []; },
+                  set selectedPermissions(val) { editingMember.permissions = val; },
+                  get selectedSidebar() { return editingMember.sidebar_access || []; },
+                  set selectedSidebar(val) { editingMember.sidebar_access = val; },
+                  rolePresets: @js($rolePresets ?? []),
+                  permissionMatrix: @js($permissionMatrix ?? []),
+                  sidebarSections: @js($sidebarSections ?? []),
+              }">
             @csrf
             @method('PUT')
             <div class="grid gap-4 sm:grid-cols-2">
@@ -120,7 +171,7 @@
                     <input type="password" name="password" x-model="editingMember.password" class="admin-control w-full text-sm" placeholder="••••••••">
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs font-bold text-slate-700">Role *</label>
+                    <label class="mb-1 block text-xs font-bold text-slate-700">Role Base *</label>
                     <select name="role" x-model="editingMember.role" required class="admin-control w-full text-sm">
                         <option value="admin">Admin</option>
                         <option value="manager">Manager</option>
@@ -136,6 +187,10 @@
                     </select>
                 </div>
             </div>
+
+            {{-- Permissions & Custom Sidebar Access Section --}}
+            @include('admin.members.partials.permissions-editor', ['prefix' => 'edit'])
+
             <div class="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                 <x-admin.button type="button" variant="outline" size="sm" @click="editModalOpen = false">Cancel</x-admin.button>
                 <x-admin.button type="submit" size="sm">Save Changes</x-admin.button>
@@ -193,7 +248,7 @@
                 <thead class="border-b text-xs uppercase text-slate-500">
                     <tr>
                         <th class="px-4 py-3 text-left">Member</th>
-                        <th class="px-4 py-3">Role</th>
+                        <th class="px-4 py-3">Role & Access Model</th>
                         <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Last Login</th>
                         <th class="px-4 py-3">IP Address</th>
@@ -209,6 +264,9 @@
                                 'manager' => 'bg-sky-100 text-sky-800',
                                 default => 'bg-slate-100 text-slate-700',
                             };
+                            $isCustom = ($member->permission_mode === 'custom') || ($member->custom_role === 'CUSTOM');
+                            $permCount = is_array($member->permissions_json) ? count($member->permissions_json) : 0;
+                            $sidebarCount = is_array($member->sidebar_access_json) ? count($member->sidebar_access_json) : null;
                         @endphp
                         <tr>
                             <td class="px-4 py-3">
@@ -227,9 +285,28 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase {{ $roleCls }}">
-                                    {{ $member->custom_role ?: $member->role }}
-                                </span>
+                                <div class="space-y-1">
+                                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase inline-block {{ $roleCls }}">
+                                        {{ $member->custom_role ?: $member->role }}
+                                    </span>
+                                    @if($isCustom)
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">
+                                                Custom RBAC
+                                            </span>
+                                            <span class="text-[10px] text-slate-400 font-medium">
+                                                {{ $permCount }} action(s)
+                                                @if(!is_null($sidebarCount))
+                                                    · {{ $sidebarCount }} page(s)
+                                                @endif
+                                            </span>
+                                        </div>
+                                    @else
+                                        <div class="text-[10px] text-slate-400">
+                                            Inherits {{ ucfirst($member->role) }} defaults
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="space-y-1">
@@ -273,34 +350,40 @@
                                         Details
                                     </a>
 
-                                    <button type="button" @click="openEdit(@js($member))" class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" title="Edit member">
-                                        <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                        Edit
-                                    </button>
+                                    @adminCan('members.update')
+                                        <button type="button" @click="openEdit(@js($member))" class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition" title="Edit member">
+                                            <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                            Edit
+                                        </button>
+                                    @endadminCan
 
                                     @if($member->email)
-                                        <form action="{{ route('admin.members.resend-invitation', $member->id) }}" method="POST" onsubmit="return confirm('Resend invitation email to {{ $member->email }}?')" class="inline">
-                                            @csrf
-                                            <button type="submit" class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-sky-600 hover:bg-sky-50 transition" title="Resend invitation">
-                                                <svg class="h-3.5 w-3.5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                </svg>
-                                                Resend
-                                            </button>
-                                        </form>
+                                        @adminCan('members.update')
+                                            <form action="{{ route('admin.members.resend-invitation', $member->id) }}" method="POST" onsubmit="return confirm('Resend invitation email to {{ $member->email }}?')" class="inline">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-sky-600 hover:bg-sky-50 transition" title="Resend invitation">
+                                                    <svg class="h-3.5 w-3.5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Resend
+                                                </button>
+                                            </form>
+                                        @endadminCan
                                     @endif
 
-                                    <form action="{{ route('admin.members.destroy', $member->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently remove {{ $member->name }}?')" class="inline">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" @disabled($member->id === auth()->id()) title="{{ $member->id === auth()->id() ? 'You cannot remove your own account' : 'Remove member' }}" class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent transition">
-                                            <svg class="h-3.5 w-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                            Remove
-                                        </button>
-                                    </form>
+                                    @adminCan('members.delete')
+                                        <form action="{{ route('admin.members.destroy', $member->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently remove {{ $member->name }}?')" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" @disabled($member->id === auth()->id()) title="{{ $member->id === auth()->id() ? 'You cannot remove your own account' : 'Remove member' }}" class="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent transition">
+                                                <svg class="h-3.5 w-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Remove
+                                            </button>
+                                        </form>
+                                    @endadminCan
                                 </div>
                             </td>
                         </tr>

@@ -77,8 +77,7 @@ class AdminActivityMonitorTest extends TestCase
     public function test_staff_without_activity_permission_is_forbidden(): void
     {
         $response = $this->actingAs($this->staff)->get(route('admin.activity.index'));
-        $response->assertRedirect(route('admin.dashboard'));
-        $response->assertSessionHas('error');
+        $response->assertForbidden();
 
         $jsonResponse = $this->actingAs($this->staff)->getJson(route('admin.activity.index'));
         $jsonResponse->assertStatus(403);

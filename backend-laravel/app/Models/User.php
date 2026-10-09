@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Http\Middleware\EnsureAdminAccess;
+use App\Http\Middleware\EnsureAdminPermission;
+use App\Services\RbacService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -60,6 +62,7 @@ class User extends Authenticatable
         'email_verification_required' => 'boolean',
         'marketing_opt_in' => 'boolean',
         'marketing_opt_in_at' => 'datetime',
+        'permissions_json' => 'array',
         'sidebar_access_json' => 'array',
         'last_login_at' => 'datetime',
         'must_change_password' => 'boolean',
@@ -123,12 +126,12 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return \App\Services\RbacService::isSuperAdmin($this);
+        return RbacService::isSuperAdmin($this);
     }
 
     public function canAdmin(string|array $permissions): bool
     {
-        return \App\Http\Middleware\EnsureAdminPermission::allows(
+        return EnsureAdminPermission::allows(
             $this,
             is_array($permissions) ? $permissions : explode('|', $permissions)
         );

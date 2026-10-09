@@ -330,8 +330,7 @@ class TeamMembersManagementTest extends TestCase
 
         // Staff attempting to view members
         $response = $this->actingAs($staff)->get(route('admin.members.index'));
-        // Rbac blocks members.view
-        $response->assertRedirect(route('admin.dashboard'));
-        $response->assertSessionHas('error');
+        // Rbac blocks members.view with 403
+        $response->assertForbidden();
     }
 }

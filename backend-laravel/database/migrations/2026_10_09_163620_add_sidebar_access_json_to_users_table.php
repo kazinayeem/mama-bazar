@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('permission_mode', 20)->default('role')->after('custom_role');
+            $table->string('permission_mode', 20)->default('role')->nullable()->after('custom_role');
             $table->text('sidebar_access_json')->nullable()->after('permissions_json');
         });
     }

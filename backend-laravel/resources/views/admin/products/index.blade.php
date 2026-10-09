@@ -87,28 +87,38 @@
     <x-admin.page-header title="Products" :subtitle="number_format($total).' products · Manage your catalog'">
         <x-slot:actions>
             <input type="file" accept=".csv" class="hidden" x-ref="fileInput" @change="handleImport($event.target.files[0])" />
-            <button type="button" @click="handleExport()"
-                    class="hidden sm:inline-flex h-10 items-center gap-1.5 rounded-[6px] border border-[var(--admin-border)] bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-[var(--admin-muted)]">
-                Export CSV
-            </button>
-            <button type="button" @click="$refs.fileInput.click()" :disabled="importing"
-                    class="hidden sm:inline-flex h-10 items-center gap-1.5 rounded-[6px] border border-[var(--admin-border)] bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-[var(--admin-muted)] disabled:opacity-50">
-                <span x-text="importing ? 'Importing…' : 'Import CSV'"></span>
-            </button>
+            @adminCan('products.export')
+                <button type="button" @click="handleExport()"
+                        class="hidden sm:inline-flex h-10 items-center gap-1.5 rounded-[6px] border border-[var(--admin-border)] bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-[var(--admin-muted)]">
+                    Export CSV
+                </button>
+            @endadminCan
+            @adminCan('products.import')
+                <button type="button" @click="$refs.fileInput.click()" :disabled="importing"
+                        class="hidden sm:inline-flex h-10 items-center gap-1.5 rounded-[6px] border border-[var(--admin-border)] bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-[var(--admin-muted)] disabled:opacity-50">
+                    <span x-text="importing ? 'Importing…' : 'Import CSV'"></span>
+                </button>
+            @endadminCan
             <div class="relative sm:hidden" x-data="{ open: false }">
                 <button type="button" @click="open = !open" @click.outside="open = false"
                         class="inline-flex h-9 w-9 items-center justify-center rounded-[6px] border border-[var(--admin-border)] bg-white text-slate-600" aria-label="More actions">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/></svg>
                 </button>
                 <div x-show="open" x-cloak class="absolute right-0 z-30 mt-1 w-40 overflow-hidden rounded-[8px] border border-[var(--admin-border)] bg-white py-1 shadow-panel">
-                    <button type="button" @click="open=false; handleExport()" class="block w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50">Export CSV</button>
-                    <button type="button" @click="open=false; $refs.fileInput.click()" class="block w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50">Import CSV</button>
+                    @adminCan('products.export')
+                        <button type="button" @click="open=false; handleExport()" class="block w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50">Export CSV</button>
+                    @endadminCan
+                    @adminCan('products.import')
+                        <button type="button" @click="open=false; $refs.fileInput.click()" class="block w-full px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50">Import CSV</button>
+                    @endadminCan
                 </div>
             </div>
-            <a href="{{ route('admin.products.create') }}"
-               class="inline-flex h-10 items-center gap-1.5 rounded-[6px] bg-brand-green-500 px-3.5 text-sm font-medium text-white hover:bg-brand-green-600">
-                Add Product
-            </a>
+            @adminCan('products.create')
+                <a href="{{ route('admin.products.create') }}"
+                   class="inline-flex h-10 items-center gap-1.5 rounded-[6px] bg-brand-green-500 px-3.5 text-sm font-medium text-white hover:bg-brand-green-600">
+                    Add Product
+                </a>
+            @endadminCan
         </x-slot:actions>
     </x-admin.page-header>
 

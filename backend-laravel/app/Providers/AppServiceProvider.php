@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\EnsureAdminPermission;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\SiteSetting;
@@ -44,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
                 return false;
             }
 
-            return \App\Http\Middleware\EnsureAdminPermission::allows(
+            return EnsureAdminPermission::allows(
                 $user,
                 is_array($permission) ? $permission : explode('|', (string) $permission)
             );

@@ -61,9 +61,11 @@
                 </button>
                 <div x-show="actionsOpen" x-cloak class="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl py-1 text-xs">
                     <a href="{{ route('admin.orders.invoice', $order->id) }}" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">View Invoice</a>
-                    <a href="{{ route('admin.orders.invoice.download', $order->id) }}" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Download PDF</a>
-                    <a href="{{ route('admin.orders.invoice', $order->id) }}?print=1" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Print Invoice</a>
-                    <a href="{{ route('admin.orders.packing-slip', $order->id) }}" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Print Packing Slip</a>
+                    @adminCan('orders.export')
+                        <a href="{{ route('admin.orders.invoice.download', $order->id) }}" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Download PDF</a>
+                        <a href="{{ route('admin.orders.invoice', $order->id) }}?print=1" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Print Invoice</a>
+                        <a href="{{ route('admin.orders.packing-slip', $order->id) }}" target="_blank" class="block px-4 py-2.5 font-semibold hover:bg-slate-50">Print Packing Slip</a>
+                    @endadminCan
                     <button type="button" onclick="copyOrderInfo()" class="block w-full text-left px-4 py-2.5 font-semibold hover:bg-slate-50">Copy Order Info</button>
                     <button type="button" @click="customerOpen = true; actionsOpen = false" class="block w-full text-left px-4 py-2.5 font-semibold hover:bg-slate-50">View Customer Details</button>
                 </div>
@@ -95,41 +97,43 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div class="lg:col-span-2 space-y-5">
-            <div class="admin-surface p-4">
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Update Order Status</h3>
-                <form action="{{ route('admin.orders.status', $order->id) }}" method="POST" class="flex flex-wrap items-end gap-3">
-                    @csrf
-                    <div class="w-52">
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Status</label>
-                        <select name="status" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 bg-white">
-                            @foreach(['pending','payment_pending','payment_verification','confirmed','processing','packed','shipped','out_for_delivery','delivered','cancelled','returned','refunded'] as $st)
-                                <option value="{{ $st }}" {{ $order->status === $st ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ',$st)) }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-[200px]">
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Note (optional)</label>
-                        <input type="text" name="note" placeholder="e.g. Courier tracking assigned" class="w-full text-xs rounded-xl border border-slate-200 p-2.5">
-                    </div>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white text-xs font-bold transition">Update</button>
-                </form>
-                <form action="{{ route('admin.orders.payment', $order->id) }}" method="POST" class="flex flex-wrap items-end gap-3 mt-3 pt-3 border-t border-slate-100">
-                    @csrf
-                    <div class="w-52">
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Payment status</label>
-                        <select name="payment_status" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 bg-white">
-                            @foreach(['pending','payment_pending','payment_verification','verified','success','failed','rejected','refunded'] as $ps)
-                                <option value="{{ $ps }}" {{ $order->payment_status === $ps ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ',$ps)) }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-[200px]">
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Note (optional)</label>
-                        <input type="text" name="note" placeholder="e.g. bKash verified" class="w-full text-xs rounded-xl border border-slate-200 p-2.5">
-                    </div>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">Save Payment</button>
-                </form>
-            </div>
+            @adminCan('orders.update')
+                <div class="admin-surface p-4">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Update Order Status</h3>
+                    <form action="{{ route('admin.orders.status', $order->id) }}" method="POST" class="flex flex-wrap items-end gap-3">
+                        @csrf
+                        <div class="w-52">
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Status</label>
+                            <select name="status" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 bg-white">
+                                @foreach(['pending','payment_pending','payment_verification','confirmed','processing','packed','shipped','out_for_delivery','delivered','cancelled','returned','refunded'] as $st)
+                                    <option value="{{ $st }}" {{ $order->status === $st ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ',$st)) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Note (optional)</label>
+                            <input type="text" name="note" placeholder="e.g. Courier tracking assigned" class="w-full text-xs rounded-xl border border-slate-200 p-2.5">
+                        </div>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white text-xs font-bold transition">Update</button>
+                    </form>
+                    <form action="{{ route('admin.orders.payment', $order->id) }}" method="POST" class="flex flex-wrap items-end gap-3 mt-3 pt-3 border-t border-slate-100">
+                        @csrf
+                        <div class="w-52">
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Payment status</label>
+                            <select name="payment_status" class="w-full text-xs rounded-xl border border-slate-200 p-2.5 bg-white">
+                                @foreach(['pending','payment_pending','payment_verification','verified','success','failed','rejected','refunded'] as $ps)
+                                    <option value="{{ $ps }}" {{ $order->payment_status === $ps ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ',$ps)) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Note (optional)</label>
+                            <input type="text" name="note" placeholder="e.g. bKash verified" class="w-full text-xs rounded-xl border border-slate-200 p-2.5">
+                        </div>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">Save Payment</button>
+                    </form>
+                </div>
+            @endadminCan
 
             <div class="admin-table-wrap">
                 <div class="p-4 border-b border-slate-100 font-bold text-xs uppercase tracking-wider text-slate-700">Order Items ({{ $order->items->sum('quantity') }} pcs)</div>
@@ -358,10 +362,12 @@
                     @endif
                 </div>
                 @if($order->email && $invoiceReady)
-                    <form action="{{ route('admin.orders.email-invoice', $order->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white text-xs font-bold">Email Invoice PDF to Customer</button>
-                    </form>
+                    @adminCan('orders.update')
+                        <form action="{{ route('admin.orders.email-invoice', $order->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand-green-600 hover:bg-brand-green-700 text-white text-xs font-bold">Email Invoice PDF to Customer</button>
+                        </form>
+                    @endadminCan
                 @elseif(! $order->email)
                     <p class="text-slate-400">No email address on this order — emails cannot be sent.</p>
                 @else
@@ -408,11 +414,13 @@
             <div class="admin-surface p-4">
                 <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Internal Notes</h3>
                 @if($order->admin_notes)<pre class="text-[11px] text-slate-600 whitespace-pre-wrap bg-slate-50 rounded-lg p-3 mb-3">{{ $order->admin_notes }}</pre>@endif
-                <form action="{{ route('admin.orders.notes', $order->id) }}" method="POST" class="space-y-2">
-                    @csrf
-                    <textarea name="admin_notes" rows="2" required placeholder="Add internal note (not printed)..." class="w-full text-xs rounded-xl border border-slate-200 p-2.5"></textarea>
-                    <button class="w-full px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold">Add Note</button>
-                </form>
+                @adminCan('orders.update')
+                    <form action="{{ route('admin.orders.notes', $order->id) }}" method="POST" class="space-y-2">
+                        @csrf
+                        <textarea name="admin_notes" rows="2" required placeholder="Add internal note (not printed)..." class="w-full text-xs rounded-xl border border-slate-200 p-2.5"></textarea>
+                        <button class="w-full px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold">Add Note</button>
+                    </form>
+                @endadminCan
             </div>
         </div>
     </div>

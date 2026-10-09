@@ -109,14 +109,20 @@
             </button>
             <div x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black/5">
                 <a href="{{ route('admin.products.show', $product['id']) }}" class="block px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">View</a>
-                <a href="{{ route('admin.products.edit', $product['id']) }}" class="block px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">Edit</a>
-                <button type="button" @click="open = false; duplicateProduct({{ $product['id'] }})" class="block w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50">Duplicate</button>
+                @adminCan('products.update')
+                    <a href="{{ route('admin.products.edit', $product['id']) }}" class="block px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">Edit</a>
+                @endadminCan
+                @adminCan('products.create')
+                    <button type="button" @click="open = false; duplicateProduct({{ $product['id'] }})" class="block w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50">Duplicate</button>
+                @endadminCan
                 @if(!empty($product['slug']))
                     <div class="my-1 border-t border-slate-100"></div>
                     <a href="{{ url('/products/' . $product['slug']) }}" target="_blank" class="block px-3 py-2 text-xs text-slate-700 hover:bg-slate-50">View on storefront</a>
                 @endif
-                <div class="my-1 border-t border-slate-100"></div>
-                <button type="button" @click="open = false; confirmDelete({{ $product['id'] }}, @js($product['title']))" class="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50">Delete</button>
+                @adminCan('products.delete')
+                    <div class="my-1 border-t border-slate-100"></div>
+                    <button type="button" @click="open = false; confirmDelete({{ $product['id'] }}, @js($product['title']))" class="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50">Delete</button>
+                @endadminCan
             </div>
         </div>
     </td>

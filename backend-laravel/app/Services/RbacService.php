@@ -456,6 +456,11 @@ class RbacService
         return false;
     }
 
+    public static function countActiveSuperAdmins(): int
+    {
+        return User::where('status', 'active')->get()->filter(fn ($u) => self::isSuperAdmin($u))->count();
+    }
+
     public static function invalidateUserPermissionCache(int $userId): void
     {
         Cache::forget("user_perm_{$userId}");
@@ -541,4 +546,3 @@ class RbacService
         return in_array($permission, $perms, true);
     }
 }
-
