@@ -45,7 +45,7 @@ return [
     ],
 
     'google_analytics' => [
-        'id' => env('GOOGLE_ANALYTICS_ID', env('GA_MEASUREMENT_ID', 'G-MAMABAZAR01')),
+        'id' => env('GOOGLE_ANALYTICS_ID', env('GA_MEASUREMENT_ID')),
     ],
 
 ];

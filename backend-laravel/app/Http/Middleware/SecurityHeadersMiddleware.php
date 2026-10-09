@@ -35,10 +35,8 @@ class SecurityHeadersMiddleware
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-        // HSTS header (Strict-Transport-Security) for HTTPS
-        if ($request->isSecure() || $request->header('x-forwarded-proto') === 'https' || config('app.env') === 'production') {
-            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-        }
+        // HSTS header (Strict-Transport-Security)
+        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
 
         return $response;
     }
