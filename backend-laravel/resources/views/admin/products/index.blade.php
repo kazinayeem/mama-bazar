@@ -246,21 +246,21 @@
         </div>
 
         <div class="hidden overflow-x-auto md:block">
-            <table class="admin-table min-w-[960px]">
+            <table class="admin-table min-w-[720px]">
                 <thead>
                     <tr>
-                        <th class="w-10">
+                        <th class="w-10 !px-3">
                             <input type="checkbox" :checked="allSelected" @change="toggleSelectAll($event.target.checked)"
                                    class="h-4 w-4 rounded border-slate-300 text-brand-green-600 focus:ring-brand-green-500" aria-label="Select all">
                         </th>
-                        <th>Product</th>
-                        <th class="w-28 text-right">Price</th>
-                        <th class="w-24 text-center">Variants</th>
-                        <th class="w-24 text-center">Stock</th>
-                        <th class="w-24">Status</th>
-                        <th class="w-20 text-center">Featured</th>
-                        <th class="w-24">Created</th>
-                        <th class="w-12 text-right"> </th>
+                        <th class="min-w-[180px] !px-3">Product</th>
+                        <th class="w-[88px] !px-2 text-right">Price</th>
+                        <th class="w-[72px] !px-2 text-center">Variants</th>
+                        <th class="w-16 !px-2 text-center">Stock</th>
+                        <th class="w-20 !px-2">Status</th>
+                        <th class="w-[76px] !px-2 text-center">Featured</th>
+                        <th class="hidden w-24 !px-3 xl:table-cell">Created</th>
+                        <th class="sticky right-0 z-10 w-12 !px-3 text-right"><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody>

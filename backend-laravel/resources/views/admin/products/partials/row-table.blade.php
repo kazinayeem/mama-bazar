@@ -33,18 +33,19 @@
             @endif
             <div class="min-w-0">
                 <a href="{{ route('admin.products.show', $product['id']) }}"
-                   class="block truncate text-sm font-semibold text-slate-900 hover:text-brand-green-700">
+                   title="{{ $product['title'] }}"
+                   class="line-clamp-2 break-words text-[13px] font-semibold leading-snug text-slate-900 hover:text-brand-green-700">
                     {{ $product['title'] }}
                 </a>
-                <p class="mt-0.5 truncate font-mono text-[11px] text-slate-400">{{ $product['sku'] ?: '—' }}</p>
-                <p class="truncate text-[11px] text-slate-500">
+                <p class="mt-0.5 line-clamp-1 break-all font-mono text-[11px] text-slate-400">{{ $product['sku'] ?: '—' }}</p>
+                <p class="line-clamp-1 break-words text-[11px] text-slate-500">
                     {{ $brandName ?: '—' }} · {{ $categoryName ?: '—' }}
                 </p>
             </div>
         </div>
     </td>
 
-    <td class="px-3 py-2 text-right whitespace-nowrap">
+    <td class="px-2 py-2 text-right whitespace-nowrap">
         <p class="text-sm font-bold text-slate-900">৳{{ number_format((float)($product['price'] ?? 0), 2) }}</p>
         @if((float)($product['discount'] ?? 0) > 0)
             <p class="text-[10px] font-semibold text-red-600">-{{ $product['discount'] }}%</p>
@@ -54,7 +55,7 @@
         @endif
     </td>
 
-    <td class="px-3 py-2 text-center">
+    <td class="px-2 py-2 text-center">
         @if($variantsCount > 0)
             <span class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">{{ $variantsCount }}</span>
         @else
@@ -62,7 +63,7 @@
         @endif
     </td>
 
-    <td class="px-3 py-2 text-center">
+    <td class="px-2 py-2 text-center">
         @if($stock <= 0)
             <span class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">0</span>
         @elseif($stock <= $lowStockAlert)
@@ -72,11 +73,11 @@
         @endif
     </td>
 
-    <td class="px-3 py-2">
+    <td class="px-2 py-2">
         <span class="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold border capitalize {{ $statusBadge }}">{{ $status }}</span>
     </td>
 
-    <td class="px-3 py-2 text-center" x-data="{ featured: {{ !empty($product['isFeatured']) ? 'true' : 'false' }}, loading: false }">
+    <td class="px-2 py-2 text-center" x-data="{ featured: {{ !empty($product['isFeatured']) ? 'true' : 'false' }}, loading: false }">
         <button type="button"
                 @click="
                     loading = true;
@@ -100,11 +101,11 @@
         </button>
     </td>
 
-    <td class="px-3 py-2 text-[11px] text-slate-500 whitespace-nowrap">
+    <td class="hidden px-3 py-2 text-[11px] text-slate-500 whitespace-nowrap xl:table-cell">
         {{ !empty($product['createdAt']) ? \Carbon\Carbon::parse($product['createdAt'])->format('M d, Y') : '—' }}
     </td>
 
-    <td class="px-3 py-2 text-right" x-data="{ open: false }">
+    <td class="sticky right-0 z-10 bg-white px-3 py-2 text-right" x-data="{ open: false }">
         <div class="relative inline-block text-left">
             <button type="button" @click="open = !open" @click.outside="open = false"
                     class="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Actions">
