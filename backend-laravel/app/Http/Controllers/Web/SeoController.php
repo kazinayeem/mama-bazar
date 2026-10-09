@@ -58,14 +58,14 @@ class SeoController extends Controller
             $products = Product::where('status', 'active')
                 ->where('product_status', 'published')
                 ->orderBy('id', 'desc')
-                ->get(['id', 'slug', 'updated_at', 'created_at']);
+                ->get(['id', 'slug', 'created_at']);
 
             $content = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
             $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
             foreach ($products as $p) {
                 $url = route('products.show', ['slug' => $p->slug]);
-                $lastmod = ($p->updated_at ?? $p->created_at ?? now())->toIso8601String();
+                $lastmod = ($p->created_at ?? now())->toIso8601String();
 
                 $content .= "    <url>\n";
                 $content .= '        <loc>'.htmlspecialchars($url, ENT_XML1, 'UTF-8')."</loc>\n";
