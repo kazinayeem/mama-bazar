@@ -20,35 +20,23 @@
 
     @case('categories')
         <x-homepage.section-shell :section="$section">
-            @php
-                $cols = (int) ($section['columns'] ?? 4);
-                $gridClass = match (true) {
-                    $cols >= 6 => 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6',
-                    $cols === 5 => 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
-                    default => 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4',
-                };
-            @endphp
-            <div class="{{ $gridClass }}">
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 py-2">
                 @foreach($items as $cat)
                     @php
                         $c = is_array($cat) ? $cat : (array) $cat;
                         $slug = $c['slug'] ?? '';
                         $name = $c['name'] ?? '';
                         $image = $c['image'] ?? $c['thumbnail'] ?? null;
-                        $count = $c['productCount'] ?? $c['products_count'] ?? null;
                     @endphp
-                    <a href="{{ route('shop', ['category' => $slug]) }}" class="group flex flex-col items-center rounded-[10px] border border-brand-green-100 bg-white px-2.5 py-3.5 text-center transition duration-200 hover:-translate-y-0.5 hover:border-brand-green-300 hover:shadow-soft">
-                        <div class="mb-2.5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-green-50 p-2 sm:h-16 sm:w-16">
+                    <a href="{{ route('shop', ['category' => $slug]) }}" class="group flex flex-col items-center text-center">
+                        <div class="w-18 h-18 sm:w-20 sm:h-20 lg:w-22 lg:h-22 rounded-full bg-white border border-slate-200/90 shadow-xs flex items-center justify-center p-3 transition-transform duration-200 group-hover:scale-105 group-hover:border-pink-300 group-hover:shadow-md">
                             @if($image)
-                                <img src="{{ $image }}" alt="{{ $name }}" class="h-10 w-10 object-contain sm:h-12 sm:w-12" loading="lazy">
+                                <img src="{{ $image }}" alt="{{ $name }}" class="w-full h-full object-contain" loading="lazy">
                             @else
-                                <span class="text-lg font-black text-brand-green-600">{{ mb_substr($name, 0, 1) }}</span>
+                                <span class="text-xl font-black" style="color:#e2006a">{{ mb_substr($name, 0, 1) }}</span>
                             @endif
                         </div>
-                        <span class="max-w-full truncate text-xs font-bold text-slate-800 group-hover:text-brand-green-600">{{ $name }}</span>
-                        @if($count !== null)
-                            <span class="mt-0.5 text-[10px] text-slate-400">{{ $count }} items</span>
-                        @endif
+                        <span class="mt-2 text-xs font-bold text-slate-800 line-clamp-1 group-hover:text-[#e2006a] transition">{{ $name }}</span>
                     </a>
                 @endforeach
             </div>
@@ -121,7 +109,7 @@
 
     @case('brands')
         <x-homepage.section-shell :section="$section">
-            <div class="flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($items as $brand)
                     @php
                         $b = is_array($brand) ? $brand : (array) $brand;
@@ -129,13 +117,22 @@
                         $name = $b['name'] ?? '';
                         $slug = $b['slug'] ?? '';
                     @endphp
-                    <a href="{{ route('shop', ['brand' => $slug]) }}" class="store-brand-chip flex h-16 w-28 shrink-0 items-center justify-center rounded-[10px] border border-slate-200 bg-white px-3 transition duration-200 hover:border-brand-green-300 sm:h-[72px] sm:w-32" title="{{ $name }}">
-                        @if($logo)
-                            <img src="{{ $logo }}" alt="{{ $name }}" class="store-brand-logo max-h-9 max-w-full object-contain sm:max-h-10" loading="lazy">
-                        @else
-                            <span class="text-xs font-bold text-slate-600">{{ $name }}</span>
-                        @endif
-                    </a>
+                    <div class="rounded-xl border border-slate-200/90 bg-white p-3.5 flex flex-col items-center text-center shadow-xs hover:shadow-md hover:border-pink-200 transition">
+                        <div class="w-14 h-14 rounded-full bg-slate-50 border border-slate-100 p-2 flex items-center justify-center mb-2">
+                            @if($logo)
+                                <img src="{{ $logo }}" alt="{{ $name }}" class="max-h-full max-w-full object-contain" loading="lazy">
+                            @else
+                                <span class="text-xs font-black text-slate-700">{{ mb_substr($name, 0, 2) }}</span>
+                            @endif
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-900 truncate max-w-full">{{ $name }}</h4>
+                        <div class="flex items-center gap-1 text-[11px] font-bold text-slate-500 mt-1">
+                            <span class="text-amber-400">★</span> 4.8
+                        </div>
+                        <a href="{{ route('shop', ['brand' => $slug]) }}" class="mt-2.5 w-full py-1.5 px-2 rounded-lg border text-[11px] font-bold text-center transition hover:bg-pink-50" style="border-color:#e2006a; color:#e2006a">
+                            Visit Shop
+                        </a>
+                    </div>
                 @endforeach
             </div>
         </x-homepage.section-shell>

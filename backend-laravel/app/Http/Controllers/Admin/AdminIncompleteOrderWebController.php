@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\IncompleteOrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class AdminIncompleteOrderWebController extends Controller
         $metrics = IncompleteOrderService::getDashboardMetrics($filters);
         $sessions = IncompleteOrderService::getTableSessions($filters, 20);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $canViewIp = $user ? $user->hasPermission('incomplete_orders.view_ip') : false;
         $canExport = $user ? $user->hasPermission('incomplete_orders.export') : false;
@@ -44,7 +45,7 @@ class AdminIncompleteOrderWebController extends Controller
      */
     public function export(Request $request): StreamedResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $canViewIp = $user ? $user->hasPermission('incomplete_orders.view_ip') : false;
 

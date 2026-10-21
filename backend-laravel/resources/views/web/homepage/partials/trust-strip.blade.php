@@ -1,21 +1,21 @@
 @php $items = $items ?? []; @endphp
 @if(count($items) > 0)
-<section class="border-y border-brand-green-100 bg-brand-green-50/60 overflow-hidden">
+<section class="border-y border-pink-100 bg-white overflow-hidden py-3">
     <div class="store-container">
-        <div class="grid grid-cols-2 gap-2 py-2.5 sm:gap-3 lg:grid-cols-4 lg:py-3.5">
+        <div class="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
             @foreach($items as $item)
                 @php
                     $title = $item['title'] ?? '';
                     $text = $item['text'] ?? $item['subtitle'] ?? '';
                 @endphp
-                <div class="flex items-center gap-2 sm:gap-3 rounded-[10px] border border-brand-green-100/80 bg-white p-2.5 sm:px-3.5 sm:py-3 min-w-0">
-                    <span class="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-[8px] bg-brand-green-500 text-xs sm:text-sm font-bold text-white shadow-xs" aria-hidden="true">
-                        {{ mb_substr($title, 0, 1) }}
+                <div class="flex items-center gap-3 rounded-xl border border-pink-100 bg-[#fffbfa] p-3 shadow-xs min-w-0 transition hover:shadow-sm">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-50 text-[#e2006a] font-bold text-sm" aria-hidden="true">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </span>
                     <div class="min-w-0 flex-1">
-                        <p class="truncate text-xs font-bold text-slate-900 sm:text-[13px] leading-tight">{{ $title }}</p>
+                        <p class="truncate text-xs font-bold text-slate-900 leading-tight">{{ $title }}</p>
                         @if($text)
-                            <p class="mt-0.5 truncate text-[10px] sm:text-[11px] text-slate-500 leading-tight">{{ $text }}</p>
+                            <p class="mt-0.5 truncate text-[11px] text-slate-500 leading-tight">{{ $text }}</p>
                         @endif
                     </div>
                 </div>
@@ -24,3 +24,4 @@
     </div>
 </section>
 @endif
+

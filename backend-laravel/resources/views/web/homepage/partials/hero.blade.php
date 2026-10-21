@@ -5,6 +5,7 @@
         ->all();
     $searches = array_slice($popularSearches ?? [], 0, 8);
     $first = $slides[0] ?? null;
+    $heroCategories = \App\Models\Category::query()->limit(10)->get();
 @endphp
 
 @if(count($slides) > 0)
@@ -25,62 +26,87 @@
     @mouseenter="stop()"
     @mouseleave="start()"
 >
-    <section class="relative bg-white py-3 sm:py-4 lg:py-5">
+    <section class="relative bg-[#f5f5f5] py-3 sm:py-4">
         <div class="store-container relative">
-            <div class="relative overflow-hidden rounded-[10px] sm:rounded-xl shadow-lg bg-white">
-                {{-- SSR Initial Slide (Immediately indexable for SEO & Fast LCP) --}}
-                @if($first)
-                    <div x-show="index === 0" class="relative">
-                        <div class="relative min-h-[280px] sm:min-h-[360px] lg:min-h-[420px]" style="background-color: {{ $first['backgroundColor'] ?? '#0f172a' }}">
-                            <picture>
-                                @if(!empty($first['mobileImage']))
-                                    <source media="(max-width: 640px)" srcset="{{ $first['mobileImage'] }}">
+            <div class="flex gap-4 items-stretch">
+                {{-- Left: Category Sidebar on Desktop --}}
+                <div class="hidden lg:flex flex-col w-60 shrink-0 rounded-xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-800">Categories</span>
+                        <a href="{{ route('shop') }}" class="text-[11px] font-bold text-[#e2006a] hover:underline">View All</a>
+                    </div>
+                    <div class="flex-1 divide-y divide-slate-50 overflow-y-auto">
+                        @foreach($heroCategories as $cat)
+                            <a href="{{ route('shop', ['category' => $cat->slug]) }}" class="flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-pink-50 hover:text-[#e2006a] transition group">
+                                <span class="flex items-center gap-2.5 truncate">
+                                    @if($cat->image)
+                                        <img src="{{ $cat->image }}" alt="{{ $cat->name }}" class="w-5 h-5 object-contain rounded">
+                                    @else
+                                        <span class="w-2 h-2 rounded-full" style="background:#e2006a"></span>
+                                    @endif
+                                    <span class="truncate">{{ $cat->name }}</span>
+                                </span>
+                                <svg class="h-3 w-3 text-slate-300 group-hover:text-[#e2006a] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Center/Main: Hero Slider --}}
+                <div class="flex-1 min-w-0 relative overflow-hidden rounded-xl shadow-md bg-white">
+                    {{-- SSR Initial Slide (Immediately indexable for SEO & Fast LCP) --}}
+                    @if($first)
+                        <div x-show="index === 0" class="relative">
+                            <div class="relative min-h-[280px] sm:min-h-[360px] lg:min-h-[420px]" style="background-color: {{ $first['backgroundColor'] ?? '#0f172a' }}">
+                                <picture>
+                                    @if(!empty($first['mobileImage']))
+                                        <source media="(max-width: 640px)" srcset="{{ $first['mobileImage'] }}">
+                                    @endif
+                                    @if(!empty($first['tabletImage']))
+                                        <source media="(max-width: 1024px)" srcset="{{ $first['tabletImage'] }}">
+                                    @endif
+                                    <img src="{{ $first['desktopImage'] ?? ($first['image'] ?? '/brandlogo.png') }}"
+                                         alt="{{ $first['title'] ?? 'Mama Bazar Online Shopping' }}"
+                                         class="absolute inset-0 h-full w-full object-cover"
+                                         loading="eager"
+                                         fetchpriority="high"
+                                         width="1280"
+                                         height="420">
+                                </picture>
+                                @if(($first['overlay'] ?? true) !== false)
+                                    <div class="absolute inset-0 bg-black" style="opacity: {{ $first['overlayOpacity'] ?? 0.55 }}"></div>
                                 @endif
-                                @if(!empty($first['tabletImage']))
-                                    <source media="(max-width: 1024px)" srcset="{{ $first['tabletImage'] }}">
-                                @endif
-                                <img src="{{ $first['desktopImage'] ?? ($first['image'] ?? '/brandlogo.png') }}"
-                                     alt="{{ $first['title'] ?? 'Mama Bazar Online Shopping' }}"
-                                     class="absolute inset-0 h-full w-full object-cover"
-                                     loading="eager"
-                                     fetchpriority="high"
-                                     width="1280"
-                                     height="420">
-                            </picture>
-                            @if(($first['overlay'] ?? true) !== false)
-                                <div class="absolute inset-0 bg-black" style="opacity: {{ $first['overlayOpacity'] ?? 0.55 }}"></div>
-                            @endif
-                            <div class="relative z-10 flex min-h-[280px] w-full flex-col justify-center px-5 py-7 sm:min-h-[360px] sm:px-12 sm:py-10 lg:min-h-[420px] lg:px-16 {{ ($first['alignment'] ?? 'left') === 'center' ? 'items-center text-center' : (($first['alignment'] ?? 'left') === 'right' ? 'items-end text-right' : 'items-start text-left') }}" style="color: {{ $first['textColor'] ?? '#ffffff' }}">
-                                <div class="max-w-xl space-y-2.5 sm:space-y-3">
-                                    @if(!empty($first['badge']))
-                                        <span class="inline-block rounded-full bg-brand-orange-500 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white">{{ $first['badge'] }}</span>
-                                    @endif
-                                    <h1 class="text-xl font-extrabold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl break-words leading-snug sm:leading-tight">
-                                        {{ $first['title'] ?? 'Mama Bazar — Online Grocery & Lifestyle Essentials in Bangladesh' }}
-                                    </h1>
-                                    @if(!empty($first['subtitle']))
-                                        <p class="text-sm opacity-90 sm:text-base lg:text-lg break-words">{{ $first['subtitle'] }}</p>
-                                    @endif
-                                    @if(!empty($first['description']))
-                                        <p class="text-xs sm:text-sm opacity-80 break-words line-clamp-2 sm:line-clamp-none">{{ $first['description'] }}</p>
-                                    @endif
-                                    @if(!empty($first['primaryButtonText']) && !empty($first['primaryButtonUrl']))
-                                        <div class="flex flex-wrap gap-2.5 sm:gap-3 pt-2 {{ ($first['alignment'] ?? 'left') === 'center' ? 'justify-center' : (($first['alignment'] ?? 'left') === 'right' ? 'justify-end' : '') }}">
-                                            <a href="{{ $first['primaryButtonUrl'] }}" class="store-btn store-btn-primary !rounded-full !px-5 !py-2 sm:!px-6 sm:!py-2.5 !text-xs sm:!text-sm shadow-md">
-                                                {{ $first['primaryButtonText'] }}
-                                            </a>
-                                            @if(!empty($first['secondaryButtonText']) && !empty($first['secondaryButtonUrl']))
-                                                <a href="{{ $first['secondaryButtonUrl'] }}" class="inline-flex items-center rounded-full border border-white/50 bg-white/15 px-5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur transition hover:bg-white/25">
-                                                    {{ $first['secondaryButtonText'] }}
+                                <div class="relative z-10 flex min-h-[280px] w-full flex-col justify-center px-5 py-7 sm:min-h-[360px] sm:px-12 sm:py-10 lg:min-h-[420px] lg:px-14 {{ ($first['alignment'] ?? 'left') === 'center' ? 'items-center text-center' : (($first['alignment'] ?? 'left') === 'right' ? 'items-end text-right' : 'items-start text-left') }}" style="color: {{ $first['textColor'] ?? '#ffffff' }}">
+                                    <div class="max-w-xl space-y-2.5 sm:space-y-3">
+                                        @if(!empty($first['badge']))
+                                            <span class="inline-block rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-white" style="background:#e2006a">{{ $first['badge'] }}</span>
+                                        @endif
+                                        <h1 class="text-xl font-extrabold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl break-words leading-snug sm:leading-tight">
+                                            {{ $first['title'] ?? 'Mama Bazar — Online Grocery & Lifestyle Essentials in Bangladesh' }}
+                                        </h1>
+                                        @if(!empty($first['subtitle']))
+                                            <p class="text-sm opacity-90 sm:text-base lg:text-lg break-words">{{ $first['subtitle'] }}</p>
+                                        @endif
+                                        @if(!empty($first['description']))
+                                            <p class="text-xs sm:text-sm opacity-80 break-words line-clamp-2 sm:line-clamp-none">{{ $first['description'] }}</p>
+                                        @endif
+                                        @if(!empty($first['primaryButtonText']) && !empty($first['primaryButtonUrl']))
+                                            <div class="flex flex-wrap gap-2.5 sm:gap-3 pt-2 {{ ($first['alignment'] ?? 'left') === 'center' ? 'justify-center' : (($first['alignment'] ?? 'left') === 'right' ? 'justify-end' : '') }}">
+                                                <a href="{{ $first['primaryButtonUrl'] }}" class="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-xs sm:text-sm font-extrabold text-white shadow-md transition hover:brightness-110" style="background:#e2006a">
+                                                    {{ $first['primaryButtonText'] }}
                                                 </a>
-                                            @endif
-                                        </div>
-                                    @endif
+                                                @if(!empty($first['secondaryButtonText']) && !empty($first['secondaryButtonUrl']))
+                                                    <a href="{{ $first['secondaryButtonUrl'] }}" class="inline-flex items-center rounded-full border border-white/50 bg-white/15 px-5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur transition hover:bg-white/25">
+                                                        {{ $first['secondaryButtonText'] }}
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                @endif
+                    @endif
 
                 {{-- Dynamic Subsequent Slides via Alpine.js --}}
                 <template x-for="(slide, i) in slides" :key="slide.id || i">
@@ -143,6 +169,7 @@
                         </div>
                     </div>
                 </template>
+            </div>
             </div>
         </div>
     </section>

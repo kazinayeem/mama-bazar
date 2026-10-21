@@ -80,7 +80,7 @@
 @endphp
 
 <article
-    class="product-card store-card group relative flex h-full flex-col overflow-hidden rounded-[10px] border border-brand-green-100 bg-white"
+    class="product-card store-card group relative flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-pink-200 hover:shadow-md"
     style="animation-delay: {{ min((int) $index * 40, 400) }}ms"
     x-data="{
         added: false,
@@ -112,24 +112,24 @@
                 height="240"
                 loading="lazy"
                 decoding="async"
-                class="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                class="h-full w-full object-contain transition-transform duration-300 ease-out group-hover:scale-105"
                 onerror="this.onerror=null;this.src='/brandlogo.png';"
             >
         </a>
 
         @if($hasDiscount && $discountPercent > 0)
-            <span class="store-badge absolute left-2.5 top-2.5 bg-brand-orange-500 text-white">-{{ $discountPercent }}%</span>
+            <span class="absolute left-2.5 top-2.5 rounded px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs" style="background:#e2006a">-{{ $discountPercent }}%</span>
         @elseif($isFlash)
-            <span class="store-badge absolute left-2.5 top-2.5 border border-brand-orange-200 bg-brand-orange-50 text-brand-orange-600">Flash</span>
+            <span class="absolute left-2.5 top-2.5 rounded px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs" style="background:#f47b20">Flash</span>
         @elseif($isNew)
-            <span class="store-badge absolute left-2.5 top-2.5 bg-brand-green-500 text-white">New</span>
+            <span class="absolute left-2.5 top-2.5 rounded px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs" style="background:#e2006a">New</span>
         @elseif($isBest)
-            <span class="store-badge absolute left-2.5 top-2.5 bg-amber-500 text-white">Best Seller</span>
+            <span class="absolute left-2.5 top-2.5 rounded px-2 py-0.5 text-[10px] font-extrabold text-white shadow-xs bg-amber-500">Best</span>
         @endif
 
         @if($isOutOfStock)
-            <div class="absolute inset-0 flex items-center justify-center bg-white/70">
-                <span class="rounded-md bg-slate-800 px-3 py-1 text-xs font-bold text-white">Out of Stock</span>
+            <div class="absolute inset-0 flex items-center justify-center bg-white/80">
+                <span class="rounded bg-slate-800 px-3 py-1 text-xs font-bold text-white">Out of Stock</span>
             </div>
         @endif
 
@@ -138,94 +138,91 @@
                 type="button"
                 @click="$dispatch('open-quick-view', { id: {{ $id }} })"
                 aria-label="Quick view {{ $title }}"
-                class="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:bg-brand-green-500 hover:text-white"
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition hover:text-white"
+                style="hover:background:#e2006a"
             >
-                <svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             </button>
             <button
                 type="button"
                 @click="$store.cart.toggleWishlist({{ $id }})"
                 aria-label="Toggle wishlist"
-                :class="$store.cart.hasWishlist({{ $id }}) ? 'bg-red-500 text-white' : 'bg-white text-slate-600 hover:bg-red-500 hover:text-white'"
-                class="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full shadow-md transition"
+                :class="$store.cart.hasWishlist({{ $id }}) ? 'text-white' : 'bg-white text-slate-500 hover:text-white'"
+                :style="$store.cart.hasWishlist({{ $id }}) ? 'background:#e2006a' : ''"
+                class="flex h-8 w-8 items-center justify-center rounded-full shadow-md transition"
             >
-                <svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" :class="$store.cart.hasWishlist({{ $id }}) ? 'fill-current' : 'fill-none'" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                <svg class="h-3.5 w-3.5" :class="$store.cart.hasWishlist({{ $id }}) ? 'fill-current' : 'fill-none'" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
             </button>
         </div>
     </div>
 
-    <div class="flex flex-1 flex-col gap-1 p-2.5 sm:gap-1.5 sm:p-3.5">
-        <div class="flex items-center justify-between gap-1.5 sm:gap-2">
-            <p class="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-brand-green-600">
+    <div class="flex flex-1 flex-col gap-1 p-3">
+        <div class="flex items-center justify-between gap-1.5">
+            <p class="min-h-[14px] truncate text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 {{ $brandName !== '' ? $brandName : "\u{00A0}" }}
             </p>
             @if($rating > 0 || $reviewCount > 0)
-                <span class="flex shrink-0 items-center gap-0.5 text-[10px] text-slate-500" aria-label="Rating {{ number_format($rating, 1) }}">
+                <span class="flex shrink-0 items-center gap-0.5 text-[11px] text-slate-600 font-bold" aria-label="Rating {{ number_format($rating, 1) }}">
                     <span class="text-amber-400" aria-hidden="true">★</span>
-                    <span class="font-semibold">{{ number_format($rating, 1) }}</span>
+                    <span>{{ number_format($rating, 1) }}</span>
                     @if($reviewCount > 0)
-                        <span class="text-slate-400">({{ $reviewCount }})</span>
+                        <span class="text-slate-400 font-normal">({{ $reviewCount }})</span>
                     @endif
                 </span>
             @endif
         </div>
 
-        <a href="{{ $productUrl }}" class="line-clamp-2 min-h-[2.25rem] sm:min-h-[2.5rem] text-xs sm:text-[13px] font-semibold leading-snug text-slate-800 transition hover:text-brand-green-600 break-words">
+        <a href="{{ $productUrl }}" class="line-clamp-2 min-h-[2.25rem] text-xs font-semibold leading-snug text-slate-800 transition hover:text-[#e2006a] break-words">
             {{ $title }}
         </a>
 
-        <div class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 pt-0.5">
-            <span class="text-sm sm:text-base font-extrabold tracking-tight text-slate-900">৳{{ number_format($effectivePrice, 0) }}</span>
+        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-0.5">
+            <span class="text-sm sm:text-base font-extrabold tracking-tight" style="color:#e2006a">৳{{ number_format($effectivePrice, 0) }}</span>
             @if($hasDiscount)
                 <span class="text-[11px] sm:text-xs text-slate-400 line-through">৳{{ number_format($price, 0) }}</span>
             @endif
             @if($isLowStock)
-                <span class="ml-auto shrink-0 text-[10px] font-bold text-brand-orange-600">Only {{ $stock }} left</span>
+                <span class="ml-auto shrink-0 text-[10px] font-bold text-orange-600">Only {{ $stock }} left</span>
             @endif
         </div>
 
         @if(!empty($colorOptions))
-            <div class="flex min-h-[18px] flex-wrap items-center gap-1 overflow-hidden">
+            <div class="flex min-h-[18px] flex-wrap items-center gap-1 overflow-hidden pt-1">
                 @foreach(array_slice($colorOptions, 0, 6) as $color)
                     <button
                         type="button"
                         @click="selectedColor = @js($color['name'] ?? '')"
                         aria-label="Select color {{ $color['name'] ?? '' }}"
-                        :class="selectedColor === @js($color['name'] ?? '') ? 'border-brand-green-500 scale-110' : 'border-slate-200 hover:border-slate-400'"
-                        class="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 rounded-full border-2 transition"
-                        style="background-color: {{ $color['value'] ?? '#cccccc' }}"
+                        :class="selectedColor === @js($color['name'] ?? '') ? 'scale-110' : 'border-slate-200'"
+                        class="h-3.5 w-3.5 shrink-0 rounded-full border-2 transition"
+                        style="background-color: {{ $color['value'] ?? '#cccccc' }};"
+                        :style="selectedColor === @js($color['name'] ?? '') ? 'border-color:#e2006a' : ''"
                     ></button>
                 @endforeach
             </div>
         @endif
 
         {{-- Actions pinned to bottom --}}
-        <div class="mt-auto flex flex-col gap-1.5 pt-2 xl:flex-row xl:gap-2">
+        <div class="mt-auto flex items-center gap-1.5 pt-2">
             <button
                 type="button"
                 @click="addToCart()"
                 :disabled="{{ $isOutOfStock ? 'true' : 'false' }}"
-                class="store-btn store-btn-primary inline-flex w-full flex-1 items-center justify-center gap-1 !min-h-[36px] !py-1.5 !px-2 !text-[11px] sm:!text-xs sm:!min-h-[38px]"
-                :class="added ? '!bg-brand-green-500 hover:!bg-brand-green-600' : ''"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-pink-300 hover:bg-pink-50 hover:text-[#e2006a]"
+                aria-label="Add to cart"
             >
                 <template x-if="added">
-                    <span class="inline-flex items-center gap-1">
-                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Added
-                    </span>
+                    <svg class="h-4 w-4" style="color:#e2006a" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                 </template>
                 <template x-if="!added">
-                    <span class="inline-flex items-center gap-1 truncate">
-                        <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        {{ $isOutOfStock ? 'Unavailable' : 'Add to Cart' }}
-                    </span>
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                 </template>
             </button>
             <a
                 href="{{ $productUrl }}"
-                class="store-btn store-btn-outline inline-flex w-full flex-1 items-center justify-center gap-1 !min-h-[36px] !py-1.5 !px-2 !text-[11px] sm:!text-xs sm:!min-h-[38px] truncate"
+                class="flex flex-1 h-9 items-center justify-center rounded-lg text-white text-xs font-bold transition shadow-xs hover:brightness-110"
+                style="background:#e2006a"
             >
-                <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                 Buy Now
             </a>
         </div>

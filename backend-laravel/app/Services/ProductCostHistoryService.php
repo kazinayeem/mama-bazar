@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductCostHistory;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -50,7 +51,7 @@ class ProductCostHistoryService
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, ProductCostHistory>
+     * @return Collection<int, ProductCostHistory>
      */
     public static function forProduct(int $productId, int $limit = 50)
     {
