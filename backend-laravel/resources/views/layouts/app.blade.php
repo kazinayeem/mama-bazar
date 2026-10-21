@@ -12,8 +12,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Critical Responsive Media Queries (Solves Responsive Checkup) -->
+    <!-- Critical Responsive Media Queries & Overflow Protection -->
     <style>
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+            width: 100%;
+        }
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
         @media (min-width: 640px) {
             .store-container { padding-left: 1.5rem; padding-right: 1.5rem; }
         }
@@ -23,7 +31,8 @@
         @media (max-width: 639px) {
             .store-container { padding-left: 1rem; padding-right: 1rem; }
         }
-        img { max-width: 100%; height: auto; }
+        img, video { max-width: 100%; height: auto; }
+        iframe { max-width: 100% !important; }
     </style>
 
     <!-- Non-render-blocking Web Fonts -->
@@ -35,7 +44,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <x-tracking-scripts />
 </head>
-<body class="min-h-screen flex flex-col bg-[#F8FAF8] font-body text-slate-800 antialiased" x-data="{ mobileMenu: false }">
+<body class="min-h-screen flex flex-col bg-[#F8FAF8] font-body text-slate-800 antialiased overflow-x-hidden w-full max-w-full" x-data="{ mobileMenu: false }">
 
     <!-- Top Announcement Bar -->
     @php
@@ -390,10 +399,10 @@
         $footerLinkClass = 'inline-flex py-1 text-[13px] text-brand-green-100/75 transition hover:translate-x-0.5 hover:text-white';
         $returnPolicyUrl = $business['return_policy_url'] ?: route('page.show', 'return-refund');
     @endphp
-    <footer class="mt-12 bg-brand-green-700 text-brand-green-100/80">
+    <footer class="mt-8 sm:mt-12 bg-brand-green-700 text-brand-green-100/80">
         {{-- Service highlights --}}
         <div class="border-b border-white/10 bg-brand-green-600">
-            <div class="store-container grid grid-cols-2 gap-x-4 gap-y-5 py-6 lg:grid-cols-4">
+            <div class="store-container grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-5 py-6 lg:grid-cols-4">
                 <div class="flex items-start gap-3">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-orange-300">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7h11v9H3zM14 10h4l3 3v3h-7M7.5 19a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm10 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/></svg>
@@ -464,9 +473,9 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-12 lg:gap-x-10">
+            <div class="grid grid-cols-1 gap-y-8 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-12 lg:gap-x-10">
                 {{-- Brand, contact & social --}}
-                <div class="col-span-2 lg:col-span-4">
+                <div class="col-span-1 sm:col-span-2 lg:col-span-4">
                     <a href="{{ url('/') }}" class="inline-flex items-center gap-2.5">
                         <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-white p-1.5 shadow-sm">
                             <img src="{{ $business['logo_url'] ?: '/brandlogo.png' }}" alt="{{ $business['business_name'] }}" class="h-full w-full object-contain">
@@ -523,7 +532,7 @@
                     @endif
                 </div>
 
-                <nav aria-label="Shop" class="lg:col-span-2">
+                <nav aria-label="Shop" class="col-span-1 lg:col-span-2">
                     <h4 class="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-white">Shop</h4>
                     <ul class="space-y-1">
                         <li><a href="{{ route('shop') }}" class="{{ $footerLinkClass }}">All Products</a></li>
@@ -534,7 +543,7 @@
                     </ul>
                 </nav>
 
-                <nav aria-label="Customer Support" class="lg:col-span-3">
+                <nav aria-label="Customer Support" class="col-span-1 lg:col-span-3">
                     <h4 class="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-white">Customer Support</h4>
                     <ul class="space-y-1">
                         <li><a href="{{ route('contact') }}" class="{{ $footerLinkClass }}">Contact Us</a></li>
@@ -546,25 +555,27 @@
                     </ul>
                 </nav>
 
-                <nav aria-label="About" class="col-span-2 sm:col-span-1 lg:col-span-3">
+                <nav aria-label="About" class="col-span-1 sm:col-span-2 lg:col-span-3">
                     <h4 class="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-white">About</h4>
                     <ul class="space-y-1">
                         <li><a href="{{ route('about') }}" class="{{ $footerLinkClass }}">About Mama Bazar</a></li>
                         <li><a href="{{ route('team') }}" class="{{ $footerLinkClass }}">Our Team</a></li>
                         <li><a href="{{ route('faq') }}" class="{{ $footerLinkClass }}">Help Center</a></li>
                     </ul>
-                    <a href="{{ route('track') }}" class="mt-5 inline-flex items-center gap-2 rounded-full bg-brand-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-orange-600">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"/></svg>
-                        Track an order
-                    </a>
+                    <div class="mt-5 flex flex-wrap gap-2.5">
+                        <a href="{{ route('track') }}" class="inline-flex items-center gap-2 rounded-full bg-brand-orange-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brand-orange-600">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"/></svg>
+                            Track an order
+                        </a>
+                    </div>
                 </nav>
             </div>
         </div>
 
         {{-- Bottom bar --}}
-        <div class="mt-12 border-t border-white/10 bg-black/15">
+        <div class="mt-10 sm:mt-12 border-t border-white/10 bg-black/15">
             <div class="store-container flex flex-col items-center justify-between gap-4 py-5 text-xs text-brand-green-100/60 lg:flex-row">
-                <p class="text-center lg:text-left">
+                <p class="text-center lg:text-left max-w-full break-words">
                     {{ $business['copyright_rendered'] }} ·
                     <button type="button" onclick="window.mbConsentShow && window.mbConsentShow()" class="underline decoration-white/30 underline-offset-2 hover:text-white">Cookie settings</button>
                     <br class="sm:hidden">

@@ -174,7 +174,7 @@
 
     @case('reviews')
         <x-homepage.section-shell :section="$section">
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach($items as $review)
                     @php
                         $r = is_array($review) ? $review : (array) $review;
@@ -183,14 +183,14 @@
                         $comment = $r['comment'] ?? '';
                         $productTitle = $r['productTitle'] ?? $r['product_title'] ?? '';
                     @endphp
-                    <div class="rounded-[10px] border border-brand-green-100 bg-white p-4">
+                    <div class="rounded-[10px] border border-brand-green-100 bg-white p-3.5 sm:p-4 min-w-0 overflow-hidden break-words">
                         <div class="flex gap-0.5 text-amber-400" aria-label="{{ $rating }} out of 5 stars">
                             @for($i = 0; $i < 5; $i++)
                                 <span class="text-sm" aria-hidden="true">{{ $i < $rating ? '★' : '☆' }}</span>
                             @endfor
                         </div>
-                        <p class="mt-2.5 line-clamp-3 text-sm leading-6 text-slate-600">{{ $comment }}</p>
-                        <p class="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-900">— {{ $name }}
+                        <p class="mt-2.5 line-clamp-3 text-sm leading-6 text-slate-600 break-words">{{ $comment }}</p>
+                        <p class="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-bold text-slate-900 break-words">— {{ $name }}
                             @if(!empty($r['isVerifiedPurchase'] ?? $r['is_verified_purchase'] ?? false))
                                 <span class="rounded-full bg-brand-green-50 px-2 py-0.5 text-[10px] font-bold text-brand-green-700">Verified Purchase</span>
                             @endif

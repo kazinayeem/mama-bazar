@@ -1,5 +1,5 @@
 {{-- Cookie / tracking consent banner. First-party only, remembers choice, re-openable. --}}
-<div id="mb-consent-banner" class="fixed inset-x-3 bottom-3 z-[90] hidden sm:inset-x-auto sm:bottom-5 sm:right-5 sm:max-w-sm" role="dialog" aria-live="polite" aria-label="Cookie consent">
+<div id="mb-consent-banner" class="fixed inset-x-3 bottom-3 z-[90] hidden sm:inset-x-auto sm:bottom-5 sm:right-5 sm:max-w-sm max-w-[calc(100vw-1.5rem)]" role="dialog" aria-live="polite" aria-label="Cookie consent">
     <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
         <p class="text-sm font-bold text-slate-900">We value your privacy</p>
         <p class="mt-1 text-xs leading-5 text-slate-500">

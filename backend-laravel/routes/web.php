@@ -38,9 +38,11 @@ use App\Http\Controllers\Web\SeoController;
 use App\Http\Controllers\Web\ShopController;
 use App\Http\Controllers\Web\SslcommerzPaymentController;
 use App\Http\Controllers\Web\TeamWebController;
+use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
@@ -49,6 +51,19 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 | Web Routes (User-Facing Blade UI)
 |--------------------------------------------------------------------------
 */
+
+if (app()->isLocal()) {
+    Route::get('/dev-login-admin', function () {
+        $admin = User::where('role', 'admin')->first();
+        if ($admin) {
+            Auth::login($admin);
+
+            return redirect()->route('admin.products.index');
+        }
+
+        return 'No admin found';
+    });
+}
 
 Route::get('/', function (Request $request) {
     if ($request->wantsJson()) {

@@ -101,6 +101,11 @@ class Order extends Model
         return $norm($alt) !== $norm($this->phone) ? $alt : null;
     }
 
+    public function getTotalAmountAttribute(): float
+    {
+        return (float) ($this->total_price ?? 0);
+    }
+
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');

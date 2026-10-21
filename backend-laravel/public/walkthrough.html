@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mama Bazar — Official E-Commerce Video Demonstration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #15803d;
+            --primary-dark: #166534;
+            --accent: #f97316;
+            --bg: #090e17;
+            --card: #111a28;
+            --border: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px;
+        }
+        .header {
+            text-align: center;
+            max-width: 900px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+        .header h1 span { color: #4ade80; }
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-top: 6px;
+        }
+        .video-container {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.7);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        video {
+            width: 100%;
+            max-height: 640px;
+            display: block;
+            outline: none;
+            background: #000;
+        }
+        .tabs {
+            display: flex;
+            background: #0d1522;
+            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            gap: 10px;
+        }
+        .tab-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn.active {
+            background: #1e293b;
+            color: #fff;
+            border-color: #334155;
+        }
+        .tab-btn:hover:not(.active) {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+        .info-panel {
+            padding: 20px 24px;
+            background: #111a28;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .title-row h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .title-row p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-dl {
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-dl:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .timeline-chapters {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .chapter-card {
+            background: #0d1522;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chapter-card:hover {
+            border-color: #22c55e;
+            background: #152238;
+            transform: translateY(-2px);
+        }
+        .chapter-time {
+            font-size: 11px;
+            font-weight: 800;
+            color: #4ade80;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .chapter-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 3px;
+        }
+        .chapter-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Mama Bazar — <span>Official Product Video & Audio Walkthrough</span></h1>
+        <p>Live screen automation recording with professional voiceover narration & background music</p>
+    </div>
+
+    <div class="video-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchVideo('/full-product-demo.mp4', 'Full Platform Walkthrough (Frontend + Admin)', this)">
+                🎬 Full Product Tour (02:27)
+            </button>
+            <button class="tab-btn" onclick="switchVideo('/customer-frontend.mp4', 'Customer Shopping & Checkout Journey', this)">
+                🛍️ Storefront Tour (00:45)
+            </button>
+            <button class="tab-btn" onclick="switchVideo('/admin-panel.mp4', 'Admin Control Panel & Security Audit', this)">
+                ⚙️ Admin Panel Tour (00:35)
+            </button>
+        </div>
+
+        <div class="video-wrapper">
+            <video id="player" controls autoplay playsinline preload="auto">
+                <source src="/full-product-demo.mp4" type="video/mp4">
+                Your browser does not support HTML5 video.
+            </video>
+        </div>
+
+        <div class="info-panel">
+            <div class="title-row">
+                <div>
+                    <h2 id="videoTitle">Full Platform Walkthrough (Frontend + Admin)</h2>
+                    <p id="videoMeta">1080p Full HD • Spoken Voiceover Narration • Soft Background Music • 60 FPS Automation</p>
+                </div>
+                <div class="actions">
+                    <a id="dlBtn" href="/full-product-demo.mp4" download class="btn-dl">⬇ Download MP4 Video</a>
+                </div>
+            </div>
+
+            <div class="timeline-chapters">
+                <div class="chapter-card" onclick="seekVideo(0)">
+                    <div class="chapter-time">00:00 • Step 1</div>
+                    <div class="chapter-title">Cookie Policy Acceptance</div>
+                    <div class="chapter-desc">Live popup interaction and consent verification.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(15)">
+                    <div class="chapter-time">00:15 • Step 2</div>
+                    <div class="chapter-title">Clean Storefront & Product Grid</div>
+                    <div class="chapter-desc">Zero ads, responsive product cards, customer reviews.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(35)">
+                    <div class="chapter-time">00:35 • Step 3</div>
+                    <div class="chapter-title">Shop Catalog & Filters</div>
+                    <div class="chapter-desc">Category filtering, live search suggestions, sorting.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(48)">
+                    <div class="chapter-time">00:48 • Step 4</div>
+                    <div class="chapter-title">Product Details & Add to Cart</div>
+                    <div class="chapter-desc">Photo gallery, stock urgency, reactive cart store.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(63)">
+                    <div class="chapter-time">01:03 • Step 5</div>
+                    <div class="chapter-title">Shopping Cart & Subtotal</div>
+                    <div class="chapter-desc">Quantity adjustments, coupon slot, transparent breakdown.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(75)">
+                    <div class="chapter-time">01:15 • Step 6</div>
+                    <div class="chapter-title">Live Checkout & Order Placement</div>
+                    <div class="chapter-desc">Shipping form filling and Cash on Delivery order submission.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(95)">
+                    <div class="chapter-time">01:35 • Step 7</div>
+                    <div class="chapter-title">Order Confirmation & Receipt</div>
+                    <div class="chapter-desc">Live order ID generation and invoice summary.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(105)">
+                    <div class="chapter-time">01:45 • Step 8</div>
+                    <div class="chapter-title">Order Tracking Portal</div>
+                    <div class="chapter-desc">Self-service real-time shipment milestone timeline.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(115)">
+                    <div class="chapter-time">01:55 • Step 9</div>
+                    <div class="chapter-title">About Us, FAQ & Support</div>
+                    <div class="chapter-desc">Company story, interactive help center, contact form.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(125)">
+                    <div class="chapter-time">02:05 • Step 10</div>
+                    <div class="chapter-title">Admin Dashboard & Analytics</div>
+                    <div class="chapter-desc">Live revenue stats, order trends, inventory alerts.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(135)">
+                    <div class="chapter-time">02:15 • Step 11</div>
+                    <div class="chapter-title">Admin Orders Management</div>
+                    <div class="chapter-desc">Customer order queue showing newly placed order.</div>
+                </div>
+                <div class="chapter-card" onclick="seekVideo(142)">
+                    <div class="chapter-time">02:22 • Step 12</div>
+                    <div class="chapter-title">Catalog Builder & Activity Log</div>
+                    <div class="chapter-desc">Rich text editor and verified security audit monitor.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const player = document.getElementById('player');
+        const videoTitle = document.getElementById('videoTitle');
+        const dlBtn = document.getElementById('dlBtn');
+
+        function switchVideo(src, title, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            videoTitle.textContent = title;
+            dlBtn.href = src;
+            player.src = src;
+            player.play();
+        }
+
+        function seekVideo(seconds) {
+            player.currentTime = seconds;
+            player.play();
+        }
+    </script>
+</body>
+</html>

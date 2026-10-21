@@ -96,7 +96,7 @@ class ActivityReportService
         $productsUpdated = (clone $actQuery)->where('event_name', 'product.updated')->count();
         $customersRegistered = (clone $userQuery)->where('role', 'user')->count();
         $teamMembersAdded = (clone $userQuery)->whereIn('role', ['admin', 'manager', 'editor', 'staff', 'super_admin'])->count();
-        $paymentsReceived = (clone $orderQuery)->where('payment_status', 'success')->sum('total_amount');
+        $paymentsReceived = (clone $orderQuery)->where('payment_status', 'success')->sum('total_price');
         $emailOperations = (clone $actQuery)->where('module', 'email')->count();
         $failedOperations = (clone $actQuery)->where('status', 'failure')->count();
         $securityEvents = (clone $actQuery)->securityOnly()->count();
