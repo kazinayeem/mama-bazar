@@ -50,6 +50,11 @@
                             </a>
                         @endforeach
                     </div>
+                    <div class="p-2 border-t border-slate-100 bg-slate-50/60">
+                        <a href="{{ route('shop') }}" class="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-bold text-[#e2006a] hover:bg-pink-50 rounded-lg transition">
+                            <span>+ View All Categories</span>
+                        </a>
+                    </div>
                 </div>
 
                 {{-- Center/Main: Hero Slider --}}
@@ -169,6 +174,74 @@
                         </div>
                     </div>
                 </template>
+            </div>
+
+            @php
+                $sideSlide1 = $slides[1] ?? null;
+                $sideSlide2 = $slides[2] ?? null;
+            @endphp
+
+            {{-- Right: Two Smaller Promotional Banners Stacked Vertically (Ready eCommerce 3-Column Hero) --}}
+            <div class="hidden xl:flex flex-col w-64 shrink-0 gap-3.5">
+                {{-- Top Promo Banner --}}
+                <div class="flex-1 relative rounded-xl overflow-hidden shadow-xs border border-slate-200/80 bg-white group min-h-[195px] flex flex-col justify-between p-4">
+                    @if(!empty($sideSlide1['desktopImage'] ?? ($sideSlide1['image'] ?? null)))
+                        <img src="{{ $sideSlide1['desktopImage'] ?? $sideSlide1['image'] }}"
+                             alt="{{ $sideSlide1['title'] ?? 'Special Offer' }}"
+                             class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                    @else
+                        <div class="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-[#e2006a]"></div>
+                    @endif
+                    
+                    <div class="relative z-10">
+                        <span class="inline-block rounded-full bg-white/25 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                            {{ $sideSlide1['badge'] ?? 'NEW ARRIVAL' }}
+                        </span>
+                        <h3 class="mt-2 text-sm font-extrabold text-white leading-snug drop-shadow-sm line-clamp-2">
+                            {{ $sideSlide1['title'] ?? 'Premium Collection Up to 50% Off' }}
+                        </h3>
+                    </div>
+
+                    <div class="relative z-10 pt-2">
+                        <a href="{{ $sideSlide1['primaryButtonUrl'] ?? route('shop') }}"
+                           class="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold text-white transition hover:brightness-110 shadow-xs"
+                           style="background:#e2006a">
+                            <span>Shop Now</span>
+                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Bottom Promo Banner --}}
+                <div class="flex-1 relative rounded-xl overflow-hidden shadow-xs border border-slate-200/80 bg-white group min-h-[195px] flex flex-col justify-between p-4">
+                    @if(!empty($sideSlide2['desktopImage'] ?? ($sideSlide2['image'] ?? null)))
+                        <img src="{{ $sideSlide2['desktopImage'] ?? $sideSlide2['image'] }}"
+                             alt="{{ $sideSlide2['title'] ?? 'Flash Deals' }}"
+                             class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                    @else
+                        <div class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-[#e2006a]"></div>
+                    @endif
+
+                    <div class="relative z-10">
+                        <span class="inline-block rounded-full bg-white/25 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                            {{ $sideSlide2['badge'] ?? 'FLASH SALE' }}
+                        </span>
+                        <h3 class="mt-2 text-sm font-extrabold text-white leading-snug drop-shadow-sm line-clamp-2">
+                            {{ $sideSlide2['title'] ?? 'Weekend Special Deals & Discounts' }}
+                        </h3>
+                    </div>
+
+                    <div class="relative z-10 pt-2">
+                        <a href="{{ $sideSlide2['primaryButtonUrl'] ?? route('shop', ['sale' => 'true']) }}"
+                           class="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold text-white transition hover:brightness-110 shadow-xs"
+                           style="background:#e2006a">
+                            <span>Explore Deals</span>
+                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
             </div>
             </div>
         </div>

@@ -47,66 +47,104 @@
 <body class="min-h-screen flex flex-col bg-[#f5f5f5] font-body text-slate-800 antialiased overflow-x-hidden w-full max-w-full" x-data="{ mobileMenu: false }">
 
     {{-- ── New UI: Top announcement bar ── --}}
+    {{-- ── New UI: Slim Top Announcement Bar (Ready eCommerce style) ── --}}
     @php
-        $announcement = $announcement ?? ['enabled' => false, 'text' => '', 'backgroundColor' => '#e2006a', 'textColor' => '#ffffff'];
+        $announcement = $announcement ?? ['enabled' => false, 'text' => '', 'backgroundColor' => '#ffffff', 'textColor' => '#64748b'];
     @endphp
-    @if(!empty($announcement['enabled']) && !empty($announcement['text']))
-        <div class="ni-topbar" style="background-color: {{ $announcement['backgroundColor'] ?? '#e2006a' }}; color: {{ $announcement['textColor'] ?? '#fff' }}">
-            <div class="store-container flex items-center justify-center gap-2">
-                <svg class="h-3 w-3 shrink-0 fill-current opacity-80" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                <span>{{ $announcement['text'] }}</span>
+    <div class="ni-topbar">
+        <div class="store-container flex items-center justify-between gap-4">
+            {{-- Left: Delivery notice --}}
+            <div class="flex items-center gap-1.5 truncate">
+                <span class="text-[#e2006a] shrink-0">🚚</span>
+                <span class="truncate">
+                    @if(!empty($announcement['enabled']) && !empty($announcement['text']))
+                        {{ $announcement['text'] }}
+                    @else
+                        Free Delivery on orders over ৳2000.00
+                    @endif
+                </span>
+            </div>
+
+            {{-- Right: Quick links --}}
+            <div class="hidden sm:flex items-center gap-4 divide-x divide-slate-200 text-[11px] shrink-0">
+                <a href="{{ route('shop', ['sale' => 'true']) }}" class="flex items-center gap-1 hover:text-[#e2006a] transition font-medium">
+                    <span class="text-[#e2006a]">🔥</span>
+                    <span>Daily Deals</span>
+                </a>
+                <a href="{{ route('page.show', 'return-refund') }}" class="pl-4 flex items-center gap-1 hover:text-[#e2006a] transition font-medium">
+                    <span class="text-[#e2006a]">📦</span>
+                    <span>Easy Returns</span>
+                </a>
+                <a href="{{ route('contact') }}" class="pl-4 flex items-center gap-1 hover:text-[#e2006a] transition font-medium">
+                    <span class="text-[#e2006a]">🎧</span>
+                    <span>Help Center</span>
+                </a>
+                <a href="{{ route('track') }}" class="pl-4 flex items-center gap-1 hover:text-[#e2006a] transition font-medium">
+                    <span class="text-[#e2006a]">📍</span>
+                    <span>Track Order</span>
+                </a>
             </div>
         </div>
-    @endif
+    </div>
 
-    {{-- ── New UI: Pink main header ── --}}
-    <header class="ni-header sticky top-0 z-40 shadow-md">
-        <div class="store-container flex items-center gap-4">
+    {{-- ── New UI: Clean White Main Header with Pink Accents ── --}}
+    <header class="ni-header sticky top-0 z-40 shadow-xs">
+        <div class="store-container flex items-center gap-3 sm:gap-6">
 
             {{-- Mobile menu toggle --}}
-            <button type="button" @click="mobileMenu = !mobileMenu" class="lg:hidden flex items-center justify-center w-9 h-9 rounded bg-white/20 text-white" aria-label="Open menu">
+            <button type="button" @click="mobileMenu = !mobileMenu" class="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-700 hover:text-[#e2006a] transition" aria-label="Open menu">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
-            {{-- Logo --}}
-            <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
-                <img src="{{ $business['logo_url'] ?: '/brandlogo.png' }}" alt="{{ $business['business_name'] }}" class="h-9 w-9 object-contain rounded bg-white/10 p-0.5">
-                <span class="hidden font-extrabold text-lg tracking-tight text-white sm:inline">
-                    {{ $business['name_first_part'] }}<span class="text-yellow-300">{{ $business['name_second_part'] }}</span>
+            {{-- Brand Logo --}}
+            <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0">
+                <img src="{{ $business['logo_url'] ?: '/brandlogo.png' }}" alt="{{ $business['business_name'] }}" class="h-9 w-auto object-contain">
+                <span class="hidden font-black text-lg tracking-tight text-slate-900 sm:inline">
+                    {{ $business['name_first_part'] }}<span class="text-[#e2006a]">{{ $business['name_second_part'] }}</span>
                 </span>
             </a>
 
-            {{-- Search bar (desktop) --}}
-            <form action="{{ route('shop') }}" method="GET" class="ni-search-wrap hidden md:flex flex-1" role="search">
+            {{-- Search bar with integrated Category dropdown (desktop) --}}
+            <form action="{{ route('shop') }}" method="GET" class="ni-search-wrap hidden md:flex" role="search">
                 <label class="sr-only" for="ni-header-search">Search products</label>
-                <input id="ni-header-search" type="search" name="q" value="{{ request('q') }}" placeholder="Search products, brands, categories…" class="ni-search-input">
-                <button type="submit" class="ni-search-btn">
+                <input id="ni-header-search" type="search" name="q" value="{{ request('q') }}" placeholder="Search for products, brands and more..." class="ni-search-input">
+                
+                {{-- Category Selector inside Search --}}
+                <div class="h-5 w-px bg-slate-200 shrink-0"></div>
+                @php
+                    $searchCats = \App\Models\Category::query()->orderBy('name')->limit(12)->get();
+                @endphp
+                <select name="category" class="border-0 bg-transparent text-xs font-semibold text-slate-600 focus:ring-0 cursor-pointer py-2 pl-2 pr-6">
+                    <option value="">All Categories</option>
+                    @foreach($searchCats as $scat)
+                        <option value="{{ $scat->slug }}" {{ request('category') === $scat->slug ? 'selected' : '' }}>{{ $scat->name }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit" class="ni-search-btn" aria-label="Search">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    Search
                 </button>
             </form>
 
-            {{-- Right actions --}}
-            <div class="flex items-center gap-1 ml-auto lg:ml-0">
-                {{-- Track Order --}}
-                <a href="{{ route('track') }}" class="ni-header-icon hidden lg:flex">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    <span>Track</span>
+            {{-- Right action icons: Wishlist, Cart, Account --}}
+            <div class="flex items-center gap-1 sm:gap-2 ml-auto shrink-0">
+                {{-- Wishlist --}}
+                <a href="{{ route('shop') }}" class="ni-header-icon" aria-label="Wishlist">
+                    <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    <span class="ni-badge">0</span>
                 </a>
 
-                {{-- Cart --}}
-                <button type="button" @click="$store.cart.drawerOpen = true" class="ni-header-icon relative" aria-label="Open cart">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                {{-- Shopping Cart --}}
+                <button type="button" @click="$store.cart.drawerOpen = true" class="ni-header-icon" aria-label="Open cart">
+                    <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                     <span class="ni-badge" x-text="$store.cart.count">0</span>
-                    <span class="hidden sm:inline">Cart</span>
                 </button>
 
-                {{-- Account --}}
+                {{-- User Account --}}
                 @auth
                     <div class="relative" x-data="{ userMenu: false }">
                         <button type="button" @click="userMenu = !userMenu" class="ni-header-icon" aria-label="Account">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                            <span class="hidden sm:inline truncate max-w-[80px]">{{ auth()->user()->name }}</span>
+                            <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         </button>
 
                         <div x-show="userMenu" @click.away="userMenu = false" x-cloak
@@ -170,24 +208,19 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="ni-header-icon">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        <span>Sign In</span>
-                    </a>
-                    <a href="{{ route('register') }}" class="hidden sm:flex ni-header-icon">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                        <span>Register</span>
+                    <a href="{{ route('login') }}" class="ni-header-icon" aria-label="Sign In">
+                        <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </a>
                 @endauth
             </div>
         </div>
 
         {{-- Mobile search row --}}
-        <div class="border-t border-white/20 px-4 pb-3 pt-2 md:hidden">
+        <div class="border-t border-slate-100 px-4 pb-3 pt-2 md:hidden">
             <form action="{{ route('shop') }}" method="GET" class="ni-search-wrap w-full" role="search">
                 <label class="sr-only" for="ni-mobile-search">Search products</label>
                 <input id="ni-mobile-search" type="search" name="q" value="{{ request('q') }}" placeholder="Search products…" class="ni-search-input">
-                <button type="submit" class="ni-search-btn">
+                <button type="submit" class="ni-search-btn" aria-label="Search">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </button>
             </form>

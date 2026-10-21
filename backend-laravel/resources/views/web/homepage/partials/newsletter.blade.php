@@ -46,7 +46,8 @@
                     <button
                         type="submit"
                         :disabled="loading"
-                        class="store-btn store-btn-accent h-11 shrink-0 px-6 disabled:opacity-60"
+                        class="h-11 shrink-0 px-7 rounded-[8px] font-extrabold text-white text-xs sm:text-sm shadow-md transition hover:brightness-110 disabled:opacity-60"
+                        style="background:#e2006a"
                         x-text="loading ? 'Subscribing…' : (@js($settings['buttonText'] ?? 'Subscribe'))"
                     ></button>
                 </form>
